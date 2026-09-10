@@ -1,7 +1,8 @@
 import { redirect } from 'next/navigation'
 import Link from 'next/link'
-import { LogOut, Users } from 'lucide-react'
+import { LogOut, Palette, Users } from 'lucide-react'
 import { AppFooter } from '@/components/layout/app-footer'
+import { BrandMark, BrandStyle } from '@/components/layout/tenant-brand'
 import { readSession } from '@/server/auth/session'
 
 export const dynamic = 'force-dynamic'
@@ -19,11 +20,21 @@ export default async function AppLayout({ children }: { children: React.ReactNod
 
   return (
     <div className="flex min-h-dvh flex-col">
+      <BrandStyle />
       <header className="border-b border-[var(--border)] bg-[var(--surface)]">
         <div className="mx-auto flex w-full max-w-5xl items-center gap-4 px-4 py-2.5">
-          <Link href="/library" className="font-semibold tracking-tight">
-            GoodWorkshop
+          <Link href="/library" className="flex items-center">
+            <BrandMark />
           </Link>
+          {session.tenantRole === 'admin' && (
+            <Link
+              href="/admin/branding"
+              className="inline-flex items-center gap-1.5 rounded px-2 py-1 text-[14px] text-[var(--fg-muted)] hover:bg-[var(--surface-raised)]"
+            >
+              <Palette aria-hidden className="size-4" />
+              Branding
+            </Link>
+          )}
           {session.tenantRole === 'admin' && (
             <Link
               href="/admin/members"

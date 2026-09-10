@@ -129,6 +129,28 @@ E-Mail-Adresse — eine Adresse ist eine Identität, und Identitäten sind globa
 vergeben. Wer keinen Zugriff hat, bekommt 404 statt 403: ein Workshop, den man nicht
 sehen darf, soll nicht bestätigen, dass es ihn gibt.
 
+## Branding
+
+Ein Tenant-Admin setzt unter **Branding** ein Logo (SVG, PNG oder WebP, höchstens 256 KB)
+und **einen** Hex-Wert als Akzentfarbe. Der Server nimmt Farbton und Buntheit daraus und
+erzeugt die Abstufungen für hell und dunkel selbst — die Helligkeitsstufen bleiben fest.
+Genau das ist der Trick: OKLCH-Helligkeit ist wahrnehmungsbezogen, also lässt sich die
+Markenfarbe austauschen, ohne den Kontrast jeder Fläche neu zu prüfen. Eine Farbe, aus der
+keine lesbare Rampe wird, wird beim Speichern abgelehnt, nicht später als unlesbare Seite
+entdeckt.
+
+Branding fasst `--brand-*` an und **nie** `.cat-*`. Modultyp-Farben sind Semantik („das ist
+eine Pause"), keine Dekoration; ein Corporate-Blau über alle Modultypen macht die Agenda
+unlesbar. Diese Farben ändert man einzeln beim jeweiligen Modultyp.
+
+Ein hochgeladenes SVG wird **abgelehnt statt bereinigt**, wenn es Skripte, `<style>`,
+Event-Handler oder externe Verweise enthält. Markup mit Mustern zu säubern ist der Weg, auf
+dem Sanitizer umgangen werden: ein knapper Fehltreffer hinterlässt eine Datei, die die
+Prüfung bestanden hat und trotzdem läuft. Zusätzlich wird das Logo ausschließlich in ein
+`<img>` ausgeliefert — darin führen Browser kein Skript aus.
+
+Die Fußzeile bleibt unverändert `GoodWorkshop · powered by roleALPHA`.
+
 ## Live-Kollaboration
 
 Mehrere Personen können denselben Workshoptag gleichzeitig bearbeiten. Die
