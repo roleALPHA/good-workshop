@@ -1,0 +1,116 @@
+# ══════════════════════════════════════════════════════════════════════════════
+# GoodWorkshop — On-Premise
+#
+#   docker compose --profile tls up -d
+#
+# ZWEI DINGE, DIE HIER ZUERST SCHIEFGEHEN:
+#
+# 1. Passkeys brauchen HTTPS. Außer auf localhost verweigern Browser WebAuthn
+#    über http:// -- eine Installation auf http://192.168.1.50:3000 hat gar
+#    keine Passkeys. Deshalb ist das `tls`-Profil der empfohlene Weg und der
+#    E-Mail-Token ein vollwertiger zweiter Weg, keine Notlösung.
+#
+# 2. GW_RP_ID hängt am Hostnamen. Wird er nach der Passkey-Registrierung
+#    geändert, sind ALLE registrierten Passkeys ungültig. Vorher festlegen.
+#
+# Ohne HTTPS und ohne SMTP kommt man trotzdem hinein:
+#    docker compose exec app node scripts/cli.mjs login-link --email du@example.com
+# ══════════════════════════════════════════════════════════════════════════════
+
+x-db-socket: &db-socket
+  # Kein Datenbank-Passwort, nirgends. Die Anwendung erreicht Postgres über
+  # einen geteilten Unix-Socket mit Peer-Authentifizierung: es gibt kein
+  # Geheimnis, das in eine .env, ein Log oder ein Backup geraten könnte.
+  DATABASE_URL: postgres://gw_app@/goodworkshop?host=/var/run/postgresql
+  MIGRATION_DATABASE_URL: postgres://gw_owner@/goodworkshop?host=/var/run/postgresql
+  ADMIN_DATABASE_URL: postgres://postgres@/goodworkshop?host=/var/run/postgresql
+
+services:
+  db:
+    image: postgres:17-alpine
+    restart: unless-stopped
+    environment:
+      POSTGRES_DB: goodworkshop
+      POSTGRES_USER: postgres
+      # Nur für lokale Socket-Verbindungen; der Port wird nirgends veröffentlicht.
+      POSTGRES_HOST_AUTH_METHOD: trust
+    volumes:
+      - pgdata:/var/lib/postgresql/data
+      - pgsocket:/var/run/postgresql
+    healthcheck:
+      test: ['CMD-SHELL', 'pg_isready -U postgres -d goodworkshop']
+      interval: 5s
+      timeout: 5s
+      retries: 20
+
+  # Läuft einmal und beendet sich. `app` startet erst, wenn das hier
+  # erfolgreich durch ist -- ein Rolling Deploy mit ausstehender Migration
+  # liefert damit gar nichts erst aus.
+  migrate:
+    image: ghcr.io/rolealpha/good-workshop:${GW_VERSION:-latest}
+    restart: 'no'
+    command: >-
+      sh -c "node scripts/db-bootstrap.mjs &&
+             node scripts/migrate.mjs &&
+             node scripts/provision.mjs"
+    environment:
+      <<: *db-socket
+      GW_APP_URL: ${GW_APP_URL:?GW_APP_URL muss gesetzt sein}
+      GW_EDITION: ${GW_EDITION:-community}
+      # Legt beim allerersten Lauf einen Admin an und druckt einen einmaligen
+      # Anmeldelink auf stdout -- unabhängig von der Mail-Konfiguration.
+      GW_BOOTSTRAP_ADMIN_EMAIL: ${GW_BOOTSTRAP_ADMIN_EMAIL:-}
+    volumes:
+      - pgsocket:/var/run/postgresql
+    depends_on:
+      db:
+        condition: service_healthy
+
+  app:
+    image: ghcr.io/rolealpha/good-workshop:${GW_VERSION:-latest}
+    restart: unless-stopped
+    environment:
+      <<: *db-socket
+      GW_APP_URL: ${GW_APP_URL:?GW_APP_URL muss gesetzt sein}
+      GW_RP_ID: ${GW_RP_ID:-}
+      GW_MAIL_TRANSPORT: ${GW_MAIL_TRANSPORT:-console}
+      SMTP_URL: ${SMTP_URL:-}
+      SMTP_FROM: ${SMTP_FROM:-}
+      GW_EDITION: ${GW_EDITION:-community}
+    volumes:
+      - pgsocket:/var/run/postgresql
+    # Nur an 127.0.0.1, nie an 0.0.0.0: ohne den Proxy davor ist nichts
+    # erreichbar, auch bei falsch stehender Firewall nicht.
+    ports:
+      - '127.0.0.1:${GW_PORT:-3000}:3000'
+    depends_on:
+      migrate:
+        condition: service_completed_successfully
+
+  # Automatisches HTTPS. Ohne das keine Passkeys -- siehe oben.
+  caddy:
+    profiles: [tls]
+    image: caddy:2-alpine
+    restart: unless-stopped
+    ports:
+      - '80:80'
+      - '443:443'
+    volumes:
+      - ./Caddyfile:/etc/caddy/Caddyfile:ro
+      - caddy_data:/data
+      - caddy_config:/config
+    depends_on: [app]
+
+  # Fängt Anmeldelinks ab, solange kein echter Mailversand eingerichtet ist.
+  mailpit:
+    profiles: [dev]
+    image: axllent/mailpit
+    restart: unless-stopped
+    ports:
+      - '127.0.0.1:8025:8025'
+
+volumes:
+  pgdata:
+  pgsocket:
+  caddy_data:
+  caddy_config:

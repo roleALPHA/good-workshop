@@ -1,0 +1,19 @@
+# Automatisches HTTPS von Let's Encrypt. Der Hostname muss öffentlich auf
+# diesen Server auflösen, sonst schlägt die Ausstellung fehl.
+#
+# Passkeys hängen an genau diesem Namen (GW_RP_ID). Eine spätere Änderung
+# macht alle registrierten Passkeys ungültig.
+{$GW_HOSTNAME} {
+	encode zstd gzip
+
+	# Die Anwendung setzt ihre eigenen Header; der Proxy ergänzt nur HSTS.
+	header {
+		Strict-Transport-Security "max-age=31536000; includeSubDomains"
+	}
+
+	reverse_proxy app:3000 {
+		# Next.js streamt Server-Komponenten; Puffern ließe die Seite erst
+		# am Stück erscheinen.
+		flush_interval -1
+	}
+}
