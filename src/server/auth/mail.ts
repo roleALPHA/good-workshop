@@ -48,6 +48,18 @@ export async function sendMail(mail: Mail): Promise<void> {
   }
 }
 
+/**
+ * Whether mail actually reaches the person it is addressed to.
+ *
+ * `console` delivers to the server log, which is the right behaviour for an
+ * install without a relay and is NOT delivery: anything that offers somebody a
+ * link has to know the difference, or it will tell an admin their invitation
+ * was sent when it went to stdout on a machine they may not have.
+ */
+export function deliversToRecipient(): boolean {
+  return authConfig.mailTransport === 'smtp'
+}
+
 export function magicLinkMail(to: string, link: string): Mail {
   return {
     to,

@@ -1,7 +1,7 @@
 import Link from 'next/link'
 import { notFound } from 'next/navigation'
 import { eq } from 'drizzle-orm'
-import { Download, Printer } from 'lucide-react'
+import { Download, Printer, Users } from 'lucide-react'
 import { AgendaSurface } from '@/components/agenda/agenda-surface'
 import { assertWorkshopAccess } from '@/domain/agenda/access'
 import { loadDay } from '@/domain/agenda/repo'
@@ -65,6 +65,7 @@ export default async function DayPage({
       title: meta[0]?.title ?? 'Workshop',
       days: await listDays(tx, workshopId),
       canEdit: access.can('workshop.content.write'),
+      canShare: access.can('workshop.share'),
       // Derived from the member id, so the same person keeps the same colour
       // across sessions and devices without storing a preference nobody set.
       userHue: presenceHue(actor.memberId),
@@ -85,6 +86,15 @@ export default async function DayPage({
           </div>
 
           <div className="flex items-center gap-2">
+            {data.canShare && (
+              <Link
+                href={`/w/${workshopId}/sharing`}
+                className="inline-flex items-center gap-1.5 rounded border border-[var(--border-strong)] px-2.5 py-1.5 text-[14px] hover:bg-[var(--surface-raised)]"
+              >
+                <Users aria-hidden className="size-4" />
+                Zugriff
+              </Link>
+            )}
             <Link
               href={`/api/w/${workshopId}/d/${dayId}/export`}
               className="inline-flex items-center gap-1.5 rounded border border-[var(--border-strong)] px-2.5 py-1.5 text-[14px] hover:bg-[var(--surface-raised)]"

@@ -1,6 +1,6 @@
 import { redirect } from 'next/navigation'
 import Link from 'next/link'
-import { LogOut } from 'lucide-react'
+import { LogOut, Users } from 'lucide-react'
 import { AppFooter } from '@/components/layout/app-footer'
 import { readSession } from '@/server/auth/session'
 
@@ -24,6 +24,15 @@ export default async function AppLayout({ children }: { children: React.ReactNod
           <Link href="/library" className="font-semibold tracking-tight">
             GoodWorkshop
           </Link>
+          {session.tenantRole === 'admin' && (
+            <Link
+              href="/admin/members"
+              className="inline-flex items-center gap-1.5 rounded px-2 py-1 text-[14px] text-[var(--fg-muted)] hover:bg-[var(--surface-raised)]"
+            >
+              <Users aria-hidden className="size-4" />
+              Mitglieder
+            </Link>
+          )}
           <span className="flex-1" />
           <span className="hidden text-[14px] text-[var(--fg-muted)] sm:inline">
             {session.displayName || session.email}

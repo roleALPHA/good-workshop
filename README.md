@@ -108,6 +108,27 @@ MCP-Schreibpfad den Kollaborations-Dienst — läuft er nicht, schlägt der Aufr
 einer benannten Fehlermeldung fehl, statt Daten zu schreiben, die kurz darauf wieder
 verschwinden.
 
+## Mitglieder und Zugriff
+
+Ein Tenant-Admin lädt unter **Mitglieder** jemanden per E-Mail-Adresse ein. Die Mitgliedschaft
+beginnt als „eingeladen"; erst das Öffnen des Anmeldelinks aktiviert sie. Ein Admin kann
+niemanden per Beschluss aktivieren — sonst könnte er eine fremde Adresse einladen und das
+daraus entstehende Konto übernehmen.
+
+Ist kein Mailversand eingerichtet (`GW_MAIL_TRANSPORT=console`, der Standard für
+On-Premise ohne Relay), zeigt die Oberfläche den Link an, statt zu behaupten, er sei
+verschickt. Wer ihn öffnet, ist als die eingeladene Person angemeldet — das steht dabei.
+
+Der letzte aktive Admin lässt sich weder degradieren noch abschalten. Ein Tenant ohne
+Admin ist nur noch über eine Shell auf dem Server zu reparieren.
+
+Zugriff auf einen einzelnen Workshop vergibt die Eigentümerin unter **Zugriff**:
+Bearbeiten oder Lesen, pro Mitglied. Ausgewählt wird aus dem Tenant, nie über eine
+E-Mail-Adresse — eine Adresse ist eine Identität, und Identitäten sind global; einladen
+über die Adresse würde stillschweigend Zugriff über eine Mandantengrenze hinweg
+vergeben. Wer keinen Zugriff hat, bekommt 404 statt 403: ein Workshop, den man nicht
+sehen darf, soll nicht bestätigen, dass es ihn gibt.
+
 ## Live-Kollaboration
 
 Mehrere Personen können denselben Workshoptag gleichzeitig bearbeiten. Die

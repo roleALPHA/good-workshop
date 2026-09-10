@@ -32,6 +32,12 @@ export default defineConfig({
         'src/domain/agenda/access.ts',
         'src/domain/agenda/repo.ts',
         'src/domain/workshop/repo.ts',
+        'src/domain/workshop/collaborators.ts',
+        // Membership crosses the auth-role boundary -- member rows behind RLS,
+        // e-mail addresses behind a role the application cannot join to. That
+        // separation is the thing worth asserting, and it does not exist
+        // without a database.
+        'src/domain/tenant/members.ts',
         // Type declarations: nothing to execute.
         '**/types.ts',
         // Browser glue, covered by Playwright: a dnd-kit coordinate getter and
