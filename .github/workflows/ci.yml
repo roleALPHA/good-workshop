@@ -139,6 +139,26 @@ jobs:
       fail-fast: false
       matrix:
         shard: [1, 2]
+    # The authenticated half of the suite is the only thing that can prove the
+    # editor persists anything -- everything else happens in memory. Without a
+    # database those tests skip themselves, which would be a quiet way to stop
+    # testing the feature the product exists for.
+    services:
+      postgres:
+        image: postgres:17-alpine
+        env:
+          POSTGRES_DB: goodworkshop
+          POSTGRES_USER: postgres
+          POSTGRES_HOST_AUTH_METHOD: trust
+        ports: ['5433:5432']
+        options: >-
+          --health-cmd "pg_isready -U postgres -d goodworkshop"
+          --health-interval 3s --health-timeout 3s --health-retries 20
+    env:
+      ADMIN_DATABASE_URL: postgres://postgres@127.0.0.1:5433/goodworkshop
+      MIGRATION_DATABASE_URL: postgres://gw_owner@127.0.0.1:5433/goodworkshop
+      DATABASE_URL: postgres://gw_app@127.0.0.1:5433/goodworkshop
+      GW_APP_URL: http://127.0.0.1:3210
     steps:
       - uses: actions/checkout@fbc6f3992d24b796d5a048ff273f7fcc4a7b6c09 # v5
       - uses: pnpm/action-setup@b906affcce14559ad1aafd4ab0e942779e9f58b1 # v4
@@ -158,6 +178,9 @@ jobs:
       - name: Install Playwright browsers
         run: pnpm exec playwright install --with-deps chromium
 
+      - name: Prepare the database
+        run: pnpm db:bootstrap && pnpm db:migrate && pnpm db:provision
+
       # Built as its own step so a compile error is reported as one, and so the
       # suite runs against the standalone output the Docker image ships.
       - run: pnpm build
@@ -165,6 +188,9 @@ jobs:
       - run: pnpm exec playwright test --shard=${{ matrix.shard }}/2
         env:
           E2E_SKIP_BUILD: '1'
+          # Each shard signs in as its own account, so two runners cannot fight
+          # over one session.
+          E2E_EMAIL: e2e-shard-${{ matrix.shard }}@example.test
 
       - uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4
         if: ${{ !cancelled() }}

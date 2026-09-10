@@ -4,6 +4,7 @@ import { useMemo } from 'react'
 import type { DayDoc } from '@/domain/agenda/types'
 import { computeSchedule } from '@/domain/schedule/computeSchedule'
 import { flattenDay, toScheduleItems, withGapRows } from '@/features/agenda/flatten'
+import type { PersistenceTarget } from '@/features/agenda/use-persistence'
 import { useMediaQuery } from '@/hooks/use-media-query'
 import { AgendaEditor } from './agenda-editor'
 import { AgendaTable } from './agenda-table'
@@ -20,7 +21,14 @@ import { AgendaTable } from './agenda-table'
  * the phone never downloads or boots the editor and the desktop swap happens
  * after hydration rather than as a mismatch.
  */
-export function AgendaSurface({ doc }: { doc: DayDoc }) {
+export function AgendaSurface({
+  doc,
+  persistence,
+}: {
+  doc: DayDoc
+  /** Absent for the public demo and for viewers: edits then stay local. */
+  persistence?: PersistenceTarget
+}) {
   const isDesktop = useMediaQuery('(min-width: 1024px)')
 
   const readOnly = useMemo(() => {
@@ -31,5 +39,5 @@ export function AgendaSurface({ doc }: { doc: DayDoc }) {
 
   if (!isDesktop) return <AgendaTable doc={doc} rows={readOnly.rows} schedule={readOnly.schedule} />
 
-  return <AgendaEditor initialDoc={doc} />
+  return <AgendaEditor initialDoc={doc} persistence={persistence} />
 }

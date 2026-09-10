@@ -58,6 +58,12 @@ export const authConfig = {
 export function auditAuthConfig(): string[] {
   const warnings: string[] = []
 
+  if (authConfig.appUrl.protocol !== 'https:') {
+    warnings.push(
+      `GW_APP_URL is ${authConfig.appUrl.origin}: the session cookie cannot be marked Secure, ` +
+        'so it travels in the clear on this network. Anyone who can read the traffic can take over a session.',
+    )
+  }
   if (!authConfig.passkeysAvailable) {
     warnings.push(
       `GW_APP_URL is ${authConfig.appUrl.origin}: passkeys are unavailable without HTTPS. ` +

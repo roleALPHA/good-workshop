@@ -26,6 +26,7 @@ import { formatDuration, formatTime } from '@/features/agenda/duration'
 import { flattenDay, toScheduleItems, withGapRows } from '@/features/agenda/flatten'
 import { treeKeyboardCoordinateGetter } from '@/features/agenda/keyboard'
 import { applyMove } from '@/features/agenda/move'
+import { usePersistence, type PersistenceTarget } from '@/features/agenda/use-persistence'
 import {
   getProjection,
   rowsForDrag,
@@ -36,6 +37,7 @@ import { catClass } from '@/lib/category-colors'
 import { cn } from '@/lib/cn'
 import { ModuleDetails } from '@/components/inspector/module-details'
 import { ClusterRow, EndOfDay, GapRow, HeaderRow, ModuleRow, type RowChrome } from './agenda-rows'
+import { BlockPicker } from './block-picker'
 import { DragHandle } from './drag-handle'
 
 const INDENT_PX = 28
@@ -80,7 +82,15 @@ const SILENT_ANNOUNCEMENTS: Announcements = {
  * Times are never stored, so nothing has to be recomputed after a move: the
  * schedule is derived from the new document on the next render, for free.
  */
-export function AgendaEditor({ initialDoc }: { initialDoc: DayDoc }) {
+export function AgendaEditor({
+  initialDoc,
+  persistence,
+}: {
+  initialDoc: DayDoc
+  /** Absent on the public demo: edits then live in this component only. */
+  persistence?: PersistenceTarget
+}) {
+  const saving = usePersistence(persistence)
   const [doc, setDoc] = useState(initialDoc)
   const [activeId, setActiveId] = useState<string | null>(null)
   const [offsetX, setOffsetX] = useState(0)
@@ -196,6 +206,13 @@ export function AgendaEditor({ initialDoc }: { initialDoc: DayDoc }) {
       ...current,
       modules: current.modules.map((m) => (m.id === moduleId ? { ...m, ...patch } : m)),
     }))
+
+    saving.patchModule(moduleId, {
+      title: patch.title,
+      durationMinutes: patch.durationMinutes,
+      pinnedStartMinute: patch.pinnedStartMinute,
+      desc: patch.desc,
+    })
   }
 
   const activeRow = rows.find((r) => r.id === activeId)
@@ -218,7 +235,14 @@ export function AgendaEditor({ initialDoc }: { initialDoc: DayDoc }) {
       onDragEnd={handleDragEnd}
       onDragCancel={handleDragCancel}
     >
-      <section aria-label={`Agenda ${doc.title}`} className="gw-agenda">
+      <section
+        aria-label={`Agenda ${doc.title}`}
+        className="gw-agenda"
+        // Always present, so anything waiting on a write -- a test, or a person
+        // watching the corner of the screen -- has one honest signal instead of
+        // guessing from a message that only appears when something is wrong.
+        data-save-state={saving.state.status}
+      >
         <HeaderRow />
 
         <SortableContext items={sortableIds} strategy={verticalListSortingStrategy}>
@@ -280,7 +304,37 @@ export function AgendaEditor({ initialDoc }: { initialDoc: DayDoc }) {
           </div>
         </SortableContext>
 
+        <BlockPicker
+          types={Object.values(doc.moduleTypes)}
+          disabled={!saving.enabled}
+          onAdd={async (typeKey) => {
+            const id = await saving.addModule(typeKey, null)
+            if (!id) return
+            const type = Object.values(doc.moduleTypes).find((t) => t.key === typeKey)
+            if (!type) return
+
+            setDoc((current) => ({
+              ...current,
+              modules: [
+                ...current.modules,
+                {
+                  id,
+                  clusterId: null,
+                  moduleTypeId: type.id,
+                  title: type.name,
+                  durationMinutes: type.defaultDurationMinutes,
+                  pinnedStartMinute: null,
+                  desc: {},
+                  // Appended at day level, so it sorts after everything there.
+                  order: Number.MAX_SAFE_INTEGER,
+                },
+              ],
+            }))
+          }}
+        />
+
         <EndOfDay schedule={schedule} targetEndMinute={doc.targetEndMinute} />
+        <SaveIndicator state={saving.state} />
         <LiveRegion message={liveMessage} />
       </section>
 
@@ -359,6 +413,32 @@ const pointerWithinOrClosestCorners: CollisionDetection = (args) => {
  * indent gesture completely silent -- and that gesture is the only way to nest
  * a block from the keyboard.
  */
+/**
+ * Says nothing while things are fine.
+ *
+ * A permanent "saved" badge trains people to ignore the one place that would
+ * tell them something went wrong. Only trouble is worth interrupting for.
+ */
+function SaveIndicator({ state }: { state: ReturnType<typeof usePersistence>['state'] }) {
+  if (state.status === 'idle' || state.status === 'saved') return null
+
+  if (state.status === 'saving') {
+    return (
+      <p className="px-4 py-1 text-[13px] text-[var(--fg-subtle)] md:px-2">Wird gespeichert …</p>
+    )
+  }
+
+  return (
+    <p
+      role="alert"
+      className="mx-4 my-2 rounded border border-[var(--border)] bg-[var(--warn-bg)] px-3 py-2 text-[14px] text-[var(--warn-fg)] md:mx-2"
+    >
+      {state.message}
+      {state.status === 'conflict' && ' Lade die Seite neu, um den aktuellen Stand zu sehen.'}
+    </p>
+  )
+}
+
 /**
  * Our own live region instead of dnd-kit's announcements.
  *

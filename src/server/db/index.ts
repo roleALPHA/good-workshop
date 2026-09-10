@@ -39,6 +39,22 @@ export async function withTenant<T>(actor: Actor, fn: (tx: Tx) => Promise<T>): P
 }
 
 /**
+ * Tenant context without a member.
+ *
+ * Needed exactly once: while resolving a session we know the tenant but not
+ * yet which member the visitor is -- that is the row we are about to read. The
+ * policies only ever compare tenant_id, so an unset member is safe here and
+ * nowhere else.
+ */
+export async function withTenantOnly<T>(tenantId: string, fn: (tx: Tx) => Promise<T>): Promise<T> {
+  return getDb().transaction(async (tx) => {
+    await tx.execute(sql`select set_config('app.tenant_id', ${tenantId}, true)`)
+    await tx.execute(sql`select set_config('app.member_id', '', true)`)
+    return fn(tx)
+  })
+}
+
+/**
  * The login path.
  *
  * The global auth tables carry no tenant_id and cannot be protected by tenant

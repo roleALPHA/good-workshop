@@ -1,4 +1,5 @@
 import { defineConfig, devices } from '@playwright/test'
+import { STORAGE_STATE } from './e2e/paths'
 
 const PORT = Number(process.env.E2E_PORT ?? 3210)
 const baseURL = `http://127.0.0.1:${PORT}`
@@ -29,11 +30,26 @@ export default defineConfig({
   },
 
   projects: [
-    { name: 'desktop', use: { ...devices['Desktop Chrome'] } },
+    // The public demo needs no database, so these two always run.
+    { name: 'desktop', use: { ...devices['Desktop Chrome'] }, testIgnore: /workshop\.spec\.ts/ },
     // The reading view is the most-used screen of this product per workshop --
     // a facilitator reads the agenda on a phone, in the room. It gets its own
     // project rather than a viewport tweak inside one test.
-    { name: 'mobile', use: { ...devices['Pixel 5'] } },
+    { name: 'mobile', use: { ...devices['Pixel 5'] }, testIgnore: /workshop\.spec\.ts/ },
+
+    // Everything past the login needs a database, so the authenticated tests
+    // are skipped where there is none rather than failing confusingly.
+    ...(process.env.DATABASE_URL
+      ? [
+          { name: 'setup', testMatch: /auth\.setup\.ts/ },
+          {
+            name: 'authenticated',
+            testMatch: /workshop\.spec\.ts/,
+            use: { ...devices['Desktop Chrome'], storageState: STORAGE_STATE },
+            dependencies: ['setup'],
+          },
+        ]
+      : []),
   ],
 
   webServer: {

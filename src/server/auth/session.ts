@@ -1,7 +1,7 @@
 import { randomUUID } from 'node:crypto'
 import { cookies } from 'next/headers'
 import { and, eq, gt, isNull, sql } from 'drizzle-orm'
-import { withAuth } from '@/server/db'
+import { withAuth, withTenantOnly } from '@/server/db'
 import { authSession, identity, member } from '@/server/db/schema'
 import { authConfig } from './config'
 import { generateSecret, hashSecret, verifySecret } from './tokens'
@@ -17,7 +17,22 @@ import { generateSecret, hashSecret, verifySecret } from './tokens'
  * no usable cookies.
  */
 
-const COOKIE_NAME = '__Host-gw_session'
+/**
+ * The cookie name depends on the deployment, and this is load-bearing.
+ *
+ * `__Host-` requires the Secure attribute, and a Secure cookie is NEVER sent
+ * over plain http -- browsers make an exception for localhost, which is exactly
+ * why this looks fine in development and fails on a LAN address. An on-prem
+ * install on http://192.168.1.50:3000 would accept the magic link, set the
+ * cookie, and then never send it back: login silently does nothing.
+ *
+ * So: the hardened name over https, a plain one otherwise. Both are read, so an
+ * install that gains TLS later does not log everybody out.
+ */
+const SECURE_COOKIE = '__Host-gw_session'
+const PLAIN_COOKIE = 'gw_session'
+
+const cookieName = () => (authConfig.appUrl.protocol === 'https:' ? SECURE_COOKIE : PLAIN_COOKIE)
 
 export type SessionUser = {
   sessionId: string
@@ -52,12 +67,11 @@ export async function createSession(
     })
   })
 
+  const secure = authConfig.appUrl.protocol === 'https:'
   const store = await cookies()
-  store.set(COOKIE_NAME, `${sessionId}.${secret}`, {
+  store.set(cookieName(), `${sessionId}.${secret}`, {
     httpOnly: true,
-    // __Host- requires Secure, and browsers make an exception for localhost so
-    // development still works over http.
-    secure: true,
+    secure,
     sameSite: 'lax',
     path: '/',
     expires: expiresAt,
@@ -66,7 +80,8 @@ export async function createSession(
 
 export async function readSession(): Promise<SessionUser | null> {
   const store = await cookies()
-  const raw = store.get(COOKIE_NAME)?.value
+  // Both names are read: an install that gains TLS later keeps its sessions.
+  const raw = store.get(SECURE_COOKIE)?.value ?? store.get(PLAIN_COOKIE)?.value
   if (!raw) return null
 
   const separator = raw.indexOf('.')
@@ -74,7 +89,13 @@ export async function readSession(): Promise<SessionUser | null> {
   const sessionId = raw.slice(0, separator)
   const secret = raw.slice(separator + 1)
 
-  return withAuth(async (tx) => {
+  /**
+   * Two reads, one per role, because no query can join across the boundary:
+   * the session and the identity live in tables gw_app cannot see at all, the
+   * membership lives in a table gw_auth cannot see. That is the separation
+   * doing its job, not an inconvenience to route around.
+   */
+  const account = await withAuth(async (tx) => {
     const rows = await tx
       .select({
         secretHash: authSession.secretHash,
@@ -99,38 +120,44 @@ export async function readSession(): Promise<SessionUser | null> {
     if (!row || !verifySecret(secret, row.secretHash)) return null
     if (row.identityStatus !== 'active' || !row.tenantId) return null
 
-    // The membership is re-read on every request rather than baked into the
-    // cookie: a revoked member must lose access immediately, and a role change
-    // must not wait for a re-login.
-    const memberships = await tx
-      .select({ id: member.id, role: member.role, status: member.status })
-      .from(member)
-      .where(and(eq(member.tenantId, row.tenantId), eq(member.identityId, row.identityId)))
-      .limit(1)
-
-    const membership = memberships[0]
-    if (!membership || membership.status !== 'active') return null
-
     await tx
       .update(authSession)
       .set({ lastSeenAt: sql`now()` })
       .where(eq(authSession.id, sessionId))
 
-    return {
-      sessionId,
-      identityId: row.identityId,
-      email: row.email,
-      displayName: row.displayName,
-      tenantId: row.tenantId,
-      memberId: membership.id,
-      tenantRole: membership.role as 'member' | 'admin',
-    }
+    return row
   })
+
+  if (!account?.tenantId) return null
+
+  // Re-read on every request rather than baked into the cookie: a revoked
+  // member has to lose access now, and a role change must not wait for a
+  // re-login.
+  const membership = await withTenantOnly(account.tenantId, async (tx) => {
+    const rows = await tx
+      .select({ id: member.id, role: member.role, status: member.status })
+      .from(member)
+      .where(eq(member.identityId, account.identityId))
+      .limit(1)
+    return rows[0] ?? null
+  })
+
+  if (!membership || membership.status !== 'active') return null
+
+  return {
+    sessionId,
+    identityId: account.identityId,
+    email: account.email,
+    displayName: account.displayName,
+    tenantId: account.tenantId,
+    memberId: membership.id,
+    tenantRole: membership.role as 'member' | 'admin',
+  }
 }
 
 export async function destroySession(): Promise<void> {
   const store = await cookies()
-  const raw = store.get(COOKIE_NAME)?.value
+  const raw = store.get(SECURE_COOKIE)?.value ?? store.get(PLAIN_COOKIE)?.value
   if (raw) {
     const sessionId = raw.slice(0, raw.indexOf('.'))
     await withAuth((tx) =>
@@ -140,5 +167,6 @@ export async function destroySession(): Promise<void> {
         .where(eq(authSession.id, sessionId)),
     )
   }
-  store.delete(COOKIE_NAME)
+  store.delete(SECURE_COOKIE)
+  store.delete(PLAIN_COOKIE)
 }
