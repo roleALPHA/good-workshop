@@ -2,6 +2,7 @@ import { defineConfig, devices } from '@playwright/test'
 import { STORAGE_STATE } from './e2e/paths'
 
 const PORT = Number(process.env.E2E_PORT ?? 3210)
+const COLLAB_PORT = Number(process.env.GW_COLLAB_PORT ?? 3211)
 const baseURL = `http://127.0.0.1:${PORT}`
 
 /**
@@ -52,20 +53,48 @@ export default defineConfig({
       : []),
   ],
 
-  webServer: {
-    // Builds first, then runs the standalone server -- byte for byte the
-    // artifact the Docker image ships. Testing against `next dev` would prove
-    // the wrong thing, and `next start` does not work with output: standalone
-    // at all (see scripts/start-standalone.mjs).
-    // In CI the build is its own step, so a failing build reads as a failing
-    // build rather than as a mysterious webServer timeout.
-    command: process.env.E2E_SKIP_BUILD
-      ? `PORT=${PORT} pnpm start`
-      : `pnpm build && PORT=${PORT} pnpm start`,
-    url: `${baseURL}/api/health`,
-    reuseExistingServer: !process.env.CI,
-    timeout: 180_000,
-    stdout: 'ignore',
-    stderr: 'pipe',
-  },
+  webServer: [
+    {
+      // Builds first, then runs the standalone server -- byte for byte the
+      // artifact the Docker image ships. Testing against `next dev` would prove
+      // the wrong thing, and `next start` does not work with output: standalone
+      // at all (see scripts/start-standalone.mjs).
+      // In CI the build is its own step, so a failing build reads as a failing
+      // build rather than as a mysterious webServer timeout.
+      command: process.env.E2E_SKIP_BUILD
+        ? `PORT=${PORT} pnpm start`
+        : `pnpm build && PORT=${PORT} pnpm start`,
+      // No proxy in the harness, so the browser is told where the
+      // collaboration server actually is.
+      env: { GW_COLLAB_URL: `ws://127.0.0.1:${COLLAB_PORT}/collab` },
+      url: `${baseURL}/api/health`,
+      reuseExistingServer: !process.env.CI,
+      timeout: 180_000,
+      stdout: 'ignore',
+      stderr: 'pipe',
+    },
+    // The collaboration server. Without it a signed-in editor has nowhere to
+    // write, so the authenticated tests would be asserting against a page that
+    // silently keeps everything in the browser.
+    ...(process.env.DATABASE_URL
+      ? [
+          {
+            command: 'node dist/collab-server.mjs',
+            url: `http://127.0.0.1:${COLLAB_PORT}/health`,
+            reuseExistingServer: !process.env.CI,
+            timeout: 60_000,
+            stdout: 'ignore' as const,
+            stderr: 'pipe' as const,
+            env: {
+              GW_COLLAB_PORT: String(COLLAB_PORT),
+              // Short enough that a test can wait for a write instead of
+              // guessing at one.
+              GW_COLLAB_PERSIST_MS: '50',
+              GW_COLLAB_MATERIALIZE_MS: '150',
+              GW_COLLAB_GRACE_MS: '200',
+            },
+          },
+        ]
+      : []),
+  ],
 })

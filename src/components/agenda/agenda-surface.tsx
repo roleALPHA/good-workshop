@@ -4,7 +4,8 @@ import { useMemo } from 'react'
 import type { DayDoc } from '@/domain/agenda/types'
 import { computeSchedule } from '@/domain/schedule/computeSchedule'
 import { flattenDay, toScheduleItems, withGapRows } from '@/features/agenda/flatten'
-import type { PersistenceTarget } from '@/features/agenda/use-persistence'
+import { useLocalDocument } from '@/features/agenda/use-local-document'
+import { useCollabDocument, type CollabTarget } from '@/features/collab/use-collab-document'
 import { useMediaQuery } from '@/hooks/use-media-query'
 import { AgendaEditor } from './agenda-editor'
 import { AgendaTable } from './agenda-table'
@@ -23,11 +24,11 @@ import { AgendaTable } from './agenda-table'
  */
 export function AgendaSurface({
   doc,
-  persistence,
+  collab,
 }: {
   doc: DayDoc
-  /** Absent for the public demo and for viewers: edits then stay local. */
-  persistence?: PersistenceTarget
+  /** Absent for the public demo and for viewers: edits then stay in the browser. */
+  collab?: CollabTarget
 }) {
   const isDesktop = useMediaQuery('(min-width: 1024px)')
 
@@ -39,5 +40,25 @@ export function AgendaSurface({
 
   if (!isDesktop) return <AgendaTable doc={doc} rows={readOnly.rows} schedule={readOnly.schedule} />
 
-  return <AgendaEditor initialDoc={doc} persistence={persistence} />
+  return <EditorSurface doc={doc} collab={collab} />
+}
+
+/**
+ * Picks how changes are shared.
+ *
+ * Both hooks are called unconditionally -- React allows nothing else -- and the
+ * collaboration one connects only when it has a target. Branching on a hook
+ * would break the moment a viewer's permissions changed while the page was open.
+ */
+function EditorSurface({ doc, collab }: { doc: DayDoc; collab?: CollabTarget }) {
+  const local = useLocalDocument(doc)
+  const shared = useCollabDocument(doc, collab ?? IDLE_TARGET)
+  return <AgendaEditor document={collab ? shared : local} />
+}
+
+/** A target the provider recognises as "do not connect". */
+const IDLE_TARGET: CollabTarget = {
+  workshopId: '',
+  dayId: '',
+  user: { name: '', color: '' },
 }

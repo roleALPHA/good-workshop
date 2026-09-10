@@ -134,12 +134,23 @@ export class Room {
     this.broadcast(encodeAwarenessMessage(this.awareness, clients))
   }
 
+  /**
+   * Two independent debounces, and they must stay independent.
+   *
+   * An earlier version returned early when a persist was already pending --
+   * which also skipped scheduling the materialisation. Updates arriving close
+   * together then had only the FIRST one schedule it, so a block added just
+   * after the day was seeded stayed out of the relational tables until the
+   * room closed. Exports and the print view showed an empty day for as long as
+   * somebody kept editing.
+   */
   private schedulePersist(): void {
-    if (this.persistTimer) return
-    this.persistTimer = setTimeout(() => {
-      this.persistTimer = null
-      void this.persist()
-    }, this.timings.persistDebounceMs)
+    if (!this.persistTimer) {
+      this.persistTimer = setTimeout(() => {
+        this.persistTimer = null
+        void this.persist()
+      }, this.timings.persistDebounceMs)
+    }
 
     if (!this.materializeTimer) {
       this.materializeTimer = setTimeout(() => {

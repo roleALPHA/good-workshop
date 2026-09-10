@@ -188,6 +188,9 @@ jobs:
       - run: pnpm exec playwright test --shard=${{ matrix.shard }}/2
         env:
           E2E_SKIP_BUILD: '1'
+          # The collaboration server runs alongside the app; without it a
+          # signed-in editor has nowhere to write.
+          GW_COLLAB_PORT: '3211'
           # Each shard signs in as its own account, so two runners cannot fight
           # over one session.
           E2E_EMAIL: e2e-shard-${{ matrix.shard }}@example.test

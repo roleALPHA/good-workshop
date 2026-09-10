@@ -39,9 +39,17 @@ export type CollabServerOptions = {
 export function startCollabServer(options: CollabServerOptions) {
   const path = options.path ?? '/collab'
   const timings = options.timings ?? DEFAULT_TIMINGS
-  const http = createServer((_req, res) => {
-    // Anything that is not an upgrade gets a plain answer, so a misrouted
-    // health check does not look like a hang.
+  const http = createServer((req, res) => {
+    // A real health endpoint: a process supervisor and a test runner both need
+    // one, and both read 426 as "not ready" rather than as "working correctly".
+    if (req.url === '/health') {
+      res.writeHead(200, { 'content-type': 'application/json' })
+      res.end(JSON.stringify({ status: 'ok', rooms: rooms.size }))
+      return
+    }
+
+    // Anything else that is not an upgrade gets a plain answer, so a misrouted
+    // request does not look like a hang.
     res.writeHead(426, { 'content-type': 'text/plain' })
     res.end('WebSocket erwartet.\n')
   })

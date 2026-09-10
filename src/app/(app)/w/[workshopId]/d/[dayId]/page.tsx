@@ -24,6 +24,14 @@ export const dynamic = 'force-dynamic'
  * no loading state on first paint -- the agenda is there, then it becomes
  * interactive.
  */
+const PRESENCE_COLORS = ['rose', 'emerald', 'blue', 'amber', 'violet', 'teal', 'orange', 'cyan']
+
+function presenceColor(memberId: string): string {
+  let hash = 0
+  for (const char of memberId) hash = (hash * 31 + char.charCodeAt(0)) >>> 0
+  return PRESENCE_COLORS[hash % PRESENCE_COLORS.length]!
+}
+
 export default async function DayPage({
   params,
 }: {
@@ -47,6 +55,10 @@ export default async function DayPage({
       title: meta[0]?.title ?? 'Workshop',
       days: await listDays(tx, workshopId),
       canEdit: access.can('workshop.content.write'),
+      userName: actor.memberId,
+      // Derived from the member id, so the same person keeps the same colour
+      // across sessions and devices without storing a preference nobody set.
+      userColor: presenceColor(actor.memberId),
     }
   }).catch(() => null)
 
@@ -114,8 +126,15 @@ export default async function DayPage({
 
       <AgendaSurface
         doc={data.doc}
-        persistence={
-          data.canEdit ? { workshopId, dayId, contentVersion: data.contentVersion } : undefined
+        collab={
+          data.canEdit
+            ? {
+                workshopId,
+                dayId,
+                user: { name: data.userName, color: data.userColor },
+                url: process.env.GW_COLLAB_URL,
+              }
+            : undefined
         }
       />
     </div>

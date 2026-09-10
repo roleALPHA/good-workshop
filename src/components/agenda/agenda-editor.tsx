@@ -25,8 +25,9 @@ import { computeSchedule } from '@/domain/schedule/computeSchedule'
 import { formatDuration, formatTime } from '@/features/agenda/duration'
 import { flattenDay, toScheduleItems, withGapRows } from '@/features/agenda/flatten'
 import { treeKeyboardCoordinateGetter } from '@/features/agenda/keyboard'
+import type { AgendaDocument, DocumentStatus } from '@/features/agenda/document'
+// Used only to preview a move for the announcement -- it mutates nothing.
 import { applyMove } from '@/features/agenda/move'
-import { usePersistence, type PersistenceTarget } from '@/features/agenda/use-persistence'
 import {
   getProjection,
   rowsForDrag,
@@ -75,23 +76,16 @@ const SILENT_ANNOUNCEMENTS: Announcements = {
  *
  * State lives here and nowhere else for now: there is no server yet, so a drag
  * is applied straight to a local DayDoc. When persistence lands this becomes an
- * optimistic update over the same `applyMove`, and the server applies the very
- * same operation -- which is why applyMove is a pure function over the document
- * rather than something that reaches into React state.
+ * Where those changes go is not this component's business: the public demo
+ * keeps them in React state, a signed-in editor writes them into a shared
+ * document other people are watching. Both arrive here as the same
+ * AgendaDocument.
  *
  * Times are never stored, so nothing has to be recomputed after a move: the
  * schedule is derived from the new document on the next render, for free.
  */
-export function AgendaEditor({
-  initialDoc,
-  persistence,
-}: {
-  initialDoc: DayDoc
-  /** Absent on the public demo: edits then live in this component only. */
-  persistence?: PersistenceTarget
-}) {
-  const saving = usePersistence(persistence)
-  const [doc, setDoc] = useState(initialDoc)
+export function AgendaEditor({ document: agenda }: { document: AgendaDocument }) {
+  const doc = agenda.doc
   const [activeId, setActiveId] = useState<string | null>(null)
   const [offsetX, setOffsetX] = useState(0)
   const [overId, setOverId] = useState<string | null>(null)
@@ -183,7 +177,7 @@ export function AgendaEditor({
       setDropMessage(
         describeProjection(doc, rows, activeId, projection).replace('landet', 'abgelegt'),
       )
-      setDoc((current) => applyMove(current, activeId, projection))
+      agenda.move(activeId, projection)
     }
     reset()
   }
@@ -202,12 +196,7 @@ export function AgendaEditor({
    * it either way.
    */
   function patchModule(moduleId: string, patch: Partial<(typeof doc)['modules'][number]>) {
-    setDoc((current) => ({
-      ...current,
-      modules: current.modules.map((m) => (m.id === moduleId ? { ...m, ...patch } : m)),
-    }))
-
-    saving.patchModule(moduleId, {
+    agenda.patchModule(moduleId, {
       title: patch.title,
       durationMinutes: patch.durationMinutes,
       pinnedStartMinute: patch.pinnedStartMinute,
@@ -241,7 +230,7 @@ export function AgendaEditor({
         // Always present, so anything waiting on a write -- a test, or a person
         // watching the corner of the screen -- has one honest signal instead of
         // guessing from a message that only appears when something is wrong.
-        data-save-state={saving.state.status}
+        data-save-state={agenda.status.kind}
       >
         <HeaderRow />
 
@@ -306,35 +295,19 @@ export function AgendaEditor({
 
         <BlockPicker
           types={Object.values(doc.moduleTypes)}
-          disabled={!saving.enabled}
-          onAdd={async (typeKey) => {
-            const id = await saving.addModule(typeKey, null)
-            if (!id) return
+          onAdd={(typeKey) => {
             const type = Object.values(doc.moduleTypes).find((t) => t.key === typeKey)
             if (!type) return
-
-            setDoc((current) => ({
-              ...current,
-              modules: [
-                ...current.modules,
-                {
-                  id,
-                  clusterId: null,
-                  moduleTypeId: type.id,
-                  title: type.name,
-                  durationMinutes: type.defaultDurationMinutes,
-                  pinnedStartMinute: null,
-                  desc: {},
-                  // Appended at day level, so it sorts after everything there.
-                  order: Number.MAX_SAFE_INTEGER,
-                },
-              ],
-            }))
+            agenda.addModule({
+              moduleTypeId: type.id,
+              title: type.name,
+              durationMinutes: type.defaultDurationMinutes,
+            })
           }}
         />
 
         <EndOfDay schedule={schedule} targetEndMinute={doc.targetEndMinute} />
-        <SaveIndicator state={saving.state} />
+        <StatusLine status={agenda.status} />
         <LiveRegion message={liveMessage} />
       </section>
 
@@ -419,12 +392,26 @@ const pointerWithinOrClosestCorners: CollisionDetection = (args) => {
  * A permanent "saved" badge trains people to ignore the one place that would
  * tell them something went wrong. Only trouble is worth interrupting for.
  */
-function SaveIndicator({ state }: { state: ReturnType<typeof usePersistence>['state'] }) {
-  if (state.status === 'idle' || state.status === 'saved') return null
+function StatusLine({ status }: { status: DocumentStatus }) {
+  if (status.kind === 'local' || status.kind === 'saved') return null
 
-  if (state.status === 'saving') {
+  if (status.kind === 'live') {
+    // Only when somebody else is here. A permanent "connected" badge is noise
+    // that trains people to ignore the one place that would warn them.
+    if (status.peers === 0) return null
     return (
-      <p className="px-4 py-1 text-[13px] text-[var(--fg-subtle)] md:px-2">Wird gespeichert …</p>
+      <p className="px-4 py-1 text-[13px] text-[var(--fg-subtle)] md:px-2">
+        {status.peers === 1 ? 'Eine weitere Person' : `${status.peers} weitere Personen`} bearbeiten
+        diesen Tag.
+      </p>
+    )
+  }
+
+  if (status.kind === 'connecting' || status.kind === 'saving') {
+    return (
+      <p className="px-4 py-1 text-[13px] text-[var(--fg-subtle)] md:px-2">
+        {status.kind === 'connecting' ? 'Verbinde …' : 'Wird gespeichert …'}
+      </p>
     )
   }
 
@@ -433,8 +420,7 @@ function SaveIndicator({ state }: { state: ReturnType<typeof usePersistence>['st
       role="alert"
       className="mx-4 my-2 rounded border border-[var(--border)] bg-[var(--warn-bg)] px-3 py-2 text-[14px] text-[var(--warn-fg)] md:mx-2"
     >
-      {state.message}
-      {state.status === 'conflict' && ' Lade die Seite neu, um den aktuellen Stand zu sehen.'}
+      {status.message}
     </p>
   )
 }
