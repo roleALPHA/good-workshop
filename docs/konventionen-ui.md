@@ -1,11 +1,6 @@
----
-name: goodworkshop-ui
-description: 'UI/UX-Konventionen für GoodWorkshop: Mobile-first, Farbtokens, Branding, Accessibility. Nutze diesen Skill bei jeder Änderung an einer React-Komponente, an Tailwind-Tokens, am Layout oder an Farben.'
----
+# UI- und UX-Konventionen
 
-# goodworkshop-ui
-
-Verbindlich für jede Änderung unter `src/app/**`, `src/components/**`, `src/features/**` und `src/styles/**`.
+Verbindlich für jede Änderung an einer React-Komponente, an Tailwind-Tokens, am Layout oder an Farben.
 
 ## Mobile-first ist keine Floskel
 

@@ -45,7 +45,7 @@ const config = [
         {
           selector: 'Literal[value=/#[0-9a-fA-F]{3}([0-9a-fA-F]{3}([0-9a-fA-F]{2})?)?\\b/]',
           message:
-            'Keine rohen Hex-Farben in UI-Code. Kategoriefarben über die .cat-*-Tokens, Akzente über --brand-*. Siehe .claude/skills/goodworkshop-ui/SKILL.md',
+            'Keine rohen Hex-Farben in UI-Code. Kategoriefarben über die .cat-*-Tokens, Akzente über --brand-*. Siehe docs/konventionen-ui.md',
         },
       ],
     },

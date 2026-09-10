@@ -24,7 +24,7 @@ export type ModuleTypeDto = {
   /**
    * The type's own field definitions. Carried on the day document because the
    * fields are edited in the row itself, not in a panel that could fetch them
-   * separately -- see the inline-editing rule in .claude/skills/goodworkshop-ui.
+   * separately -- see the inline-editing rule in docs/konventionen-ui.md.
    */
   jsonSchema?: unknown
 }

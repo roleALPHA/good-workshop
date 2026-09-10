@@ -129,7 +129,7 @@
   /* Category tokens. Equal OKLCH lightness across hues is what keeps the
    legend from looking amateurish -- the same swatches in sRGB hex have
    wildly unequal perceived brightness. A module type stores a token
-   NAME ("rose"), never a hex value. See .claude/skills/goodworkshop-ui. */
+   NAME ("rose"), never a hex value. See docs/konventionen-ui.md. */
   .cat-rose {
     --cat-bar: oklch(0.64 0.185 12);
     --cat-bg: oklch(0.972 0.03 12);

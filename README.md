@@ -44,11 +44,11 @@ pnpm dev
 
 ### Arbeitsweisen
 
-Drei verbindliche Konventionen liegen als Skills im Repo und gelten für jeden Beitrag:
+Drei verbindliche Konventionen, für jeden Beitrag:
 
-- [`goodworkshop-ui`](.claude/skills/goodworkshop-ui/SKILL.md) — Mobile-first, Farbtokens, Branding, Accessibility
-- [`goodworkshop-testing`](.claude/skills/goodworkshop-testing/SKILL.md) — Testpyramide, RLS-Tests, Flake-Politik
-- [`goodworkshop-ci`](.claude/skills/goodworkshop-ci/SKILL.md) — GitHub Actions, Docker-Build, Release nach ghcr.io
+- [UI und UX](docs/konventionen-ui.md) — Mobile-first, Bearbeiten an Ort und Stelle statt in Dialogen, Farbtokens, Branding, Accessibility
+- [Tests](docs/konventionen-tests.md) — Testpyramide, Mandantentrennungs-Tests, Flake-Politik
+- [CI/CD](docs/konventionen-ci.md) — GitHub Actions, Docker-Build, Release nach ghcr.io
 
 Zwei Guardrails werden von ESLint erzwungen und sind kein Stilthema:
 

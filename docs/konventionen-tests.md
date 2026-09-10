@@ -1,9 +1,6 @@
----
-name: goodworkshop-testing
-description: 'Teststrategie für GoodWorkshop (Testpyramide: viele Unit- und Komponententests, wenige E2E). Nutze diesen Skill, wenn Tests geschrieben oder geändert werden, wenn Testlücken bewertet werden, oder wenn eine neue Domänentabelle oder pure Funktion entsteht.'
----
+# Teststrategie
 
-# goodworkshop-testing
+Verbindlich, wenn Tests geschrieben oder geändert werden, wenn Testlücken bewertet werden, oder wenn eine neue Domänentabelle oder reine Funktion entsteht.
 
 ## Testpyramide, breit unten
 

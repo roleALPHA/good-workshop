@@ -10,7 +10,7 @@ const baseURL = `http://127.0.0.1:${PORT}`
  * tested; what E2E adds is proof that the whole pipeline survives a real
  * browser -- server render, CSS tokens, responsive collapse, accessibility tree.
  *
- * See .claude/skills/goodworkshop-testing/SKILL.md for the flow list.
+ * See docs/konventionen-tests.md for the flow list.
  */
 export default defineConfig({
   testDir: './e2e',

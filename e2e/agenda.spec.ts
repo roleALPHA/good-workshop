@@ -12,7 +12,7 @@ import { expect, test, type Page } from '@playwright/test'
  * would collide with the bullet lists inside descriptions.
  *
  * Flows still to be added as their features land (see
- * .claude/skills/goodworkshop-testing/SKILL.md): magic-link login, creating a
+ * docs/konventionen-tests.md): magic-link login, creating a
  * workshop, setting a pin in the UI, Markdown export, and the 409 conflict
  * banner across two browser contexts.
  */

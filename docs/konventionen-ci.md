@@ -1,9 +1,6 @@
----
-name: goodworkshop-ci
-description: 'CI/CD und Docker-Build für GoodWorkshop mit GitHub Actions und ghcr.io. Nutze diesen Skill bei Änderungen an Workflows unter .github/, am Dockerfile, an docker-compose.yml oder an der Release-Mechanik.'
----
+# CI/CD und Docker-Build
 
-# goodworkshop-ci
+Verbindlich bei Änderungen an Workflows unter `.github/`, am Dockerfile, an `compose.yaml` oder an der Release-Mechanik.
 
 ## Kostenlage
 

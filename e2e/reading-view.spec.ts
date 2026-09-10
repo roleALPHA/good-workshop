@@ -4,7 +4,7 @@ import { expect, test } from '@playwright/test'
  * The phone reading view is not a degraded desktop table -- it is the screen a
  * facilitator actually uses on the day, standing in the room. These assertions
  * are the mechanical half of the checklist in
- * .claude/skills/goodworkshop-ui/SKILL.md.
+ * docs/konventionen-ui.md.
  */
 
 test.describe('reading view on a phone', () => {

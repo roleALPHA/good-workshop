@@ -20,7 +20,7 @@ import { OverlapWarning, TimeCell } from './time-cell'
  * (`break-inside: avoid`).
  *
  * Below `md` the grid is dropped entirely and rows become cards -- see
- * .claude/skills/goodworkshop-ui: the reading view on a phone is the most-used
+ * docs/konventionen-ui.md: the reading view on a phone is the most-used
  * screen of this product per workshop, and a horizontally scrolling table is
  * not a reading view.
  */
@@ -41,7 +41,7 @@ export const GRID = 'md:grid md:grid-cols-[var(--gw-cols)] md:items-stretch'
  *
  * Passed only by the editor; the print view and the phone reading view leave it
  * out and get the same markup, read-only. See the inline-editing rule in
- * .claude/skills/goodworkshop-ui.
+ * docs/konventionen-ui.md.
  */
 export type RowEditing = {
   onTitleChange: (title: string) => void

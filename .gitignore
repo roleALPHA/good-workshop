@@ -14,3 +14,10 @@ next-env.d.ts
 blob-report/
 .playwright/
 e2e/.auth/
+
+# Werkzeug-spezifische lokale Konfiguration. Die verbindlichen Konventionen
+# liegen als normale Dokumente in docs/ -- sie gelten fuer jeden Beitrag, nicht
+# nur fuer den, der mit einem bestimmten Werkzeug arbeitet.
+.claude/
+CLAUDE.md
+**/CLAUDE.md
