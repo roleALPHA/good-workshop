@@ -10,7 +10,7 @@ import { registerTools } from './tools'
  * is rebuilding a small object per call; the benefit is that two containers
  * behind a load balancer need no coordination at all.
  */
-export function buildMcpServer(actor: PatActor): McpServer {
+export function buildMcpServer(actor: PatActor, authorization: string): McpServer {
   const server = new McpServer(
     { name: 'goodworkshop', version: process.env.GW_VERSION ?? 'dev' },
     {
@@ -32,6 +32,6 @@ export function buildMcpServer(actor: PatActor): McpServer {
     },
   )
 
-  registerTools(server, { actor })
+  registerTools(server, { actor, authorization })
   return server
 }

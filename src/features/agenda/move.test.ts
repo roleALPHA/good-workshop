@@ -140,7 +140,9 @@ describe('applyMove', () => {
         ['b', 1, null],
       ],
     )
-    expect(applyMove(d, 'a', { depth: 0, parentId: null, index: -1, valid: false })).toBe(d)
+    expect(
+      applyMove(d, 'a', { depth: 0, parentId: null, index: -1, afterId: null, valid: false }),
+    ).toBe(d)
   })
 
   it('produces gapless orders per parent so repeated moves cannot drift', () => {

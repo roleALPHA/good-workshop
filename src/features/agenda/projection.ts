@@ -24,10 +24,28 @@ export type Projection = {
   parentId: string | null
   /** Index in the reordered list where the active row lands. */
   index: number
+  /**
+   * The sibling the row lands behind, or null for first.
+   *
+   * Carried alongside the index because they answer different questions. The
+   * index is a position in the flat RENDER list, which is what the local
+   * document renumbers against. Ordering keys are per sibling list, and the
+   * two do not line up: rows between are a cluster's children, and index 0 is
+   * "first row on screen" while a sort key needs "no predecessor". Deriving
+   * one from the other at the call site got both wrong -- a block dragged to
+   * the very top landed second.
+   */
+  afterId: string | null
   valid: boolean
 }
 
-const INVALID: Projection = { depth: 0, parentId: null, index: -1, valid: false }
+const INVALID: Projection = {
+  depth: 0,
+  parentId: null,
+  index: -1,
+  afterId: null,
+  valid: false,
+}
 
 /**
  * The list a drag operates on.
@@ -82,12 +100,40 @@ export function getProjection(
   const minDepth = minDepthFor(active, next)
   const depth = clamp(projected, minDepth, maxDepth)
 
+  const parentId = depth === 0 ? null : findParentId(reordered, overIndex)
+
   return {
     depth,
-    parentId: depth === 0 ? null : findParentId(reordered, overIndex),
+    parentId,
     index: overIndex,
+    afterId: findAnchor(reordered, overIndex, depth, parentId),
     valid: true,
   }
+}
+
+/**
+ * The nearest row above that belongs to the same sibling list.
+ *
+ * At day level a cluster's child does not count, but the cluster it lives in
+ * does -- dropping below the last row of a section means "after that section".
+ * Inside a cluster, reaching the cluster row itself means "first child".
+ */
+function findAnchor(
+  rows: ProjectionRow[],
+  index: number,
+  depth: 0 | 1,
+  parentId: string | null,
+): string | null {
+  for (let i = index - 1; i >= 0; i--) {
+    const row = rows[i]!
+    if (depth === 0) {
+      if (row.depth === 0) return row.id
+      continue
+    }
+    if (row.id === parentId) return null
+    if (row.depth === 1 && row.parentId === parentId) return row.id
+  }
+  return null
 }
 
 /**

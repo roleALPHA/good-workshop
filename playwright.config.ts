@@ -66,7 +66,18 @@ export default defineConfig({
         : `pnpm build && PORT=${PORT} pnpm start`,
       // No proxy in the harness, so the browser is told where the
       // collaboration server actually is.
-      env: { GW_COLLAB_URL: `ws://127.0.0.1:${COLLAB_PORT}/collab` },
+      env: {
+        // Where the app thinks it lives. Magic-link verification redirects
+        // against this, so getting it from the ambient environment means a
+        // developer's .env.local can send the browser to a port that is not
+        // listening -- which reads as "the login is broken".
+        GW_APP_URL: baseURL,
+        GW_COLLAB_URL: `ws://127.0.0.1:${COLLAB_PORT}/collab`,
+        // The address the app itself uses when an MCP write joins a room.
+        // Separate from the one above because the browser goes through a
+        // proxy in a real deployment and this process is inside it.
+        GW_COLLAB_INTERNAL_URL: `ws://127.0.0.1:${COLLAB_PORT}/collab`,
+      },
       url: `${baseURL}/api/health`,
       reuseExistingServer: !process.env.CI,
       timeout: 180_000,

@@ -20,7 +20,8 @@ export const maxDuration = 60
  * something: the SDK speaks Node's req/res, Next speaks Request/Response.
  */
 export async function POST(request: NextRequest) {
-  const actor = await resolveBearer(request.headers.get('authorization'))
+  const authorization = request.headers.get('authorization')
+  const actor = await resolveBearer(authorization)
 
   if (!actor) {
     return new NextResponse(JSON.stringify({ error: 'invalid_token' }), {
@@ -40,7 +41,7 @@ export async function POST(request: NextRequest) {
     return NextResponse.json({ error: 'invalid_json' }, { status: 400 })
   }
 
-  const server = buildMcpServer(actor)
+  const server = buildMcpServer(actor, authorization ?? '')
   const transport = new StreamableHTTPServerTransport({ sessionIdGenerator: undefined })
 
   try {

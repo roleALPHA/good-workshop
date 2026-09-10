@@ -100,6 +100,14 @@ anschließend als „die KI hat meinen Workshop gelöscht".
 Es gibt bewusst **keinen** Bereich für Nutzerverwaltung: ein MCP-Client darf niemals
 Nutzer einladen oder zu Admins machen.
 
+**Ein Modell ist ein Kollaborator, kein zweiter Schreibweg.** Schreibende Werkzeuge
+gehen durch denselben Raum wie ein Browser: das Modell taucht in der Anwesenheitsliste
+auf, sein Block erscheint sofort bei allen, die den Tag offen haben, und beide
+Änderungen führen zusammen statt sich zu überschreiben. Deshalb braucht auch der
+MCP-Schreibpfad den Kollaborations-Dienst — läuft er nicht, schlägt der Aufruf mit
+einer benannten Fehlermeldung fehl, statt Daten zu schreiben, die kurz darauf wieder
+verschwinden.
+
 ## Live-Kollaboration
 
 Mehrere Personen können denselben Workshoptag gleichzeitig bearbeiten. Die
@@ -107,10 +115,19 @@ Zusammenführung übernimmt ein CRDT (Yjs), sodass gleichzeitige Änderungen an
 verschiedenen Blöcken — und an verschiedenen Feldern desselben Blocks — beide
 überleben statt sich zu überschreiben.
 
-**Yjs ist die Bearbeitungsschicht, Postgres bleibt die Akte.** Export, Druck, die
-MCP-Werkzeuge und jede Server Action lesen die relationalen Tabellen und wissen nichts
-von einem CRDT. Ein Materializer schreibt den Stand zurück; `collab_state.materialized_up_to`
-sagt, wie weit die Tabellen hinterherhängen.
+**Yjs ist die Bearbeitungsschicht, Postgres bleibt die Akte.** Export, Druck und jede
+Leseabfrage lesen die relationalen Tabellen und wissen nichts von einem CRDT. Ein
+Materializer schreibt den Stand zurück; `collab_state.materialized_up_to` sagt, wie weit
+die Tabellen hinterherhängen.
+
+**Ein Tag hat genau einen Schreibweg.** Der Materializer schreibt das Dokument in die
+Tabellen und löscht dort alles, was das Dokument nicht kennt — anders wären Löschungen
+nicht übertragbar. Damit ist jeder zweite Schreibweg auf denselben Tag ein stiller
+Datenverlust: geschrieben wird, ein paar Sekunden später wieder gelöscht, und nur dann,
+wenn zufällig jemand den Tag offen hat. Deshalb geht _alles_, was einen Tag verändert —
+Editor wie MCP —, durch den Raum. Der Raum füllt sein Dokument beim Öffnen aus der
+Datenbank, damit auch ein Schreibvorgang in einen Tag, den nie jemand geöffnet hat, vom
+echten Stand ausgeht.
 
 Der Kollaborations-Dienst läuft als **eigener Prozess im selben Image** auf Port 3001 —
 Next kann aus einem Route-Handler kein WebSocket-Upgrade bedienen. Ein zweites Image

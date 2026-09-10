@@ -38,6 +38,13 @@ export default defineConfig({
         // a hook that calls server actions have no meaningful unit surface.
         'src/features/agenda/keyboard.ts',
         'src/features/agenda/use-persistence.ts',
+        // A hand-written WebSocket client with reconnect backoff, and the hook
+        // that drives it. What matters about them -- that an edit reaches the
+        // other browser -- is asserted end to end by Playwright and by the
+        // collaboration suite against a real server; a mocked socket here
+        // would only assert that the mock was called.
+        'src/features/collab/provider.ts',
+        'src/features/collab/use-collab-document.ts',
       ],
       thresholds: {
         'src/domain/**': { statements: 80, branches: 80, functions: 80, lines: 80 },

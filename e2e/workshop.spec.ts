@@ -1,3 +1,4 @@
+import { execFileSync } from 'node:child_process'
 import { expect, test, type Page } from '@playwright/test'
 
 /** Waits for the shared document to be connected before touching it. */
@@ -187,4 +188,113 @@ test('renders a printable day without any editor JavaScript', async ({ page }) =
   // was on screen, and a hydration pass would reflow it mid-dialog.
   await expect(page.getByRole('button', { name: /verschieben$/ })).toHaveCount(0)
   await expect(page.getByLabel('Dauer')).toHaveCount(0)
+})
+
+/**
+ * A token, made once for the whole file through the CLI an operator would use.
+ *
+ * There is no UI for this yet, and inventing a test-only endpoint would prove
+ * that endpoint works rather than that the real path does.
+ */
+let mcpToken: string | undefined
+function tokenForMcp(): string {
+  mcpToken ??= /gwp_[A-Za-z0-9_-]+/.exec(
+    execFileSync(
+      'node',
+      [
+        'scripts/cli.mjs',
+        'token',
+        'create',
+        '--email',
+        process.env.E2E_EMAIL ?? 'e2e@example.test',
+        '--name',
+        'e2e',
+        '--scopes',
+        'workshops:read,workshops:write',
+      ],
+      { encoding: 'utf8' },
+    ),
+  )![0]
+  return mcpToken
+}
+
+function idsFrom(page: Page): { workshopId: string; dayId: string } {
+  const match = /\/w\/([0-9a-f-]+)\/d\/([0-9a-f-]+)/.exec(page.url())
+  if (!match) throw new Error(`Keine Workshop-Ids in ${page.url()}`)
+  return { workshopId: match[1]!, dayId: match[2]! }
+}
+
+test('lets an LLM write into a day somebody has open', async ({ page, request }) => {
+  // The bug this guards: MCP used to write straight to the tables while the
+  // materialiser wrote the shared document back over them and deleted what it
+  // did not hold. The model's block vanished a few seconds later, silently,
+  // and only when somebody happened to have the day open.
+  await addBlock(page, 'Gruppenarbeit')
+  const { workshopId, dayId } = idsFrom(page)
+
+  const response = await request.post('/api/mcp', {
+    headers: {
+      authorization: `Bearer ${tokenForMcp()}`,
+      accept: 'application/json, text/event-stream',
+    },
+    data: {
+      jsonrpc: '2.0',
+      id: 1,
+      method: 'tools/call',
+      params: {
+        name: 'add_module',
+        arguments: { workshopId, dayId, typeKey: 'break', title: 'Vom Modell' },
+      },
+    },
+  })
+  expect(response.ok(), await response.text()).toBeTruthy()
+  expect(await response.text()).toContain('Block angelegt')
+
+  // In the open editor, with no reload: the model joined the same room.
+  await expect(page.getByRole('article', { name: 'Vom Modell' })).toBeVisible()
+
+  // And both blocks survive. Before the fix the human's block outlived the
+  // model's by exactly one materialisation.
+  await reloadUntil(page, async () => {
+    await expect(page.getByRole('article', { name: 'Gruppenarbeit' })).toBeVisible()
+    await expect(page.getByRole('article', { name: 'Vom Modell' })).toBeVisible()
+  })
+})
+
+test('lets an LLM write into a day nobody has open', async ({ page, request }) => {
+  await addBlock(page, 'Gruppenarbeit')
+  const { workshopId, dayId } = idsFrom(page)
+
+  // Close the editor first, and wait out the room's grace period, so the write
+  // has to open the room itself and seed it from the database. Seeding used to
+  // happen in the browser, which quietly made "somebody opened this page" a
+  // precondition -- and a model starting from an empty document would have had
+  // the materialiser delete the day.
+  await reloadUntil(page, async () => {
+    await expect(page.getByRole('article', { name: 'Gruppenarbeit' })).toBeVisible()
+  })
+  await page.goto('/library')
+
+  await expect(async () => {
+    const response = await request.post('/api/mcp', {
+      headers: {
+        authorization: `Bearer ${tokenForMcp()}`,
+        accept: 'application/json, text/event-stream',
+      },
+      data: {
+        jsonrpc: '2.0',
+        id: 1,
+        method: 'tools/call',
+        params: {
+          name: 'add_module',
+          arguments: { workshopId, dayId, typeKey: 'break', title: 'Später ergänzt' },
+        },
+      },
+    })
+    expect(await response.text()).toContain('Block angelegt')
+  }).toPass({ timeout: 20_000 })
+
+  await page.goto(`/w/${workshopId}/d/${dayId}`)
+  await expect(page.getByRole('article', { name: 'Gruppenarbeit' })).toBeVisible()
+  await expect(page.getByRole('article', { name: 'Später ergänzt' })).toBeVisible()
 })

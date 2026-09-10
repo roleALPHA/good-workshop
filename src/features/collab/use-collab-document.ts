@@ -3,7 +3,7 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import { uuidv7 } from 'uuidv7'
 import type * as Y from 'yjs'
-import { seedFromDayDoc, toDayDoc } from '@/domain/collab/doc'
+import { toDayDoc } from '@/domain/collab/doc'
 import type { DayDoc } from '@/domain/agenda/types'
 import type {
   AgendaDocument,
@@ -18,10 +18,9 @@ import { addModule, applyProjection, patchModule, removeModule } from './y-ops'
 /**
  * The editor, backed by a shared document.
  *
- * The server-rendered day is used twice and for different reasons: as the
- * first paint, so nothing flashes, and as the seed if this day has no CRDT
- * state yet. Seeding is guarded inside the document itself, so two people
- * opening an untouched day at the same moment cannot double it.
+ * The server-rendered day is the first paint, so nothing flashes while the
+ * socket opens. It is not the seed: the room fills the document from the
+ * database before anyone syncs against it.
  */
 
 export type CollabTarget = {
@@ -60,12 +59,11 @@ export function useCollabDocument(initial: DayDoc, target: CollabTarget): Agenda
       onState: setConnection,
       onPeers: setPeers,
       onPending: setPending,
-      onSynced: () => {
-        // Only after the first sync: seeding before it would race the server's
-        // state and create a second copy of every block.
-        seedFromDayDoc(provider.doc, initial)
-        setRevision((n) => n + 1)
-      },
+      // The document arrives populated -- the room seeds it from the database
+      // when it opens. This browser used to do the seeding, which quietly made
+      // "somebody opened this page" a precondition for the day existing as a
+      // CRDT at all, and an LLM writing through MCP does not open pages.
+      onSynced: () => setRevision((n) => n + 1),
     })
 
     providerRef.current = provider

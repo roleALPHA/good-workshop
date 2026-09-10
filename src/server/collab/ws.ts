@@ -8,6 +8,7 @@ import { encodeAwarenessUpdate } from 'y-protocols/awareness'
 import { assertWorkshopAccess } from '@/domain/agenda/access'
 import { SESSION_COOKIE_NAMES, verifySessionCookie } from '@/server/auth/session'
 import { withTenant, type Actor } from '@/server/db'
+import { hasScope, resolveBearer } from '@/server/mcp/auth'
 import { DEFAULT_TIMINGS, Room, type Connection, type RoomTimings } from './room'
 
 /**
@@ -21,10 +22,20 @@ import { DEFAULT_TIMINGS, Room, type Connection, type RoomTimings } from './room
  * Authentication is the session cookie the browser already sends on the
  * upgrade request. No ticket endpoint, no second token to mint and expire:
  * the credential that opens the editor is the credential that opens the socket.
+ * A personal access token is accepted the same way, because an LLM writing
+ * through MCP is a participant here and not a special case.
  */
 
 const MESSAGE_SYNC = 0
 const MESSAGE_AWARENESS = 1
+/**
+ * Out-of-band requests that are not part of the Yjs protocol.
+ *
+ * Exactly one so far: "write the tables out now". A human editor never needs
+ * it -- they read the document, not the tables -- but a tool call has to be
+ * able to answer "is it saved" with something better than a debounce timer.
+ */
+const MESSAGE_CONTROL = 2
 
 const rooms = new Map<string, Room>()
 const roomKey = (workshopId: string, dayId: string) => `${workshopId}:${dayId}`
@@ -65,7 +76,13 @@ export function startCollabServer(options: CollabServerOptions) {
       if (!actor) return reject(socket, 401, 'Nicht angemeldet oder kein Zugriff.')
 
       wss.handleUpgrade(request, socket, head, (ws) => {
-        void attach(ws, target.workshopId, target.dayId, actor, timings)
+        // A failure in here used to be an unhandled rejection and an open,
+        // silent socket: the client waited for a sync that was never coming
+        // and blamed the network. Close it and say why.
+        attach(ws, target.workshopId, target.dayId, actor, timings).catch((error) => {
+          console.error('collab: attach failed', { workshop: target.workshopId, error })
+          ws.close(1011, 'Raum konnte nicht geöffnet werden.')
+        })
       })
     })().catch((error) => {
       console.error('collab: upgrade failed', error)
@@ -97,7 +114,8 @@ function parseTarget(request: IncomingMessage, path: string) {
 }
 
 /**
- * Session cookie plus the same per-workshop capability check the web app uses.
+ * A session cookie or a personal access token, then the same per-workshop
+ * capability check the web app uses.
  *
  * Read access is not enough: a socket that can only read still receives every
  * keystroke, so a viewer gets a connection but their updates are ignored
@@ -105,19 +123,8 @@ function parseTarget(request: IncomingMessage, path: string) {
  * one under the impression they can edit.
  */
 async function authenticate(request: IncomingMessage, workshopId: string): Promise<Actor | null> {
-  const cookies = parseCookies(request.headers.cookie ?? '')
-  const raw = SESSION_COOKIE_NAMES.map((name) => cookies[name]).find(Boolean)
-  if (!raw) return null
-
-  const session = await verifySessionCookie(raw)
-  if (!session) return null
-
-  const actor: Actor = {
-    tenantId: session.tenantId,
-    memberId: session.memberId,
-    tenantRole: session.tenantRole,
-    source: 'web',
-  }
+  const actor = await identify(request)
+  if (!actor) return null
 
   try {
     await withTenant(actor, (tx) =>
@@ -129,6 +136,36 @@ async function authenticate(request: IncomingMessage, workshopId: string): Promi
   }
 }
 
+async function identify(request: IncomingMessage): Promise<Actor | null> {
+  const header = request.headers.authorization
+  if (header) {
+    const pat = await resolveBearer(header)
+    // A read-only token opening a write socket is a mistake worth naming
+    // early rather than letting it connect and silently drop every update.
+    if (!pat || !hasScope(pat, 'workshops:write')) return null
+    return {
+      tenantId: pat.tenantId,
+      memberId: pat.memberId,
+      tenantRole: pat.tenantRole,
+      source: 'mcp',
+    }
+  }
+
+  const cookies = parseCookies(request.headers.cookie ?? '')
+  const raw = SESSION_COOKIE_NAMES.map((name) => cookies[name]).find(Boolean)
+  if (!raw) return null
+
+  const session = await verifySessionCookie(raw)
+  if (!session) return null
+
+  return {
+    tenantId: session.tenantId,
+    memberId: session.memberId,
+    tenantRole: session.tenantRole,
+    source: 'web',
+  }
+}
+
 async function attach(
   ws: WebSocket,
   workshopId: string,
@@ -137,6 +174,22 @@ async function attach(
   timings: RoomTimings,
 ) {
   const key = roomKey(workshopId, dayId)
+
+  /**
+   * The socket is already receiving, and the room is not ready yet.
+   *
+   * A client sends its first sync step the moment the socket opens, and `ws`
+   * DISCARDS a message that has no listener rather than buffering it. Opening
+   * a room reads the log and, for a day nobody has opened before, the whole
+   * day out of the database -- easily long enough to lose that first message,
+   * after which both sides wait for each other forever.
+   */
+  const queued: Uint8Array[] = []
+  let deliver = (data: Uint8Array) => {
+    queued.push(data)
+  }
+  ws.on('message', (data: Buffer) => deliver(new Uint8Array(data)))
+  ws.on('error', () => ws.close())
 
   let room = rooms.get(key)
   if (!room) {
@@ -173,7 +226,15 @@ async function attach(
     { added, updated, removed }: { added: number[]; updated: number[]; removed: number[] },
     origin: unknown,
   ) => {
-    if (origin === connection) return
+    if (origin === connection) {
+      // The client's own awareness id, learned from its first presence
+      // message. It is what lets `remove` clear this cursor when the socket
+      // closes -- without it a closed tab leaves a ghost on everyone else's
+      // page for as long as the room lives.
+      const own = added[0] ?? updated[0]
+      if (own !== undefined) connection.awarenessId = own
+      return
+    }
     const changed = [...added, ...updated, ...removed]
     if (changed.length > 0) {
       connection.send(message(MESSAGE_AWARENESS, encodeAwarenessUpdate(room.awareness, changed)))
@@ -181,24 +242,22 @@ async function attach(
   }
   room.awareness.on('update', onAwareness)
 
-  ws.on('message', (data: Buffer) => {
-    try {
-      handleMessage(room, connection, new Uint8Array(data))
-    } catch (error) {
-      console.error('collab: bad message', { dayId, error })
-    }
-  })
-
   ws.on('close', () => {
     room.doc.off('update', onUpdate)
     room.awareness.off('update', onAwareness)
     room.remove(connection)
   })
 
-  ws.on('error', () => ws.close())
+  const open = room
+  deliver = (data) => {
+    void handleMessage(open, connection, data).catch((error) => {
+      console.error('collab: bad message', { dayId, error })
+    })
+  }
+  for (const data of queued.splice(0)) deliver(data)
 }
 
-function handleMessage(room: Room, connection: Connection, data: Uint8Array): void {
+async function handleMessage(room: Room, connection: Connection, data: Uint8Array): Promise<void> {
   const decoder = decoding.createDecoder(data)
   const type = decoding.readVarUint(decoder)
 
@@ -218,6 +277,26 @@ function handleMessage(room: Room, connection: Connection, data: Uint8Array): vo
     room.applyAwareness(update, connection)
     return
   }
+
+  if (type === MESSAGE_CONTROL) {
+    const request = JSON.parse(new TextDecoder().decode(decoding.readVarUint8Array(decoder))) as {
+      op?: string
+      id?: string
+    }
+    if (request.op !== 'flush') return
+
+    // Messages are handled in order, so a flush reply also proves that
+    // whatever the caller sent before it has been applied. One round trip
+    // answers both "did you get it" and "is it in the tables".
+    const contentVersion = await room.flushNow()
+    connection.send(
+      controlMessage({ op: 'flushed', id: request.id, contentVersion: contentVersion.toString() }),
+    )
+  }
+}
+
+function controlMessage(payload: Record<string, unknown>): Uint8Array {
+  return message(MESSAGE_CONTROL, new TextEncoder().encode(JSON.stringify(payload)))
 }
 
 function encodeSyncStep1(doc: Y.Doc): Uint8Array {

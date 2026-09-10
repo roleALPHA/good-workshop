@@ -5,8 +5,13 @@ import {
   encodeAwarenessUpdate,
   removeAwarenessStates,
 } from 'y-protocols/awareness'
+import { assertWorkshopAccess } from '@/domain/agenda/access'
+import { loadDay } from '@/domain/agenda/repo'
+import { dayOf, seedFromDayDoc } from '@/domain/collab/doc'
+import { eq } from 'drizzle-orm'
 import type { Actor } from '@/server/db'
 import { withTenant } from '@/server/db'
+import { workshop } from '@/server/db/schema'
 import { materializeDay } from './materialize'
 import { appendUpdate, loadDoc, maybeCompact } from './store'
 
@@ -79,11 +84,35 @@ export class Room {
     })
   }
 
-  /** Replays the stored log. Called once, before any client is served. */
+  /**
+   * Replays the stored log, and seeds from the relational day if there is none.
+   *
+   * Seeding belongs HERE and not in the browser. It used to happen on the
+   * client, which was fine as long as a browser was the only thing that ever
+   * opened a day -- but an LLM writing through MCP opens rooms too, and it
+   * would have started from an empty document. The materialiser writes the
+   * document back and deletes what it does not hold, so the first model write
+   * to a day nobody had opened yet would have erased that day.
+   *
+   * The guard inside `seedFromDayDoc` is what makes this safe to call on every
+   * load: a day that already has state keeps it.
+   */
   async load(): Promise<void> {
     if (this.loaded) return
-    const stored = await withTenant(this.actor, (tx) => loadDoc(tx, this.dayId))
-    Y.applyUpdate(this.doc, Y.encodeStateAsUpdate(stored.doc), 'load')
+
+    await withTenant(this.actor, async (tx) => {
+      const stored = await loadDoc(tx, this.dayId)
+      Y.applyUpdate(this.doc, Y.encodeStateAsUpdate(stored.doc), 'load')
+
+      if (dayOf(this.doc).get('seeded') === true) return
+
+      const access = await assertWorkshopAccess(tx, this.actor, this.workshopId, 'workshop.read')
+      const { doc } = await loadDay(tx, access, this.dayId)
+      // Deliberately not tagged 'load': this IS new state and has to reach the
+      // log, or the next room would seed all over again.
+      seedFromDayDoc(this.doc, doc)
+    })
+
     this.loaded = true
   }
 
@@ -191,8 +220,16 @@ export class Room {
     }
   }
 
-  /** Writes everything out. Called when the last editor leaves. */
-  async flush(): Promise<void> {
+  /**
+   * Writes everything out now and reports where the relational tables landed.
+   *
+   * The debounces exist because nobody is waiting for the tables -- except an
+   * MCP client, which is. A model that writes a day and immediately reads it
+   * back would otherwise get the state from before its own call, and would
+   * either write it a second time or report to the user that nothing happened.
+   * One explicit flush turns that into read-after-write.
+   */
+  async flushNow(): Promise<bigint> {
     if (this.persistTimer) clearTimeout(this.persistTimer)
     if (this.materializeTimer) clearTimeout(this.materializeTimer)
     this.persistTimer = null
@@ -200,6 +237,20 @@ export class Room {
 
     await this.persist()
     await this.materialize()
+
+    return withTenant(this.actor, async (tx) => {
+      const row = await tx
+        .select({ contentVersion: workshop.contentVersion })
+        .from(workshop)
+        .where(eq(workshop.id, this.workshopId))
+        .limit(1)
+      return row[0]?.contentVersion ?? 0n
+    })
+  }
+
+  /** Writes everything out. Called when the last editor leaves. */
+  async flush(): Promise<void> {
+    await this.flushNow()
     this.doc.destroy()
   }
 }

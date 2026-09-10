@@ -1,15 +1,31 @@
 import { z } from 'zod'
-import { and, desc, eq, isNull } from 'drizzle-orm'
+import { desc, eq, isNull } from 'drizzle-orm'
+import type * as Y from 'yjs'
+import { uuidv7 } from 'uuidv7'
 import type { McpServer } from '@modelcontextprotocol/sdk/server/mcp.js'
-import { assertWorkshopAccess, VersionConflictError } from '@/domain/agenda/access'
-import { addModule, applyAgenda, deleteModule, loadDay, moveModule } from '@/domain/agenda/repo'
+import {
+  assertWorkshopAccess,
+  VersionConflictError,
+  type WorkshopAccess,
+} from '@/domain/agenda/access'
+import { loadDay } from '@/domain/agenda/repo'
+import {
+  addClusterBlock,
+  addModuleBlock,
+  clearBlocks,
+  moveBlock,
+  removeBlock,
+  setDayFields,
+  type NewModuleBlock,
+} from '@/domain/collab/ops'
 import { createWorkshop, firstDayOf, listDays } from '@/domain/workshop/repo'
 import { computeSchedule } from '@/domain/schedule/computeSchedule'
 import { formatDuration, formatTime } from '@/features/agenda/duration'
 import { flattenDay, toScheduleItems } from '@/features/agenda/flatten'
+import { editInRoom } from '@/server/collab/client'
 import { renderDayMarkdown } from '@/server/export/markdown'
-import { withTenant } from '@/server/db'
-import { auditEvent, moduleType, workshop, workshopDay } from '@/server/db/schema'
+import { withTenant, type Tx } from '@/server/db'
+import { auditEvent, moduleType, workshop } from '@/server/db/schema'
 import { requireScope, type PatActor } from './auth'
 
 /**
@@ -29,7 +45,14 @@ import { requireScope, type PatActor } from './auth'
  *    a model write to somebody's data.
  */
 
-type Ctx = { actor: PatActor }
+/**
+ * The raw Authorization header travels with the context.
+ *
+ * Writes open a socket to the collaboration room, and the room authenticates
+ * the same credential the tool call arrived with -- rather than the MCP server
+ * holding some second, more powerful key. There is still no privileged path.
+ */
+type Ctx = { actor: PatActor; authorization: string }
 
 const ok = (text: string, structured?: Record<string, unknown>) => ({
   content: [{ type: 'text' as const, text }],
@@ -39,7 +62,7 @@ const ok = (text: string, structured?: Record<string, unknown>) => ({
 const fail = (text: string) => ({ content: [{ type: 'text' as const, text }], isError: true })
 
 export function registerTools(server: McpServer, ctx: Ctx): void {
-  const { actor } = ctx
+  const { actor, authorization } = ctx
 
   const audit = (
     tx: Parameters<Parameters<typeof withTenant>[1]>[0],
@@ -225,6 +248,51 @@ export function registerTools(server: McpServer, ctx: Ctx): void {
     },
   )
 
+  // ── Agenda-Schreibvorgänge ──────────────────────────────────────────────
+  //
+  // Every one of these goes through the collaboration room rather than through
+  // the repository, and that is load-bearing rather than tidy. The room's
+  // document is what the materialiser writes back to the tables, deleting
+  // whatever it does not hold. A tool writing to the tables directly would
+  // have its block removed again a few seconds later -- silently, and only
+  // when somebody happened to have the day open, which is the worst possible
+  // shape for a bug. One day has one write path.
+  //
+  // The side effect is what we actually wanted: the model joins the room like
+  // anybody else, so a person editing the day sees it arrive.
+
+  const presence = { name: 'KI-Assistent', color: 'violet' }
+
+  const inRoom = <T>(workshopId: string, dayId: string, edit: (doc: Y.Doc) => T) =>
+    editInRoom({ workshopId, dayId, authorization, presence }, edit)
+
+  /**
+   * Access and version check before the room is opened.
+   *
+   * Compare-and-swap still matters even though the CRDT merges: merging is the
+   * right answer for two people editing different fields, and the wrong answer
+   * for `apply_agenda` with mode=replace, which is destructive on purpose.
+   */
+  const preflight = async <T>(
+    workshopId: string,
+    expectedVersion: string | undefined,
+    prepare?: (tx: Tx, access: WorkshopAccess) => Promise<T>,
+  ): Promise<T | undefined> =>
+    withTenant(actor, async (tx) => {
+      const access = await assertWorkshopAccess(tx, actor, workshopId, 'workshop.content.write')
+      if (expectedVersion !== undefined && BigInt(expectedVersion) !== access.contentVersion) {
+        throw new VersionConflictError(BigInt(expectedVersion), access.contentVersion)
+      }
+      return prepare ? prepare(tx, access) : undefined
+    })
+
+  /** Bookkeeping, and it never fails a tool call. */
+  const record = (action: string, entityId: string | null, data: Record<string, unknown> = {}) =>
+    withTenant(actor, (tx) => audit(tx, action, entityId, data)).then(
+      () => {},
+      () => {},
+    )
+
   server.registerTool(
     'apply_agenda',
     {
@@ -268,21 +336,46 @@ export function registerTools(server: McpServer, ctx: Ctx): void {
     async ({ workshopId, dayId, mode, items, expectedVersion }) => {
       requireScope(actor, 'workshops:write')
       try {
-        return await withTenant(actor, async (tx) => {
-          const access = await assertWorkshopAccess(tx, actor, workshopId, 'workshop.content.write')
-          const result = await applyAgenda(
-            tx,
-            access,
-            dayId,
-            mode,
-            items,
-            expectedVersion === undefined ? undefined : BigInt(expectedVersion),
-          )
-          await audit(tx, 'agenda.apply', workshopId, { dayId, mode, created: result.created })
-          return ok(`${result.created} Einträge geschrieben.`, {
-            created: result.created,
-            contentVersion: result.contentVersion.toString(),
+        const types = await preflight(workshopId, expectedVersion, (tx) => readTypes(tx))
+        if (!types) return fail('Modultypen konnten nicht gelesen werden.')
+
+        // Every type is resolved before anything is written: a day half
+        // applied because the eleventh block named a type that does not exist
+        // is worse than a day not applied at all.
+        const wanted = items.flatMap((item) =>
+          item.kind === 'cluster' ? (item.children ?? []).map((c) => c.typeKey) : [item.typeKey],
+        )
+        const unknown = [...new Set(wanted)].filter((key) => !types.has(key))
+        if (unknown.length > 0) return fail(unknownTypes(unknown, types))
+
+        const { result, contentVersion } = await inRoom(workshopId, dayId, (doc) => {
+          let created = 0
+          doc.transact(() => {
+            if (mode === 'replace') clearBlocks(doc)
+
+            for (const item of items) {
+              if (item.kind === 'module') {
+                addModuleBlock(doc, uuidv7(), moduleFrom(item, types))
+                created += 1
+                continue
+              }
+
+              const clusterId = uuidv7()
+              addClusterBlock(doc, clusterId, { title: item.title, color: item.color ?? null })
+              created += 1
+              for (const child of item.children ?? []) {
+                addModuleBlock(doc, uuidv7(), { ...moduleFrom(child, types), parentId: clusterId })
+                created += 1
+              }
+            }
           })
+          return created
+        })
+
+        await record('agenda.apply', workshopId, { dayId, mode, created: result })
+        return ok(`${result} Einträge geschrieben.`, {
+          created: result,
+          contentVersion: contentVersion.toString(),
         })
       } catch (error) {
         return toolError(error)
@@ -294,49 +387,36 @@ export function registerTools(server: McpServer, ctx: Ctx): void {
     'add_module',
     {
       title: 'Block hinzufügen',
-      description: 'Hängt einen einzelnen Block an. Für ganze Abläufe apply_agenda benutzen.',
+      description:
+        'Hängt einen einzelnen Block an das Ende des Tages oder eines Clusters. ' +
+        'Für ganze Abläufe apply_agenda benutzen.',
       inputSchema: {
         workshopId: z.string().uuid(),
         dayId: z.string().uuid(),
         typeKey: z.string(),
         title: z.string().optional(),
         durationMinutes: z.number().int().min(0).max(1440).optional(),
+        clusterId: z.string().uuid().nullable().default(null),
         expectedVersion: z.string().regex(/^\d+$/).optional(),
       },
     },
-    async ({ workshopId, dayId, typeKey, title, durationMinutes, expectedVersion }) => {
+    async ({ workshopId, dayId, typeKey, title, durationMinutes, clusterId, expectedVersion }) => {
       requireScope(actor, 'workshops:write')
       try {
-        return await withTenant(actor, async (tx) => {
-          const access = await assertWorkshopAccess(tx, actor, workshopId, 'workshop.content.write')
-          const types = await tx
-            .select({ id: moduleType.id, name: moduleType.name, key: moduleType.key })
-            .from(moduleType)
-          const type = types.find((t) => t.key === typeKey)
-          if (!type) {
-            return fail(
-              `Unbekannter Modultyp "${typeKey}". Verfügbar: ${types.map((t) => t.key).join(', ')}`,
-            )
-          }
+        const types = await preflight(workshopId, expectedVersion, (tx) => readTypes(tx))
+        if (!types) return fail('Modultypen konnten nicht gelesen werden.')
+        if (!types.has(typeKey)) return fail(unknownTypes([typeKey], types))
 
-          const created = await addModule(
-            tx,
-            access,
-            {
-              dayId,
-              clusterId: null,
-              moduleTypeId: type.id,
-              title: title ?? type.name,
-              durationMinutes,
-            },
-            expectedVersion === undefined ? undefined : BigInt(expectedVersion),
-          )
-          await audit(tx, 'module.create', workshopId, { moduleId: created.id, typeKey })
-          return ok(`Block angelegt: ${created.id}`, {
-            id: created.id,
-            contentVersion: created.contentVersion.toString(),
-          })
-        })
+        const id = uuidv7()
+        const { contentVersion } = await inRoom(workshopId, dayId, (doc) =>
+          addModuleBlock(doc, id, {
+            ...moduleFrom({ typeKey, title, durationMinutes }, types),
+            parentId: clusterId,
+          }),
+        )
+
+        await record('module.create', workshopId, { moduleId: id, typeKey })
+        return ok(`Block angelegt: ${id}`, { id, contentVersion: contentVersion.toString() })
       } catch (error) {
         return toolError(error)
       }
@@ -361,19 +441,19 @@ export function registerTools(server: McpServer, ctx: Ctx): void {
     async ({ workshopId, moduleId, dayId, clusterId, afterId, expectedVersion }) => {
       requireScope(actor, 'workshops:write')
       try {
-        return await withTenant(actor, async (tx) => {
-          const access = await assertWorkshopAccess(tx, actor, workshopId, 'workshop.content.write')
-          const version = await moveModule(
-            tx,
-            access,
-            moduleId,
-            { dayId, clusterId },
-            afterId,
-            expectedVersion === undefined ? undefined : BigInt(expectedVersion),
+        await preflight(workshopId, expectedVersion)
+        const { result, contentVersion } = await inRoom(workshopId, dayId, (doc) =>
+          moveBlock(doc, moduleId, clusterId, afterId),
+        )
+        if (!result) {
+          return fail(
+            `Block ${moduleId} liegt nicht an diesem Tag, oder das Ziel-Cluster gibt es nicht. ` +
+              'Lies den Tag mit get_workshop neu.',
           )
-          await audit(tx, 'module.move', workshopId, { moduleId })
-          return ok('Verschoben.', { contentVersion: version.toString() })
-        })
+        }
+
+        await record('module.move', workshopId, { moduleId })
+        return ok('Verschoben.', { contentVersion: contentVersion.toString() })
       } catch (error) {
         return toolError(error)
       }
@@ -384,27 +464,26 @@ export function registerTools(server: McpServer, ctx: Ctx): void {
     'delete_module',
     {
       title: 'Block löschen',
-      description: 'Löscht einen Block endgültig.',
+      description:
+        'Löscht einen Block endgültig. Bei einem Cluster werden seine Blöcke mitgelöscht.',
       inputSchema: {
         workshopId: z.string().uuid(),
+        dayId: z.string().uuid(),
         moduleId: z.string().uuid(),
         expectedVersion: z.string().regex(/^\d+$/).optional(),
       },
     },
-    async ({ workshopId, moduleId, expectedVersion }) => {
+    async ({ workshopId, dayId, moduleId, expectedVersion }) => {
       requireScope(actor, 'workshops:write')
       try {
-        return await withTenant(actor, async (tx) => {
-          const access = await assertWorkshopAccess(tx, actor, workshopId, 'workshop.content.write')
-          const version = await deleteModule(
-            tx,
-            access,
-            moduleId,
-            expectedVersion === undefined ? undefined : BigInt(expectedVersion),
-          )
-          await audit(tx, 'module.delete', workshopId, { moduleId })
-          return ok('Gelöscht.', { contentVersion: version.toString() })
-        })
+        await preflight(workshopId, expectedVersion)
+        const { result, contentVersion } = await inRoom(workshopId, dayId, (doc) =>
+          removeBlock(doc, moduleId),
+        )
+        if (result === 0) return fail(`Block ${moduleId} liegt nicht an diesem Tag.`)
+
+        await record('module.delete', workshopId, { moduleId, removed: result })
+        return ok(`Gelöscht (${result}).`, { contentVersion: contentVersion.toString() })
       } catch (error) {
         return toolError(error)
       }
@@ -425,18 +504,62 @@ export function registerTools(server: McpServer, ctx: Ctx): void {
     },
     async ({ workshopId, dayId, startMinute }) => {
       requireScope(actor, 'workshops:write')
-      return withTenant(actor, async (tx) => {
-        await assertWorkshopAccess(tx, actor, workshopId, 'workshop.content.write')
-        await tx
-          .update(workshopDay)
-          .set({
-            startTime: `${String(Math.floor(startMinute / 60)).padStart(2, '0')}:${String(startMinute % 60).padStart(2, '0')}:00`,
-          })
-          .where(and(eq(workshopDay.id, dayId), eq(workshopDay.workshopId, workshopId)))
-        await audit(tx, 'day.update', workshopId, { dayId, startMinute })
-        return ok(`Tagesbeginn: ${formatTime(startMinute)}`)
-      })
+      try {
+        await preflight(workshopId, undefined)
+        // Through the room like everything else. Writing start_time straight
+        // to the table would have been reverted by the next materialisation,
+        // which reads it from the document.
+        const { contentVersion } = await inRoom(workshopId, dayId, (doc) =>
+          setDayFields(doc, { startMinute }),
+        )
+
+        await record('day.update', workshopId, { dayId, startMinute })
+        return ok(`Tagesbeginn: ${formatTime(startMinute)}`, {
+          contentVersion: contentVersion.toString(),
+        })
+      } catch (error) {
+        return toolError(error)
+      }
     },
+  )
+}
+
+type ResolvedType = { id: string; name: string; defaultDurationMinutes: number }
+
+async function readTypes(tx: Tx): Promise<Map<string, ResolvedType>> {
+  const rows = await tx
+    .select({
+      id: moduleType.id,
+      key: moduleType.key,
+      name: moduleType.name,
+      defaultDurationMinutes: moduleType.defaultDurationMinutes,
+    })
+    .from(moduleType)
+  return new Map(rows.map((row) => [row.key, row]))
+}
+
+function moduleFrom(
+  input: {
+    typeKey: string
+    title?: string
+    durationMinutes?: number
+    pinnedStartMinute?: number | null
+  },
+  types: Map<string, ResolvedType>,
+): NewModuleBlock {
+  const type = types.get(input.typeKey)!
+  return {
+    moduleTypeId: type.id,
+    title: input.title ?? type.name,
+    durationMinutes: input.durationMinutes ?? type.defaultDurationMinutes,
+    pinnedStartMinute: input.pinnedStartMinute ?? null,
+  }
+}
+
+/** Errors name the allowed values, so the next call can be right. */
+function unknownTypes(keys: string[], types: Map<string, ResolvedType>): string {
+  return (
+    `Unbekannte Modultypen: ${keys.join(', ')}. ` + `Verfügbar: ${[...types.keys()].join(', ')}`
   )
 }
 

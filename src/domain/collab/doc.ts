@@ -1,6 +1,6 @@
 import * as Y from 'yjs'
 import type { ClusterDto, DayDoc, ModuleDto } from '@/domain/agenda/types'
-import { sortByPosition } from '@/domain/agenda/ordering'
+import { keyBetween, sortByPosition } from '@/domain/agenda/ordering'
 
 /**
  * A workshop day as a CRDT.
@@ -79,20 +79,34 @@ export function seedFromDayDoc(doc: Y.Doc, source: DayDoc): void {
     // Ordinals become fractional keys again. The DTO carries ordinals because
     // that is what clients and LLMs can reason about; the CRDT needs the sort
     // key back, because that is what makes a move a single-field write.
+    //
+    // Real keys, not zero-padded ordinals. A padded number sorts correctly and
+    // is not a valid fractional key, so the first append to a seeded day threw
+    // instead of adding a block -- the seed has to hand back keys the ordering
+    // helpers can keep building on.
     const dayLevel = sortByPosition([
       ...source.clusters.map((c) => ({ id: c.id, position: pad(c.order) })),
       ...source.modules
         .filter((m) => m.clusterId === null)
         .map((m) => ({ id: m.id, position: pad(m.order) })),
     ])
-    const dayPositions = new Map(dayLevel.map((row, index) => [row.id, pad(index)]))
+    const dayPositions = keysFor(dayLevel.map((row) => row.id))
+    const childPositions = new Map<string, string>()
+    for (const cluster of source.clusters) {
+      const children = sortByPosition(
+        source.modules
+          .filter((m) => m.clusterId === cluster.id)
+          .map((m) => ({ id: m.id, position: pad(m.order) })),
+      ).map((row) => row.id)
+      for (const [id, key] of keysFor(children)) childPositions.set(id, key)
+    }
 
     for (const cluster of source.clusters) {
       blocks.set(
         cluster.id,
         newBlock({
           kind: 'cluster',
-          position: dayPositions.get(cluster.id) ?? pad(cluster.order),
+          position: dayPositions.get(cluster.id) ?? keyBetween(null, null),
           parentId: null,
           title: cluster.title,
           color: cluster.color,
@@ -106,7 +120,8 @@ export function seedFromDayDoc(doc: Y.Doc, source: DayDoc): void {
         newBlock({
           kind: 'module',
           position:
-            mod.clusterId === null ? (dayPositions.get(mod.id) ?? pad(mod.order)) : pad(mod.order),
+            (mod.clusterId === null ? dayPositions.get(mod.id) : childPositions.get(mod.id)) ??
+            keyBetween(null, null),
           parentId: mod.clusterId,
           title: mod.title,
           moduleTypeId: mod.moduleTypeId,
@@ -256,5 +271,16 @@ export function readDayFields(doc: Y.Doc): { startMinute: number; title: string 
   }
 }
 
-/** Zero-padded so plain string comparison orders numerically. */
+/** Zero-padded so plain string comparison orders numerically. Ordering only. */
 const pad = (order: number) => String(order).padStart(6, '0')
+
+/** Evenly spaced fractional keys for a list that is already in order. */
+function keysFor(ids: string[]): Map<string, string> {
+  const out = new Map<string, string>()
+  let previous: string | null = null
+  for (const id of ids) {
+    previous = keyBetween(previous, null)
+    out.set(id, previous)
+  }
+  return out
+}
