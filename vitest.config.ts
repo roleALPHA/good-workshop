@@ -38,6 +38,7 @@ export default defineConfig({
         // separation is the thing worth asserting, and it does not exist
         // without a database.
         'src/domain/tenant/members.ts',
+        'src/domain/tenant/tokens.ts',
         // Type declarations: nothing to execute.
         '**/types.ts',
         // Browser glue, covered by Playwright: a dnd-kit coordinate getter and

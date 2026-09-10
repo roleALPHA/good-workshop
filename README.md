@@ -80,13 +80,17 @@ Releases entstehen aus einem Git-Tag `v*` und landen als Multi-Arch-Image
 GoodWorkshop ist ein MCP-Server: ein LLM-Client wie Claude Desktop oder Claude Code kann
 Workshops lesen und schreiben.
 
+Ein Token legst du unter **Token** in deinen Einstellungen an. Es wird einmal angezeigt und
+nur als Hash gespeichert; im Client trägst du es als `Authorization: Bearer gwp_…` gegen
+`https://<host>/api/mcp` ein. Ein Token handelt als die Person, die es angelegt hat — es
+kann nie mehr, als diese Person selbst darf.
+
+Für Installationen ohne Browserzugang geht es auch von der Kommandozeile:
+
 ```bash
 docker compose exec app node scripts/cli.mjs token create \
   --email du@example.com --name "Claude" --scopes workshops:read,workshops:write,module_types:read
 ```
-
-Das Token wird einmal angezeigt und nur als Hash gespeichert. Im Client als
-`Authorization: Bearer gwp_…` gegen `https://<host>/api/mcp` eintragen.
 
 Das wichtigste Werkzeug ist `apply_agenda`: es schreibt einen kompletten Tagesablauf in
 einem Zug. Zwanzig einzelne, voneinander abhängige Aufrufe sind der Punkt, an dem Modelle

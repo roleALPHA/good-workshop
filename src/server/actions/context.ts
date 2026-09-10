@@ -11,6 +11,7 @@ import {
   type Capability,
   type WorkshopAccess,
 } from '@/domain/agenda/access'
+import { TokenError } from '@/domain/tenant/tokens'
 import { TagError } from '@/domain/workshop/tags'
 
 /**
@@ -89,9 +90,9 @@ function toResult<T>(error: unknown): ActionResult<T> {
   if (error instanceof ForbiddenError) {
     return fail('forbidden', error.message)
   }
-  // Carries a sentence written for the person reading it. Flattening it into
-  // "that did not work" would throw away the only useful part.
-  if (error instanceof TagError) {
+  // Both carry a sentence written for the person reading it. Flattening them
+  // into "that did not work" would throw away the only useful part.
+  if (error instanceof TagError || error instanceof TokenError) {
     return fail('invalid_input', error.message)
   }
   if (error instanceof VersionConflictError) {

@@ -1,6 +1,6 @@
 import { redirect } from 'next/navigation'
 import Link from 'next/link'
-import { LogOut, Palette, Users } from 'lucide-react'
+import { KeyRound, LogOut, Palette, Users } from 'lucide-react'
 import { AppFooter } from '@/components/layout/app-footer'
 import { BrandMark, BrandStyle } from '@/components/layout/tenant-brand'
 import { readSession } from '@/server/auth/session'
@@ -45,6 +45,13 @@ export default async function AppLayout({ children }: { children: React.ReactNod
             </Link>
           )}
           <span className="flex-1" />
+          <Link
+            href="/settings/tokens"
+            className="inline-flex items-center gap-1.5 rounded px-2 py-1 text-[14px] text-[var(--fg-muted)] hover:bg-[var(--surface-raised)]"
+          >
+            <KeyRound aria-hidden className="size-4" />
+            <span className="hidden sm:inline">Token</span>
+          </Link>
           <span className="hidden text-[14px] text-[var(--fg-muted)] sm:inline">
             {session.displayName || session.email}
           </span>
