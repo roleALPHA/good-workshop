@@ -65,8 +65,9 @@ docker build -t goodworkshop .
 docker run -p 3000:3000 goodworkshop
 ```
 
-Das Image ist multi-stage gebaut, läuft als non-root `node`, wiegt rund 70 MB und hat
-einen `HEALTHCHECK` auf `/api/health`. Kein Secret steckt in einem Layer — alles, was zur
+Das Image ist multi-stage gebaut, läuft als non-root `node`, lädt rund 70 MB herunter
+(entpackt etwa 316 MB) und hat einen `HEALTHCHECK` auf `/api/health`, der auch meldet,
+welcher Commit läuft. Kein Secret steckt in einem Layer — alles, was zur
 Laufzeit gebraucht wird (`DATABASE_URL`, `AUTH_SECRET`, `GW_APP_URL`, …), kommt als
 Environment-Variable beim Start.
 
