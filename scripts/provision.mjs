@@ -6,7 +6,7 @@
  * install usable and an upgraded install consistent, and it runs unattended.
  */
 import { readFile } from 'node:fs/promises'
-import { randomUUID } from 'node:crypto'
+import { createHash, randomBytes, randomUUID } from 'node:crypto'
 import { dirname, join } from 'node:path'
 import { fileURLToPath } from 'node:url'
 import pg from 'pg'
@@ -109,6 +109,8 @@ try {
     }
   }
 
+  await bootstrapAdmin(client)
+
   await client.query('commit')
   console.log(
     `Provisioned ${tenants.length} tenant(s): ${created} module type(s) created, ${updated} updated.`,
@@ -118,4 +120,68 @@ try {
   throw error
 } finally {
   await client.end()
+}
+
+/**
+ * First-run bootstrap. This is the single feature that decides whether an
+ * on-prem install succeeds.
+ *
+ * The link is printed to STDOUT regardless of mail configuration, because the
+ * realistic failure is an install with neither HTTPS nor an SMTP relay -- where
+ * without this there is literally no way in.
+ */
+async function bootstrapAdmin(client) {
+  const email = process.env.GW_BOOTSTRAP_ADMIN_EMAIL?.trim().toLowerCase()
+  if (!email) return
+
+  // The identity tables are unreachable for gw_app by design -- that separation
+  // is what stops an ORM mistake outside the auth module from reading
+  // credential material. Stepping into gw_auth explicitly is the sanctioned
+  // door, and because gw_app is NOINHERIT the privilege exists only until this
+  // transaction ends.
+  await client.query('set local role gw_auth')
+
+  const { rows: existing } = await client.query('select id from identity where email = $1', [email])
+  let identityId = existing[0]?.id
+
+  if (!identityId) {
+    const { rows } = await client.query(
+      'insert into identity (id, email, email_verified_at) values ($1, $2, now()) returning id',
+      [randomUUID(), email],
+    )
+    identityId = rows[0].id
+  }
+
+  await client.query('reset role')
+  await client.query(`select set_config('app.tenant_id', $1, true)`, [DEFAULT_TENANT_ID])
+
+  const { rows: members } = await client.query(
+    `insert into member (id, tenant_id, identity_id, role, status)
+     values ($1, $2, $3, 'admin', 'active')
+     on conflict (tenant_id, identity_id) do nothing
+     returning id`,
+    [randomUUID(), DEFAULT_TENANT_ID, identityId],
+  )
+
+  // Only on the very first run: printing a fresh login link on every boot would
+  // put a working credential into the log on every restart.
+  if (members.length === 0) return
+
+  await client.query('set local role gw_auth')
+  const secret = randomBytes(32).toString('base64url')
+  const tokenHash = createHash('sha256').update(secret).digest('hex')
+  await client.query(
+    `insert into email_token (id, purpose, email, identity_id, tenant_id, token_hash, expires_at)
+     values ($1, 'login', $2, $3, $4, $5, now() + interval '24 hours')`,
+    [randomUUID(), email, identityId, DEFAULT_TENANT_ID, tokenHash],
+  )
+  await client.query('reset role')
+
+  const base = process.env.GW_APP_URL ?? 'http://localhost:3000'
+  console.log('')
+  console.log('  Admin angelegt: ' + email)
+  console.log('  Einmaliger Anmeldelink (24 Stunden gültig):')
+  console.log('')
+  console.log('    ' + new URL('/verify?token=' + secret, base))
+  console.log('')
 }

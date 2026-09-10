@@ -1,0 +1,92 @@
+import { randomUUID } from 'node:crypto'
+import pg from 'pg'
+import { afterAll, beforeAll, describe, expect, it } from 'vitest'
+import { consumeMagicLink, issueMagicLink } from './magic-link'
+import { authConfig } from './config'
+
+/**
+ * The e-mail token path, against a real database.
+ *
+ * This is a full authentication route, not a fallback: an on-prem install
+ * without TLS has no passkeys at all, so every property here is load-bearing.
+ */
+
+const ops = new pg.Client({ connectionString: process.env.OPS_DATABASE_URL })
+const email = `magic-${randomUUID()}@example.test`
+const identityId = randomUUID()
+
+beforeAll(async () => {
+  await ops.connect()
+  await ops.query(
+    `insert into tenant (id, slug, name) values ($1, $2, 'Test') on conflict (id) do nothing`,
+    [authConfig.defaultTenantId, 'default'],
+  )
+  await ops.query('insert into identity (id, email, status) values ($1, $2, $3)', [
+    identityId,
+    email,
+    'active',
+  ])
+  await ops.query(
+    `insert into member (id, tenant_id, identity_id, role, status)
+     values ($1, $2, $3, 'member', 'invited')`,
+    [randomUUID(), authConfig.defaultTenantId, identityId],
+  )
+})
+
+afterAll(async () => {
+  await ops.query('delete from identity where id = $1', [identityId])
+  await ops.end()
+})
+
+const tokenOf = (link: string) => new URL(link).searchParams.get('token')!
+
+describe('magic links', () => {
+  it('issues a link for a known address', async () => {
+    const issued = await issueMagicLink(email)
+    expect(issued?.email).toBe(email)
+    expect(tokenOf(issued!.link)).toHaveLength(43)
+  })
+
+  it('says nothing about unknown addresses', async () => {
+    // Not an error, not a different message: an anonymous visitor must not be
+    // able to use this endpoint to find out which addresses have accounts.
+    expect(await issueMagicLink(`nobody-${randomUUID()}@example.test`)).toBeNull()
+  })
+
+  it('rejects something that is not an address before touching the database', async () => {
+    expect(await issueMagicLink('kein-at-zeichen')).toBeNull()
+  })
+
+  it('can be consumed exactly once', async () => {
+    const issued = await issueMagicLink(email)
+    const token = tokenOf(issued!.link)
+
+    const first = await consumeMagicLink(token)
+    expect(first?.identityId).toBe(identityId)
+
+    // The single-use property comes from UPDATE ... WHERE consumed_at IS NULL,
+    // so two concurrent requests race in the database and exactly one wins.
+    expect(await consumeMagicLink(token)).toBeNull()
+  })
+
+  it('refuses a token that has expired', async () => {
+    const issued = await issueMagicLink(email)
+    const token = tokenOf(issued!.link)
+    await ops.query(`update email_token set expires_at = now() - interval '1 minute'`)
+    expect(await consumeMagicLink(token)).toBeNull()
+  })
+
+  it('refuses a token that was never issued', async () => {
+    expect(await consumeMagicLink('vollstaendig-erfunden')).toBeNull()
+  })
+
+  it('stores only a hash, so a stolen dump yields no working links', async () => {
+    const issued = await issueMagicLink(email)
+    const token = tokenOf(issued!.link)
+    const { rows } = await ops.query(
+      'select token_hash from email_token order by created_at desc limit 1',
+    )
+    expect(rows[0].token_hash).not.toBe(token)
+    expect(rows[0].token_hash).toMatch(/^[0-9a-f]{64}$/)
+  })
+})

@@ -95,8 +95,10 @@ jobs:
       # The most important job in this workflow. A table shipped without RLS is
       # a silent, total data leak with no symptom -- no feature breaks, and
       # every tenant can read every other tenant's rows.
-      - name: Tenant isolation
+      - name: Tenant isolation and auth
         run: pnpm test:db
+        env:
+          GW_APP_URL: http://localhost:3000
 
   build:
     name: Docker Build
