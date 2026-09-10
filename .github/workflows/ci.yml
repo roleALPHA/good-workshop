@@ -116,21 +116,46 @@ jobs:
           tags: goodworkshop:ci
           cache-from: type=gha
           cache-to: type=gha,mode=max
+      # Deliberately WITHOUT a database. This step is about the image -- does
+      # the standalone bundle boot with every file it needs -- and the schema
+      # is proven against a real Postgres by the `db` job. Two things are
+      # asserted, and the second is the interesting one: the health endpoint
+      # must fail CLOSED rather than crash or, worse, cheerfully answer 200
+      # while it cannot reach anything.
       - name: Smoke test the image
         run: |
-          docker run -d --name gw-ci -p 3000:3000 goodworkshop:ci
-          for i in $(seq 1 30); do
-            if [ "$(curl -s -o /dev/null -w '%{http_code}' http://localhost:3000/api/health)" = "200" ]; then
-              echo "healthy after ${i}s"
-              curl -s http://localhost:3000/api/health
-              docker rm -f gw-ci
-              exit 0
+          docker run -d --name gw-ci -p 3000:3000 \
+            -e GW_APP_URL=http://localhost:3000 goodworkshop:ci
+
+          ready=
+          for i in $(seq 1 40); do
+            if [ "$(curl -s -o /dev/null -w '%{http_code}' http://localhost:3000/)" = "200" ]; then
+              echo "serving after ${i}s"
+              ready=1
+              break
             fi
             sleep 1
           done
-          echo "::error::Container never became healthy"
-          docker logs gw-ci
-          exit 1
+
+          if [ -z "$ready" ]; then
+            echo "::error::Der Container liefert die Startseite nicht aus"
+            docker logs gw-ci
+            docker rm -f gw-ci
+            exit 1
+          fi
+
+          status=$(curl -s -o /tmp/health.json -w '%{http_code}' http://localhost:3000/api/health)
+          cat /tmp/health.json
+          docker rm -f gw-ci
+
+          if [ "$status" != "503" ]; then
+            echo "::error::Ohne Datenbank muss der Healthcheck 503 melden, war: $status"
+            exit 1
+          fi
+          grep -q '"name":"database","ok":false' /tmp/health.json || {
+            echo "::error::Der Healthcheck nennt die Datenbank nicht als Ursache"
+            exit 1
+          }
 
   e2e:
     name: E2E (shard ${{ matrix.shard }}/2)
