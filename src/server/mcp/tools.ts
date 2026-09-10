@@ -261,7 +261,10 @@ export function registerTools(server: McpServer, ctx: Ctx): void {
   // The side effect is what we actually wanted: the model joins the room like
   // anybody else, so a person editing the day sees it arrive.
 
-  const presence = { name: 'KI-Assistent', color: 'violet' }
+  // Announced as a model, not merely as a name. Somebody watching their
+  // agenda change under their hands is owed the difference between a colleague
+  // and something a colleague pointed at their workshop.
+  const presence = { name: 'KI-Assistent', hue: 292, kind: 'model' as const }
 
   const inRoom = <T>(workshopId: string, dayId: string, edit: (doc: Y.Doc) => T) =>
     editInRoom({ workshopId, dayId, authorization, presence }, edit)

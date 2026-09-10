@@ -27,7 +27,7 @@ export type CollabTarget = {
   workshopId: string
   dayId: string
   /** Shown to other people as presence. */
-  user: { name: string; color: string }
+  user: { name: string; hue: number }
   /**
    * Where the collaboration server is.
    *
@@ -55,16 +55,20 @@ export function useCollabDocument(initial: DayDoc, target: CollabTarget): Agenda
     if (!target.workshopId || !target.dayId) return
 
     const url = collabUrl(target)
-    const provider = new CollabProvider(url, target.user, {
-      onState: setConnection,
-      onPeers: setPeers,
-      onPending: setPending,
-      // The document arrives populated -- the room seeds it from the database
-      // when it opens. This browser used to do the seeding, which quietly made
-      // "somebody opened this page" a precondition for the day existing as a
-      // CRDT at all, and an LLM writing through MCP does not open pages.
-      onSynced: () => setRevision((n) => n + 1),
-    })
+    const provider = new CollabProvider(
+      url,
+      { ...target.user, kind: 'person' },
+      {
+        onState: setConnection,
+        onPeers: setPeers,
+        onPending: setPending,
+        // The document arrives populated -- the room seeds it from the database
+        // when it opens. This browser used to do the seeding, which quietly made
+        // "somebody opened this page" a precondition for the day existing as a
+        // CRDT at all, and an LLM writing through MCP does not open pages.
+        onSynced: () => setRevision((n) => n + 1),
+      },
+    )
 
     providerRef.current = provider
     setYdoc(provider.doc)
@@ -118,6 +122,8 @@ export function useCollabDocument(initial: DayDoc, target: CollabTarget): Agenda
     () => ({
       doc,
       status,
+      peers,
+      setFocus: (blockId: string | null) => providerRef.current?.setFocus(blockId),
       patchModule: (moduleId: string, patch: ModulePatch) =>
         withDoc((d) => patchModule(d, moduleId, patch)),
       move: (blockId: string, projection: Projection) =>
@@ -125,13 +131,8 @@ export function useCollabDocument(initial: DayDoc, target: CollabTarget): Agenda
       addModule: (block: NewBlock) => withDoc((d) => addModule(d, uuidv7(), block)),
       removeModule: (moduleId: string) => withDoc((d) => removeModule(d, moduleId)),
     }),
-    [doc, status, withDoc],
+    [doc, status, peers, withDoc],
   )
-}
-
-/** Which block this person has focused, so others can see it. */
-export function useReportFocus(): (blockId: string | null) => void {
-  return useCallback(() => {}, [])
 }
 
 function collabUrl(target: CollabTarget): string {

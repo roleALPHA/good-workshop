@@ -47,6 +47,12 @@ Beschreibungen rendern dort als statisches HTML. Niemals eine TipTap-`EditorView
 - **Nie rohe Hex-Werte im Komponentencode.** Eine ESLint-Regel bricht darauf.
 - Jede Farbfläche erfüllt WCAG AA (4.5:1 für Text) in **beiden** Themes.
 - **Kein Zustand nur über Farbe.** Pins, Overlaps und Konflikte tragen immer zusätzlich Icon oder Text.
+- Anwesenheit **nur** über `--peer` (`.gw-peer`, Hue pro Person). Nie `.cat-*`: eine
+  Kategoriefarbe bedeutet „das ist eine Pause", und ein Mensch ist keine Kategorie.
+  Jede Anwesenheitsmarke trägt den Namen als Text — ein farbiger Ring allein sagt
+  niemandem, wer da gerade schreibt.
+- Eine Teilnehmerin, die kein Mensch ist, wird als solche benannt. Eine LLM tritt über
+  MCP demselben Raum bei wie eine Kollegin; sie darf nicht für eine gehalten werden.
 
 ### Tenant-Branding fasst `--brand-*` an und nie `.cat-*`
 

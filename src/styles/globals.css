@@ -130,6 +130,19 @@
    legend from looking amateurish -- the same swatches in sRGB hex have
    wildly unequal perceived brightness. A module type stores a token
    NAME ("rose"), never a hex value. See docs/konventionen-ui.md. */
+  /* Presence. Deliberately its own token and its own shape language: a
+   category colour means "this is a break", and a person is not a category.
+   The hue is set per peer from the member id; lightness and chroma are fixed
+   here so no colleague can end up unreadable against the surface. */
+  .gw-peer {
+    --peer: oklch(0.56 0.16 var(--peer-hue, 250));
+    --peer-soft: oklch(0.56 0.16 var(--peer-hue, 250) / 0.14);
+  }
+  .dark .gw-peer {
+    --peer: oklch(0.74 0.14 var(--peer-hue, 250));
+    --peer-soft: oklch(0.74 0.14 var(--peer-hue, 250) / 0.18);
+  }
+
   .cat-rose {
     --cat-bar: oklch(0.64 0.185 12);
     --cat-bg: oklch(0.972 0.03 12);

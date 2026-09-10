@@ -69,10 +69,12 @@ test('derives a cluster duration from its children', async ({ page }) => {
 })
 
 test('shows the running end time and flags going over plan', async ({ page }) => {
-  // Scoped to the agenda: 17:30 also appears in the header summary above it.
-  await expect(agenda(page).getByText('17:30')).toBeVisible()
-  await expect(agenda(page).getByText('Ende', { exact: true })).toBeVisible()
-  await expect(agenda(page).getByText('30m über Plan')).toBeVisible()
+  // Located through its own label rather than by hunting for the time: the
+  // same time appears in the running totals, and scoping to the agenda stopped
+  // separating them once those totals moved in there with it.
+  const end = agenda(page).getByText('Ende', { exact: true }).locator('..')
+  await expect(end).toContainText('17:30')
+  await expect(end).toContainText('30m über Plan')
 })
 
 test('carries the attribution footer on every view', async ({ page }) => {
@@ -178,6 +180,23 @@ test.describe('inline editing in the day view', () => {
     // moves without a save, a reload or a recalculation step.
     await expect(block(page, 'Einwandintegration')).toContainText('15:05')
     await expect(section_(page, 'Zielbild erarbeiten')).toContainText('55m')
+  })
+
+  test('keeps the running totals in step with the table', async ({ page }) => {
+    // The summary used to be rendered from the server's copy of the day and
+    // never updated, so after the first edit it announced totals for an agenda
+    // nobody could see -- most starkly on a fresh workshop, where it said
+    // "0 Blöcke" above three of them.
+    const summary = page.getByRole('main')
+    const before = (await summary.textContent()) ?? ''
+    const total = /·\s([0-9hm ]+)\sInhalt/.exec(before)?.[1]?.trim()
+    expect(total, 'the summary states a content total').toBeTruthy()
+
+    const duration = block(page, 'Spannungsfelder sammeln').getByLabel('Dauer')
+    await duration.fill('45m')
+    await duration.press('Tab')
+
+    await expect(page.getByText(/Inhalt/).first()).not.toContainText(`${total} Inhalt`)
   })
 
   test('reverts a duration it cannot read instead of guessing', async ({ page }) => {

@@ -24,6 +24,26 @@ export type NewBlock = {
   durationMinutes: number
 }
 
+/**
+ * Somebody else in the room.
+ *
+ * `kind` is not decoration. An LLM writing through MCP joins the room like a
+ * person does, and a name alone would let it pass for a colleague -- whoever
+ * is watching their agenda change under their hands is owed the difference.
+ *
+ * The colour is an OKLCH hue rather than a token name, so presence never
+ * borrows the category palette. Category colours mean "this is a break"; a
+ * person is not a category, and the two must not read as the same language.
+ */
+export type Peer = {
+  clientId: number
+  name: string
+  hue: number
+  kind: 'person' | 'model'
+  /** The block they are editing right now, if any. */
+  focusedBlockId: string | null
+}
+
 export type AgendaDocument = {
   /** The current day, derived. Never mutated in place. */
   doc: DayDoc
@@ -34,6 +54,10 @@ export type AgendaDocument = {
   removeModule: (moduleId: string) => void
   /** How the change is being shared, for the UI to report honestly. */
   status: DocumentStatus
+  /** Who else is here. Empty when nothing is shared. */
+  peers: Peer[]
+  /** Tells the others which block this person is in. */
+  setFocus: (blockId: string | null) => void
 }
 
 export type DocumentStatus =

@@ -298,3 +298,63 @@ test('lets an LLM write into a day nobody has open', async ({ page, request }) =
   await expect(page.getByRole('article', { name: 'Gruppenarbeit' })).toBeVisible()
   await expect(page.getByRole('article', { name: 'Später ergänzt' })).toBeVisible()
 })
+
+test('names the other people on the day, and says which one is not a person', async ({
+  page,
+  context,
+}) => {
+  await addBlock(page, 'Gruppenarbeit')
+
+  const other = await context.newPage()
+  await other.goto(page.url())
+  await connected(other)
+
+  // A colleague, by name rather than by colour: a coloured dot alone tells a
+  // colour-blind reader nothing, and tells anybody else nothing either.
+  const presence = page.getByRole('list', { name: 'Weitere Personen an diesem Tag' })
+  await expect(presence).toContainText(process.env.E2E_EMAIL ?? 'e2e@example.test')
+
+  // Focus a field and let the other window show where this person is.
+  await page.getByRole('article', { name: 'Gruppenarbeit' }).getByLabel('Titel').focus()
+  await expect(other.getByRole('article', { name: 'Gruppenarbeit' })).toContainText(
+    'bearbeitet diesen Block gerade',
+  )
+
+  await other.close()
+})
+
+test('applies a whole agenda from an LLM into an open day', async ({ page, request }) => {
+  const { workshopId, dayId } = idsFrom(page)
+
+  // apply_agenda is the tool that matters: a model writing twenty dependent
+  // calls loses ids and drifts. The presence LABEL is asserted in the
+  // component tests -- the model is only in the room for a few hundred
+  // milliseconds, and racing that window is how a suite becomes flaky.
+  const writing = request.post('/api/mcp', {
+    headers: {
+      authorization: `Bearer ${tokenForMcp()}`,
+      accept: 'application/json, text/event-stream',
+    },
+    data: {
+      jsonrpc: '2.0',
+      id: 1,
+      method: 'tools/call',
+      params: {
+        name: 'apply_agenda',
+        arguments: {
+          workshopId,
+          dayId,
+          mode: 'append',
+          items: [
+            { kind: 'cluster', title: 'Aufwärmen', children: [{ typeKey: 'check_in' }] },
+            { kind: 'module', typeKey: 'break', title: 'Kaffee' },
+          ],
+        },
+      },
+    },
+  })
+
+  await expect(page.getByRole('group', { name: 'Aufwärmen' })).toBeVisible()
+  await expect(page.getByRole('article', { name: 'Kaffee' })).toBeVisible()
+  expect(await (await writing).text()).toContain('3 Einträge geschrieben')
+})

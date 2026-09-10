@@ -25,7 +25,7 @@ import { computeSchedule } from '@/domain/schedule/computeSchedule'
 import { formatDuration, formatTime } from '@/features/agenda/duration'
 import { flattenDay, toScheduleItems, withGapRows } from '@/features/agenda/flatten'
 import { treeKeyboardCoordinateGetter } from '@/features/agenda/keyboard'
-import type { AgendaDocument, DocumentStatus } from '@/features/agenda/document'
+import type { AgendaDocument, DocumentStatus, Peer } from '@/features/agenda/document'
 // Used only to preview a move for the announcement -- it mutates nothing.
 import { applyMove } from '@/features/agenda/move'
 import {
@@ -39,6 +39,8 @@ import { cn } from '@/lib/cn'
 import { ModuleDetails } from '@/components/inspector/module-details'
 import { ClusterRow, EndOfDay, GapRow, HeaderRow, ModuleRow, type RowChrome } from './agenda-rows'
 import { BlockPicker } from './block-picker'
+import { DayHeader } from './day-header'
+import { PresenceBar } from './presence'
 import { DragHandle } from './drag-handle'
 
 const INDENT_PX = 28
@@ -207,6 +209,40 @@ export function AgendaEditor({ document: agenda }: { document: AgendaDocument })
   const activeRow = rows.find((r) => r.id === activeId)
   const projectedParent = projection?.parentId ?? null
 
+  // Grouped once per render rather than filtered per row: a day is tens of
+  // rows and a room is a handful of people, but the nested scan is the kind of
+  // thing that quietly becomes the reason a drag stutters.
+  const presenceByBlock = useMemo(() => {
+    const out = new Map<string, Peer[]>()
+    for (const peer of agenda.peers) {
+      if (!peer.focusedBlockId) continue
+      const bucket = out.get(peer.focusedBlockId)
+      if (bucket) bucket.push(peer)
+      else out.set(peer.focusedBlockId, [peer])
+    }
+    return out
+  }, [agenda.peers])
+
+  /**
+   * One handler for the whole table instead of props on every input.
+   *
+   * Focus is reported from where it actually happens -- the field somebody is
+   * typing in -- and the row is read off the DOM. Threading a callback through
+   * every input would mean each new field has to remember to opt in, and the
+   * one that forgot would be invisible to everyone else.
+   */
+  const reportFocus = (event: React.FocusEvent<HTMLElement>) => {
+    const row = (event.target as HTMLElement).closest('[data-block-id]')
+    agenda.setFocus(row?.getAttribute('data-block-id') ?? null)
+  }
+
+  const clearFocus = (event: React.FocusEvent<HTMLElement>) => {
+    // Only when focus left the table altogether: moving between two fields of
+    // the same row would otherwise blink the mark off and on.
+    if (event.currentTarget.contains(event.relatedTarget)) return
+    agenda.setFocus(null)
+  }
+
   return (
     <DndContext
       sensors={sensors}
@@ -231,7 +267,11 @@ export function AgendaEditor({ document: agenda }: { document: AgendaDocument })
         // watching the corner of the screen -- has one honest signal instead of
         // guessing from a message that only appears when something is wrong.
         data-save-state={agenda.status.kind}
+        onFocusCapture={reportFocus}
+        onBlurCapture={clearFocus}
       >
+        <DayHeader doc={doc} schedule={schedule} />
+        <PresenceBar peers={agenda.peers} />
         <HeaderRow />
 
         <SortableContext items={sortableIds} strategy={verticalListSortingStrategy}>
@@ -259,7 +299,11 @@ export function AgendaEditor({ document: agenda }: { document: AgendaDocument })
                         cluster={row.cluster}
                         entry={entry}
                         childCount={row.childCount}
-                        chrome={{ ...chrome, isDropTarget: projectedParent === row.id }}
+                        chrome={{
+                          ...chrome,
+                          isDropTarget: projectedParent === row.id,
+                          presence: presenceByBlock.get(row.id),
+                        }}
                       />
                     ) : (
                       <ModuleRow
@@ -267,7 +311,7 @@ export function AgendaEditor({ document: agenda }: { document: AgendaDocument })
                         type={doc.moduleTypes[row.module.moduleTypeId]}
                         entry={entry}
                         nested={row.depth === 1}
-                        chrome={chrome}
+                        chrome={{ ...chrome, presence: presenceByBlock.get(row.id) }}
                         editing={{
                           expanded: expandedId === row.id,
                           onToggleExpanded: () =>
@@ -395,17 +439,10 @@ const pointerWithinOrClosestCorners: CollisionDetection = (args) => {
 function StatusLine({ status }: { status: DocumentStatus }) {
   if (status.kind === 'local' || status.kind === 'saved') return null
 
-  if (status.kind === 'live') {
-    // Only when somebody else is here. A permanent "connected" badge is noise
-    // that trains people to ignore the one place that would warn them.
-    if (status.peers === 0) return null
-    return (
-      <p className="px-4 py-1 text-[13px] text-[var(--fg-subtle)] md:px-2">
-        {status.peers === 1 ? 'Eine weitere Person' : `${status.peers} weitere Personen`} bearbeiten
-        diesen Tag.
-      </p>
-    )
-  }
+  // Nothing to say while a connection is healthy. Who else is here is named in
+  // the presence bar, by name -- a second, vaguer count of the same people
+  // underneath was both redundant and, as it happened, ungrammatical.
+  if (status.kind === 'live') return null
 
   if (status.kind === 'connecting' || status.kind === 'saving') {
     return (

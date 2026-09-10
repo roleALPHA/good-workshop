@@ -2,7 +2,7 @@
 
 import { useCallback, useMemo, useState } from 'react'
 import type { DayDoc } from '@/domain/agenda/types'
-import type { AgendaDocument, ModulePatch, NewBlock } from './document'
+import type { AgendaDocument, ModulePatch, NewBlock, Peer } from './document'
 import { applyMove } from './move'
 import type { Projection } from './projection'
 
@@ -61,7 +61,20 @@ export function useLocalDocument(initial: DayDoc): AgendaDocument {
   }, [])
 
   return useMemo(
-    () => ({ doc, patchModule, move, addModule, removeModule, status: { kind: 'local' as const } }),
+    () => ({
+      doc,
+      patchModule,
+      move,
+      addModule,
+      removeModule,
+      status: { kind: 'local' as const },
+      // Nothing is shared, so nobody is here and there is nothing to announce.
+      peers: NOBODY,
+      setFocus: () => {},
+    }),
     [doc, patchModule, move, addModule, removeModule],
   )
 }
+
+/** One frozen array, so it never re-renders anything by identity. */
+const NOBODY: Peer[] = []

@@ -41,7 +41,7 @@ export type RoomTarget = {
   /** Passed through verbatim; the room authenticates it exactly like a browser's cookie. */
   authorization: string
   /** How the writer appears to the people in the room. */
-  presence?: { name: string; color: string }
+  presence?: { name: string; hue: number; kind: 'person' | 'model' }
   url?: string
   timeoutMs?: number
 }

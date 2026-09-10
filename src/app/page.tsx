@@ -1,10 +1,6 @@
-import { AgendaSummary } from '@/components/agenda/agenda-summary'
 import { AgendaSurface } from '@/components/agenda/agenda-surface'
-import { CategoryLegend } from '@/components/agenda/category-legend'
 import { AppFooter } from '@/components/layout/app-footer'
-import { computeSchedule } from '@/domain/schedule/computeSchedule'
 import { createDemoDay } from '@/features/agenda/fixtures/day-fixture'
-import { flattenDay, toScheduleItems } from '@/features/agenda/flatten'
 
 /**
  * Preview of the agenda while persistence is being built. Renders the demo
@@ -16,8 +12,6 @@ import { flattenDay, toScheduleItems } from '@/features/agenda/flatten'
  */
 export default function HomePage() {
   const doc = createDemoDay()
-  const rows = flattenDay(doc)
-  const schedule = computeSchedule(doc.startMinute, toScheduleItems(rows))
 
   return (
     <div className="flex min-h-dvh flex-col">
@@ -27,12 +21,6 @@ export default function HomePage() {
             Design Sprint Kickoff · {doc.date}
           </p>
           <h1 className="mt-1 text-2xl font-semibold tracking-tight">{doc.title}</h1>
-          <div className="mt-2">
-            <AgendaSummary doc={doc} schedule={schedule} />
-          </div>
-          <div className="mt-4">
-            <CategoryLegend doc={doc} />
-          </div>
         </header>
 
         <AgendaSurface doc={doc} />

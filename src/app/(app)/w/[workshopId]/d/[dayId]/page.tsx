@@ -2,15 +2,12 @@ import Link from 'next/link'
 import { notFound } from 'next/navigation'
 import { eq } from 'drizzle-orm'
 import { Download, Printer } from 'lucide-react'
-import { AgendaSummary } from '@/components/agenda/agenda-summary'
 import { AgendaSurface } from '@/components/agenda/agenda-surface'
-import { CategoryLegend } from '@/components/agenda/category-legend'
 import { assertWorkshopAccess } from '@/domain/agenda/access'
 import { loadDay } from '@/domain/agenda/repo'
 import { listDays } from '@/domain/workshop/repo'
-import { computeSchedule } from '@/domain/schedule/computeSchedule'
-import { flattenDay, toScheduleItems } from '@/features/agenda/flatten'
 import { currentActor } from '@/server/actions/context'
+import { readSession } from '@/server/auth/session'
 import { withTenant } from '@/server/db'
 import { workshop as workshopTable } from '@/server/db/schema'
 import { redirect } from 'next/navigation'
@@ -24,12 +21,20 @@ export const dynamic = 'force-dynamic'
  * no loading state on first paint -- the agenda is there, then it becomes
  * interactive.
  */
-const PRESENCE_COLORS = ['rose', 'emerald', 'blue', 'amber', 'violet', 'teal', 'orange', 'cyan']
-
-function presenceColor(memberId: string): string {
+/**
+ * A hue, not one of the category colours.
+ *
+ * Category colours carry meaning -- "this is a break" -- and a person is not a
+ * category. Presence gets its own axis in the same OKLCH space so the two never
+ * read as the same language.
+ *
+ * Eight steps around the wheel rather than a free hash: adjacent hues are hard
+ * to tell apart at avatar size, which is the only size this is ever seen at.
+ */
+function presenceHue(memberId: string): number {
   let hash = 0
   for (const char of memberId) hash = (hash * 31 + char.charCodeAt(0)) >>> 0
-  return PRESENCE_COLORS[hash % PRESENCE_COLORS.length]!
+  return (hash % 8) * 45
 }
 
 export default async function DayPage({
@@ -40,6 +45,11 @@ export default async function DayPage({
   const { workshopId, dayId } = await params
   const actor = await currentActor()
   if (!actor) redirect('/login')
+
+  // The name other people see. A member id would be honest and useless -- the
+  // point of presence is recognising a colleague.
+  const session = await readSession()
+  const displayName = session?.displayName?.trim() || (session?.email ?? 'Jemand')
 
   const data = await withTenant(actor, async (tx) => {
     const access = await assertWorkshopAccess(tx, actor, workshopId, 'workshop.read')
@@ -55,17 +65,13 @@ export default async function DayPage({
       title: meta[0]?.title ?? 'Workshop',
       days: await listDays(tx, workshopId),
       canEdit: access.can('workshop.content.write'),
-      userName: actor.memberId,
       // Derived from the member id, so the same person keeps the same colour
       // across sessions and devices without storing a preference nobody set.
-      userColor: presenceColor(actor.memberId),
+      userHue: presenceHue(actor.memberId),
     }
   }).catch(() => null)
 
   if (!data) notFound()
-
-  const rows = flattenDay(data.doc)
-  const schedule = computeSchedule(data.doc.startMinute, toScheduleItems(rows))
 
   return (
     <div>
@@ -115,13 +121,6 @@ export default async function DayPage({
             ))}
           </nav>
         )}
-
-        <div className="mt-3">
-          <AgendaSummary doc={data.doc} schedule={schedule} />
-        </div>
-        <div className="mt-3">
-          <CategoryLegend doc={data.doc} />
-        </div>
       </header>
 
       <AgendaSurface
@@ -131,7 +130,7 @@ export default async function DayPage({
             ? {
                 workshopId,
                 dayId,
-                user: { name: data.userName, color: data.userColor },
+                user: { name: displayName, hue: data.userHue },
                 url: process.env.GW_COLLAB_URL,
               }
             : undefined

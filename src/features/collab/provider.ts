@@ -10,6 +10,7 @@ import {
 import * as decoding from 'lib0/decoding'
 import * as encoding from 'lib0/encoding'
 import * as syncProtocol from 'y-protocols/sync'
+import type { Peer } from '@/features/agenda/document'
 
 /**
  * The browser half of the collaboration connection.
@@ -37,15 +38,16 @@ export type ProviderEvents = {
   onPending?: (pending: boolean) => void
 }
 
-export type PeerPresence = {
-  clientId: number
-  name: string
-  color: string
-  /** Which block they have focused, if any. */
-  focusedBlockId?: string | null
-}
+export type PeerPresence = Peer
 
-export type LocalPresence = { name: string; color: string }
+/**
+ * What this client tells the others about itself.
+ *
+ * A hue rather than a colour token: presence must not borrow the category
+ * palette, where a colour means "this is a break". And `kind`, because an LLM
+ * joins this room too and must not be able to pass for a colleague.
+ */
+export type LocalPresence = { name: string; hue: number; kind: 'person' | 'model' }
 
 export class CollabProvider {
   readonly doc: Y.Doc
@@ -89,12 +91,13 @@ export class CollabProvider {
     const out: PeerPresence[] = []
     this.awareness.getStates().forEach((state, clientId) => {
       if (clientId === this.awareness.clientID) return
-      const user = (state as { user?: LocalPresence }).user
-      if (!user) return
+      const user = (state as { user?: Partial<LocalPresence> }).user
+      if (!user?.name) return
       out.push({
         clientId,
         name: user.name,
-        color: user.color,
+        hue: typeof user.hue === 'number' ? user.hue : 250,
+        kind: user.kind === 'model' ? 'model' : 'person',
         focusedBlockId: (state as { focusedBlockId?: string | null }).focusedBlockId ?? null,
       })
     })

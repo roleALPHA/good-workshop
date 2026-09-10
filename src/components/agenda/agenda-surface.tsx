@@ -9,6 +9,7 @@ import { useCollabDocument, type CollabTarget } from '@/features/collab/use-coll
 import { useMediaQuery } from '@/hooks/use-media-query'
 import { AgendaEditor } from './agenda-editor'
 import { AgendaTable } from './agenda-table'
+import { DayHeader } from './day-header'
 
 /**
  * Picks the reading view or the editor.
@@ -38,7 +39,14 @@ export function AgendaSurface({
     return { rows: withGapRows(rows, schedule), schedule }
   }, [doc])
 
-  if (!isDesktop) return <AgendaTable doc={doc} rows={readOnly.rows} schedule={readOnly.schedule} />
+  if (!isDesktop) {
+    return (
+      <>
+        <DayHeader doc={doc} schedule={readOnly.schedule} />
+        <AgendaTable doc={doc} rows={readOnly.rows} schedule={readOnly.schedule} />
+      </>
+    )
+  }
 
   return <EditorSurface doc={doc} collab={collab} />
 }
@@ -60,5 +68,5 @@ function EditorSurface({ doc, collab }: { doc: DayDoc; collab?: CollabTarget }) 
 const IDLE_TARGET: CollabTarget = {
   workshopId: '',
   dayId: '',
-  user: { name: '', color: '' },
+  user: { name: '', hue: 0 },
 }

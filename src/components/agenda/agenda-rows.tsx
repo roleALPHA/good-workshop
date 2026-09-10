@@ -1,12 +1,14 @@
 import type { CSSProperties, ReactNode } from 'react'
 import { ChevronDown } from 'lucide-react'
 import type { ClusterDto, ModuleDto, ModuleTypeDto } from '@/domain/agenda/types'
+import type { Peer } from '@/features/agenda/document'
 import type { Schedule, ScheduleEntry } from '@/domain/schedule/types'
 import { formatDuration, formatTime } from '@/features/agenda/duration'
 import { catClass } from '@/lib/category-colors'
 import { cn } from '@/lib/cn'
 import { isRichTextValue } from '@/lib/richtext/schema'
 import { RichText } from '@/lib/richtext/render'
+import { PeerMarks } from './presence'
 import { TitleInput } from './inline-inputs'
 import { OverlapWarning, TimeCell } from './time-cell'
 
@@ -60,6 +62,8 @@ export type RowChrome = {
   isDragging?: boolean
   /** Set while a drag would land inside this cluster. */
   isDropTarget?: boolean
+  /** Who else has this row focused right now. */
+  presence?: Peer[]
 }
 
 /** Hidden on phones: the card layout carries its own labels. */
@@ -106,6 +110,7 @@ export function ModuleRow({
       ref={chrome?.rootRef}
       style={chrome?.style}
       aria-labelledby={titleId}
+      data-block-id={mod.id}
       className={cn(
         catClass(type?.color),
         'group relative break-inside-avoid border-b border-[var(--border)]',
@@ -114,6 +119,7 @@ export function ModuleRow({
       )}
     >
       {chrome?.handle}
+      {chrome?.presence ? <PeerMarks peers={chrome.presence} /> : null}
       {/* Phone: the category bar is the card's left edge. */}
       <span
         aria-hidden
@@ -206,18 +212,24 @@ export function ClusterRow({
       style={chrome?.style}
       role="group"
       aria-labelledby={titleId}
+      // Read by the table's one focus handler to work out which row somebody
+      // is in, so a new field never has to remember to report itself.
+      data-block-id={cluster.id}
       // aria-expanded belongs on the disclosure BUTTON, not on the group it
       // controls -- role="group" does not support it. It moves onto the chevron
       // when that lands, together with aria-controls.
       className={cn(
         catClass(cluster.color ?? 'slate'),
         // Sticky on phones so you always know which section you are reading.
-        'group sticky top-0 z-10 break-inside-avoid border-b border-[var(--border)] bg-[var(--cat-bg)] md:static',
+        // md:relative rather than md:static: unsticky on desktop, but still a
+        // positioning context for the presence mark.
+        'group sticky top-0 z-10 break-inside-avoid border-b border-[var(--border)] bg-[var(--cat-bg)] md:relative',
         chrome?.isDragging && 'opacity-40',
         chrome?.isDropTarget && 'ring-2 ring-[var(--cat-bar)] ring-inset',
       )}
     >
       {chrome?.handle}
+      {chrome?.presence ? <PeerMarks peers={chrome.presence} /> : null}
       <div className={cn('items-center', GRID)}>
         <span className="hidden md:block" />
         <div className="hidden py-2 md:block md:px-2">
