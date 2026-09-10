@@ -14,6 +14,11 @@ concurrency:
 
 env:
   REGISTRY: ghcr.io
+  # Normalised to lowercase per job below. `github.repository` keeps the
+  # organisation's casing ("roleALPHA/..."), and a registry reference with an
+  # uppercase letter is rejected outright: "repository name must be lowercase".
+  # metadata-action lowercases its own outputs, so this only bites where the
+  # name is used directly -- push-by-digest and imagetools.
   IMAGE_NAME: ${{ github.repository }}
 
 jobs:
@@ -38,8 +43,10 @@ jobs:
           - platform: linux/arm64
             runner: ubuntu-24.04-arm
     steps:
-      - name: Derive artifact-safe platform name
-        run: echo "PLATFORM_PAIR=${platform//\//-}" >> "$GITHUB_ENV"
+      - name: Normalise names
+        run: |
+          echo "PLATFORM_PAIR=${platform//\//-}" >> "$GITHUB_ENV"
+          echo "IMAGE_NAME=${GITHUB_REPOSITORY,,}" >> "$GITHUB_ENV"
         env:
           platform: ${{ matrix.platform }}
 
@@ -96,6 +103,9 @@ jobs:
       contents: read
       packages: write
     steps:
+      - name: Normalise image name
+        run: echo "IMAGE_NAME=${GITHUB_REPOSITORY,,}" >> "$GITHUB_ENV"
+
       - uses: actions/download-artifact@634f93cb2916e3fdff6788551b99b062d0335ce0 # v5
         with:
           path: /tmp/digests

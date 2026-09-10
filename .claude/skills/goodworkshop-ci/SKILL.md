@@ -45,6 +45,16 @@ Die naheliegende Alternative — ein Job mit QEMU-Emulation und `platforms: linu
 - `permissions:` je Job minimal deklarieren. `packages: write` **ausschließlich** im Release-Job.
 - Caching: `actions/setup-node` mit `cache: pnpm`; Playwright-Browser über `actions/cache` am Lockfile-Hash; Docker-Layer über `cache-from/to: type=gha`.
 
+## Der Registry-Name muss kleingeschrieben sein
+
+`github.repository` behält die Schreibweise der Organisation (`roleALPHA/good-workshop`). Eine Registry-Referenz mit Großbuchstaben wird abgewiesen: _„repository name must be lowercase"_. `docker/metadata-action` normalisiert seine **eigenen** Ausgaben, deshalb fällt das nur dort auf, wo der Name direkt verwendet wird — `push-by-digest` und `imagetools create`.
+
+Jeder Job, der den Namen direkt benutzt, normalisiert ihn zuerst:
+
+```yaml
+- run: echo "IMAGE_NAME=${GITHUB_REPOSITORY,,}" >> "$GITHUB_ENV"
+```
+
 ## Dockerfile-Regeln
 
 - Multi-stage, `output: 'standalone'`, `USER node`.
