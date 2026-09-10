@@ -12,7 +12,7 @@ export default defineConfig({
   test: {
     environment: 'node',
     globals: true,
-    include: ['src/server/**/*.db.test.ts'],
+    include: ['src/**/*.db.test.ts'],
     // One connection pool, one migration state: parallel files would fight.
     fileParallelism: false,
     testTimeout: 20_000,
