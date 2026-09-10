@@ -75,6 +75,31 @@ Releases entstehen aus einem Git-Tag `v*` und landen als Multi-Arch-Image
 (`linux/amd64` + `linux/arm64`, jeweils nativ gebaut) inklusive SBOM und Provenance auf
 `ghcr.io`.
 
+## MCP
+
+GoodWorkshop ist ein MCP-Server: ein LLM-Client wie Claude Desktop oder Claude Code kann
+Workshops lesen und schreiben.
+
+```bash
+docker compose exec app node scripts/cli.mjs token create \
+  --email du@example.com --name "Claude" --scopes workshops:read,workshops:write,module_types:read
+```
+
+Das Token wird einmal angezeigt und nur als Hash gespeichert. Im Client als
+`Authorization: Bearer gwp_…` gegen `https://<host>/api/mcp` eintragen.
+
+Das wichtigste Werkzeug ist `apply_agenda`: es schreibt einen kompletten Tagesablauf in
+einem Zug. Zwanzig einzelne, voneinander abhängige Aufrufe sind der Punkt, an dem Modelle
+auseinanderfallen — sie verlieren Ids, driften in der Reihenfolge und wenden bei einem
+Fehler die Hälfte an. Ein deklarativer Schreibvorgang ist ganz oder gar nicht.
+
+Jede Änderung nimmt optional `expectedVersion`. Ohne das überschreibt ein Client mit
+fünf Minuten altem Stand stillschweigend die Live-Bearbeitung — gemeldet wird das
+anschließend als „die KI hat meinen Workshop gelöscht".
+
+Es gibt bewusst **keinen** Bereich für Nutzerverwaltung: ein MCP-Client darf niemals
+Nutzer einladen oder zu Admins machen.
+
 ## Architektur in drei Sätzen
 
 Ein **Modul** (Typ, Dauer, typspezifische Attribute als JSON) hängt an einem **Cluster**

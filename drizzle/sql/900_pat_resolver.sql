@@ -31,5 +31,11 @@ as $$
     and tn.status = 'active';
 $$;
 
+-- Owned by gw_ops, the one BYPASSRLS role, because that is what makes the
+-- SECURITY DEFINER actually definitive. Narrow by construction: it takes a
+-- token id and a hash, and returns nothing but the identifiers needed to set a
+-- proper tenant context for everything that follows.
+alter function app.resolve_pat(text, text) owner to gw_ops;
+
 revoke all on function app.resolve_pat(text, text) from public;
 grant execute on function app.resolve_pat(text, text) to gw_app;

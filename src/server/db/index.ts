@@ -72,6 +72,21 @@ export async function withAuth<T>(fn: (tx: Tx) => Promise<T>): Promise<T> {
 }
 
 /**
+ * A transaction with no tenant context at all.
+ *
+ * Exists for exactly one caller: resolving a personal access token, where the
+ * tenant is what we are trying to find out. Everything reachable this way must
+ * go through app.resolve_pat, which is SECURITY DEFINER and returns nothing but
+ * the identifiers needed to set a proper context afterwards.
+ *
+ * Anything else called from here would run with no tenant, which fails closed
+ * (zero rows) rather than leaking -- but it would still be a bug.
+ */
+export async function withoutTenant<T>(fn: (tx: Tx) => Promise<T>): Promise<T> {
+  return getDb().transaction(async (tx) => fn(tx))
+}
+
+/**
  * Cross-tenant maintenance from the CLI. Uses a BYPASSRLS role and must never
  * be reachable from a request handler.
  */

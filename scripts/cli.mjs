@@ -63,6 +63,11 @@ try {
     case 'members':
       await listMembers()
       break
+    case 'token':
+      if (subcommand === 'create') await createToken(requireEmail())
+      else if (subcommand === 'list') await listTokens()
+      else fail('Usage: token create --email <address> [--name <label>] [--scopes a,b]')
+      break
     default:
       console.log(
         [
@@ -72,6 +77,8 @@ try {
           '  admin create --email <address>    Create an identity and a tenant admin',
           '  admin promote --email <address>   Make an existing member an admin',
           '  members                           List members of the default tenant',
+          '  token create --email <address>    Create a personal access token for MCP',
+          '  token list                        List tokens (never their secrets)',
         ].join('\n'),
       )
   }
@@ -197,6 +204,93 @@ async function promote(email) {
   )
   if (rowCount === 0) fail(`${email} is not a member of the default tenant.`)
   console.log(`  ${email} promoted to admin.`)
+}
+
+/**
+ * Personal access tokens for MCP clients.
+ *
+ * The secret is shown once and never again -- only its hash is stored, so a
+ * stolen database yields no working tokens. Scopes default to read-only:
+ * granting write should be a decision, not an accident.
+ */
+async function createToken(email) {
+  const found = await findIdentity(email)
+  if (!found) fail(`No identity for ${email}.`)
+
+  const scopes =
+    typeof flags.scopes === 'string'
+      ? flags.scopes
+          .split(',')
+          .map((s) => s.trim())
+          .filter(Boolean)
+      : ['workshops:read', 'module_types:read']
+
+  const allowed = [
+    'workshops:read',
+    'workshops:write',
+    'module_types:read',
+    'module_types:write',
+    'tenant:read',
+  ]
+  const unknown = scopes.filter((s) => !allowed.includes(s))
+  if (unknown.length > 0)
+    fail(`Unknown scope(s): ${unknown.join(', ')}. Allowed: ${allowed.join(', ')}`)
+
+  const tokenId = randomBytes(9).toString('base64url').slice(0, 12)
+  const secret = randomBytes(32).toString('base64url')
+
+  const memberId = await asTenant(async () => {
+    const { rows } = await client.query('select id from member where identity_id = $1', [found.id])
+    if (!rows[0]) fail(`${email} is not a member of the default tenant.`)
+    return rows[0].id
+  })
+
+  await asTenant(() =>
+    client.query(
+      `insert into personal_access_token (id, tenant_id, member_id, name, token_id, token_hash, scopes)
+       values ($1, $2, $3, $4, $5, $6, $7)`,
+      [
+        randomUUID(),
+        DEFAULT_TENANT_ID,
+        memberId,
+        typeof flags.name === 'string' ? flags.name : 'MCP',
+        tokenId,
+        hashSecret(secret),
+        scopes,
+      ],
+    ),
+  )
+
+  console.log('')
+  console.log(`  gwp_${tokenId}_${secret}`)
+  console.log('')
+  console.log(`  Scopes: ${scopes.join(', ')}`)
+  console.log('  Dieses Token wird nur einmal angezeigt.')
+  console.log('')
+}
+
+async function listTokens() {
+  const rows = await asTenant(async () => {
+    const result = await client.query(
+      `select name, token_id, scopes, last_used_at, revoked_at from personal_access_token order by created_at`,
+    )
+    return result.rows
+  })
+
+  if (rows.length === 0) {
+    console.log('  No tokens yet. Create one: token create --email <address>')
+    return
+  }
+  for (const row of rows) {
+    const state = row.revoked_at
+      ? 'revoked'
+      : row.last_used_at
+        ? `last used ${row.last_used_at.toISOString().slice(0, 10)}`
+        : 'never used'
+    console.log(
+      `  ${row.name.padEnd(20)} gwp_${row.token_id}_…  ${row.scopes.join(',').padEnd(38)} ${state}`,
+    )
+  }
 }
 
 async function listMembers() {

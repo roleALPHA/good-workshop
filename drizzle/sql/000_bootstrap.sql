@@ -25,7 +25,10 @@ create extension if not exists citext;
 do $$
 begin
   if not exists (select 1 from pg_roles where rolname = 'gw_owner') then
-    create role gw_owner login nobypassrls;
+    -- NOINHERIT: gw_owner is a member of gw_ops (needed to hand it ownership
+    -- of the one SECURITY DEFINER function) but does not carry that privilege
+    -- around unless it explicitly steps into the role.
+    create role gw_owner login noinherit nobypassrls;
   end if;
   if not exists (select 1 from pg_roles where rolname = 'gw_auth') then
     create role gw_auth nologin nobypassrls;
@@ -45,6 +48,13 @@ $$;
 
 grant gw_auth to gw_app;
 
+-- So that migrations can hand app.resolve_pat to gw_ops. That function is the
+-- only thing in the system allowed to look past RLS, and it can only do so if
+-- its OWNER may -- a SECURITY DEFINER function owned by gw_owner sees nothing
+-- at all, because FORCE ROW LEVEL SECURITY leaves the owner without an
+-- applicable policy.
+grant gw_ops to gw_owner;
+
 -- ── The app schema and its accessors ───────────────────────────────────────
 
 create schema if not exists app;
@@ -52,6 +62,9 @@ create schema if not exists app;
 -- and CREATE because app.resolve_pat is (re)created on every migration run.
 grant usage on schema app to gw_owner, gw_app, gw_auth, gw_ops;
 grant create on schema app to gw_owner;
+-- The new owner of a function needs CREATE in its schema, so handing
+-- app.resolve_pat to gw_ops requires this.
+grant create on schema app to gw_ops;
 
 -- current_setting(..., true) returns NULL when the GUC is unset. `tenant_id =
 -- NULL` is NULL, NULL is not true, so an unset tenant yields zero rows on read

@@ -235,6 +235,158 @@ export async function addModule(
   return { id, contentVersion: await bumpContentVersion(tx, access, expectedVersion) }
 }
 
+export type NewCluster = {
+  dayId: string
+  title: string
+  color?: string | null
+  afterId?: string | null
+}
+
+export async function addCluster(
+  tx: Tx,
+  access: WorkshopAccess,
+  input: NewCluster,
+  expectedVersion?: bigint,
+): Promise<{ id: string; contentVersion: bigint }> {
+  const siblings = await siblingsOf(tx, { dayId: input.dayId, clusterId: null })
+  const placement =
+    input.afterId === undefined
+      ? { position: keyAtEnd(siblings), rebalance: null }
+      : placeAfter(siblings, input.afterId)
+
+  const position = placement.rebalance
+    ? await applyRebalance(tx, placement.rebalance)
+    : placement.position
+
+  const id = uuidv7()
+  await tx.insert(cluster).values({
+    id,
+    workshopId: access.workshopId,
+    dayId: input.dayId,
+    title: input.title,
+    color: input.color ?? null,
+    position,
+  })
+
+  return { id, contentVersion: await bumpContentVersion(tx, access, expectedVersion) }
+}
+
+/**
+ * Writes a whole day in one transaction.
+ *
+ * The single most important entry point for an LLM client. Twenty sequential,
+ * dependent tool calls is where models fall apart -- they lose ids, drift on
+ * ordering, and half-apply on failure, leaving an agenda that is worse than
+ * before. One declarative write is all-or-nothing: either the day looks like
+ * what was asked for, or nothing changed.
+ *
+ * `replace` clears the day first. That is destructive by design and named so.
+ */
+export type AgendaItem =
+  | { kind: 'cluster'; title: string; color?: string | null; children?: AgendaModule[] }
+  | ({ kind: 'module' } & AgendaModule)
+
+export type AgendaModule = {
+  typeKey: string
+  title?: string
+  durationMinutes?: number
+  pinnedStartMinute?: number | null
+  desc?: Record<string, unknown>
+}
+
+export async function applyAgenda(
+  tx: Tx,
+  access: WorkshopAccess,
+  dayId: string,
+  mode: 'replace' | 'append',
+  items: AgendaItem[],
+  expectedVersion?: bigint,
+): Promise<{ created: number; contentVersion: bigint }> {
+  if (mode === 'replace') {
+    await tx.delete(workshopModule).where(eq(workshopModule.dayId, dayId))
+    await tx.delete(cluster).where(eq(cluster.dayId, dayId))
+  }
+
+  const types = await tx
+    .select({
+      id: moduleType.id,
+      key: moduleType.key,
+      duration: moduleType.defaultDurationMinutes,
+      name: moduleType.name,
+    })
+    .from(moduleType)
+  const byKey = new Map(types.map((t) => [t.key, t]))
+
+  let created = 0
+  let lastDayLevelId: string | null = null
+
+  for (const item of items) {
+    if (item.kind === 'cluster') {
+      const { id } = await addCluster(tx, access, {
+        dayId,
+        title: item.title,
+        color: item.color ?? null,
+        afterId: lastDayLevelId,
+      })
+      lastDayLevelId = id
+      created++
+
+      let lastChildId: string | null = null
+      for (const child of item.children ?? []) {
+        lastChildId = await insertModule(tx, access, byKey, dayId, id, child, lastChildId)
+        created++
+      }
+      continue
+    }
+
+    lastDayLevelId = await insertModule(tx, access, byKey, dayId, null, item, lastDayLevelId)
+    created++
+  }
+
+  return { created, contentVersion: await bumpContentVersion(tx, access, expectedVersion) }
+}
+
+async function insertModule(
+  tx: Tx,
+  access: WorkshopAccess,
+  byKey: Map<string, { id: string; duration: number; name: string }>,
+  dayId: string,
+  clusterId: string | null,
+  input: AgendaModule,
+  afterId: string | null,
+): Promise<string> {
+  const type = byKey.get(input.typeKey)
+  if (!type) {
+    // Named, with the alternatives, so a model can fix its next call rather
+    // than guess again.
+    throw new Error(
+      `Unbekannter Modultyp "${input.typeKey}". Verfügbar: ${[...byKey.keys()].join(', ')}`,
+    )
+  }
+
+  const { id } = await addModule(tx, access, {
+    dayId,
+    clusterId,
+    moduleTypeId: type.id,
+    title: input.title ?? type.name,
+    durationMinutes: input.durationMinutes ?? type.duration,
+    desc: input.desc,
+    afterId,
+  })
+
+  if (input.pinnedStartMinute !== undefined && input.pinnedStartMinute !== null) {
+    await tx
+      .update(workshopModule)
+      .set({ pinnedStartTime: minutesToTime(input.pinnedStartMinute) })
+      .where(eq(workshopModule.id, id))
+  }
+
+  return id
+}
+
+const minutesToTime = (minute: number) =>
+  `${String(Math.floor(minute / 60)).padStart(2, '0')}:${String(minute % 60).padStart(2, '0')}:00`
+
 export async function deleteModule(
   tx: Tx,
   access: WorkshopAccess,
