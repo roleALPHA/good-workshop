@@ -205,5 +205,56 @@ export function toDayDoc(doc: Y.Doc, moduleTypes: DayDoc['moduleTypes']): DayDoc
   }
 }
 
+export type RawBlock = {
+  id: string
+  kind: BlockKind
+  position: string
+  parentId: string | null
+  title: string
+  moduleTypeId: string | null
+  durationMinutes: number
+  pinnedStartMinute: number | null
+  color: string | null
+  desc: Record<string, unknown>
+}
+
+/**
+ * The blocks with their sort keys intact.
+ *
+ * `toDayDoc` projects ordinals, which is right for a client and wrong for
+ * anything writing back to the database: the fractional key IS the stored
+ * order, and reconstructing one from an ordinal would invent a value where a
+ * real one already exists.
+ */
+export function readBlocks(doc: Y.Doc): RawBlock[] {
+  const out: RawBlock[] = []
+
+  blocksOf(doc).forEach((block, id) => {
+    const kind = block.get('kind') === 'cluster' ? 'cluster' : 'module'
+    out.push({
+      id,
+      kind,
+      position: String(block.get('position') ?? ''),
+      parentId: (block.get('parentId') as string | null) ?? null,
+      title: String(block.get('title') ?? ''),
+      moduleTypeId: (block.get('moduleTypeId') as string | undefined) ?? null,
+      durationMinutes: Number(block.get('durationMinutes') ?? 0),
+      pinnedStartMinute: (block.get('pinnedStartMinute') as number | null) ?? null,
+      color: (block.get('color') as string | null) ?? null,
+      desc: (block.get('desc') as Record<string, unknown>) ?? {},
+    })
+  })
+
+  return out
+}
+
+export function readDayFields(doc: Y.Doc): { startMinute: number; title: string } {
+  const day = dayOf(doc)
+  return {
+    startMinute: Number(day.get('startMinute') ?? 540),
+    title: String(day.get('title') ?? ''),
+  }
+}
+
 /** Zero-padded so plain string comparison orders numerically. */
 const pad = (order: number) => String(order).padStart(6, '0')

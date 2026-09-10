@@ -20,7 +20,7 @@ import {
   uniqueIndex,
   uuid,
 } from 'drizzle-orm/pg-core'
-import { citext, TENANT_POLICY_USING, tenantId, timestamps } from './columns'
+import { bytea, citext, TENANT_POLICY_USING, tenantId, timestamps } from './columns'
 
 /**
  * Four invariants hold across this file without exception. Violating one means
@@ -810,6 +810,85 @@ export const auditEvent = pgTable(
     index('audit_entity_idx').on(t.tenantId, t.entityType, t.entityId, t.createdAt),
     index('audit_recent_idx').on(t.tenantId, t.createdAt),
     pgPolicy('audit_tenant_isolation', {
+      for: 'all',
+      to: 'gw_app',
+      using: TENANT_POLICY_USING,
+      withCheck: TENANT_POLICY_USING,
+    }),
+  ],
+).enableRLS()
+
+// ═══════════════════════════════════════════════════════════════════════════
+// Collaboration
+// ═══════════════════════════════════════════════════════════════════════════
+
+/**
+ * The CRDT state of one day, as an append-only log of Yjs updates.
+ *
+ * Append-only because that is what a CRDT is: the document is the sum of its
+ * updates, and appending is the only operation that never needs a lock. Two
+ * clients writing at the same moment simply both insert.
+ *
+ * The log is compacted -- all rows merged into one -- once it grows past a
+ * threshold. Compaction is an optimisation, never a correctness requirement:
+ * a log that is never compacted still replays to exactly the same document.
+ *
+ * Note what this table is NOT: the source of truth for reading. Export, print,
+ * MCP and every server action read the relational tables, which a materialiser
+ * keeps up to date. Yjs is the editing layer, not the record.
+ */
+export const collabUpdate = pgTable(
+  'collab_update',
+  {
+    id: bigserial('id', { mode: 'number' }).primaryKey(),
+    tenantId: tenantId().references(() => tenant.id, { onDelete: 'cascade' }),
+    dayId: uuid('day_id').notNull(),
+    payload: bytea('payload').notNull(),
+    /** True for a row produced by compaction, so a reader can tell them apart. */
+    isSnapshot: boolean('is_snapshot').notNull().default(false),
+    createdAt: timestamp('created_at', { withTimezone: true }).notNull().defaultNow(),
+  },
+  (t) => [
+    foreignKey({
+      columns: [t.tenantId, t.dayId],
+      foreignColumns: [workshopDay.tenantId, workshopDay.id],
+    }).onDelete('cascade'),
+    // Replay order. The primary key alone would do, but the day has to filter
+    // first or every read scans the whole log.
+    index('collab_update_replay_idx').on(t.tenantId, t.dayId, t.id),
+    pgPolicy('collab_update_tenant_isolation', {
+      for: 'all',
+      to: 'gw_app',
+      using: TENANT_POLICY_USING,
+      withCheck: TENANT_POLICY_USING,
+    }),
+  ],
+).enableRLS()
+
+/**
+ * What the relational tables were last brought in line with.
+ *
+ * Lets the materialiser skip work when nothing has changed since, and makes
+ * "is the database behind the CRDT, and by how much" answerable rather than a
+ * matter of trust.
+ */
+export const collabState = pgTable(
+  'collab_state',
+  {
+    tenantId: tenantId().references(() => tenant.id, { onDelete: 'cascade' }),
+    dayId: uuid('day_id').notNull(),
+    /** The highest collab_update.id folded into the relational tables. */
+    materializedUpTo: bigint('materialized_up_to', { mode: 'number' }).notNull().default(0),
+    materializedAt: timestamp('materialized_at', { withTimezone: true }),
+    updatedAt: timestamp('updated_at', { withTimezone: true }).notNull().defaultNow(),
+  },
+  (t) => [
+    primaryKey({ columns: [t.dayId] }),
+    foreignKey({
+      columns: [t.tenantId, t.dayId],
+      foreignColumns: [workshopDay.tenantId, workshopDay.id],
+    }).onDelete('cascade'),
+    pgPolicy('collab_state_tenant_isolation', {
       for: 'all',
       to: 'gw_app',
       using: TENANT_POLICY_USING,

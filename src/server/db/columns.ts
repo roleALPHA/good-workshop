@@ -1,6 +1,11 @@
 import { sql } from 'drizzle-orm'
 import { customType, timestamp, uuid } from 'drizzle-orm/pg-core'
 
+/** Raw bytes. Yjs updates are binary and must not go through a text encoding. */
+export const bytea = customType<{ data: Buffer; driverData: Buffer }>({
+  dataType: () => 'bytea',
+})
+
 /** Case-insensitive text. Used for e-mail and for names that must be unique regardless of case. */
 export const citext = customType<{ data: string }>({
   dataType: () => 'citext',
