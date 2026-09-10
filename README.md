@@ -31,14 +31,16 @@ pnpm install
 pnpm dev
 ```
 
-| Befehl               | Zweck                                                      |
-| -------------------- | ---------------------------------------------------------- |
-| `pnpm lint`          | ESLint inkl. der Projekt-Guardrails                        |
-| `pnpm typecheck`     | `tsc --noEmit`                                             |
-| `pnpm test`          | Vitest (Unit + Komponente)                                 |
-| `pnpm test:coverage` | mit Coverage-Schwellen auf `src/domain` und `src/features` |
-| `pnpm format`        | Prettier                                                   |
-| `pnpm build`         | Produktions-Build (`output: 'standalone'`)                 |
+| Befehl               | Zweck                                                               |
+| -------------------- | ------------------------------------------------------------------- |
+| `pnpm lint`          | ESLint inkl. der Projekt-Guardrails                                 |
+| `pnpm typecheck`     | `tsc --noEmit`                                                      |
+| `pnpm test`          | Vitest (Unit + Komponente)                                          |
+| `pnpm test:coverage` | mit Coverage-Schwellen auf `src/domain` und `src/features`          |
+| `pnpm test:e2e`      | Playwright (Desktop + Pixel 5) gegen den gebauten Standalone-Server |
+| `pnpm test:e2e:ui`   | dieselbe Suite im Playwright-UI-Modus                               |
+| `pnpm format`        | Prettier                                                            |
+| `pnpm build`         | Produktions-Build (`output: 'standalone'`)                          |
 
 ### Arbeitsweisen
 

@@ -37,6 +37,16 @@ Eine neue Tabelle ohne RLS ist ein stilles, totales Datenleck ohne Symptom. Dies
 
 Nie direkte State-Manipulation. Getestet wird, was der Nutzer sieht — **Rollen und zugängliche Namen**, keine `data-testid`-Ketten, keine Snapshot-Tests ganzer Bäume.
 
+### E2E läuft gegen das Standalone-Artefakt, nicht gegen `next dev`
+
+`pnpm test:e2e` baut und startet `scripts/start-standalone.mjs` — byteweise das, was das Docker-Image ausliefert. `next start` funktioniert mit `output: 'standalone'` überhaupt nicht (es warnt und liefert etwas anderes aus). Wer die Kopierschritte in `start-standalone.mjs` ändert, muss sie im `Dockerfile` mitziehen: eine Abweichung dort heißt grüne Tests bei kaputtem Image.
+
+### Elemente werden über Rollen und zugängliche Namen gefunden
+
+Konkret in der Agenda: ein Block ist `getByRole('article', { name: <Titel> })`, ein Cluster `getByRole('group', { name: <Titel> })`, die Agenda selbst `getByRole('region', { name: /^Agenda/ })`.
+
+**Nicht** `getByRole('listitem')` — die `<li>` in den Beschreibungen tragen dieselbe Rolle, und eine Query, die beides trifft, ist nicht nur ein Testproblem: sie zeigt, dass das Markup die Struktur nicht ausdrückt. Wenn ein Test hier kämpft, ist meist die Semantik zu reparieren, nicht der Selektor.
+
 ### E2E deckt genau diese Flows — mehr nicht
 
 1. Magic-Link-Login
@@ -45,7 +55,11 @@ Nie direkte State-Manipulation. Getestet wird, was der Nutzer sieht — **Rollen
 4. Pin setzen und Nachrücken prüfen
 5. Markdown-Export
 6. 409-Konflikt in zwei Browser-Kontexten
-7. Mobile-Viewport: Leseansicht ohne horizontalen Scroll, Fließtext ≥ 16 px
+7. Mobile-Viewport: Leseansicht ohne horizontalen Scroll, Fließtext ≥ 16 px, Karten statt Tabelle, sticky Cluster-Header
+
+Flows, deren Feature noch nicht existiert, werden **nicht** als `test.fixme`-Attrappen vorweggenommen — sie stehen als Liste im Kopfkommentar von `e2e/agenda.spec.ts` und kommen mit ihrem Feature dazu.
+
+Zwei Projekte, `desktop` und `mobile` (Pixel 5); Tests, die nur für eines gelten, schließen das andere per `test.skip(({ isMobile }) => …)` aus. In CI läuft die Suite auf zwei Shards.
 
 ### Keine Flakes
 

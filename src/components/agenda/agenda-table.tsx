@@ -35,10 +35,10 @@ export function AgendaTable({
   schedule: Schedule
 }) {
   return (
-    <div className="gw-agenda">
+    <section aria-label={`Agenda ${doc.title}`} className="gw-agenda">
       <HeaderRow />
 
-      <div role="list" className="border-t border-[var(--border)] md:border-t-0">
+      <div className="border-t border-[var(--border)] md:border-t-0">
         {rows.map((row) => {
           if (row.kind === 'gap') return <GapRow key={row.id} minutes={row.minutes} />
 
@@ -65,7 +65,7 @@ export function AgendaTable({
       </div>
 
       <EndOfDay schedule={schedule} targetEndMinute={doc.targetEndMinute} />
-    </div>
+    </section>
   )
 }
 
@@ -102,9 +102,11 @@ function ModuleRow({
   const description = isRichTextValue(mod.desc.description) ? mod.desc.description : null
   const info = additionalInfo(mod)
 
+  const titleId = `module-title-${mod.id}`
+
   return (
     <article
-      role="listitem"
+      aria-labelledby={titleId}
       className={cn(
         catClass(type?.color),
         'group relative break-inside-avoid border-b border-[var(--border)]',
@@ -132,7 +134,9 @@ function ModuleRow({
           nested && 'pl-7 md:ml-7 md:pl-3',
         )}
       >
-        <h3 className="font-semibold text-[var(--fg)]">{mod.title}</h3>
+        <h3 id={titleId} className="font-semibold text-[var(--fg)]">
+          {mod.title}
+        </h3>
         {type && <p className="mt-0.5 text-[13px] text-[var(--cat-fg)] md:hidden">{type.name}</p>}
         {description && (
           <RichText value={description} className="mt-1 text-[15px] text-[var(--fg-muted)]" />
@@ -158,9 +162,12 @@ function ClusterRow({
   entry: ScheduleEntry
   childCount: number
 }) {
+  const titleId = `cluster-title-${cluster.id}`
+
   return (
     <div
-      role="listitem"
+      role="group"
+      aria-labelledby={titleId}
       className={cn(
         catClass(cluster.color ?? 'slate'),
         // Sticky on phones so you always know which section you are reading.
@@ -174,7 +181,9 @@ function ClusterRow({
         </div>
         <span className="hidden md:block" />
         <div className="flex items-baseline gap-2 border-l-4 border-[var(--cat-bar)] py-2 pl-3 md:px-3">
-          <h2 className="text-[15px] font-semibold text-[var(--cat-fg)]">{cluster.title}</h2>
+          <h2 id={titleId} className="text-[15px] font-semibold text-[var(--cat-fg)]">
+            {cluster.title}
+          </h2>
           <span className="tabular text-[13px] text-[var(--cat-fg)] opacity-80">
             {childCount} {childCount === 1 ? 'Block' : 'Blöcke'} ·{' '}
             {formatDuration(entry.durationMinutes, { spaced: true })}
@@ -193,7 +202,7 @@ function ClusterRow({
  */
 function GapRow({ minutes }: { minutes: number }) {
   return (
-    <div role="listitem" aria-hidden className={cn('items-center', GRID)}>
+    <div aria-hidden className={cn('items-center', GRID)}>
       <span className="hidden md:block" />
       <span className="hidden md:block" />
       <span className="hidden md:block" />

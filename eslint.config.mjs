@@ -6,7 +6,19 @@ import prettier from 'eslint-config-prettier'
 const compat = new FlatCompat({ baseDirectory: dirname(fileURLToPath(import.meta.url)) })
 
 const config = [
-  { ignores: ['.next/**', 'node_modules/**', 'coverage/**', 'next-env.d.ts'] },
+  {
+    ignores: [
+      '.next/**',
+      'node_modules/**',
+      'coverage/**',
+      'next-env.d.ts',
+      // Test and build artefacts: minified vendor bundles that would otherwise
+      // drown the report in thousands of irrelevant findings.
+      'playwright-report/**',
+      'blob-report/**',
+      'test-results/**',
+    ],
+  },
 
   ...compat.extends('next/core-web-vitals', 'next/typescript'),
   prettier,
