@@ -1,0 +1,233 @@
+@import 'tailwindcss';
+
+/* Dark mode is driven by next-themes' class strategy, not by a media query
+   alone: the viewer's explicit choice has to win in both directions. */
+@custom-variant dark (&:where(.dark, .dark *));
+
+@theme {
+  --font-sans: 'Inter Variable', ui-sans-serif, system-ui, -apple-system, 'Segoe UI', sans-serif;
+
+  /* The agenda grid contract. Every row -- header, module, cluster -- uses this
+     one custom property so columns stay aligned across nesting depths. It is
+     applied only from `md` up; below that the table collapses to cards. */
+  --gw-cols: 32px 92px 40px minmax(280px, 1fr) minmax(200px, 0.6fr) 44px;
+  --gw-indent: 28px;
+}
+
+:root {
+  color-scheme: light;
+
+  /* Surfaces */
+  --bg: oklch(0.985 0.002 250);
+  --surface: oklch(1 0 0);
+  --surface-raised: oklch(0.995 0.001 250);
+  --border: oklch(0.912 0.004 250);
+  --border-strong: oklch(0.845 0.006 250);
+
+  /* Text */
+  --fg: oklch(0.235 0.011 255);
+  --fg-muted: oklch(0.525 0.012 255);
+  --fg-subtle: oklch(0.655 0.011 255);
+
+  /* Feedback */
+  --warn-fg: oklch(0.47 0.13 70);
+  --warn-bg: oklch(0.968 0.038 80);
+  --danger-fg: oklch(0.505 0.185 27);
+  --danger-bg: oklch(0.965 0.03 27);
+
+  /* Brand accent. A tenant supplies ONE hex; the server converts it to OKLCH,
+     keeps hue + chroma and generates this ramp with contrast already checked.
+     Branding touches --brand-* and never .cat-* -- module-type colours are
+     semantics, not decoration. */
+  --brand-h: 262;
+  --brand-c: 0.17;
+  --brand: oklch(0.545 var(--brand-c) var(--brand-h));
+  --brand-hover: oklch(0.485 var(--brand-c) var(--brand-h));
+  --brand-active: oklch(0.43 var(--brand-c) var(--brand-h));
+  --brand-fg: oklch(0.995 0.005 var(--brand-h));
+  --brand-subtle-bg: oklch(0.965 0.028 var(--brand-h));
+  --brand-subtle-fg: oklch(0.4 0.11 var(--brand-h));
+  --brand-ring: oklch(0.64 0.14 var(--brand-h));
+}
+
+.dark {
+  color-scheme: dark;
+
+  --bg: oklch(0.178 0.008 255);
+  --surface: oklch(0.215 0.009 255);
+  --surface-raised: oklch(0.248 0.01 255);
+  --border: oklch(0.31 0.01 255);
+  --border-strong: oklch(0.395 0.012 255);
+
+  --fg: oklch(0.955 0.004 255);
+  --fg-muted: oklch(0.735 0.01 255);
+  --fg-subtle: oklch(0.605 0.01 255);
+
+  --warn-fg: oklch(0.845 0.115 82);
+  --warn-bg: oklch(0.3 0.055 75);
+  --danger-fg: oklch(0.79 0.135 25);
+  --danger-bg: oklch(0.295 0.065 25);
+
+  --brand: oklch(0.66 0.15 var(--brand-h));
+  --brand-hover: oklch(0.715 0.145 var(--brand-h));
+  --brand-active: oklch(0.76 0.135 var(--brand-h));
+  --brand-fg: oklch(0.185 0.02 var(--brand-h));
+  --brand-subtle-bg: oklch(0.285 0.055 var(--brand-h));
+  --brand-subtle-fg: oklch(0.885 0.055 var(--brand-h));
+  --brand-ring: oklch(0.68 0.13 var(--brand-h));
+}
+
+@layer base {
+  html {
+    /* dvh everywhere -- mobile browser chrome makes vh lie. */
+    min-height: 100dvh;
+  }
+
+  body {
+    background-color: var(--bg);
+    color: var(--fg);
+    font-family: var(--font-sans);
+    /* Never below 16px: iOS Safari zooms into any focused input under it. */
+    font-size: 16px;
+    line-height: 1.55;
+    -webkit-font-smoothing: antialiased;
+    /* A horizontal scrollbar on <body> is a bug, not a compromise. */
+    overflow-x: hidden;
+  }
+
+  /* Times and durations must not jitter while typing. This one declaration
+     carries a surprising amount of the "polished" feeling. */
+  .tabular {
+    font-variant-numeric: tabular-nums;
+    font-feature-settings: 'tnum';
+  }
+
+  :focus-visible {
+    outline: 2px solid var(--brand-ring);
+    outline-offset: 2px;
+    border-radius: 3px;
+  }
+
+  ::selection {
+    background: var(--brand-subtle-bg);
+    color: var(--brand-subtle-fg);
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    *,
+    *::before,
+    *::after {
+      animation-duration: 0.01ms !important;
+      animation-iteration-count: 1 !important;
+      transition-duration: 0.01ms !important;
+      scroll-behavior: auto !important;
+    }
+  }
+}
+
+@layer components {
+  /* Category tokens. Equal OKLCH lightness across hues is what keeps the
+   legend from looking amateurish -- the same swatches in sRGB hex have
+   wildly unequal perceived brightness. A module type stores a token
+   NAME ("rose"), never a hex value. See .claude/skills/goodworkshop-ui. */
+  .cat-rose {
+    --cat-bar: oklch(0.64 0.185 12);
+    --cat-bg: oklch(0.972 0.03 12);
+    --cat-fg: oklch(0.4 0.115 12);
+  }
+  .cat-red {
+    --cat-bar: oklch(0.64 0.19 27);
+    --cat-bg: oklch(0.972 0.03 27);
+    --cat-fg: oklch(0.4 0.118 27);
+  }
+  .cat-orange {
+    --cat-bar: oklch(0.64 0.15 55);
+    --cat-bg: oklch(0.972 0.024 55);
+    --cat-fg: oklch(0.4 0.093 55);
+  }
+  .cat-amber {
+    --cat-bar: oklch(0.64 0.13 85);
+    --cat-bg: oklch(0.972 0.021 85);
+    --cat-fg: oklch(0.4 0.081 85);
+  }
+  .cat-emerald {
+    --cat-bar: oklch(0.64 0.14 155);
+    --cat-bg: oklch(0.972 0.022 155);
+    --cat-fg: oklch(0.4 0.087 155);
+  }
+  .cat-teal {
+    --cat-bar: oklch(0.64 0.11 185);
+    --cat-bg: oklch(0.972 0.018 185);
+    --cat-fg: oklch(0.4 0.068 185);
+  }
+  .cat-cyan {
+    --cat-bar: oklch(0.64 0.12 215);
+    --cat-bg: oklch(0.972 0.019 215);
+    --cat-fg: oklch(0.4 0.074 215);
+  }
+  .cat-blue {
+    --cat-bar: oklch(0.64 0.175 255);
+    --cat-bg: oklch(0.972 0.028 255);
+    --cat-fg: oklch(0.4 0.108 255);
+  }
+  .cat-violet {
+    --cat-bar: oklch(0.64 0.18 292);
+    --cat-bg: oklch(0.972 0.029 292);
+    --cat-fg: oklch(0.4 0.112 292);
+  }
+  .cat-slate {
+    --cat-bar: oklch(0.64 0.025 250);
+    --cat-bg: oklch(0.972 0.004 250);
+    --cat-fg: oklch(0.4 0.015 250);
+  }
+  .dark .cat-rose {
+    --cat-bar: oklch(0.705 0.155 12);
+    --cat-bg: oklch(0.255 0.043 12);
+    --cat-fg: oklch(0.89 0.05 12);
+  }
+  .dark .cat-red {
+    --cat-bar: oklch(0.705 0.16 27);
+    --cat-bg: oklch(0.255 0.045 27);
+    --cat-fg: oklch(0.89 0.051 27);
+  }
+  .dark .cat-orange {
+    --cat-bar: oklch(0.705 0.125 55);
+    --cat-bg: oklch(0.255 0.035 55);
+    --cat-fg: oklch(0.89 0.04 55);
+  }
+  .dark .cat-amber {
+    --cat-bar: oklch(0.705 0.11 85);
+    --cat-bg: oklch(0.255 0.031 85);
+    --cat-fg: oklch(0.89 0.035 85);
+  }
+  .dark .cat-emerald {
+    --cat-bar: oklch(0.705 0.12 155);
+    --cat-bg: oklch(0.255 0.034 155);
+    --cat-fg: oklch(0.89 0.038 155);
+  }
+  .dark .cat-teal {
+    --cat-bar: oklch(0.705 0.095 185);
+    --cat-bg: oklch(0.255 0.027 185);
+    --cat-fg: oklch(0.89 0.03 185);
+  }
+  .dark .cat-cyan {
+    --cat-bar: oklch(0.705 0.105 215);
+    --cat-bg: oklch(0.255 0.029 215);
+    --cat-fg: oklch(0.89 0.034 215);
+  }
+  .dark .cat-blue {
+    --cat-bar: oklch(0.705 0.15 255);
+    --cat-bg: oklch(0.255 0.042 255);
+    --cat-fg: oklch(0.89 0.048 255);
+  }
+  .dark .cat-violet {
+    --cat-bar: oklch(0.705 0.155 292);
+    --cat-bg: oklch(0.255 0.043 292);
+    --cat-fg: oklch(0.89 0.05 292);
+  }
+  .dark .cat-slate {
+    --cat-bar: oklch(0.705 0.022 250);
+    --cat-bg: oklch(0.255 0.006 250);
+    --cat-fg: oklch(0.89 0.007 250);
+  }
+}
