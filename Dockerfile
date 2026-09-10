@@ -59,12 +59,21 @@ COPY --from=builder --chown=node:node /app/src/domain/moduleType/builtins.json .
 # the migrator, which no route touches, so it would be traced away.
 COPY --from=deps --chown=node:node /app/node_modules/drizzle-orm ./node_modules/drizzle-orm
 
+# The collaboration server. Bundled separately because nothing a route imports
+# reaches it, so Next's output tracing would leave it out entirely -- and it
+# runs in THIS image rather than a second one, so an on-prem install stays
+# "one image plus Postgres".
+COPY --from=builder --chown=node:node /app/dist ./dist
+COPY --from=deps --chown=node:node /app/node_modules/ws ./node_modules/ws
+
 USER node
-EXPOSE 3000
+EXPOSE 3000 3001
 
 # Fail-closed: a non-2xx or an unreachable server marks the container unhealthy
 # instead of letting a load balancer keep sending traffic to it.
 HEALTHCHECK --interval=30s --timeout=5s --start-period=20s --retries=3 \
   CMD node -e "fetch('http://127.0.0.1:'+(process.env.PORT||3000)+'/api/health').then(r=>process.exit(r.ok?0:1)).catch(()=>process.exit(1))"
 
-CMD ["node", "server.js"]
+# Both processes, one container. See scripts/start-container.mjs for why there
+# is no supervisor.
+CMD ["node", "scripts/start-container.mjs"]

@@ -17,6 +17,8 @@ const config = [
       'playwright-report/**',
       'blob-report/**',
       'test-results/**',
+      // The bundled collaboration server: generated output, not source.
+      'dist/**',
     ],
   },
 

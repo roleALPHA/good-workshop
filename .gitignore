@@ -21,3 +21,4 @@ e2e/.auth/
 .claude/
 CLAUDE.md
 **/CLAUDE.md
+dist/

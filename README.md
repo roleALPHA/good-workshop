@@ -100,6 +100,24 @@ anschließend als „die KI hat meinen Workshop gelöscht".
 Es gibt bewusst **keinen** Bereich für Nutzerverwaltung: ein MCP-Client darf niemals
 Nutzer einladen oder zu Admins machen.
 
+## Live-Kollaboration
+
+Mehrere Personen können denselben Workshoptag gleichzeitig bearbeiten. Die
+Zusammenführung übernimmt ein CRDT (Yjs), sodass gleichzeitige Änderungen an
+verschiedenen Blöcken — und an verschiedenen Feldern desselben Blocks — beide
+überleben statt sich zu überschreiben.
+
+**Yjs ist die Bearbeitungsschicht, Postgres bleibt die Akte.** Export, Druck, die
+MCP-Werkzeuge und jede Server Action lesen die relationalen Tabellen und wissen nichts
+von einem CRDT. Ein Materializer schreibt den Stand zurück; `collab_state.materialized_up_to`
+sagt, wie weit die Tabellen hinterherhängen.
+
+Der Kollaborations-Dienst läuft als **eigener Prozess im selben Image** auf Port 3001 —
+Next kann aus einem Route-Handler kein WebSocket-Upgrade bedienen. Ein zweites Image
+wäre der bequemere Weg gewesen und hätte die Zusage „ein Image plus Postgres" gebrochen.
+Der Proxy leitet `/collab` dorthin; authentifiziert wird mit demselben Sitzungs-Cookie,
+das auch den Editor öffnet.
+
 ## Architektur in drei Sätzen
 
 Ein **Modul** (Typ, Dauer, typspezifische Attribute als JSON) hängt an einem **Cluster**

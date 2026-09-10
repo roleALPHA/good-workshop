@@ -7,3 +7,4 @@ drizzle/
 playwright-report/
 blob-report/
 test-results/
+dist/

@@ -77,12 +77,18 @@ services:
       SMTP_URL: ${SMTP_URL:-}
       SMTP_FROM: ${SMTP_FROM:-}
       GW_EDITION: ${GW_EDITION:-community}
+      GW_COLLAB_PORT: '3001'
     volumes:
       - pgsocket:/var/run/postgresql
     # Nur an 127.0.0.1, nie an 0.0.0.0: ohne den Proxy davor ist nichts
     # erreichbar, auch bei falsch stehender Firewall nicht.
+    #
+    # Zwei Ports: die Anwendung, und der Kollaborations-Dienst. Der zweite
+    # existiert, weil Next aus einem Route-Handler kein WebSocket-Upgrade
+    # bedienen kann -- er läuft aber im selben Container, aus demselben Image.
     ports:
       - '127.0.0.1:${GW_PORT:-3000}:3000'
+      - '127.0.0.1:${GW_COLLAB_PORT:-3001}:3001'
     depends_on:
       migrate:
         condition: service_completed_successfully

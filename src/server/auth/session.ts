@@ -82,8 +82,21 @@ export async function readSession(): Promise<SessionUser | null> {
   const store = await cookies()
   // Both names are read: an install that gains TLS later keeps its sessions.
   const raw = store.get(SECURE_COOKIE)?.value ?? store.get(PLAIN_COOKIE)?.value
-  if (!raw) return null
+  return raw ? verifySessionCookie(raw) : null
+}
 
+/** The cookie names, for callers that parse a raw Cookie header themselves. */
+export const SESSION_COOKIE_NAMES = [SECURE_COOKIE, PLAIN_COOKIE] as const
+
+/**
+ * Validates a session cookie value.
+ *
+ * Split out from readSession because the collaboration server runs outside
+ * Next and has no `next/headers` -- it parses the upgrade request's Cookie
+ * header itself. A second implementation there would be a second place for the
+ * rules about revocation and membership to drift.
+ */
+export async function verifySessionCookie(raw: string): Promise<SessionUser | null> {
   const separator = raw.indexOf('.')
   if (separator < 0) return null
   const sessionId = raw.slice(0, separator)
