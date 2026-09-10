@@ -1,0 +1,224 @@
+// Vitest Snapshot v1, https://vitest.dev/guide/snapshot.html
+
+exports[`renderDayMarkdown > renders the agenda flavour 1`] = `
+"---
+title: "Design Sprint Kickoff"
+date: 2026-09-15
+tags: ["design-sprint", "acme"]
+duration: 4h 30m
+---
+
+# Design Sprint Kickoff
+
+> Tag 1 · 2026-09-15 · 13:00–17:30 · 3h 45m Inhalt, 1h 15m Pausen
+
+| Zeit | Dauer | Block | Info |
+| --- | --- | --- | --- |
+| 13:00 | 35m | **Ankommen & Rahmen** | 3 Blöcke |
+| 13:00 🔒 | 15m | ↳ Check-in & Start | Check-in |
+| 13:15 | 10m | ↳ Agenda & Spielregeln | Begrüßung & Organisatorisches |
+| 13:25 | 10m | ↳ Energizer: Zwei Wahrheiten | Energizer |
+| 13:35 | 45m | Druckpunkte | Impuls / Präsentation |
+| 14:20 | 40m | **Zielbild erarbeiten** | 2 Blöcke |
+| 14:20 | 30m | ↳ Spannungsfelder sammeln | Gruppenarbeit |
+| 14:50 | 10m | ↳ Einwandintegration | Entscheidung / Abstimmung |
+| 14:30 🔒 | 1h | Mittagessen | Mittagessen · ⚠ Überschneidung |
+| 15:30 | 45m | IT-Management verorten | Gruppenarbeit |
+| 16:15 | 15m | Kaffeepause | Pause |
+| 16:30 | 30m | Was sind die nächsten großen Fragen? | Plenumsdiskussion |
+| 17:00 | 15m | Nächste Schritte | Nächste Schritte |
+| 17:15 | 15m | Check-out | Check-out |
+
+## Details
+
+### 13:00 · Check-in & Start
+
+Kurze Vorstellungsrunde, ein Satz pro Person.
+
+**Sozialform:** Plenum
+
+### 13:15 · Agenda & Spielregeln
+
+Ablauf des Tages, Pausen, Umgang mit Handys.
+
+### 13:25 · Energizer: Zwei Wahrheiten
+
+Auflockerung vor dem inhaltlichen Einstieg.
+
+**Material:** Moderationskarten
+
+### 13:35 · Druckpunkte
+
+Die drei Zielbilder und ihre jeweiligen Druckpunkte gegenüberstellen.
+
+- Zielbilder und entsprechende Druckpunkte gegenüberstellen
+- Aggregierte Version vorstellen – Konsent einholen
+- Welche Mechaniken sind im aggregierten Zielbild aufgelöst?
+
+**Material:** Alle Zielbilder ausgedruckt, Klebepunkte
+
+**Sozialform:** Plenum
+
+### 14:20 · Spannungsfelder sammeln
+
+Spannungsfelder sichtbar machen und einordnen: zentral vs. dezentral, stabil vs. fluide.
+
+**Gruppengröße:** 4
+
+**Ergebnis:** Ein Flipchart je Gruppe
+
+**Sozialform:** Kleingruppen
+
+### 14:50 · Einwandintegration
+
+Konsolidierte Version per Konsent-Verfahren integrieren.
+
+**Verfahren:** Konsent
+
+### 14:30 · Mittagessen
+
+**Verpflegung:** Vegetarische Option ist bestellt.
+
+### 15:30 · IT-Management verorten
+
+Wo auf dem Zielbild ist das IT-Management zu verorten?
+
+**Sozialform:** Kleingruppen
+
+### 16:30 · Was sind die nächsten großen Fragen?
+
+Wie kommen wir von einem High-Level-Zielbild zu einem differenzierten Zielbild?
+
+- Zusammenarbeit der Schnittstellen
+- Teamlogiken und Kompetenzen
+- Etappenziele und Transition
+- Projektlogik
+- Governance
+
+### 17:00 · Nächste Schritte
+
+Wer macht was bis wann?
+
+### 17:15 · Check-out
+
+Ein Wort zum Tag, Blitzlichtrunde.
+
+**Format:** Reihum
+
+---
+
+GoodWorkshop · powered by roleALPHA
+"
+`;
+
+exports[`renderDayMarkdown > renders the outline flavour 1`] = `
+"---
+title: "Design Sprint Kickoff"
+date: 2026-09-15
+tags: ["design-sprint", "acme"]
+duration: 4h 30m
+---
+
+# Design Sprint Kickoff
+
+> Tag 1 · 2026-09-15 · 13:00–17:30 · 3h 45m Inhalt, 1h 15m Pausen
+
+## Ankommen & Rahmen
+*13:00 · 35m*
+
+### 13:00 🔒 · Check-in & Start
+\`15m\` · Check-in
+
+Kurze Vorstellungsrunde, ein Satz pro Person.
+
+**Sozialform:** Plenum
+
+### 13:15 · Agenda & Spielregeln
+\`10m\` · Begrüßung & Organisatorisches
+
+Ablauf des Tages, Pausen, Umgang mit Handys.
+
+### 13:25 · Energizer: Zwei Wahrheiten
+\`10m\` · Energizer
+
+Auflockerung vor dem inhaltlichen Einstieg.
+
+**Material:** Moderationskarten
+
+### 13:35 · Druckpunkte
+\`45m\` · Impuls / Präsentation
+
+Die drei Zielbilder und ihre jeweiligen Druckpunkte gegenüberstellen.
+
+- Zielbilder und entsprechende Druckpunkte gegenüberstellen
+- Aggregierte Version vorstellen – Konsent einholen
+- Welche Mechaniken sind im aggregierten Zielbild aufgelöst?
+
+**Material:** Alle Zielbilder ausgedruckt, Klebepunkte
+
+**Sozialform:** Plenum
+
+## Zielbild erarbeiten
+*14:20 · 40m*
+
+### 14:20 · Spannungsfelder sammeln
+\`30m\` · Gruppenarbeit
+
+Spannungsfelder sichtbar machen und einordnen: zentral vs. dezentral, stabil vs. fluide.
+
+**Gruppengröße:** 4
+
+**Ergebnis:** Ein Flipchart je Gruppe
+
+**Sozialform:** Kleingruppen
+
+### 14:50 · Einwandintegration
+\`10m\` · Entscheidung / Abstimmung
+
+Konsolidierte Version per Konsent-Verfahren integrieren.
+
+**Verfahren:** Konsent
+
+### 14:30 🔒 · Mittagessen
+\`1h\` · Mittagessen
+
+**Verpflegung:** Vegetarische Option ist bestellt.
+
+### 15:30 · IT-Management verorten
+\`45m\` · Gruppenarbeit
+
+Wo auf dem Zielbild ist das IT-Management zu verorten?
+
+**Sozialform:** Kleingruppen
+
+### 16:15 · Kaffeepause
+\`15m\` · Pause
+
+### 16:30 · Was sind die nächsten großen Fragen?
+\`30m\` · Plenumsdiskussion
+
+Wie kommen wir von einem High-Level-Zielbild zu einem differenzierten Zielbild?
+
+- Zusammenarbeit der Schnittstellen
+- Teamlogiken und Kompetenzen
+- Etappenziele und Transition
+- Projektlogik
+- Governance
+
+### 17:00 · Nächste Schritte
+\`15m\` · Nächste Schritte
+
+Wer macht was bis wann?
+
+### 17:15 · Check-out
+\`15m\` · Check-out
+
+Ein Wort zum Tag, Blitzlichtrunde.
+
+**Format:** Reihum
+
+---
+
+GoodWorkshop · powered by roleALPHA
+"
+`;

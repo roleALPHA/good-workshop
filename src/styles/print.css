@@ -1,0 +1,48 @@
+/* Print rules, kept out of globals.css so the editor never pays for them. */
+
+.gw-print {
+  background: #fff;
+  color: #111;
+  max-width: 60rem;
+  margin: 0 auto;
+  padding: 2rem 1.5rem;
+}
+
+@page {
+  size: A4;
+  margin: 16mm;
+}
+
+@media print {
+  /* Category bars carry meaning here -- a printed agenda without them is a
+     list of times. Browsers strip backgrounds by default, so ask explicitly. */
+  * {
+    -webkit-print-color-adjust: exact;
+    print-color-adjust: exact;
+  }
+
+  .gw-print {
+    padding: 0;
+    max-width: none;
+  }
+
+  /* A block split across a page break is the one thing that makes a printed
+     agenda unusable in the room. */
+  .gw-print [data-print-row] {
+    break-inside: avoid;
+  }
+
+  .gw-print [data-print-section] {
+    break-after: avoid;
+  }
+
+  .gw-print a[href^='http']::after {
+    content: ' (' attr(href) ')';
+    font-size: 9px;
+    color: #555;
+  }
+
+  .gw-print [data-print-hide] {
+    display: none !important;
+  }
+}
