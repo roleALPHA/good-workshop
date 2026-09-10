@@ -79,6 +79,14 @@ async function regrant(db) {
     await db.execute(sql.raw(`revoke all on table "${table}" from gw_app`))
     await db.execute(sql.raw(`grant select, insert, update, delete on table "${table}" to gw_auth`))
   }
+
+  // The migration ledger, readable. The health endpoint compares what the
+  // image ships against what the database has applied, and a rolling deploy
+  // whose migration has not run yet has to FAIL that check rather than serve
+  // pages against a schema it does not understand. Read-only, and there is
+  // nothing secret in a list of file names.
+  await db.execute(sql`grant usage on schema drizzle to gw_app, gw_ops`)
+  await db.execute(sql`grant select on drizzle.__drizzle_migrations to gw_app, gw_ops`)
 }
 
 /**

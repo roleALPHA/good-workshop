@@ -199,6 +199,22 @@ wäre der bequemere Weg gewesen und hätte die Zusage „ein Image plus Postgres
 Der Proxy leitet `/collab` dorthin; authentifiziert wird mit demselben Sitzungs-Cookie,
 das auch den Editor öffnet.
 
+## Healthcheck
+
+`/api/health` prüft die Datenbankverbindung **und** ob die Migrationen, die dieses Image
+erwartet, auch angewendet sind. Ein Rolling Deploy mit ausstehender Migration fällt damit
+am Healthcheck durch, statt Seiten gegen ein Schema auszuliefern, das er nicht versteht.
+
+Eine Datenbank, die _voraus_ ist, wird gemeldet und toleriert: beim Rolling Deploy läuft die
+Migration zuerst, und die alten Container liefern weiter aus, bis sie ersetzt sind. Das ist
+der vorgesehene Zustand — daran zu scheitern hieße, dass jedes Deployment die Installation
+auf dem Weg kurz abschaltet.
+
+Ohne Datenbank antwortet der Endpunkt mit 503. Das ist beabsichtigt: der Container kann die
+Anwendung dann nicht ausliefern. Die Testumgebung wartet deshalb auf die Startseite und
+nicht auf diesen Endpunkt — „lauscht der Server" und „kann dieser Container die Anwendung
+ausliefern" sind zwei verschiedene Fragen.
+
 ## Architektur in drei Sätzen
 
 Ein **Modul** (Typ, Dauer, typspezifische Attribute als JSON) hängt an einem **Cluster**

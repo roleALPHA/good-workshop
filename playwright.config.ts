@@ -78,7 +78,12 @@ export default defineConfig({
         // proxy in a real deployment and this process is inside it.
         GW_COLLAB_INTERNAL_URL: `ws://127.0.0.1:${COLLAB_PORT}/collab`,
       },
-      url: `${baseURL}/api/health`,
+      // The demo page, not /api/health. Health is now honest about needing a
+      // database -- it returns 503 without one -- and the demo suite runs with
+      // no database at all. "Is the server listening" and "can this container
+      // serve the app" are different questions, and the harness is asking the
+      // first one.
+      url: `${baseURL}/`,
       reuseExistingServer: !process.env.CI,
       timeout: 180_000,
       stdout: 'ignore',
