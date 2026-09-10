@@ -1,0 +1,1297 @@
+[
+  {
+    "key": "admin",
+    "name": "Begrüßung & Organisatorisches",
+    "description": "Ankommen, Ablauf, Spielregeln.",
+    "category": "opening",
+    "color": "slate",
+    "icon": "info",
+    "defaultDurationMinutes": 10,
+    "countsAsContent": true,
+    "jsonSchema": {
+      "$schema": "https://json-schema.org/draft/2020-12/schema",
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "description": {
+          "type": "string",
+          "format": "richtext",
+          "title": "Beschreibung",
+          "x-gw": {
+            "group": "Inhalt",
+            "order": 1,
+            "cols": 12
+          }
+        },
+        "facilitator_notes": {
+          "type": "string",
+          "format": "richtext",
+          "title": "Moderationsnotizen",
+          "description": "Nur für dich sichtbar, nicht im Teilnehmer-Export.",
+          "x-gw": {
+            "group": "Moderation",
+            "order": 1,
+            "cols": 12,
+            "private": true
+          }
+        },
+        "materials": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          },
+          "title": "Material",
+          "x-gw": {
+            "group": "Vorbereitung",
+            "order": 1,
+            "cols": 12,
+            "widget": "tags",
+            "help": "Alles, was auf dem Tisch liegen muss",
+            "summary": true,
+            "export": "inline-list"
+          }
+        },
+        "participation": {
+          "type": "string",
+          "title": "Sozialform",
+          "enum": ["plenary", "small_groups", "pairs", "individual", "none"],
+          "x-gw": {
+            "group": "Inhalt",
+            "order": 3,
+            "cols": 6,
+            "widget": "select",
+            "export": "inline"
+          }
+        },
+        "agenda_overview": {
+          "type": "string",
+          "format": "richtext",
+          "title": "Agenda-Überblick",
+          "x-gw": {
+            "group": "Inhalt",
+            "order": 2,
+            "cols": 12
+          }
+        }
+      }
+    }
+  },
+  {
+    "key": "check_in",
+    "name": "Check-in",
+    "description": "Alle kommen einmal zu Wort.",
+    "category": "opening",
+    "color": "rose",
+    "icon": "hand",
+    "defaultDurationMinutes": 15,
+    "countsAsContent": true,
+    "jsonSchema": {
+      "$schema": "https://json-schema.org/draft/2020-12/schema",
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "description": {
+          "type": "string",
+          "format": "richtext",
+          "title": "Beschreibung",
+          "x-gw": {
+            "group": "Inhalt",
+            "order": 1,
+            "cols": 12
+          }
+        },
+        "facilitator_notes": {
+          "type": "string",
+          "format": "richtext",
+          "title": "Moderationsnotizen",
+          "description": "Nur für dich sichtbar, nicht im Teilnehmer-Export.",
+          "x-gw": {
+            "group": "Moderation",
+            "order": 1,
+            "cols": 12,
+            "private": true
+          }
+        },
+        "materials": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          },
+          "title": "Material",
+          "x-gw": {
+            "group": "Vorbereitung",
+            "order": 1,
+            "cols": 12,
+            "widget": "tags",
+            "help": "Alles, was auf dem Tisch liegen muss",
+            "summary": true,
+            "export": "inline-list"
+          }
+        },
+        "participation": {
+          "type": "string",
+          "title": "Sozialform",
+          "enum": ["plenary", "small_groups", "pairs", "individual", "none"],
+          "x-gw": {
+            "group": "Inhalt",
+            "order": 3,
+            "cols": 6,
+            "widget": "select",
+            "export": "inline"
+          }
+        },
+        "prompt": {
+          "type": "string",
+          "format": "richtext",
+          "title": "Impulsfrage",
+          "x-gw": {
+            "group": "Inhalt",
+            "order": 2,
+            "cols": 12
+          }
+        },
+        "format": {
+          "type": "string",
+          "title": "Format",
+          "enum": ["round", "popcorn", "pairs", "written"],
+          "x-gw": {
+            "group": "Ablauf",
+            "order": 1,
+            "cols": 6,
+            "widget": "select",
+            "export": "inline"
+          }
+        },
+        "timebox_per_person_seconds": {
+          "type": "integer",
+          "title": "Zeit je Person (Sek.)",
+          "minimum": 0,
+          "maximum": 600,
+          "x-gw": {
+            "group": "Ablauf",
+            "order": 2,
+            "cols": 6
+          }
+        }
+      }
+    }
+  },
+  {
+    "key": "presentation",
+    "name": "Impuls / Präsentation",
+    "description": "",
+    "category": "content",
+    "color": "violet",
+    "icon": "presentation",
+    "defaultDurationMinutes": 20,
+    "countsAsContent": true,
+    "jsonSchema": {
+      "$schema": "https://json-schema.org/draft/2020-12/schema",
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "description": {
+          "type": "string",
+          "format": "richtext",
+          "title": "Beschreibung",
+          "x-gw": {
+            "group": "Inhalt",
+            "order": 1,
+            "cols": 12
+          }
+        },
+        "facilitator_notes": {
+          "type": "string",
+          "format": "richtext",
+          "title": "Moderationsnotizen",
+          "description": "Nur für dich sichtbar, nicht im Teilnehmer-Export.",
+          "x-gw": {
+            "group": "Moderation",
+            "order": 1,
+            "cols": 12,
+            "private": true
+          }
+        },
+        "materials": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          },
+          "title": "Material",
+          "x-gw": {
+            "group": "Vorbereitung",
+            "order": 1,
+            "cols": 12,
+            "widget": "tags",
+            "help": "Alles, was auf dem Tisch liegen muss",
+            "summary": true,
+            "export": "inline-list"
+          }
+        },
+        "participation": {
+          "type": "string",
+          "title": "Sozialform",
+          "enum": ["plenary", "small_groups", "pairs", "individual", "none"],
+          "x-gw": {
+            "group": "Inhalt",
+            "order": 3,
+            "cols": 6,
+            "widget": "select",
+            "export": "inline"
+          }
+        },
+        "presenter": {
+          "type": "string",
+          "title": "Vortragende:r",
+          "x-gw": {
+            "group": "Ablauf",
+            "order": 1,
+            "cols": 6,
+            "summary": true,
+            "export": "inline"
+          }
+        },
+        "slides_url": {
+          "type": "string",
+          "format": "uri",
+          "title": "Folien",
+          "x-gw": {
+            "group": "Vorbereitung",
+            "order": 2,
+            "cols": 12,
+            "export": "link"
+          }
+        },
+        "key_points": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          },
+          "title": "Kernaussagen",
+          "x-gw": {
+            "group": "Inhalt",
+            "order": 2,
+            "cols": 12,
+            "widget": "tags",
+            "export": "list"
+          }
+        }
+      }
+    }
+  },
+  {
+    "key": "discussion",
+    "name": "Plenumsdiskussion",
+    "description": "",
+    "category": "content",
+    "color": "cyan",
+    "icon": "messages-square",
+    "defaultDurationMinutes": 20,
+    "countsAsContent": true,
+    "jsonSchema": {
+      "$schema": "https://json-schema.org/draft/2020-12/schema",
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "description": {
+          "type": "string",
+          "format": "richtext",
+          "title": "Beschreibung",
+          "x-gw": {
+            "group": "Inhalt",
+            "order": 1,
+            "cols": 12
+          }
+        },
+        "facilitator_notes": {
+          "type": "string",
+          "format": "richtext",
+          "title": "Moderationsnotizen",
+          "description": "Nur für dich sichtbar, nicht im Teilnehmer-Export.",
+          "x-gw": {
+            "group": "Moderation",
+            "order": 1,
+            "cols": 12,
+            "private": true
+          }
+        },
+        "materials": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          },
+          "title": "Material",
+          "x-gw": {
+            "group": "Vorbereitung",
+            "order": 1,
+            "cols": 12,
+            "widget": "tags",
+            "help": "Alles, was auf dem Tisch liegen muss",
+            "summary": true,
+            "export": "inline-list"
+          }
+        },
+        "participation": {
+          "type": "string",
+          "title": "Sozialform",
+          "enum": ["plenary", "small_groups", "pairs", "individual", "none"],
+          "x-gw": {
+            "group": "Inhalt",
+            "order": 3,
+            "cols": 6,
+            "widget": "select",
+            "export": "inline"
+          }
+        },
+        "question": {
+          "type": "string",
+          "format": "richtext",
+          "title": "Leitfrage",
+          "x-gw": {
+            "group": "Inhalt",
+            "order": 2,
+            "cols": 12
+          }
+        }
+      }
+    }
+  },
+  {
+    "key": "group_work",
+    "name": "Gruppenarbeit",
+    "description": "",
+    "category": "activity",
+    "color": "emerald",
+    "icon": "users",
+    "defaultDurationMinutes": 45,
+    "countsAsContent": true,
+    "jsonSchema": {
+      "$schema": "https://json-schema.org/draft/2020-12/schema",
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "description": {
+          "type": "string",
+          "format": "richtext",
+          "title": "Beschreibung",
+          "x-gw": {
+            "group": "Inhalt",
+            "order": 1,
+            "cols": 12
+          }
+        },
+        "facilitator_notes": {
+          "type": "string",
+          "format": "richtext",
+          "title": "Moderationsnotizen",
+          "description": "Nur für dich sichtbar, nicht im Teilnehmer-Export.",
+          "x-gw": {
+            "group": "Moderation",
+            "order": 1,
+            "cols": 12,
+            "private": true
+          }
+        },
+        "materials": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          },
+          "title": "Material",
+          "x-gw": {
+            "group": "Vorbereitung",
+            "order": 1,
+            "cols": 12,
+            "widget": "tags",
+            "help": "Alles, was auf dem Tisch liegen muss",
+            "summary": true,
+            "export": "inline-list"
+          }
+        },
+        "participation": {
+          "type": "string",
+          "title": "Sozialform",
+          "enum": ["plenary", "small_groups", "pairs", "individual", "none"],
+          "x-gw": {
+            "group": "Inhalt",
+            "order": 3,
+            "cols": 6,
+            "widget": "select",
+            "export": "inline"
+          }
+        },
+        "task": {
+          "type": "string",
+          "format": "richtext",
+          "title": "Arbeitsauftrag",
+          "x-gw": {
+            "group": "Inhalt",
+            "order": 2,
+            "cols": 12
+          }
+        },
+        "group_size": {
+          "type": "integer",
+          "title": "Gruppengröße",
+          "minimum": 2,
+          "maximum": 20,
+          "x-gw": {
+            "group": "Ablauf",
+            "order": 1,
+            "cols": 4,
+            "export": "inline"
+          }
+        },
+        "number_of_groups": {
+          "type": "integer",
+          "title": "Anzahl Gruppen",
+          "minimum": 1,
+          "maximum": 50,
+          "x-gw": {
+            "group": "Ablauf",
+            "order": 2,
+            "cols": 4
+          }
+        },
+        "deliverable": {
+          "type": "string",
+          "title": "Ergebnis",
+          "x-gw": {
+            "group": "Ablauf",
+            "order": 3,
+            "cols": 4,
+            "summary": true,
+            "export": "inline"
+          }
+        },
+        "room_setup": {
+          "type": "string",
+          "title": "Raumaufbau",
+          "x-gw": {
+            "group": "Vorbereitung",
+            "order": 2,
+            "cols": 12
+          }
+        }
+      }
+    }
+  },
+  {
+    "key": "exercise",
+    "name": "Übung",
+    "description": "",
+    "category": "activity",
+    "color": "teal",
+    "icon": "activity",
+    "defaultDurationMinutes": 30,
+    "countsAsContent": true,
+    "jsonSchema": {
+      "$schema": "https://json-schema.org/draft/2020-12/schema",
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "description": {
+          "type": "string",
+          "format": "richtext",
+          "title": "Beschreibung",
+          "x-gw": {
+            "group": "Inhalt",
+            "order": 1,
+            "cols": 12
+          }
+        },
+        "facilitator_notes": {
+          "type": "string",
+          "format": "richtext",
+          "title": "Moderationsnotizen",
+          "description": "Nur für dich sichtbar, nicht im Teilnehmer-Export.",
+          "x-gw": {
+            "group": "Moderation",
+            "order": 1,
+            "cols": 12,
+            "private": true
+          }
+        },
+        "materials": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          },
+          "title": "Material",
+          "x-gw": {
+            "group": "Vorbereitung",
+            "order": 1,
+            "cols": 12,
+            "widget": "tags",
+            "help": "Alles, was auf dem Tisch liegen muss",
+            "summary": true,
+            "export": "inline-list"
+          }
+        },
+        "participation": {
+          "type": "string",
+          "title": "Sozialform",
+          "enum": ["plenary", "small_groups", "pairs", "individual", "none"],
+          "x-gw": {
+            "group": "Inhalt",
+            "order": 3,
+            "cols": 6,
+            "widget": "select",
+            "export": "inline"
+          }
+        },
+        "instructions": {
+          "type": "string",
+          "format": "richtext",
+          "title": "Anleitung",
+          "x-gw": {
+            "group": "Inhalt",
+            "order": 2,
+            "cols": 12
+          }
+        },
+        "method_url": {
+          "type": "string",
+          "format": "uri",
+          "title": "Methodenbeschreibung",
+          "x-gw": {
+            "group": "Vorbereitung",
+            "order": 2,
+            "cols": 12,
+            "export": "link"
+          }
+        },
+        "debrief": {
+          "type": "string",
+          "format": "richtext",
+          "title": "Auswertung",
+          "x-gw": {
+            "group": "Inhalt",
+            "order": 4,
+            "cols": 12
+          }
+        }
+      }
+    }
+  },
+  {
+    "key": "decision",
+    "name": "Entscheidung / Abstimmung",
+    "description": "",
+    "category": "activity",
+    "color": "red",
+    "icon": "check-square",
+    "defaultDurationMinutes": 20,
+    "countsAsContent": true,
+    "jsonSchema": {
+      "$schema": "https://json-schema.org/draft/2020-12/schema",
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "description": {
+          "type": "string",
+          "format": "richtext",
+          "title": "Beschreibung",
+          "x-gw": {
+            "group": "Inhalt",
+            "order": 1,
+            "cols": 12
+          }
+        },
+        "facilitator_notes": {
+          "type": "string",
+          "format": "richtext",
+          "title": "Moderationsnotizen",
+          "description": "Nur für dich sichtbar, nicht im Teilnehmer-Export.",
+          "x-gw": {
+            "group": "Moderation",
+            "order": 1,
+            "cols": 12,
+            "private": true
+          }
+        },
+        "materials": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          },
+          "title": "Material",
+          "x-gw": {
+            "group": "Vorbereitung",
+            "order": 1,
+            "cols": 12,
+            "widget": "tags",
+            "help": "Alles, was auf dem Tisch liegen muss",
+            "summary": true,
+            "export": "inline-list"
+          }
+        },
+        "participation": {
+          "type": "string",
+          "title": "Sozialform",
+          "enum": ["plenary", "small_groups", "pairs", "individual", "none"],
+          "x-gw": {
+            "group": "Inhalt",
+            "order": 3,
+            "cols": 6,
+            "widget": "select",
+            "export": "inline"
+          }
+        },
+        "method": {
+          "type": "string",
+          "title": "Verfahren",
+          "enum": ["dot_voting", "fist_of_five", "consent", "majority"],
+          "x-gw": {
+            "group": "Ablauf",
+            "order": 1,
+            "cols": 6,
+            "widget": "select",
+            "summary": true,
+            "export": "inline"
+          }
+        },
+        "options": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          },
+          "title": "Optionen",
+          "x-gw": {
+            "group": "Inhalt",
+            "order": 2,
+            "cols": 12,
+            "widget": "tags",
+            "export": "list"
+          }
+        }
+      }
+    }
+  },
+  {
+    "key": "reflection",
+    "name": "Reflexion",
+    "description": "",
+    "category": "content",
+    "color": "blue",
+    "icon": "lightbulb",
+    "defaultDurationMinutes": 15,
+    "countsAsContent": true,
+    "jsonSchema": {
+      "$schema": "https://json-schema.org/draft/2020-12/schema",
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "description": {
+          "type": "string",
+          "format": "richtext",
+          "title": "Beschreibung",
+          "x-gw": {
+            "group": "Inhalt",
+            "order": 1,
+            "cols": 12
+          }
+        },
+        "facilitator_notes": {
+          "type": "string",
+          "format": "richtext",
+          "title": "Moderationsnotizen",
+          "description": "Nur für dich sichtbar, nicht im Teilnehmer-Export.",
+          "x-gw": {
+            "group": "Moderation",
+            "order": 1,
+            "cols": 12,
+            "private": true
+          }
+        },
+        "materials": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          },
+          "title": "Material",
+          "x-gw": {
+            "group": "Vorbereitung",
+            "order": 1,
+            "cols": 12,
+            "widget": "tags",
+            "help": "Alles, was auf dem Tisch liegen muss",
+            "summary": true,
+            "export": "inline-list"
+          }
+        },
+        "participation": {
+          "type": "string",
+          "title": "Sozialform",
+          "enum": ["plenary", "small_groups", "pairs", "individual", "none"],
+          "x-gw": {
+            "group": "Inhalt",
+            "order": 3,
+            "cols": 6,
+            "widget": "select",
+            "export": "inline"
+          }
+        },
+        "prompt": {
+          "type": "string",
+          "format": "richtext",
+          "title": "Reflexionsfrage",
+          "x-gw": {
+            "group": "Inhalt",
+            "order": 2,
+            "cols": 12
+          }
+        },
+        "individual_first": {
+          "type": "boolean",
+          "title": "Erst einzeln, dann geteilt",
+          "x-gw": {
+            "group": "Ablauf",
+            "order": 1,
+            "cols": 12
+          }
+        }
+      }
+    }
+  },
+  {
+    "key": "energizer",
+    "name": "Energizer",
+    "description": "",
+    "category": "activity",
+    "color": "orange",
+    "icon": "zap",
+    "defaultDurationMinutes": 10,
+    "countsAsContent": true,
+    "jsonSchema": {
+      "$schema": "https://json-schema.org/draft/2020-12/schema",
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "description": {
+          "type": "string",
+          "format": "richtext",
+          "title": "Beschreibung",
+          "x-gw": {
+            "group": "Inhalt",
+            "order": 1,
+            "cols": 12
+          }
+        },
+        "facilitator_notes": {
+          "type": "string",
+          "format": "richtext",
+          "title": "Moderationsnotizen",
+          "description": "Nur für dich sichtbar, nicht im Teilnehmer-Export.",
+          "x-gw": {
+            "group": "Moderation",
+            "order": 1,
+            "cols": 12,
+            "private": true
+          }
+        },
+        "materials": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          },
+          "title": "Material",
+          "x-gw": {
+            "group": "Vorbereitung",
+            "order": 1,
+            "cols": 12,
+            "widget": "tags",
+            "help": "Alles, was auf dem Tisch liegen muss",
+            "summary": true,
+            "export": "inline-list"
+          }
+        },
+        "participation": {
+          "type": "string",
+          "title": "Sozialform",
+          "enum": ["plenary", "small_groups", "pairs", "individual", "none"],
+          "x-gw": {
+            "group": "Inhalt",
+            "order": 3,
+            "cols": 6,
+            "widget": "select",
+            "export": "inline"
+          }
+        },
+        "activity": {
+          "type": "string",
+          "format": "richtext",
+          "title": "Aktivität",
+          "x-gw": {
+            "group": "Inhalt",
+            "order": 2,
+            "cols": 12
+          }
+        },
+        "space_needed": {
+          "type": "string",
+          "title": "Platzbedarf",
+          "enum": ["seated", "standing", "room", "outdoor"],
+          "x-gw": {
+            "group": "Vorbereitung",
+            "order": 2,
+            "cols": 6,
+            "widget": "select"
+          }
+        }
+      }
+    }
+  },
+  {
+    "key": "break",
+    "name": "Pause",
+    "description": "",
+    "category": "logistics",
+    "color": "slate",
+    "icon": "coffee",
+    "defaultDurationMinutes": 15,
+    "countsAsContent": false,
+    "jsonSchema": {
+      "$schema": "https://json-schema.org/draft/2020-12/schema",
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "description": {
+          "type": "string",
+          "format": "richtext",
+          "title": "Beschreibung",
+          "x-gw": {
+            "group": "Inhalt",
+            "order": 1,
+            "cols": 12
+          }
+        },
+        "facilitator_notes": {
+          "type": "string",
+          "format": "richtext",
+          "title": "Moderationsnotizen",
+          "description": "Nur für dich sichtbar, nicht im Teilnehmer-Export.",
+          "x-gw": {
+            "group": "Moderation",
+            "order": 1,
+            "cols": 12,
+            "private": true
+          }
+        },
+        "materials": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          },
+          "title": "Material",
+          "x-gw": {
+            "group": "Vorbereitung",
+            "order": 1,
+            "cols": 12,
+            "widget": "tags",
+            "help": "Alles, was auf dem Tisch liegen muss",
+            "summary": true,
+            "export": "inline-list"
+          }
+        },
+        "participation": {
+          "type": "string",
+          "title": "Sozialform",
+          "enum": ["plenary", "small_groups", "pairs", "individual", "none"],
+          "x-gw": {
+            "group": "Inhalt",
+            "order": 3,
+            "cols": 6,
+            "widget": "select",
+            "export": "inline"
+          }
+        }
+      }
+    }
+  },
+  {
+    "key": "lunch",
+    "name": "Mittagessen",
+    "description": "",
+    "category": "logistics",
+    "color": "amber",
+    "icon": "utensils",
+    "defaultDurationMinutes": 60,
+    "countsAsContent": false,
+    "jsonSchema": {
+      "$schema": "https://json-schema.org/draft/2020-12/schema",
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "description": {
+          "type": "string",
+          "format": "richtext",
+          "title": "Beschreibung",
+          "x-gw": {
+            "group": "Inhalt",
+            "order": 1,
+            "cols": 12
+          }
+        },
+        "facilitator_notes": {
+          "type": "string",
+          "format": "richtext",
+          "title": "Moderationsnotizen",
+          "description": "Nur für dich sichtbar, nicht im Teilnehmer-Export.",
+          "x-gw": {
+            "group": "Moderation",
+            "order": 1,
+            "cols": 12,
+            "private": true
+          }
+        },
+        "materials": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          },
+          "title": "Material",
+          "x-gw": {
+            "group": "Vorbereitung",
+            "order": 1,
+            "cols": 12,
+            "widget": "tags",
+            "help": "Alles, was auf dem Tisch liegen muss",
+            "summary": true,
+            "export": "inline-list"
+          }
+        },
+        "participation": {
+          "type": "string",
+          "title": "Sozialform",
+          "enum": ["plenary", "small_groups", "pairs", "individual", "none"],
+          "x-gw": {
+            "group": "Inhalt",
+            "order": 3,
+            "cols": 6,
+            "widget": "select",
+            "export": "inline"
+          }
+        },
+        "catering_note": {
+          "type": "string",
+          "title": "Verpflegung",
+          "x-gw": {
+            "group": "Vorbereitung",
+            "order": 1,
+            "cols": 12,
+            "summary": true,
+            "export": "inline"
+          }
+        }
+      }
+    }
+  },
+  {
+    "key": "buffer",
+    "name": "Puffer",
+    "description": "",
+    "category": "logistics",
+    "color": "slate",
+    "icon": "clock",
+    "defaultDurationMinutes": 10,
+    "countsAsContent": false,
+    "jsonSchema": {
+      "$schema": "https://json-schema.org/draft/2020-12/schema",
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "description": {
+          "type": "string",
+          "format": "richtext",
+          "title": "Beschreibung",
+          "x-gw": {
+            "group": "Inhalt",
+            "order": 1,
+            "cols": 12
+          }
+        },
+        "facilitator_notes": {
+          "type": "string",
+          "format": "richtext",
+          "title": "Moderationsnotizen",
+          "description": "Nur für dich sichtbar, nicht im Teilnehmer-Export.",
+          "x-gw": {
+            "group": "Moderation",
+            "order": 1,
+            "cols": 12,
+            "private": true
+          }
+        },
+        "materials": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          },
+          "title": "Material",
+          "x-gw": {
+            "group": "Vorbereitung",
+            "order": 1,
+            "cols": 12,
+            "widget": "tags",
+            "help": "Alles, was auf dem Tisch liegen muss",
+            "summary": true,
+            "export": "inline-list"
+          }
+        },
+        "participation": {
+          "type": "string",
+          "title": "Sozialform",
+          "enum": ["plenary", "small_groups", "pairs", "individual", "none"],
+          "x-gw": {
+            "group": "Inhalt",
+            "order": 3,
+            "cols": 6,
+            "widget": "select",
+            "export": "inline"
+          }
+        }
+      }
+    }
+  },
+  {
+    "key": "check_out",
+    "name": "Check-out",
+    "description": "",
+    "category": "closing",
+    "color": "rose",
+    "icon": "door-open",
+    "defaultDurationMinutes": 15,
+    "countsAsContent": true,
+    "jsonSchema": {
+      "$schema": "https://json-schema.org/draft/2020-12/schema",
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "description": {
+          "type": "string",
+          "format": "richtext",
+          "title": "Beschreibung",
+          "x-gw": {
+            "group": "Inhalt",
+            "order": 1,
+            "cols": 12
+          }
+        },
+        "facilitator_notes": {
+          "type": "string",
+          "format": "richtext",
+          "title": "Moderationsnotizen",
+          "description": "Nur für dich sichtbar, nicht im Teilnehmer-Export.",
+          "x-gw": {
+            "group": "Moderation",
+            "order": 1,
+            "cols": 12,
+            "private": true
+          }
+        },
+        "materials": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          },
+          "title": "Material",
+          "x-gw": {
+            "group": "Vorbereitung",
+            "order": 1,
+            "cols": 12,
+            "widget": "tags",
+            "help": "Alles, was auf dem Tisch liegen muss",
+            "summary": true,
+            "export": "inline-list"
+          }
+        },
+        "participation": {
+          "type": "string",
+          "title": "Sozialform",
+          "enum": ["plenary", "small_groups", "pairs", "individual", "none"],
+          "x-gw": {
+            "group": "Inhalt",
+            "order": 3,
+            "cols": 6,
+            "widget": "select",
+            "export": "inline"
+          }
+        },
+        "prompt": {
+          "type": "string",
+          "format": "richtext",
+          "title": "Abschlussfrage",
+          "x-gw": {
+            "group": "Inhalt",
+            "order": 2,
+            "cols": 12
+          }
+        },
+        "format": {
+          "type": "string",
+          "title": "Format",
+          "enum": ["round", "written", "temperature"],
+          "x-gw": {
+            "group": "Ablauf",
+            "order": 1,
+            "cols": 6,
+            "widget": "select"
+          }
+        }
+      }
+    }
+  },
+  {
+    "key": "next_steps",
+    "name": "Nächste Schritte",
+    "description": "",
+    "category": "closing",
+    "color": "blue",
+    "icon": "flag",
+    "defaultDurationMinutes": 15,
+    "countsAsContent": true,
+    "jsonSchema": {
+      "$schema": "https://json-schema.org/draft/2020-12/schema",
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "description": {
+          "type": "string",
+          "format": "richtext",
+          "title": "Beschreibung",
+          "x-gw": {
+            "group": "Inhalt",
+            "order": 1,
+            "cols": 12
+          }
+        },
+        "facilitator_notes": {
+          "type": "string",
+          "format": "richtext",
+          "title": "Moderationsnotizen",
+          "description": "Nur für dich sichtbar, nicht im Teilnehmer-Export.",
+          "x-gw": {
+            "group": "Moderation",
+            "order": 1,
+            "cols": 12,
+            "private": true
+          }
+        },
+        "materials": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          },
+          "title": "Material",
+          "x-gw": {
+            "group": "Vorbereitung",
+            "order": 1,
+            "cols": 12,
+            "widget": "tags",
+            "help": "Alles, was auf dem Tisch liegen muss",
+            "summary": true,
+            "export": "inline-list"
+          }
+        },
+        "participation": {
+          "type": "string",
+          "title": "Sozialform",
+          "enum": ["plenary", "small_groups", "pairs", "individual", "none"],
+          "x-gw": {
+            "group": "Inhalt",
+            "order": 3,
+            "cols": 6,
+            "widget": "select",
+            "export": "inline"
+          }
+        },
+        "owner_field": {
+          "type": "boolean",
+          "title": "Verantwortliche erfassen",
+          "x-gw": {
+            "group": "Ablauf",
+            "order": 1,
+            "cols": 6
+          }
+        },
+        "deadline_field": {
+          "type": "boolean",
+          "title": "Fristen erfassen",
+          "x-gw": {
+            "group": "Ablauf",
+            "order": 2,
+            "cols": 6
+          }
+        }
+      }
+    }
+  },
+  {
+    "key": "note",
+    "name": "Notiz",
+    "description": "",
+    "category": "custom",
+    "color": "slate",
+    "icon": "sticky-note",
+    "defaultDurationMinutes": 0,
+    "countsAsContent": false,
+    "jsonSchema": {
+      "$schema": "https://json-schema.org/draft/2020-12/schema",
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "description": {
+          "type": "string",
+          "format": "richtext",
+          "title": "Beschreibung",
+          "x-gw": {
+            "group": "Inhalt",
+            "order": 1,
+            "cols": 12
+          }
+        },
+        "facilitator_notes": {
+          "type": "string",
+          "format": "richtext",
+          "title": "Moderationsnotizen",
+          "description": "Nur für dich sichtbar, nicht im Teilnehmer-Export.",
+          "x-gw": {
+            "group": "Moderation",
+            "order": 1,
+            "cols": 12,
+            "private": true
+          }
+        },
+        "materials": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          },
+          "title": "Material",
+          "x-gw": {
+            "group": "Vorbereitung",
+            "order": 1,
+            "cols": 12,
+            "widget": "tags",
+            "help": "Alles, was auf dem Tisch liegen muss",
+            "summary": true,
+            "export": "inline-list"
+          }
+        },
+        "participation": {
+          "type": "string",
+          "title": "Sozialform",
+          "enum": ["plenary", "small_groups", "pairs", "individual", "none"],
+          "x-gw": {
+            "group": "Inhalt",
+            "order": 3,
+            "cols": 6,
+            "widget": "select",
+            "export": "inline"
+          }
+        }
+      }
+    }
+  }
+]

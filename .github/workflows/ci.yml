@@ -85,6 +85,12 @@ jobs:
         run: pnpm db:bootstrap
       - name: Apply migrations
         run: pnpm db:migrate
+      - name: Provision built-in module types
+        run: pnpm db:provision
+      # Provisioning runs on every boot in production, so "runs twice without
+      # changing anything" is a property worth checking, not assuming.
+      - name: Provisioning is idempotent
+        run: pnpm db:provision
 
       # The most important job in this workflow. A table shipped without RLS is
       # a silent, total data leak with no symptom -- no feature breaks, and
