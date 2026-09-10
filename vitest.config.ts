@@ -21,6 +21,24 @@ export default defineConfig({
       // Deliberately not a global target: coverage thresholds only guard the
       // zones where a bug is silent. A repo-wide number just breeds alibi tests.
       include: ['src/domain/**', 'src/features/**'],
+      // Modules whose tests live in another suite. Counting them here would
+      // report them as untested and make the threshold measure the wrong thing
+      // -- and lowering the threshold to accommodate that would quietly weaken
+      // it for the pure logic it exists to protect.
+      exclude: [
+        // Covered by the `db` suite (*.db.test.ts) against a real Postgres,
+        // which is a required check in its own right. Their invariants -- RLS,
+        // composite FKs, compare-and-swap -- cannot be asserted without one.
+        'src/domain/agenda/access.ts',
+        'src/domain/agenda/repo.ts',
+        'src/domain/workshop/repo.ts',
+        // Type declarations: nothing to execute.
+        '**/types.ts',
+        // Browser glue, covered by Playwright: a dnd-kit coordinate getter and
+        // a hook that calls server actions have no meaningful unit surface.
+        'src/features/agenda/keyboard.ts',
+        'src/features/agenda/use-persistence.ts',
+      ],
       thresholds: {
         'src/domain/**': { statements: 80, branches: 80, functions: 80, lines: 80 },
         'src/features/**': { statements: 80, branches: 80, functions: 80, lines: 80 },
