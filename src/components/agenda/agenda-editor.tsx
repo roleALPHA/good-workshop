@@ -1,10 +1,9 @@
 'use client'
 
-import { useEffect, useMemo, useState } from 'react'
+import { useMemo, useState } from 'react'
 import {
   DndContext,
   DragOverlay,
-  KeyboardSensor,
   MeasuringStrategy,
   MouseSensor,
   TouchSensor,
@@ -15,6 +14,7 @@ import {
   type Announcements,
   type CollisionDetection,
   type DragMoveEvent,
+  type DragOverEvent,
   type DragStartEvent,
 } from '@dnd-kit/core'
 import { restrictToWindowEdges } from '@dnd-kit/modifiers'
@@ -24,7 +24,7 @@ import type { DayDoc } from '@/domain/agenda/types'
 import { computeSchedule } from '@/domain/schedule/computeSchedule'
 import { formatDuration, formatTime } from '@/features/agenda/duration'
 import { flattenDay, toScheduleItems, withGapRows } from '@/features/agenda/flatten'
-import { treeKeyboardCoordinateGetter } from '@/features/agenda/keyboard'
+import { ImmediateKeyboardSensor, treeKeyboardCoordinateGetter } from '@/features/agenda/keyboard'
 import { applyMove } from '@/features/agenda/move'
 import {
   getProjection,
@@ -45,11 +45,9 @@ const INDENT_PX = 28
  * `useSensor` memoises on the identity of its options object. Building the
  * coordinate getter inside the component hands it a new function on every
  * render, so the sensor is torn down and re-instantiated mid-drag -- and it
- * takes its document key listener with it. The symptom is bizarre and hard to
- * trace: the drag starts (that is the activator's own handler) and then Space
- * and Escape do nothing at all.
+ * takes its document key listener with it.
  */
-const KEYBOARD_COORDINATES = treeKeyboardCoordinateGetter()
+const KEYBOARD_COORDINATES = treeKeyboardCoordinateGetter(INDENT_PX)
 
 /** Same reason: every one of these objects must keep its identity across renders. */
 // A few pixels of slop so a click on a row stays a click, not a one-pixel drag.
@@ -84,10 +82,6 @@ export function AgendaEditor({ initialDoc }: { initialDoc: DayDoc }) {
   const [activeId, setActiveId] = useState<string | null>(null)
   const [offsetX, setOffsetX] = useState(0)
   const [overId, setOverId] = useState<string | null>(null)
-  // Depth changes from the keyboard are counted here rather than expressed as
-  // an x coordinate -- see treeKeyboardCoordinateGetter for why.
-  const [keyboardIndent, setKeyboardIndent] = useState(0)
-  const [isKeyboardDrag, setIsKeyboardDrag] = useState(false)
 
   const rows = useMemo(() => flattenDay(doc), [doc])
   const schedule = useMemo(
@@ -103,32 +97,10 @@ export function AgendaEditor({ initialDoc }: { initialDoc: DayDoc }) {
     [rows, activeId],
   )
 
-  // The two input methods must not be mixed. During a keyboard drag dnd-kit
-  // still reports a horizontal delta -- moving onto a row at a different
-  // indentation shifts x by exactly one step -- which would silently add to the
-  // indent the user actually asked for.
-  const effectiveOffsetX = isKeyboardDrag ? keyboardIndent * INDENT_PX : offsetX
-
+  // Mouse and keyboard agree on what the horizontal offset means: a pointer
+  // drags x by hand, arrow keys step it by exactly one INDENT_PX at a time.
   const projection: Projection | null =
-    activeId && overId
-      ? getProjection(dragRows, activeId, overId, effectiveOffsetX, INDENT_PX)
-      : null
-
-  useEffect(() => {
-    if (!activeId || !isKeyboardDrag) return
-
-    function onKeyDown(event: KeyboardEvent) {
-      if (event.code === 'ArrowLeft') setKeyboardIndent((d) => d - 1)
-      else if (event.code === 'ArrowRight') setKeyboardIndent((d) => d + 1)
-      else return
-      // The projection clamps out-of-range depths anyway; preventing default
-      // stops the page scrolling sideways underneath the drag.
-      event.preventDefault()
-    }
-
-    window.addEventListener('keydown', onKeyDown)
-    return () => window.removeEventListener('keydown', onKeyDown)
-  }, [activeId, isKeyboardDrag])
+    activeId && overId ? getProjection(dragRows, activeId, overId, offsetX, INDENT_PX) : null
 
   const sortableIds = useMemo(() => dragRows.map((r) => r.id), [dragRows])
 
@@ -139,20 +111,30 @@ export function AgendaEditor({ initialDoc }: { initialDoc: DayDoc }) {
   const sensors = useSensors(
     useSensor(MouseSensor, MOUSE_OPTIONS),
     useSensor(TouchSensor, TOUCH_OPTIONS),
-    useSensor(KeyboardSensor, KEYBOARD_OPTIONS),
+    useSensor(ImmediateKeyboardSensor, KEYBOARD_OPTIONS),
   )
 
   function handleDragStart(event: DragStartEvent) {
     setDropMessage('')
     setActiveId(String(event.active.id))
-    setIsKeyboardDrag(event.activatorEvent instanceof KeyboardEvent)
     setOffsetX(0)
-    setKeyboardIndent(0)
     setOverId(String(event.active.id))
   }
 
   function handleDragMove(event: DragMoveEvent) {
     setOffsetX(event.delta.x)
+  }
+
+  /**
+   * Which row we are over comes from onDragOver, never from onDragMove.
+   *
+   * onDragMove carries an `over` that dnd-kit has not recomputed yet -- it
+   * still names the row from before this move. A pointer hides that: moves
+   * arrive in a stream and the next one corrects it. A keyboard produces
+   * exactly one move per key press, so reading it there means the projection is
+   * permanently one press behind and the row never actually goes anywhere.
+   */
+  function handleDragOver(event: DragOverEvent) {
     if (event.over) setOverId(String(event.over.id))
   }
 
@@ -160,8 +142,6 @@ export function AgendaEditor({ initialDoc }: { initialDoc: DayDoc }) {
     setActiveId(null)
     setOverId(null)
     setOffsetX(0)
-    setKeyboardIndent(0)
-    setIsKeyboardDrag(false)
   }
 
   function handleDragEnd() {
@@ -185,7 +165,7 @@ export function AgendaEditor({ initialDoc }: { initialDoc: DayDoc }) {
   return (
     <DndContext
       sensors={sensors}
-      collisionDetection={pointerWithinOrClosestCorners}
+      collisionDetection={agendaCollisionDetection}
       // Rows resize during a drag: a description reflows, a cluster collapses.
       // Without Always, dnd-kit keeps aiming at where rows used to be.
       measuring={{ droppable: { strategy: MeasuringStrategy.Always } }}
@@ -196,6 +176,7 @@ export function AgendaEditor({ initialDoc }: { initialDoc: DayDoc }) {
       accessibility={{ announcements: SILENT_ANNOUNCEMENTS }}
       onDragStart={handleDragStart}
       onDragMove={handleDragMove}
+      onDragOver={handleDragOver}
       onDragEnd={handleDragEnd}
       onDragCancel={handleDragCancel}
     >
@@ -251,26 +232,37 @@ export function AgendaEditor({ initialDoc }: { initialDoc: DayDoc }) {
 
       <DragOverlay dropAnimation={null}>
         {activeRow && activeRow.kind !== 'gap' ? (
+          // This wrapper keeps the dragged row's exact box, and that is not
+          // cosmetic: dnd-kit measures the overlay's only element child
+          // (getMeasurableNode) and uses that rect for collision detection.
+          // With no pointer to fall back on, a keyboard drag is decided by that
+          // rect alone -- and a chip shorter than the row, or nudged sideways
+          // by the indent, keeps colliding with the row it just left. So the
+          // indent is padding inside the box rather than a margin around it.
           <div
-            className={cn(
-              catClass(
-                activeRow.kind === 'cluster'
-                  ? (activeRow.cluster.color ?? 'slate')
-                  : doc.moduleTypes[activeRow.module.moduleTypeId]?.color,
-              ),
-              'flex items-baseline gap-2 rounded border border-[var(--border-strong)] bg-[var(--surface)] px-3 py-2 shadow-lg',
-              'border-l-4 border-l-[var(--cat-bar)]',
-            )}
-            style={{ marginLeft: projection?.depth === 1 ? INDENT_PX : 0 }}
+            className="h-full w-full"
+            style={{ paddingLeft: projection?.depth === 1 ? INDENT_PX : 0 }}
           >
-            <span className="font-semibold">
-              {activeRow.kind === 'cluster' ? activeRow.cluster.title : activeRow.module.title}
-            </span>
-            <span className="tabular text-[13px] text-[var(--fg-muted)]">
-              {activeRow.kind === 'cluster'
-                ? `${activeRow.childCount} ${activeRow.childCount === 1 ? 'Block' : 'Blöcke'}`
-                : formatDuration(activeRow.module.durationMinutes)}
-            </span>
+            <div
+              className={cn(
+                catClass(
+                  activeRow.kind === 'cluster'
+                    ? (activeRow.cluster.color ?? 'slate')
+                    : doc.moduleTypes[activeRow.module.moduleTypeId]?.color,
+                ),
+                'flex items-baseline gap-2 rounded border border-[var(--border-strong)] bg-[var(--surface)] px-3 py-2 shadow-lg',
+                'border-l-4 border-l-[var(--cat-bar)]',
+              )}
+            >
+              <span className="font-semibold">
+                {activeRow.kind === 'cluster' ? activeRow.cluster.title : activeRow.module.title}
+              </span>
+              <span className="tabular text-[13px] text-[var(--fg-muted)]">
+                {activeRow.kind === 'cluster'
+                  ? `${activeRow.childCount} ${activeRow.childCount === 1 ? 'Block' : 'Blöcke'}`
+                  : formatDuration(activeRow.module.durationMinutes)}
+              </span>
+            </div>
           </div>
         ) : null}
       </DragOverlay>
@@ -308,10 +300,39 @@ function SortableRow({
  * Rows vary wildly in height -- a one-line break next to a block with a nested
  * bullet list. `closestCenter` mis-targets the tall ones badly, so pointer
  * containment wins where it applies and corners are the fallback.
+ *
+ * A keyboard drag has no pointer, and for it corners are wrong too: comparing
+ * all four means a short row wins over the tall row the user actually stepped
+ * onto, because half its corners are nearer by accident of height. What a key
+ * press means is "the row that starts here", so the keyboard path ranks by top
+ * edge alone -- which treeKeyboardCoordinateGetter aims at exactly, making the
+ * intended row a zero-distance answer rather than the winner of a tie-break.
  */
-const pointerWithinOrClosestCorners: CollisionDetection = (args) => {
-  const within = pointerWithin(args)
-  return within.length > 0 ? within : closestCorners(args)
+const agendaCollisionDetection: CollisionDetection = (args) => {
+  const { collisionRect, droppableRects, droppableContainers, pointerCoordinates } = args
+
+  if (pointerCoordinates) {
+    const within = pointerWithin(args)
+    if (within.length > 0) return within
+    return closestCorners(args)
+  }
+
+  return droppableContainers
+    .flatMap((container) => {
+      const rect = droppableRects.get(container.id)
+      return rect
+        ? [
+            {
+              id: container.id,
+              data: {
+                droppableContainer: container,
+                value: Math.abs(rect.top - collisionRect.top),
+              },
+            },
+          ]
+        : []
+    })
+    .sort((a, b) => a.data.value - b.data.value)
 }
 
 /**

@@ -149,12 +149,71 @@ test.describe('drag & drop', () => {
     await page.keyboard.press('ArrowRight')
     await expect(live(page)).toContainText('in Abschnitt Ankommen & Rahmen')
   })
-})
 
-// NOT covered here, deliberately: FINISHING a keyboard drag. Picking a row up
-// with Space works, and so does indenting it with the arrow keys, but the
-// closing Space and the cancelling Escape never reach dnd-kit's keyboard
-// sensor -- neither onDragEnd nor onDragCancel fires. There is no working
-// behaviour to assert, and asserting it anyway would leave a permanently red
-// test or, worse, a quietly weakened one. Tracked separately; the mouse path
-// above exercises the same projection and move code.
+  test('moves a block out of its section with the keyboard and recomputes everything', async ({
+    page,
+  }) => {
+    const section = section_(page, 'Ankommen & Rahmen')
+    await expect(section).toContainText('3 Blöcke · 35m')
+
+    await page.getByRole('button', { name: 'Energizer: Zwei Wahrheiten verschieben' }).focus()
+    await page.keyboard.press('Space')
+    await expect(live(page)).toContainText('in Abschnitt Ankommen & Rahmen')
+
+    // One press, one position: past the last child of the section, onto the day.
+    await page.keyboard.press('ArrowDown')
+    await expect(live(page)).toContainText('auf Tagesebene, Position 5')
+
+    await page.keyboard.press('Space')
+    await expect(live(page)).toContainText('abgelegt')
+
+    await expect(section).toContainText('2 Blöcke · 25m')
+    // Nothing stores a time, so the whole day after the block is re-derived.
+    await expect(block(page, 'Energizer: Zwei Wahrheiten')).toContainText('14:10')
+    expect((await page.getByRole('heading', { level: 3 }).allInnerTexts()).slice(0, 4)).toEqual([
+      'Check-in & Start',
+      'Agenda & Spielregeln',
+      'Druckpunkte',
+      'Energizer: Zwei Wahrheiten',
+    ])
+  })
+
+  test('nests a day-level block into the section above it with the arrow keys', async ({
+    page,
+  }) => {
+    const section = section_(page, 'Ankommen & Rahmen')
+
+    await page.getByRole('button', { name: 'Druckpunkte verschieben' }).focus()
+    await page.keyboard.press('Space')
+    await expect(live(page)).toContainText('auf Tagesebene')
+
+    // The horizontal axis is the only way to nest from a keyboard, so this is
+    // the one gesture that has to survive all the way into applyMove.
+    await page.keyboard.press('ArrowRight')
+    await expect(live(page)).toContainText('in Abschnitt Ankommen & Rahmen')
+
+    await page.keyboard.press('Space')
+    await expect(live(page)).toContainText('abgelegt')
+
+    await expect(section).toContainText('4 Blöcke · 1h 20m')
+  })
+
+  test('cancels a keyboard drag and leaves the agenda untouched', async ({ page }) => {
+    const section = section_(page, 'Ankommen & Rahmen')
+    const before = await page.getByRole('heading', { level: 3 }).allInnerTexts()
+
+    await page.getByRole('button', { name: 'Energizer: Zwei Wahrheiten verschieben' }).focus()
+    await page.keyboard.press('Space')
+    await expect(live(page)).toContainText('in Abschnitt Ankommen & Rahmen')
+
+    await page.keyboard.press('ArrowDown')
+    await expect(live(page)).toContainText('auf Tagesebene')
+
+    await page.keyboard.press('Escape')
+    await expect(live(page)).toHaveText('Verschieben abgebrochen.')
+
+    await expect(section).toContainText('3 Blöcke · 35m')
+    await expect(block(page, 'Energizer: Zwei Wahrheiten')).toContainText('13:25')
+    expect(await page.getByRole('heading', { level: 3 }).allInnerTexts()).toEqual(before)
+  })
+})
