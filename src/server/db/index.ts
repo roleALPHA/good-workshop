@@ -1,5 +1,5 @@
 import { sql } from 'drizzle-orm'
-import { db, type Database } from './client'
+import { getDb, type Database } from './client'
 
 export * as schema from './schema'
 export type { Actor, TenantContext } from './actor'
@@ -28,7 +28,7 @@ type Tx = Parameters<Parameters<Database['transaction']>[0]>[0]
  *    debug.
  */
 export async function withTenant<T>(actor: Actor, fn: (tx: Tx) => Promise<T>): Promise<T> {
-  return db.transaction(async (tx) => {
+  return getDb().transaction(async (tx) => {
     await tx.execute(sql`select set_config('app.tenant_id', ${actor.tenantId}, true)`)
     await tx.execute(sql`select set_config('app.member_id', ${actor.memberId}, true)`)
     await tx.execute(
@@ -49,7 +49,7 @@ export async function withTenant<T>(actor: Actor, fn: (tx: Tx) => Promise<T>): P
  * the auth module cannot read credential material.
  */
 export async function withAuth<T>(fn: (tx: Tx) => Promise<T>): Promise<T> {
-  return db.transaction(async (tx) => {
+  return getDb().transaction(async (tx) => {
     await tx.execute(sql`set local role gw_auth`)
     return fn(tx)
   })
@@ -63,7 +63,7 @@ export async function withOps<T>(fn: (tx: Tx) => Promise<T>): Promise<T> {
   if (process.env.GW_ALLOW_OPS !== '1') {
     throw new Error('withOps is CLI-only. Set GW_ALLOW_OPS=1 in the CLI entrypoint.')
   }
-  return db.transaction(async (tx) => fn(tx))
+  return getDb().transaction(async (tx) => fn(tx))
 }
 
 export type { Tx }
