@@ -12,6 +12,7 @@ import { blocksOf } from '@/domain/collab/doc'
 import { addModuleBlock } from '@/domain/collab/ops'
 import { generatePersonalAccessToken } from '@/server/auth/tokens'
 import { editInRoom } from './client'
+import { Room } from './room'
 import { startCollabServer } from './ws'
 
 /**
@@ -219,3 +220,46 @@ async function connectAsHuman() {
 
   return { doc, close: () => ws.close() }
 }
+
+describe('a room whose materialisation is quicker than its persist', () => {
+  it('still writes the day out', async () => {
+    // The race that produced an export of a completely EMPTY day while the
+    // editor showed a full one. Materialising reads the log back out of the
+    // database; one that overtakes its own append finds nothing new, reports
+    // "unchanged" and schedules nothing more, so the tables stay behind until
+    // the room closes -- which for a day somebody is still looking at is never.
+    //
+    // The timings are inverted on purpose: persist last, materialise first.
+    // With a real debounce this happens only under load, which is exactly the
+    // kind of bug that reappears because it could not be reproduced.
+    const dayId = uuidv7()
+    await ops.query(
+      `insert into workshop_day (id, tenant_id, workshop_id, position) values ($1, $2, $3, 'a1')`,
+      [dayId, TENANT, workshopId],
+    )
+
+    const actor = {
+      tenantId: TENANT,
+      memberId,
+      tenantRole: 'member' as const,
+      source: 'web' as const,
+    }
+    const room = new Room(workshopId, dayId, actor, () => {}, {
+      persistDebounceMs: 400,
+      materializeDebounceMs: 20,
+      emptyGraceMs: 60_000,
+    })
+
+    await room.load()
+    addModuleBlock(room.doc, uuidv7(), {
+      moduleTypeId,
+      title: 'Trotz Wettlauf da',
+      durationMinutes: 30,
+    })
+
+    await new Promise((resolve) => setTimeout(resolve, 600))
+
+    const rows = await ops.query('select title from module where day_id = $1', [dayId])
+    expect(rows.rows.map((row: { title: string }) => row.title)).toEqual(['Trotz Wettlauf da'])
+  })
+})

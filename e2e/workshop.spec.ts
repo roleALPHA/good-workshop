@@ -166,11 +166,12 @@ test('exports the day as Markdown', async ({ page }) => {
     expect(result.body).toContain(workshopTitle)
     expect(result.body).toContain('Gruppenarbeit')
     expect(result.body).toContain('GoodWorkshop · powered by roleALPHA')
-    // Thirty seconds, not fifteen: the very first materialisation after the
-    // collaboration server starts is markedly slower than every later one --
-    // steady state is under two seconds. The cause is not fully pinned down,
-    // so the budget is generous rather than the assertion weakened.
-  }).toPass({ timeout: 30_000 })
+    // Retried at all, not budgeted for slowness: the tables trail the live
+    // document by one debounce, deliberately. The generous budget this used to
+    // carry blamed "a slow first materialisation" for what was really a race
+    // between materialising and persisting -- fixed in the room, and guarded
+    // by a test that reproduces it deterministically.
+  }).toPass({ timeout: 10_000 })
 })
 
 test('renders a printable day without any editor JavaScript', async ({ page }) => {
@@ -178,12 +179,12 @@ test('renders a printable day without any editor JavaScript', async ({ page }) =
 
   const url = (await page.getByRole('link', { name: 'Drucken' }).getAttribute('href'))!
 
-  // Same lag as the export: the print view renders from the tables.
+  // Same one-debounce lag as the export: the print view renders from the tables.
   await expect(async () => {
     await page.goto(url)
     await expect(page.getByRole('heading', { name: workshopTitle })).toBeVisible()
     await expect(page.getByText('Gruppenarbeit')).toBeVisible()
-  }).toPass({ timeout: 30_000 })
+  }).toPass({ timeout: 10_000 })
   // No drag handles, no inputs: what comes out of the printer must match what
   // was on screen, and a hydration pass would reflow it mid-dialog.
   await expect(page.getByRole('button', { name: /verschieben$/ })).toHaveCount(0)

@@ -60,6 +60,7 @@ export class Room {
   readonly connections = new Set<Connection>()
 
   private pendingUpdates: Uint8Array[] = []
+  private persisting: Promise<void> | null = null
   private persistTimer: NodeJS.Timeout | null = null
   private materializeTimer: NodeJS.Timeout | null = null
   private teardownTimer: NodeJS.Timeout | null = null
@@ -189,7 +190,19 @@ export class Room {
     }
   }
 
-  private async persist(): Promise<void> {
+  /**
+   * Appends what we hold to the log, one write at a time.
+   *
+   * Chained rather than concurrent: two appends in flight can land in either
+   * order, and anything reading the log in between sees one with the middle
+   * missing.
+   */
+  private persist(): Promise<void> {
+    this.persisting = (this.persisting ?? Promise.resolve()).then(() => this.persistOnce())
+    return this.persisting
+  }
+
+  private async persistOnce(): Promise<void> {
     const batch = this.pendingUpdates
     if (batch.length === 0) return
     this.pendingUpdates = []
@@ -211,6 +224,21 @@ export class Room {
   }
 
   private async materialize(): Promise<void> {
+    // Everything we hold has to be in the log FIRST.
+    //
+    // Materialising reads the log back out of the database, so one that
+    // overtakes its own persist finds nothing new, reports "unchanged" and
+    // schedules nothing more. The tables then stay behind until the room
+    // closes -- which, for a day somebody is still looking at, is never. The
+    // symptom was an export that showed a completely empty day while the
+    // editor showed a full one, and it read as "the first materialisation is
+    // slow" because a later edit usually rescheduled one.
+    if (this.persistTimer) {
+      clearTimeout(this.persistTimer)
+      this.persistTimer = null
+    }
+    await this.persist()
+
     try {
       await withTenant(this.actor, (tx) => materializeDay(tx, this.workshopId, this.dayId))
     } catch (error) {
@@ -230,12 +258,11 @@ export class Room {
    * One explicit flush turns that into read-after-write.
    */
   async flushNow(): Promise<bigint> {
-    if (this.persistTimer) clearTimeout(this.persistTimer)
     if (this.materializeTimer) clearTimeout(this.materializeTimer)
-    this.persistTimer = null
     this.materializeTimer = null
 
-    await this.persist()
+    // Persisting is materialisation's own first step, so asking for it twice
+    // here would only invite the two to drift apart later.
     await this.materialize()
 
     return withTenant(this.actor, async (tx) => {
