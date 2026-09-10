@@ -1,4 +1,5 @@
 import type { CSSProperties, ReactNode } from 'react'
+import { ChevronDown } from 'lucide-react'
 import type { ClusterDto, ModuleDto, ModuleTypeDto } from '@/domain/agenda/types'
 import type { Schedule, ScheduleEntry } from '@/domain/schedule/types'
 import { formatDuration, formatTime } from '@/features/agenda/duration'
@@ -6,6 +7,7 @@ import { catClass } from '@/lib/category-colors'
 import { cn } from '@/lib/cn'
 import { isRichTextValue } from '@/lib/richtext/schema'
 import { RichText } from '@/lib/richtext/render'
+import { TitleInput } from './inline-inputs'
 import { OverlapWarning, TimeCell } from './time-cell'
 
 /**
@@ -34,6 +36,22 @@ export const GRID = 'md:grid md:grid-cols-[var(--gw-cols)] md:items-stretch'
  * pile of buttons. They belong on the handle, which is a button anyway. That
  * also stops every click inside a description from starting a drag.
  */
+/**
+ * Turns a row from a rendering into a place you can work.
+ *
+ * Passed only by the editor; the print view and the phone reading view leave it
+ * out and get the same markup, read-only. See the inline-editing rule in
+ * .claude/skills/goodworkshop-ui.
+ */
+export type RowEditing = {
+  onTitleChange: (title: string) => void
+  onDurationChange: (minutes: number) => void
+  onDescChange: (desc: Record<string, unknown>) => void
+  expanded: boolean
+  onToggleExpanded: () => void
+  details?: ReactNode
+}
+
 export type RowChrome = {
   rootRef?: (el: HTMLElement | null) => void
   style?: CSSProperties
@@ -69,12 +87,14 @@ export function ModuleRow({
   entry,
   nested,
   chrome,
+  editing,
 }: {
   module: ModuleDto
   type: ModuleTypeDto | undefined
   entry: ScheduleEntry
   nested: boolean
   chrome?: RowChrome
+  editing?: RowEditing
 }) {
   const description = isRichTextValue(mod.desc.description) ? mod.desc.description : null
   const info = additionalInfo(mod)
@@ -104,7 +124,7 @@ export function ModuleRow({
       <span className="hidden md:block" />
 
       <div className={cn('pt-3 pb-3 pl-4 md:px-2 md:pl-2', nested && 'pl-7 md:pl-2')}>
-        <TimeCell entry={entry} />
+        <TimeCell entry={entry} editing={editing} />
       </div>
 
       <span className="hidden md:block" />
@@ -115,14 +135,47 @@ export function ModuleRow({
           nested && 'pl-7 md:ml-7 md:pl-3',
         )}
       >
-        <h3 id={titleId} className="font-semibold text-[var(--fg)]">
-          {mod.title}
-        </h3>
+        {editing ? (
+          <h3 id={titleId}>
+            <TitleInput value={mod.title} onCommit={editing.onTitleChange} />
+          </h3>
+        ) : (
+          <h3 id={titleId} className="font-semibold text-[var(--fg)]">
+            {mod.title}
+          </h3>
+        )}
         {type && <p className="mt-0.5 text-[13px] text-[var(--cat-fg)] md:hidden">{type.name}</p>}
         {description && (
           <RichText value={description} className="mt-1 text-[15px] text-[var(--fg-muted)]" />
         )}
         {entry.conflict?.kind === 'overlap' && <OverlapWarning minutes={entry.conflict.minutes} />}
+
+        {editing && (
+          <>
+            <button
+              type="button"
+              onClick={editing.onToggleExpanded}
+              aria-expanded={editing.expanded}
+              aria-controls={`details-${mod.id}`}
+              className="mt-1.5 -ml-1 inline-flex items-center gap-1 rounded px-1 py-0.5 text-[13px] text-[var(--fg-muted)] hover:bg-[var(--surface-raised)]"
+            >
+              <ChevronDown
+                aria-hidden
+                className={cn('size-3.5 transition-transform', editing.expanded && 'rotate-180')}
+              />
+              {editing.expanded ? 'Weniger' : 'Mehr Felder'}
+            </button>
+
+            {editing.expanded && (
+              <div
+                id={`details-${mod.id}`}
+                className="mt-3 rounded border border-[var(--border)] bg-[var(--surface-raised)] p-3"
+              >
+                {editing.details}
+              </div>
+            )}
+          </>
+        )}
       </div>
 
       <div className={cn('pb-3 pl-4 md:px-3 md:pt-3 md:pl-3', nested && 'pl-7 md:pl-3')}>

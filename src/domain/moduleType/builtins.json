@@ -14,26 +14,52 @@
       "additionalProperties": false,
       "properties": {
         "description": {
-          "type": "string",
-          "format": "richtext",
+          "type": "object",
+          "properties": {
+            "format": {
+              "const": "tiptap-doc-v1"
+            },
+            "doc": {
+              "type": "object"
+            },
+            "text": {
+              "type": "string"
+            }
+          },
+          "required": ["format", "doc"],
+          "additionalProperties": false,
           "title": "Beschreibung",
           "x-gw": {
             "group": "Inhalt",
             "order": 1,
-            "cols": 12
+            "cols": 12,
+            "widget": "richtext"
           }
         },
         "facilitator_notes": {
-          "type": "string",
-          "format": "richtext",
+          "type": "object",
+          "properties": {
+            "format": {
+              "const": "tiptap-doc-v1"
+            },
+            "doc": {
+              "type": "object"
+            },
+            "text": {
+              "type": "string"
+            }
+          },
+          "required": ["format", "doc"],
+          "additionalProperties": false,
           "title": "Moderationsnotizen",
-          "description": "Nur für dich sichtbar, nicht im Teilnehmer-Export.",
           "x-gw": {
             "group": "Moderation",
             "order": 1,
             "cols": 12,
-            "private": true
-          }
+            "private": true,
+            "widget": "richtext"
+          },
+          "description": "Nur für dich sichtbar, nicht im Teilnehmer-Export."
         },
         "materials": {
           "type": "array",
@@ -64,13 +90,26 @@
           }
         },
         "agenda_overview": {
-          "type": "string",
-          "format": "richtext",
+          "type": "object",
+          "properties": {
+            "format": {
+              "const": "tiptap-doc-v1"
+            },
+            "doc": {
+              "type": "object"
+            },
+            "text": {
+              "type": "string"
+            }
+          },
+          "required": ["format", "doc"],
+          "additionalProperties": false,
           "title": "Agenda-Überblick",
           "x-gw": {
             "group": "Inhalt",
             "order": 2,
-            "cols": 12
+            "cols": 12,
+            "widget": "richtext"
           }
         }
       }
@@ -91,26 +130,52 @@
       "additionalProperties": false,
       "properties": {
         "description": {
-          "type": "string",
-          "format": "richtext",
+          "type": "object",
+          "properties": {
+            "format": {
+              "const": "tiptap-doc-v1"
+            },
+            "doc": {
+              "type": "object"
+            },
+            "text": {
+              "type": "string"
+            }
+          },
+          "required": ["format", "doc"],
+          "additionalProperties": false,
           "title": "Beschreibung",
           "x-gw": {
             "group": "Inhalt",
             "order": 1,
-            "cols": 12
+            "cols": 12,
+            "widget": "richtext"
           }
         },
         "facilitator_notes": {
-          "type": "string",
-          "format": "richtext",
+          "type": "object",
+          "properties": {
+            "format": {
+              "const": "tiptap-doc-v1"
+            },
+            "doc": {
+              "type": "object"
+            },
+            "text": {
+              "type": "string"
+            }
+          },
+          "required": ["format", "doc"],
+          "additionalProperties": false,
           "title": "Moderationsnotizen",
-          "description": "Nur für dich sichtbar, nicht im Teilnehmer-Export.",
           "x-gw": {
             "group": "Moderation",
             "order": 1,
             "cols": 12,
-            "private": true
-          }
+            "private": true,
+            "widget": "richtext"
+          },
+          "description": "Nur für dich sichtbar, nicht im Teilnehmer-Export."
         },
         "materials": {
           "type": "array",
@@ -141,13 +206,26 @@
           }
         },
         "prompt": {
-          "type": "string",
-          "format": "richtext",
+          "type": "object",
+          "properties": {
+            "format": {
+              "const": "tiptap-doc-v1"
+            },
+            "doc": {
+              "type": "object"
+            },
+            "text": {
+              "type": "string"
+            }
+          },
+          "required": ["format", "doc"],
+          "additionalProperties": false,
           "title": "Impulsfrage",
           "x-gw": {
             "group": "Inhalt",
             "order": 2,
-            "cols": 12
+            "cols": 12,
+            "widget": "richtext"
           }
         },
         "format": {
@@ -191,26 +269,52 @@
       "additionalProperties": false,
       "properties": {
         "description": {
-          "type": "string",
-          "format": "richtext",
+          "type": "object",
+          "properties": {
+            "format": {
+              "const": "tiptap-doc-v1"
+            },
+            "doc": {
+              "type": "object"
+            },
+            "text": {
+              "type": "string"
+            }
+          },
+          "required": ["format", "doc"],
+          "additionalProperties": false,
           "title": "Beschreibung",
           "x-gw": {
             "group": "Inhalt",
             "order": 1,
-            "cols": 12
+            "cols": 12,
+            "widget": "richtext"
           }
         },
         "facilitator_notes": {
-          "type": "string",
-          "format": "richtext",
+          "type": "object",
+          "properties": {
+            "format": {
+              "const": "tiptap-doc-v1"
+            },
+            "doc": {
+              "type": "object"
+            },
+            "text": {
+              "type": "string"
+            }
+          },
+          "required": ["format", "doc"],
+          "additionalProperties": false,
           "title": "Moderationsnotizen",
-          "description": "Nur für dich sichtbar, nicht im Teilnehmer-Export.",
           "x-gw": {
             "group": "Moderation",
             "order": 1,
             "cols": 12,
-            "private": true
-          }
+            "private": true,
+            "widget": "richtext"
+          },
+          "description": "Nur für dich sichtbar, nicht im Teilnehmer-Export."
         },
         "materials": {
           "type": "array",
@@ -294,26 +398,52 @@
       "additionalProperties": false,
       "properties": {
         "description": {
-          "type": "string",
-          "format": "richtext",
+          "type": "object",
+          "properties": {
+            "format": {
+              "const": "tiptap-doc-v1"
+            },
+            "doc": {
+              "type": "object"
+            },
+            "text": {
+              "type": "string"
+            }
+          },
+          "required": ["format", "doc"],
+          "additionalProperties": false,
           "title": "Beschreibung",
           "x-gw": {
             "group": "Inhalt",
             "order": 1,
-            "cols": 12
+            "cols": 12,
+            "widget": "richtext"
           }
         },
         "facilitator_notes": {
-          "type": "string",
-          "format": "richtext",
+          "type": "object",
+          "properties": {
+            "format": {
+              "const": "tiptap-doc-v1"
+            },
+            "doc": {
+              "type": "object"
+            },
+            "text": {
+              "type": "string"
+            }
+          },
+          "required": ["format", "doc"],
+          "additionalProperties": false,
           "title": "Moderationsnotizen",
-          "description": "Nur für dich sichtbar, nicht im Teilnehmer-Export.",
           "x-gw": {
             "group": "Moderation",
             "order": 1,
             "cols": 12,
-            "private": true
-          }
+            "private": true,
+            "widget": "richtext"
+          },
+          "description": "Nur für dich sichtbar, nicht im Teilnehmer-Export."
         },
         "materials": {
           "type": "array",
@@ -344,13 +474,26 @@
           }
         },
         "question": {
-          "type": "string",
-          "format": "richtext",
+          "type": "object",
+          "properties": {
+            "format": {
+              "const": "tiptap-doc-v1"
+            },
+            "doc": {
+              "type": "object"
+            },
+            "text": {
+              "type": "string"
+            }
+          },
+          "required": ["format", "doc"],
+          "additionalProperties": false,
           "title": "Leitfrage",
           "x-gw": {
             "group": "Inhalt",
             "order": 2,
-            "cols": 12
+            "cols": 12,
+            "widget": "richtext"
           }
         }
       }
@@ -371,26 +514,52 @@
       "additionalProperties": false,
       "properties": {
         "description": {
-          "type": "string",
-          "format": "richtext",
+          "type": "object",
+          "properties": {
+            "format": {
+              "const": "tiptap-doc-v1"
+            },
+            "doc": {
+              "type": "object"
+            },
+            "text": {
+              "type": "string"
+            }
+          },
+          "required": ["format", "doc"],
+          "additionalProperties": false,
           "title": "Beschreibung",
           "x-gw": {
             "group": "Inhalt",
             "order": 1,
-            "cols": 12
+            "cols": 12,
+            "widget": "richtext"
           }
         },
         "facilitator_notes": {
-          "type": "string",
-          "format": "richtext",
+          "type": "object",
+          "properties": {
+            "format": {
+              "const": "tiptap-doc-v1"
+            },
+            "doc": {
+              "type": "object"
+            },
+            "text": {
+              "type": "string"
+            }
+          },
+          "required": ["format", "doc"],
+          "additionalProperties": false,
           "title": "Moderationsnotizen",
-          "description": "Nur für dich sichtbar, nicht im Teilnehmer-Export.",
           "x-gw": {
             "group": "Moderation",
             "order": 1,
             "cols": 12,
-            "private": true
-          }
+            "private": true,
+            "widget": "richtext"
+          },
+          "description": "Nur für dich sichtbar, nicht im Teilnehmer-Export."
         },
         "materials": {
           "type": "array",
@@ -421,13 +590,26 @@
           }
         },
         "task": {
-          "type": "string",
-          "format": "richtext",
+          "type": "object",
+          "properties": {
+            "format": {
+              "const": "tiptap-doc-v1"
+            },
+            "doc": {
+              "type": "object"
+            },
+            "text": {
+              "type": "string"
+            }
+          },
+          "required": ["format", "doc"],
+          "additionalProperties": false,
           "title": "Arbeitsauftrag",
           "x-gw": {
             "group": "Inhalt",
             "order": 2,
-            "cols": 12
+            "cols": 12,
+            "widget": "richtext"
           }
         },
         "group_size": {
@@ -491,26 +673,52 @@
       "additionalProperties": false,
       "properties": {
         "description": {
-          "type": "string",
-          "format": "richtext",
+          "type": "object",
+          "properties": {
+            "format": {
+              "const": "tiptap-doc-v1"
+            },
+            "doc": {
+              "type": "object"
+            },
+            "text": {
+              "type": "string"
+            }
+          },
+          "required": ["format", "doc"],
+          "additionalProperties": false,
           "title": "Beschreibung",
           "x-gw": {
             "group": "Inhalt",
             "order": 1,
-            "cols": 12
+            "cols": 12,
+            "widget": "richtext"
           }
         },
         "facilitator_notes": {
-          "type": "string",
-          "format": "richtext",
+          "type": "object",
+          "properties": {
+            "format": {
+              "const": "tiptap-doc-v1"
+            },
+            "doc": {
+              "type": "object"
+            },
+            "text": {
+              "type": "string"
+            }
+          },
+          "required": ["format", "doc"],
+          "additionalProperties": false,
           "title": "Moderationsnotizen",
-          "description": "Nur für dich sichtbar, nicht im Teilnehmer-Export.",
           "x-gw": {
             "group": "Moderation",
             "order": 1,
             "cols": 12,
-            "private": true
-          }
+            "private": true,
+            "widget": "richtext"
+          },
+          "description": "Nur für dich sichtbar, nicht im Teilnehmer-Export."
         },
         "materials": {
           "type": "array",
@@ -541,13 +749,26 @@
           }
         },
         "instructions": {
-          "type": "string",
-          "format": "richtext",
+          "type": "object",
+          "properties": {
+            "format": {
+              "const": "tiptap-doc-v1"
+            },
+            "doc": {
+              "type": "object"
+            },
+            "text": {
+              "type": "string"
+            }
+          },
+          "required": ["format", "doc"],
+          "additionalProperties": false,
           "title": "Anleitung",
           "x-gw": {
             "group": "Inhalt",
             "order": 2,
-            "cols": 12
+            "cols": 12,
+            "widget": "richtext"
           }
         },
         "method_url": {
@@ -562,13 +783,26 @@
           }
         },
         "debrief": {
-          "type": "string",
-          "format": "richtext",
+          "type": "object",
+          "properties": {
+            "format": {
+              "const": "tiptap-doc-v1"
+            },
+            "doc": {
+              "type": "object"
+            },
+            "text": {
+              "type": "string"
+            }
+          },
+          "required": ["format", "doc"],
+          "additionalProperties": false,
           "title": "Auswertung",
           "x-gw": {
             "group": "Inhalt",
             "order": 4,
-            "cols": 12
+            "cols": 12,
+            "widget": "richtext"
           }
         }
       }
@@ -589,26 +823,52 @@
       "additionalProperties": false,
       "properties": {
         "description": {
-          "type": "string",
-          "format": "richtext",
+          "type": "object",
+          "properties": {
+            "format": {
+              "const": "tiptap-doc-v1"
+            },
+            "doc": {
+              "type": "object"
+            },
+            "text": {
+              "type": "string"
+            }
+          },
+          "required": ["format", "doc"],
+          "additionalProperties": false,
           "title": "Beschreibung",
           "x-gw": {
             "group": "Inhalt",
             "order": 1,
-            "cols": 12
+            "cols": 12,
+            "widget": "richtext"
           }
         },
         "facilitator_notes": {
-          "type": "string",
-          "format": "richtext",
+          "type": "object",
+          "properties": {
+            "format": {
+              "const": "tiptap-doc-v1"
+            },
+            "doc": {
+              "type": "object"
+            },
+            "text": {
+              "type": "string"
+            }
+          },
+          "required": ["format", "doc"],
+          "additionalProperties": false,
           "title": "Moderationsnotizen",
-          "description": "Nur für dich sichtbar, nicht im Teilnehmer-Export.",
           "x-gw": {
             "group": "Moderation",
             "order": 1,
             "cols": 12,
-            "private": true
-          }
+            "private": true,
+            "widget": "richtext"
+          },
+          "description": "Nur für dich sichtbar, nicht im Teilnehmer-Export."
         },
         "materials": {
           "type": "array",
@@ -683,26 +943,52 @@
       "additionalProperties": false,
       "properties": {
         "description": {
-          "type": "string",
-          "format": "richtext",
+          "type": "object",
+          "properties": {
+            "format": {
+              "const": "tiptap-doc-v1"
+            },
+            "doc": {
+              "type": "object"
+            },
+            "text": {
+              "type": "string"
+            }
+          },
+          "required": ["format", "doc"],
+          "additionalProperties": false,
           "title": "Beschreibung",
           "x-gw": {
             "group": "Inhalt",
             "order": 1,
-            "cols": 12
+            "cols": 12,
+            "widget": "richtext"
           }
         },
         "facilitator_notes": {
-          "type": "string",
-          "format": "richtext",
+          "type": "object",
+          "properties": {
+            "format": {
+              "const": "tiptap-doc-v1"
+            },
+            "doc": {
+              "type": "object"
+            },
+            "text": {
+              "type": "string"
+            }
+          },
+          "required": ["format", "doc"],
+          "additionalProperties": false,
           "title": "Moderationsnotizen",
-          "description": "Nur für dich sichtbar, nicht im Teilnehmer-Export.",
           "x-gw": {
             "group": "Moderation",
             "order": 1,
             "cols": 12,
-            "private": true
-          }
+            "private": true,
+            "widget": "richtext"
+          },
+          "description": "Nur für dich sichtbar, nicht im Teilnehmer-Export."
         },
         "materials": {
           "type": "array",
@@ -733,13 +1019,26 @@
           }
         },
         "prompt": {
-          "type": "string",
-          "format": "richtext",
+          "type": "object",
+          "properties": {
+            "format": {
+              "const": "tiptap-doc-v1"
+            },
+            "doc": {
+              "type": "object"
+            },
+            "text": {
+              "type": "string"
+            }
+          },
+          "required": ["format", "doc"],
+          "additionalProperties": false,
           "title": "Reflexionsfrage",
           "x-gw": {
             "group": "Inhalt",
             "order": 2,
-            "cols": 12
+            "cols": 12,
+            "widget": "richtext"
           }
         },
         "individual_first": {
@@ -769,26 +1068,52 @@
       "additionalProperties": false,
       "properties": {
         "description": {
-          "type": "string",
-          "format": "richtext",
+          "type": "object",
+          "properties": {
+            "format": {
+              "const": "tiptap-doc-v1"
+            },
+            "doc": {
+              "type": "object"
+            },
+            "text": {
+              "type": "string"
+            }
+          },
+          "required": ["format", "doc"],
+          "additionalProperties": false,
           "title": "Beschreibung",
           "x-gw": {
             "group": "Inhalt",
             "order": 1,
-            "cols": 12
+            "cols": 12,
+            "widget": "richtext"
           }
         },
         "facilitator_notes": {
-          "type": "string",
-          "format": "richtext",
+          "type": "object",
+          "properties": {
+            "format": {
+              "const": "tiptap-doc-v1"
+            },
+            "doc": {
+              "type": "object"
+            },
+            "text": {
+              "type": "string"
+            }
+          },
+          "required": ["format", "doc"],
+          "additionalProperties": false,
           "title": "Moderationsnotizen",
-          "description": "Nur für dich sichtbar, nicht im Teilnehmer-Export.",
           "x-gw": {
             "group": "Moderation",
             "order": 1,
             "cols": 12,
-            "private": true
-          }
+            "private": true,
+            "widget": "richtext"
+          },
+          "description": "Nur für dich sichtbar, nicht im Teilnehmer-Export."
         },
         "materials": {
           "type": "array",
@@ -819,13 +1144,26 @@
           }
         },
         "activity": {
-          "type": "string",
-          "format": "richtext",
+          "type": "object",
+          "properties": {
+            "format": {
+              "const": "tiptap-doc-v1"
+            },
+            "doc": {
+              "type": "object"
+            },
+            "text": {
+              "type": "string"
+            }
+          },
+          "required": ["format", "doc"],
+          "additionalProperties": false,
           "title": "Aktivität",
           "x-gw": {
             "group": "Inhalt",
             "order": 2,
-            "cols": 12
+            "cols": 12,
+            "widget": "richtext"
           }
         },
         "space_needed": {
@@ -857,26 +1195,52 @@
       "additionalProperties": false,
       "properties": {
         "description": {
-          "type": "string",
-          "format": "richtext",
+          "type": "object",
+          "properties": {
+            "format": {
+              "const": "tiptap-doc-v1"
+            },
+            "doc": {
+              "type": "object"
+            },
+            "text": {
+              "type": "string"
+            }
+          },
+          "required": ["format", "doc"],
+          "additionalProperties": false,
           "title": "Beschreibung",
           "x-gw": {
             "group": "Inhalt",
             "order": 1,
-            "cols": 12
+            "cols": 12,
+            "widget": "richtext"
           }
         },
         "facilitator_notes": {
-          "type": "string",
-          "format": "richtext",
+          "type": "object",
+          "properties": {
+            "format": {
+              "const": "tiptap-doc-v1"
+            },
+            "doc": {
+              "type": "object"
+            },
+            "text": {
+              "type": "string"
+            }
+          },
+          "required": ["format", "doc"],
+          "additionalProperties": false,
           "title": "Moderationsnotizen",
-          "description": "Nur für dich sichtbar, nicht im Teilnehmer-Export.",
           "x-gw": {
             "group": "Moderation",
             "order": 1,
             "cols": 12,
-            "private": true
-          }
+            "private": true,
+            "widget": "richtext"
+          },
+          "description": "Nur für dich sichtbar, nicht im Teilnehmer-Export."
         },
         "materials": {
           "type": "array",
@@ -924,26 +1288,52 @@
       "additionalProperties": false,
       "properties": {
         "description": {
-          "type": "string",
-          "format": "richtext",
+          "type": "object",
+          "properties": {
+            "format": {
+              "const": "tiptap-doc-v1"
+            },
+            "doc": {
+              "type": "object"
+            },
+            "text": {
+              "type": "string"
+            }
+          },
+          "required": ["format", "doc"],
+          "additionalProperties": false,
           "title": "Beschreibung",
           "x-gw": {
             "group": "Inhalt",
             "order": 1,
-            "cols": 12
+            "cols": 12,
+            "widget": "richtext"
           }
         },
         "facilitator_notes": {
-          "type": "string",
-          "format": "richtext",
+          "type": "object",
+          "properties": {
+            "format": {
+              "const": "tiptap-doc-v1"
+            },
+            "doc": {
+              "type": "object"
+            },
+            "text": {
+              "type": "string"
+            }
+          },
+          "required": ["format", "doc"],
+          "additionalProperties": false,
           "title": "Moderationsnotizen",
-          "description": "Nur für dich sichtbar, nicht im Teilnehmer-Export.",
           "x-gw": {
             "group": "Moderation",
             "order": 1,
             "cols": 12,
-            "private": true
-          }
+            "private": true,
+            "widget": "richtext"
+          },
+          "description": "Nur für dich sichtbar, nicht im Teilnehmer-Export."
         },
         "materials": {
           "type": "array",
@@ -1002,26 +1392,52 @@
       "additionalProperties": false,
       "properties": {
         "description": {
-          "type": "string",
-          "format": "richtext",
+          "type": "object",
+          "properties": {
+            "format": {
+              "const": "tiptap-doc-v1"
+            },
+            "doc": {
+              "type": "object"
+            },
+            "text": {
+              "type": "string"
+            }
+          },
+          "required": ["format", "doc"],
+          "additionalProperties": false,
           "title": "Beschreibung",
           "x-gw": {
             "group": "Inhalt",
             "order": 1,
-            "cols": 12
+            "cols": 12,
+            "widget": "richtext"
           }
         },
         "facilitator_notes": {
-          "type": "string",
-          "format": "richtext",
+          "type": "object",
+          "properties": {
+            "format": {
+              "const": "tiptap-doc-v1"
+            },
+            "doc": {
+              "type": "object"
+            },
+            "text": {
+              "type": "string"
+            }
+          },
+          "required": ["format", "doc"],
+          "additionalProperties": false,
           "title": "Moderationsnotizen",
-          "description": "Nur für dich sichtbar, nicht im Teilnehmer-Export.",
           "x-gw": {
             "group": "Moderation",
             "order": 1,
             "cols": 12,
-            "private": true
-          }
+            "private": true,
+            "widget": "richtext"
+          },
+          "description": "Nur für dich sichtbar, nicht im Teilnehmer-Export."
         },
         "materials": {
           "type": "array",
@@ -1069,26 +1485,52 @@
       "additionalProperties": false,
       "properties": {
         "description": {
-          "type": "string",
-          "format": "richtext",
+          "type": "object",
+          "properties": {
+            "format": {
+              "const": "tiptap-doc-v1"
+            },
+            "doc": {
+              "type": "object"
+            },
+            "text": {
+              "type": "string"
+            }
+          },
+          "required": ["format", "doc"],
+          "additionalProperties": false,
           "title": "Beschreibung",
           "x-gw": {
             "group": "Inhalt",
             "order": 1,
-            "cols": 12
+            "cols": 12,
+            "widget": "richtext"
           }
         },
         "facilitator_notes": {
-          "type": "string",
-          "format": "richtext",
+          "type": "object",
+          "properties": {
+            "format": {
+              "const": "tiptap-doc-v1"
+            },
+            "doc": {
+              "type": "object"
+            },
+            "text": {
+              "type": "string"
+            }
+          },
+          "required": ["format", "doc"],
+          "additionalProperties": false,
           "title": "Moderationsnotizen",
-          "description": "Nur für dich sichtbar, nicht im Teilnehmer-Export.",
           "x-gw": {
             "group": "Moderation",
             "order": 1,
             "cols": 12,
-            "private": true
-          }
+            "private": true,
+            "widget": "richtext"
+          },
+          "description": "Nur für dich sichtbar, nicht im Teilnehmer-Export."
         },
         "materials": {
           "type": "array",
@@ -1119,13 +1561,26 @@
           }
         },
         "prompt": {
-          "type": "string",
-          "format": "richtext",
+          "type": "object",
+          "properties": {
+            "format": {
+              "const": "tiptap-doc-v1"
+            },
+            "doc": {
+              "type": "object"
+            },
+            "text": {
+              "type": "string"
+            }
+          },
+          "required": ["format", "doc"],
+          "additionalProperties": false,
           "title": "Abschlussfrage",
           "x-gw": {
             "group": "Inhalt",
             "order": 2,
-            "cols": 12
+            "cols": 12,
+            "widget": "richtext"
           }
         },
         "format": {
@@ -1157,26 +1612,52 @@
       "additionalProperties": false,
       "properties": {
         "description": {
-          "type": "string",
-          "format": "richtext",
+          "type": "object",
+          "properties": {
+            "format": {
+              "const": "tiptap-doc-v1"
+            },
+            "doc": {
+              "type": "object"
+            },
+            "text": {
+              "type": "string"
+            }
+          },
+          "required": ["format", "doc"],
+          "additionalProperties": false,
           "title": "Beschreibung",
           "x-gw": {
             "group": "Inhalt",
             "order": 1,
-            "cols": 12
+            "cols": 12,
+            "widget": "richtext"
           }
         },
         "facilitator_notes": {
-          "type": "string",
-          "format": "richtext",
+          "type": "object",
+          "properties": {
+            "format": {
+              "const": "tiptap-doc-v1"
+            },
+            "doc": {
+              "type": "object"
+            },
+            "text": {
+              "type": "string"
+            }
+          },
+          "required": ["format", "doc"],
+          "additionalProperties": false,
           "title": "Moderationsnotizen",
-          "description": "Nur für dich sichtbar, nicht im Teilnehmer-Export.",
           "x-gw": {
             "group": "Moderation",
             "order": 1,
             "cols": 12,
-            "private": true
-          }
+            "private": true,
+            "widget": "richtext"
+          },
+          "description": "Nur für dich sichtbar, nicht im Teilnehmer-Export."
         },
         "materials": {
           "type": "array",
@@ -1242,26 +1723,52 @@
       "additionalProperties": false,
       "properties": {
         "description": {
-          "type": "string",
-          "format": "richtext",
+          "type": "object",
+          "properties": {
+            "format": {
+              "const": "tiptap-doc-v1"
+            },
+            "doc": {
+              "type": "object"
+            },
+            "text": {
+              "type": "string"
+            }
+          },
+          "required": ["format", "doc"],
+          "additionalProperties": false,
           "title": "Beschreibung",
           "x-gw": {
             "group": "Inhalt",
             "order": 1,
-            "cols": 12
+            "cols": 12,
+            "widget": "richtext"
           }
         },
         "facilitator_notes": {
-          "type": "string",
-          "format": "richtext",
+          "type": "object",
+          "properties": {
+            "format": {
+              "const": "tiptap-doc-v1"
+            },
+            "doc": {
+              "type": "object"
+            },
+            "text": {
+              "type": "string"
+            }
+          },
+          "required": ["format", "doc"],
+          "additionalProperties": false,
           "title": "Moderationsnotizen",
-          "description": "Nur für dich sichtbar, nicht im Teilnehmer-Export.",
           "x-gw": {
             "group": "Moderation",
             "order": 1,
             "cols": 12,
-            "private": true
-          }
+            "private": true,
+            "widget": "richtext"
+          },
+          "description": "Nur für dich sichtbar, nicht im Teilnehmer-Export."
         },
         "materials": {
           "type": "array",

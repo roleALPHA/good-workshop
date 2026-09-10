@@ -32,13 +32,15 @@ test('renders the day in agenda order with computed start times', async ({ page 
   await expect(block(page, 'Energizer: Zwei Wahrheiten')).toContainText('13:25')
   await expect(block(page, 'Druckpunkte')).toContainText('13:35')
 
-  const titles = await page.getByRole('heading', { level: 3 }).allInnerTexts()
-  expect(titles.slice(0, 4)).toEqual([
-    'Check-in & Start',
-    'Agenda & Spielregeln',
-    'Energizer: Zwei Wahrheiten',
-    'Druckpunkte',
-  ])
+  // Asserted on accessible names rather than on text, because the two views
+  // hold the title in different places: an input value in the editor,
+  // document text in the reading view. The name is identical either way, and
+  // that is the property that actually matters.
+  const rows = page.getByRole('article')
+  await expect(rows.nth(0)).toHaveAccessibleName('Check-in & Start')
+  await expect(rows.nth(1)).toHaveAccessibleName('Agenda & Spielregeln')
+  await expect(rows.nth(2)).toHaveAccessibleName('Energizer: Zwei Wahrheiten')
+  await expect(rows.nth(3)).toHaveAccessibleName('Druckpunkte')
 })
 
 test('announces a pinned start time instead of signalling it with an icon alone', async ({
@@ -54,8 +56,10 @@ test('states an overlap in words rather than silently shortening a block', async
   await expect(lunch).toContainText('14:30')
   await expect(lunch).toContainText('Überschneidet den vorherigen Block um 30m')
 
-  // The block above keeps its full duration -- the conflict is surfaced, not resolved.
-  await expect(block(page, 'Einwandintegration')).toContainText('10m')
+  // Nothing was auto-shortened: lunch still runs its full hour, and the block
+  // after it starts accordingly. Asserted through the schedule rather than
+  // through the duration control, which only exists in the editor.
+  await expect(block(page, 'IT-Management verorten')).toContainText('15:30')
 })
 
 test('derives a cluster duration from its children', async ({ page }) => {
@@ -158,3 +162,65 @@ test.describe('drag & drop', () => {
 // behaviour to assert, and asserting it anyway would leave a permanently red
 // test or, worse, a quietly weakened one. Tracked separately; the mouse path
 // above exercises the same projection and move code.
+
+test.describe('inline editing in the day view', () => {
+  test.skip(({ isMobile }) => isMobile === true, 'The editor only mounts from 1024px up')
+
+  test('changes a duration in the row and moves every following block', async ({ page }) => {
+    const row = block(page, 'Spannungsfelder sammeln')
+    await expect(block(page, 'Einwandintegration')).toContainText('14:50')
+
+    const duration = row.getByLabel('Dauer')
+    await duration.fill('45m')
+    await duration.press('Tab')
+
+    // The whole point of deriving times: one edit, and everything after it
+    // moves without a save, a reload or a recalculation step.
+    await expect(block(page, 'Einwandintegration')).toContainText('15:05')
+    await expect(section_(page, 'Zielbild erarbeiten')).toContainText('55m')
+  })
+
+  test('reverts a duration it cannot read instead of guessing', async ({ page }) => {
+    const duration = block(page, 'Spannungsfelder sammeln').getByLabel('Dauer')
+    await duration.fill('völliger unsinn')
+    await duration.press('Tab')
+
+    // A silently wrong duration shifts every following block and is easy to miss.
+    await expect(duration).toHaveValue('30m')
+    await expect(block(page, 'Einwandintegration')).toContainText('14:50')
+  })
+
+  test('renames a block in place, with no dialog anywhere', async ({ page }) => {
+    const title = block(page, 'Spannungsfelder sammeln').getByLabel('Titel')
+    await title.fill('Spannungsfelder clustern')
+    // Tab from the keyboard, not through the locator: the row's accessible name
+    // is derived from this very input, so the locator stops matching its own
+    // row the moment the value changes. That is correct behaviour -- the name
+    // follows the title -- but it means the handle cannot be re-resolved.
+    await page.keyboard.press('Tab')
+
+    await expect(block(page, 'Spannungsfelder clustern')).toBeVisible()
+    await expect(page.getByRole('dialog')).toHaveCount(0)
+  })
+
+  test('opens the type’s own fields inside the same row', async ({ page }) => {
+    const row = block(page, 'Spannungsfelder sammeln')
+    const toggle = row.getByRole('button', { name: /Mehr Felder/ })
+
+    await expect(toggle).toHaveAttribute('aria-expanded', 'false')
+    await toggle.click()
+
+    await expect(row.getByLabel('Arbeitsauftrag')).toBeVisible()
+    await expect(row.getByLabel('Gruppengröße')).toBeVisible()
+    // Inside the row, not in a panel beside it.
+    await expect(page.getByRole('dialog')).toHaveCount(0)
+  })
+
+  test('keeps the collapsed table calm — four fields, not the whole schema', async ({ page }) => {
+    // The guardrail against the agenda turning into a wall of forms.
+    const row = block(page, 'Spannungsfelder sammeln')
+    await expect(row.getByLabel('Arbeitsauftrag')).toHaveCount(0)
+    await expect(row.getByLabel('Titel')).toBeVisible()
+    await expect(row.getByLabel('Dauer')).toBeVisible()
+  })
+})

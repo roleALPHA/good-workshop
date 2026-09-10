@@ -34,6 +34,7 @@ import {
 } from '@/features/agenda/projection'
 import { catClass } from '@/lib/category-colors'
 import { cn } from '@/lib/cn'
+import { ModuleDetails } from '@/components/inspector/module-details'
 import { ClusterRow, EndOfDay, GapRow, HeaderRow, ModuleRow, type RowChrome } from './agenda-rows'
 import { DragHandle } from './drag-handle'
 
@@ -133,6 +134,9 @@ export function AgendaEditor({ initialDoc }: { initialDoc: DayDoc }) {
   const sortableIds = useMemo(() => dragRows.map((r) => r.id), [dragRows])
 
   const [dropMessage, setDropMessage] = useState('')
+  // Which row has its type-specific fields open. One at a time: several
+  // expanded rows turn the agenda back into a wall of forms.
+  const [expandedId, setExpandedId] = useState<string | null>(null)
 
   const liveMessage = activeId ? describeProjection(doc, rows, activeId, projection) : dropMessage
 
@@ -177,6 +181,21 @@ export function AgendaEditor({ initialDoc }: { initialDoc: DayDoc }) {
   function handleDragCancel() {
     if (activeId) setDropMessage('Verschieben abgebrochen.')
     reset()
+  }
+
+  /**
+   * Edits land straight on the document.
+   *
+   * No dialog, no save button, no edit mode -- the agenda has to stay readable
+   * while it is being changed. Persistence will replace this local update with
+   * an optimistic one over the same shape; the component does not learn about
+   * it either way.
+   */
+  function patchModule(moduleId: string, patch: Partial<(typeof doc)['modules'][number]>) {
+    setDoc((current) => ({
+      ...current,
+      modules: current.modules.map((m) => (m.id === moduleId ? { ...m, ...patch } : m)),
+    }))
   }
 
   const activeRow = rows.find((r) => r.id === activeId)
@@ -236,6 +255,22 @@ export function AgendaEditor({ initialDoc }: { initialDoc: DayDoc }) {
                         entry={entry}
                         nested={row.depth === 1}
                         chrome={chrome}
+                        editing={{
+                          expanded: expandedId === row.id,
+                          onToggleExpanded: () =>
+                            setExpandedId((current) => (current === row.id ? null : row.id)),
+                          onTitleChange: (title) => patchModule(row.id, { title }),
+                          onDurationChange: (durationMinutes) =>
+                            patchModule(row.id, { durationMinutes }),
+                          onDescChange: (desc) => patchModule(row.id, { desc }),
+                          details: (
+                            <ModuleDetails
+                              module={row.module}
+                              type={doc.moduleTypes[row.module.moduleTypeId]}
+                              onChange={(desc) => patchModule(row.id, { desc })}
+                            />
+                          ),
+                        }}
                       />
                     )
                   }

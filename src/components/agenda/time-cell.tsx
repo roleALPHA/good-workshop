@@ -2,6 +2,7 @@ import { Lock } from 'lucide-react'
 import type { ScheduleEntry } from '@/domain/schedule/types'
 import { formatDuration, formatTime } from '@/features/agenda/duration'
 import { cn } from '@/lib/cn'
+import { DurationInput } from './inline-inputs'
 
 /**
  * Start time above, duration below in bold -- the layout of the reference
@@ -13,10 +14,13 @@ export function TimeCell({
   entry,
   showDuration = true,
   className,
+  editing,
 }: {
   entry: ScheduleEntry
   showDuration?: boolean
   className?: string
+  /** Present only in the editor; the duration then becomes editable in place. */
+  editing?: { onDurationChange: (minutes: number) => void }
 }) {
   return (
     <div
@@ -41,11 +45,14 @@ export function TimeCell({
         )}
         {formatTime(entry.startMinute)}
       </span>
-      {showDuration && (
-        <span className="text-[15px] font-semibold text-[var(--fg)]">
-          {formatDuration(entry.durationMinutes)}
-        </span>
-      )}
+      {showDuration &&
+        (editing ? (
+          <DurationInput minutes={entry.durationMinutes} onCommit={editing.onDurationChange} />
+        ) : (
+          <span className="text-[15px] font-semibold text-[var(--fg)]">
+            {formatDuration(entry.durationMinutes)}
+          </span>
+        ))}
     </div>
   )
 }

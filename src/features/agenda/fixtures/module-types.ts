@@ -1,4 +1,5 @@
 import type { ModuleTypeDto } from '@/domain/agenda/types'
+import { BUILTIN_BY_KEY } from '@/domain/moduleType/builtins'
 
 /**
  * The built-in module types, as they will be seeded per tenant.
@@ -145,10 +146,16 @@ export const BUILTIN_MODULE_TYPES: ModuleTypeDto[] = [
   },
 ]
 
+/** Schemas come from the same JSON the server seeds, so the fixture cannot drift. */
+const withSchema = (type: ModuleTypeDto): ModuleTypeDto => ({
+  ...type,
+  jsonSchema: BUILTIN_BY_KEY[type.key]?.jsonSchema,
+})
+
 export const MODULE_TYPES_BY_ID: Record<string, ModuleTypeDto> = Object.fromEntries(
-  BUILTIN_MODULE_TYPES.map((t) => [t.id, t]),
+  BUILTIN_MODULE_TYPES.map((t) => [t.id, withSchema(t)]),
 )
 
 export const MODULE_TYPES_BY_KEY: Record<string, ModuleTypeDto> = Object.fromEntries(
-  BUILTIN_MODULE_TYPES.map((t) => [t.key, t]),
+  BUILTIN_MODULE_TYPES.map((t) => [t.key, withSchema(t)]),
 )

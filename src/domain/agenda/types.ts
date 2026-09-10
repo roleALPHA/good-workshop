@@ -21,6 +21,12 @@ export type ModuleTypeDto = {
   defaultDurationMinutes: number
   /** false for break / lunch / buffer -- drives the "5h30 content, 1h15 breaks" split. */
   countsAsContent: boolean
+  /**
+   * The type's own field definitions. Carried on the day document because the
+   * fields are edited in the row itself, not in a panel that could fetch them
+   * separately -- see the inline-editing rule in .claude/skills/goodworkshop-ui.
+   */
+  jsonSchema?: unknown
 }
 
 export type ClusterDto = {
