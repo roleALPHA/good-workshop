@@ -1,0 +1,29 @@
+version: 2
+updates:
+  # Actions are pinned to full-length commit SHAs, which means they can only be
+  # updated by a bot that understands the pin. Without this file the pinning
+  # convention silently turns into "we run 2026's actions forever".
+  - package-ecosystem: github-actions
+    directory: /
+    schedule:
+      interval: weekly
+    groups:
+      actions:
+        patterns: ['*']
+
+  - package-ecosystem: npm
+    directory: /
+    schedule:
+      interval: weekly
+    open-pull-requests-limit: 5
+    groups:
+      dev-dependencies:
+        dependency-type: development
+      production-minor-patch:
+        dependency-type: production
+        update-types: [minor, patch]
+
+  - package-ecosystem: docker
+    directory: /
+    schedule:
+      interval: weekly

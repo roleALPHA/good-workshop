@@ -1,0 +1,55 @@
+import { defineConfig, devices } from '@playwright/test'
+
+const PORT = Number(process.env.E2E_PORT ?? 3210)
+const baseURL = `http://127.0.0.1:${PORT}`
+
+/**
+ * E2E is the narrow top of the pyramid: only flows that cannot be proven a
+ * level down. Schedule arithmetic, ordering and duration parsing are unit
+ * tested; what E2E adds is proof that the whole pipeline survives a real
+ * browser -- server render, CSS tokens, responsive collapse, accessibility tree.
+ *
+ * See .claude/skills/goodworkshop-testing/SKILL.md for the flow list.
+ */
+export default defineConfig({
+  testDir: './e2e',
+  fullyParallel: true,
+  forbidOnly: !!process.env.CI,
+  retries: process.env.CI ? 1 : 0,
+  workers: process.env.CI ? 2 : undefined,
+  reporter: process.env.CI ? [['github'], ['html', { open: 'never' }]] : [['list']],
+
+  use: {
+    baseURL,
+    // Only on a retry: traces and video on every run turn a fast suite into a
+    // slow one and bury the interesting artefact among hundreds of boring ones.
+    trace: 'on-first-retry',
+    video: 'on-first-retry',
+    screenshot: 'only-on-failure',
+  },
+
+  projects: [
+    { name: 'desktop', use: { ...devices['Desktop Chrome'] } },
+    // The reading view is the most-used screen of this product per workshop --
+    // a facilitator reads the agenda on a phone, in the room. It gets its own
+    // project rather than a viewport tweak inside one test.
+    { name: 'mobile', use: { ...devices['Pixel 5'] } },
+  ],
+
+  webServer: {
+    // Builds first, then runs the standalone server -- byte for byte the
+    // artifact the Docker image ships. Testing against `next dev` would prove
+    // the wrong thing, and `next start` does not work with output: standalone
+    // at all (see scripts/start-standalone.mjs).
+    // In CI the build is its own step, so a failing build reads as a failing
+    // build rather than as a mysterious webServer timeout.
+    command: process.env.E2E_SKIP_BUILD
+      ? `PORT=${PORT} pnpm start`
+      : `pnpm build && PORT=${PORT} pnpm start`,
+    url: `${baseURL}/api/health`,
+    reuseExistingServer: !process.env.CI,
+    timeout: 180_000,
+    stdout: 'ignore',
+    stderr: 'pipe',
+  },
+})

@@ -1,0 +1,9 @@
+.next/
+node_modules/
+coverage/
+pnpm-lock.yaml
+LICENSE
+drizzle/
+playwright-report/
+blob-report/
+test-results/
