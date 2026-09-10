@@ -13,12 +13,12 @@ import { expect, test, type Page } from '@playwright/test'
  *
  * Flows still to be added as their features land (see
  * .claude/skills/goodworkshop-testing/SKILL.md): magic-link login, creating a
- * workshop, drag & drop by mouse and by keyboard, setting a pin in the UI,
- * Markdown export, and the 409 conflict banner across two browser contexts.
+ * workshop, setting a pin in the UI, Markdown export, and the 409 conflict
+ * banner across two browser contexts.
  */
 
 const block = (page: Page, name: string) => page.getByRole('article', { name })
-const section = (page: Page, name: string) => page.getByRole('group', { name })
+const section_ = (page: Page, name: string) => page.getByRole('group', { name })
 const agenda = (page: Page) => page.getByRole('region', { name: /^Agenda/ })
 
 test.beforeEach(async ({ page }) => {
@@ -60,8 +60,8 @@ test('states an overlap in words rather than silently shortening a block', async
 
 test('derives a cluster duration from its children', async ({ page }) => {
   // 15 + 10 + 10 = 35, and it starts where its first (pinned) child starts.
-  await expect(section(page, 'Ankommen & Rahmen')).toContainText('3 Blöcke · 35m')
-  await expect(section(page, 'Ankommen & Rahmen')).toContainText('13:00')
+  await expect(section_(page, 'Ankommen & Rahmen')).toContainText('3 Blöcke · 35m')
+  await expect(section_(page, 'Ankommen & Rahmen')).toContainText('13:00')
 })
 
 test('shows the running end time and flags going over plan', async ({ page }) => {
@@ -99,3 +99,62 @@ test('follows the system colour scheme through the token system', async ({ page 
   )
   expect(barColour).not.toBe('')
 })
+
+test.describe('drag & drop', () => {
+  test.skip(({ isMobile }) => isMobile === true, 'The editor only mounts from 1024px up')
+
+  // The live region doubles as the synchronisation point: asserting on it is
+  // how we know dnd-kit has processed the previous input. Pressing keys back to
+  // back without that was what made these tests flaky, and a fixed sleep would
+  // only have hidden it.
+  const live = (page: Page) => agenda(page).getByRole('status')
+
+  test('moves a block to the end of the day with the mouse and recomputes everything', async ({
+    page,
+  }) => {
+    const section = section_(page, 'Ankommen & Rahmen')
+    await expect(section).toContainText('3 Blöcke · 35m')
+
+    const handle = page.getByRole('button', { name: 'Energizer: Zwei Wahrheiten verschieben' })
+    const target = block(page, 'Check-out')
+
+    const from = (await handle.boundingBox())!
+    const to = (await target.boundingBox())!
+
+    await page.mouse.move(from.x + from.width / 2, from.y + from.height / 2)
+    await page.mouse.down()
+    // Past the 6px activation slop first, then to the target in steps so
+    // dnd-kit sees a real gesture rather than a teleport.
+    await page.mouse.move(from.x + from.width / 2, from.y + 20, { steps: 5 })
+    await page.mouse.move(to.x + 200, to.y + to.height / 2, { steps: 15 })
+    await expect(live(page)).toContainText('auf Tagesebene')
+    await page.mouse.up()
+
+    // The block left the section, so the section is one block and ten minutes shorter.
+    await expect(section).toContainText('2 Blöcke · 25m')
+    await expect(block(page, 'Energizer: Zwei Wahrheiten')).toBeVisible()
+  })
+
+  test('announces the projected landing spot on every keyboard indent step', async ({ page }) => {
+    await page.getByRole('button', { name: 'Energizer: Zwei Wahrheiten verschieben' }).focus()
+    await page.keyboard.press('Space')
+    await expect(live(page)).toContainText('in Abschnitt Ankommen & Rahmen')
+
+    // Without an announcement driven by the projection, indenting from the
+    // keyboard would be completely silent: dnd-kit's own onDragOver fires only
+    // when the row underneath changes, and indenting changes nothing vertically.
+    await page.keyboard.press('ArrowLeft')
+    await expect(live(page)).toContainText('auf Tagesebene')
+
+    await page.keyboard.press('ArrowRight')
+    await expect(live(page)).toContainText('in Abschnitt Ankommen & Rahmen')
+  })
+})
+
+// NOT covered here, deliberately: FINISHING a keyboard drag. Picking a row up
+// with Space works, and so does indenting it with the arrow keys, but the
+// closing Space and the cancelling Escape never reach dnd-kit's keyboard
+// sensor -- neither onDragEnd nor onDragCancel fires. There is no working
+// behaviour to assert, and asserting it anyway would leave a permanently red
+// test or, worse, a quietly weakened one. Tracked separately; the mouse path
+// above exercises the same projection and move code.

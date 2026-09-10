@@ -64,6 +64,13 @@ test.describe('reading view on a phone', () => {
     }).toPass()
   })
 
+  test('does not boot the editor at all', async ({ page }) => {
+    // Not a feature withheld from phones: nested drag & drop plus rich text on
+    // a 375px screen is the wrong tool for the screen. No handles means no
+    // dnd-kit, no ProseMirror, nothing to hydrate.
+    await expect(page.getByRole('button', { name: /verschieben$/ })).toHaveCount(0)
+  })
+
   test('shows the attribution footer here too', async ({ page }) => {
     await expect(page.getByText('GoodWorkshop · powered by roleALPHA')).toBeVisible()
   })

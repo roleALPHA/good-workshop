@@ -1,21 +1,23 @@
 import { AgendaSummary } from '@/components/agenda/agenda-summary'
-import { AgendaTable } from '@/components/agenda/agenda-table'
+import { AgendaSurface } from '@/components/agenda/agenda-surface'
 import { CategoryLegend } from '@/components/agenda/category-legend'
 import { AppFooter } from '@/components/layout/app-footer'
 import { computeSchedule } from '@/domain/schedule/computeSchedule'
 import { createDemoDay } from '@/features/agenda/fixtures/day-fixture'
-import { flattenDay, toScheduleItems, withGapRows } from '@/features/agenda/flatten'
+import { flattenDay, toScheduleItems } from '@/features/agenda/flatten'
 
 /**
- * Static preview of the agenda while the editor is being built. Renders the
- * demo fixture through exactly the pipeline the real editor will use:
- *   DayDoc -> flattenDay -> computeSchedule -> withGapRows -> AgendaTable
+ * Preview of the agenda while persistence is being built. Renders the demo
+ * fixture through exactly the pipeline the real editor uses:
+ *   DayDoc -> flattenDay -> computeSchedule -> withGapRows -> rows
+ *
+ * Edits live in client state only -- there is no database yet, so a reload
+ * brings the fixture back.
  */
 export default function HomePage() {
   const doc = createDemoDay()
   const rows = flattenDay(doc)
   const schedule = computeSchedule(doc.startMinute, toScheduleItems(rows))
-  const rowsWithGaps = withGapRows(rows, schedule)
 
   return (
     <div className="flex min-h-dvh flex-col">
@@ -33,7 +35,7 @@ export default function HomePage() {
           </div>
         </header>
 
-        <AgendaTable doc={doc} rows={rowsWithGaps} schedule={schedule} />
+        <AgendaSurface doc={doc} />
       </main>
       <AppFooter />
     </div>

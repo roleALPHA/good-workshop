@@ -1,4 +1,4 @@
-import type { CSSProperties, HTMLAttributes, ReactNode } from 'react'
+import type { CSSProperties, ReactNode } from 'react'
 import type { ClusterDto, ModuleDto, ModuleTypeDto } from '@/domain/agenda/types'
 import type { Schedule, ScheduleEntry } from '@/domain/schedule/types'
 import { formatDuration, formatTime } from '@/features/agenda/duration'
@@ -26,17 +26,22 @@ import { OverlapWarning, TimeCell } from './time-cell'
 export const GRID = 'md:grid md:grid-cols-[var(--gw-cols)] md:items-stretch'
 
 /**
- * What a row needs to become draggable. The static table passes nothing; the
- * editor passes dnd-kit's ref, transform style and attributes here, and the
- * handle separately -- listeners belong on the handle alone, or every click in
- * a description would start a drag.
+ * What a row needs to become draggable. The static table passes nothing.
+ *
+ * dnd-kit's `attributes` and `listeners` deliberately do NOT go on the row:
+ * `attributes` sets role="button", which would overwrite the row's own
+ * `article` / `group` role and flatten the agenda's accessibility tree into a
+ * pile of buttons. They belong on the handle, which is a button anyway. That
+ * also stops every click inside a description from starting a drag.
  */
 export type RowChrome = {
   rootRef?: (el: HTMLElement | null) => void
   style?: CSSProperties
-  attributes?: HTMLAttributes<HTMLElement>
+  /** A focusable drag handle carrying dnd-kit's attributes and listeners. */
   handle?: ReactNode
   isDragging?: boolean
+  /** Set while a drag would land inside this cluster. */
+  isDropTarget?: boolean
 }
 
 /** Hidden on phones: the card layout carries its own labels. */
@@ -80,7 +85,6 @@ export function ModuleRow({
     <article
       ref={chrome?.rootRef}
       style={chrome?.style}
-      {...chrome?.attributes}
       aria-labelledby={titleId}
       className={cn(
         catClass(type?.color),
@@ -147,7 +151,6 @@ export function ClusterRow({
     <div
       ref={chrome?.rootRef}
       style={chrome?.style}
-      {...chrome?.attributes}
       role="group"
       aria-labelledby={titleId}
       // aria-expanded belongs on the disclosure BUTTON, not on the group it
@@ -158,6 +161,7 @@ export function ClusterRow({
         // Sticky on phones so you always know which section you are reading.
         'group sticky top-0 z-10 break-inside-avoid border-b border-[var(--border)] bg-[var(--cat-bg)] md:static',
         chrome?.isDragging && 'opacity-40',
+        chrome?.isDropTarget && 'ring-2 ring-[var(--cat-bar)] ring-inset',
       )}
     >
       {chrome?.handle}
