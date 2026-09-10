@@ -1,0 +1,28 @@
+# Postgres für lokale Entwicklung und Tests.
+#
+# Kein Passwort, nirgends: `trust` auf einem Port, der ausschließlich an
+# 127.0.0.1 gebunden ist. Damit gibt es lokal kein Geheimnis, das in einer
+# .env landen, in ein Log rutschen oder in ein Backup wandern könnte.
+#
+# In Produktion wird stattdessen der Unix-Socket mit Peer-Authentifizierung
+# benutzt (siehe compose.yaml) -- dort wäre `trust` über TCP fahrlässig.
+services:
+  db:
+    image: postgres:17-alpine
+    container_name: goodworkshop-dev-db
+    environment:
+      POSTGRES_DB: goodworkshop
+      POSTGRES_USER: postgres
+      POSTGRES_HOST_AUTH_METHOD: trust
+    ports:
+      - '127.0.0.1:5433:5432'
+    volumes:
+      - dev-pgdata:/var/lib/postgresql/data
+    healthcheck:
+      test: ['CMD-SHELL', 'pg_isready -U postgres -d goodworkshop']
+      interval: 3s
+      timeout: 3s
+      retries: 20
+
+volumes:
+  dev-pgdata:

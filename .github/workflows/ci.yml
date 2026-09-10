@@ -50,6 +50,48 @@ jobs:
           path: coverage/
           retention-days: 7
 
+  db:
+    name: Schema & Tenant Isolation
+    runs-on: ubuntu-latest
+    services:
+      postgres:
+        image: postgres:17-alpine
+        env:
+          POSTGRES_DB: goodworkshop
+          POSTGRES_USER: postgres
+          # No password anywhere, on purpose: the port is only reachable from
+          # this job's network namespace, and a secret that does not exist
+          # cannot leak into a log or an artifact.
+          POSTGRES_HOST_AUTH_METHOD: trust
+        ports: ['5433:5432']
+        options: >-
+          --health-cmd "pg_isready -U postgres -d goodworkshop"
+          --health-interval 3s --health-timeout 3s --health-retries 20
+    env:
+      ADMIN_DATABASE_URL: postgres://postgres@127.0.0.1:5433/goodworkshop
+      MIGRATION_DATABASE_URL: postgres://gw_owner@127.0.0.1:5433/goodworkshop
+      DATABASE_URL: postgres://gw_app@127.0.0.1:5433/goodworkshop
+      OPS_DATABASE_URL: postgres://gw_ops@127.0.0.1:5433/goodworkshop
+    steps:
+      - uses: actions/checkout@fbc6f3992d24b796d5a048ff273f7fcc4a7b6c09 # v5
+      - uses: pnpm/action-setup@b906affcce14559ad1aafd4ab0e942779e9f58b1 # v4
+      - uses: actions/setup-node@a0853c24544627f65ddf259abe73b1d18a591444 # v5
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+          cache: pnpm
+      - run: pnpm install --frozen-lockfile
+
+      - name: Bootstrap roles
+        run: pnpm db:bootstrap
+      - name: Apply migrations
+        run: pnpm db:migrate
+
+      # The most important job in this workflow. A table shipped without RLS is
+      # a silent, total data leak with no symptom -- no feature breaks, and
+      # every tenant can read every other tenant's rows.
+      - name: Tenant isolation
+        run: pnpm test:db
+
   build:
     name: Docker Build
     runs-on: ubuntu-latest

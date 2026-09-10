@@ -12,6 +12,9 @@ export default defineConfig({
     globals: true,
     setupFiles: ['./vitest.setup.ts'],
     include: ['src/**/*.{test,spec}.{ts,tsx}'],
+    // Database tests live in their own suite and their own CI job -- they need
+    // a real Postgres with migrations applied. See vitest.db.config.ts.
+    exclude: ['**/node_modules/**', 'src/**/*.db.test.ts'],
     coverage: {
       provider: 'v8',
       reporter: ['text', 'lcov'],
