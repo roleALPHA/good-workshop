@@ -1,7 +1,14 @@
 import { uuidv7 } from 'uuidv7'
-import { and, asc, desc, eq, isNull, sql } from 'drizzle-orm'
+import { and, asc, desc, eq, ilike, isNull, or, sql } from 'drizzle-orm'
 import type { Actor, Tx } from '@/server/db'
-import { folder, member, workshop, workshopCollaborator, workshopDay } from '@/server/db/schema'
+import {
+  folder,
+  member,
+  tag,
+  workshop,
+  workshopCollaborator,
+  workshopDay,
+} from '@/server/db/schema'
 import { keyAtEnd } from '@/domain/agenda/ordering'
 import type { WorkshopAccess } from '@/domain/agenda/access'
 
@@ -14,6 +21,8 @@ import type { WorkshopAccess } from '@/domain/agenda/access'
  * is allowed to open.
  */
 
+export type WorkshopTag = { id: string; name: string; color: string }
+
 export type WorkshopSummary = {
   id: string
   title: string
@@ -21,6 +30,7 @@ export type WorkshopSummary = {
   folderId: string | null
   updatedAt: Date
   dayCount: number
+  tags: WorkshopTag[]
   role: 'owner' | 'editor' | 'viewer' | 'admin'
 }
 
@@ -62,12 +72,44 @@ export async function listFolders(tx: Tx): Promise<FolderNode[]> {
   walk(null, 0)
   return out
 }
+export type LibraryQuery = {
+  folderId?: string | null
+  tagId?: string
+  /** Free text over the title. */
+  search?: string
+  /** From a previous page. */
+  cursor?: string
+  limit?: number
+}
 
+export type LibraryPage = {
+  workshops: WorkshopSummary[]
+  /** Opaque; pass it back to get the next page. Null when there is none. */
+  nextCursor: string | null
+}
+
+const DEFAULT_LIMIT = 25
+
+/**
+ * The library, one page at a time.
+ *
+ * Visibility is a SQL predicate rather than a filter applied afterwards, and
+ * that is what makes paging possible at all: filtering in JavaScript means a
+ * page of twenty rows can yield three visible ones, so LIMIT would return
+ * short pages and OFFSET would skip rows nobody ever saw.
+ *
+ * Keyset, not OFFSET. Somebody editing a workshop while you page through the
+ * list moves it to the top, which with OFFSET silently shifts everything down
+ * and hands you a row you already had -- or hides one you never saw.
+ */
 export async function listWorkshops(
   tx: Tx,
   actor: Actor,
-  options: { folderId?: string | null } = {},
-): Promise<WorkshopSummary[]> {
+  options: LibraryQuery = {},
+): Promise<LibraryPage> {
+  const limit = Math.min(Math.max(options.limit ?? DEFAULT_LIMIT, 1), 100)
+  const after = parseCursor(options.cursor)
+
   const rows = await tx
     .select({
       id: workshop.id,
@@ -80,6 +122,12 @@ export async function listWorkshops(
       dayCount: sql<number>`(
         select count(*)::int from ${workshopDay} d where d.workshop_id = ${workshop.id}
       )`,
+      tags: sql<{ id: string; name: string; color: string }[]>`coalesce((
+        select json_agg(json_build_object('id', t.id, 'name', t.name, 'color', t.color)
+                        order by t.name)
+        from workshop_tag wt join tag t on t.id = wt.tag_id
+        where wt.workshop_id = ${workshop.id}
+      ), '[]'::json)`,
     })
     .from(workshop)
     .leftJoin(
@@ -92,37 +140,120 @@ export async function listWorkshops(
     .where(
       and(
         isNull(workshop.deletedAt),
-        options.folderId === undefined
-          ? undefined
-          : options.folderId === null
-            ? isNull(workshop.folderId)
-            : eq(workshop.folderId, options.folderId),
+        visibleTo(actor),
+        folderFilter(options.folderId),
+        options.tagId
+          ? sql`exists (select 1 from workshop_tag wt
+                        where wt.workshop_id = ${workshop.id} and wt.tag_id = ${options.tagId})`
+          : undefined,
+        // ILIKE rather than a tsvector column: this is a title search over
+        // hundreds to a few thousand rows, and a stemmed index would need a
+        // migration to buy nothing here -- while making "strat" stop matching
+        // "Strategie", which is what people actually type.
+        options.search ? ilike(workshop.title, `%${escapeLike(options.search)}%`) : undefined,
+        after
+          ? sql`(${workshop.updatedAt}, ${workshop.id}) < (${after.updatedAt}, ${after.id})`
+          : undefined,
       ),
     )
-    .orderBy(desc(workshop.updatedAt))
+    .orderBy(desc(workshop.updatedAt), desc(workshop.id))
+    .limit(limit + 1)
 
-  return rows
-    .map((row) => ({
+  // One row more than asked for is how "is there another page" is answered
+  // without a second count query over the same predicate.
+  const page = rows.slice(0, limit)
+  const last = page.at(-1)
+
+  return {
+    workshops: page.map((row) => ({
       id: row.id,
       title: row.title,
       status: row.status,
       folderId: row.folderId,
       updatedAt: row.updatedAt,
       dayCount: row.dayCount,
+      tags: row.tags ?? [],
       role: roleOf(row.ownerId, row.collaboratorRole, actor),
-    }))
-    .filter((row): row is WorkshopSummary => row.role !== null)
+    })),
+    nextCursor: rows.length > limit && last ? makeCursor(last.updatedAt, last.id) : null,
+  }
 }
 
+/**
+ * Who may see a workshop, as a predicate.
+ *
+ * The same three rules `assertWorkshopAccess` applies to one workshop, said
+ * once for a whole list. They have to agree: a row that shows up here and then
+ * 404s when opened is a worse bug than either half alone.
+ */
+function visibleTo(actor: Actor) {
+  if (actor.tenantRole === 'admin') return undefined
+  return or(
+    eq(workshop.ownerId, actor.memberId),
+    sql`exists (select 1 from workshop_collaborator wc
+                where wc.workshop_id = ${workshop.id} and wc.member_id = ${actor.memberId})`,
+  )
+}
+
+function folderFilter(folderId: string | null | undefined) {
+  if (folderId === undefined) return undefined
+  return folderId === null ? isNull(workshop.folderId) : eq(workshop.folderId, folderId)
+}
+
+/** `%` and `_` are wildcards; somebody searching for them means the characters. */
+const escapeLike = (input: string) => input.replace(/[\\%_]/g, (c) => `\\${c}`)
+
+const makeCursor = (updatedAt: Date, id: string) =>
+  Buffer.from(`${updatedAt.toISOString()}|${id}`).toString('base64url')
+
+function parseCursor(cursor: string | undefined): { updatedAt: Date; id: string } | null {
+  if (!cursor) return null
+  try {
+    const [iso, id] = Buffer.from(cursor, 'base64url').toString('utf8').split('|')
+    const updatedAt = new Date(iso ?? '')
+    if (!id || Number.isNaN(updatedAt.getTime())) return null
+    return { updatedAt, id }
+  } catch {
+    // A cursor is opaque to the client, so a broken one is a bad link rather
+    // than a request worth failing: start from the top.
+    return null
+  }
+}
+
+/**
+ * The role to show next to a row.
+ *
+ * Display only -- the predicate above already decided who sees what. Kept in
+ * step with it deliberately: two answers to "may I open this" is how a list
+ * ends up offering rows that 404.
+ */
 function roleOf(
   ownerId: string,
   collaboratorRole: string | null,
   actor: Actor,
-): WorkshopSummary['role'] | null {
+): WorkshopSummary['role'] {
   if (ownerId === actor.memberId) return 'owner'
   if (collaboratorRole === 'editor' || collaboratorRole === 'viewer') return collaboratorRole
-  if (actor.tenantRole === 'admin') return 'admin'
-  return null
+  return 'admin'
+}
+
+export type TagSummary = { id: string; name: string; color: string; count: number }
+
+/** The tenant's tags, with how many workshops carry each. */
+export async function listTags(tx: Tx): Promise<TagSummary[]> {
+  const rows = await tx
+    .select({
+      id: tag.id,
+      name: tag.name,
+      color: tag.color,
+      count: sql<number>`(
+        select count(*)::int from workshop_tag wt where wt.tag_id = ${tag.id}
+      )`,
+    })
+    .from(tag)
+    .orderBy(asc(tag.name))
+
+  return rows
 }
 
 export type NewWorkshop = { title: string; folderId?: string | null; date?: string | null }

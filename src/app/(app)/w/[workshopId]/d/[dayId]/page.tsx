@@ -3,8 +3,10 @@ import { notFound } from 'next/navigation'
 import { eq } from 'drizzle-orm'
 import { Download, Printer, Users } from 'lucide-react'
 import { AgendaSurface } from '@/components/agenda/agenda-surface'
+import { TagEditor } from '@/components/agenda/tag-editor'
 import { assertWorkshopAccess } from '@/domain/agenda/access'
 import { loadDay } from '@/domain/agenda/repo'
+import { tagsOf } from '@/domain/workshop/tags'
 import { listDays } from '@/domain/workshop/repo'
 import { currentActor } from '@/server/actions/context'
 import { readSession } from '@/server/auth/session'
@@ -64,6 +66,8 @@ export default async function DayPage({
       contentVersion: contentVersion.toString(),
       title: meta[0]?.title ?? 'Workshop',
       days: await listDays(tx, workshopId),
+      tags: await tagsOf(tx, workshopId),
+      canUpdate: access.can('workshop.update'),
       canEdit: access.can('workshop.content.write'),
       canShare: access.can('workshop.share'),
       // Derived from the member id, so the same person keeps the same colour
@@ -83,6 +87,15 @@ export default async function DayPage({
               ← Bibliothek
             </Link>
             <h1 className="mt-0.5 text-2xl font-semibold tracking-tight">{data.title}</h1>
+            {data.canUpdate ? (
+              <div className="mt-1.5">
+                <TagEditor workshopId={workshopId} initial={data.tags} />
+              </div>
+            ) : (
+              data.tags.length > 0 && (
+                <p className="mt-1.5 text-[13px] text-[var(--fg-muted)]">{data.tags.join(' · ')}</p>
+              )
+            )}
           </div>
 
           <div className="flex items-center gap-2">

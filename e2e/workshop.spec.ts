@@ -248,8 +248,13 @@ test('lets an LLM write into a day somebody has open', async ({ page, request })
       },
     },
   })
-  expect(response.ok(), await response.text()).toBeTruthy()
-  expect(await response.text()).toContain('Block angelegt')
+  // The body is carried into both messages: when this fails it is almost
+  // always the collaboration server being unreachable, and the tool says so in
+  // words. Asserting on the text alone would report "expected to contain" and
+  // leave the actual reason in a log nobody opens.
+  const body = await response.text()
+  expect(response.ok(), body).toBeTruthy()
+  expect(body, body).toContain('Block angelegt')
 
   // In the open editor, with no reload: the model joined the same room.
   await expect(page.getByRole('article', { name: 'Vom Modell' })).toBeVisible()
@@ -355,7 +360,8 @@ test('applies a whole agenda from an LLM into an open day', async ({ page, reque
     },
   })
 
+  const written = await (await writing).text()
+  expect(written, written).toContain('3 Einträge geschrieben')
   await expect(page.getByRole('group', { name: 'Aufwärmen' })).toBeVisible()
   await expect(page.getByRole('article', { name: 'Kaffee' })).toBeVisible()
-  expect(await (await writing).text()).toContain('3 Einträge geschrieben')
 })

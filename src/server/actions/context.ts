@@ -11,6 +11,7 @@ import {
   type Capability,
   type WorkshopAccess,
 } from '@/domain/agenda/access'
+import { TagError } from '@/domain/workshop/tags'
 
 /**
  * The one way a server action reaches the database.
@@ -87,6 +88,11 @@ function toResult<T>(error: unknown): ActionResult<T> {
   }
   if (error instanceof ForbiddenError) {
     return fail('forbidden', error.message)
+  }
+  // Carries a sentence written for the person reading it. Flattening it into
+  // "that did not work" would throw away the only useful part.
+  if (error instanceof TagError) {
+    return fail('invalid_input', error.message)
   }
   if (error instanceof VersionConflictError) {
     return {

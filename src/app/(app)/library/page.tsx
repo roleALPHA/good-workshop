@@ -1,41 +1,45 @@
 import Link from 'next/link'
 import { Folder as FolderIcon } from 'lucide-react'
 import { loadLibrary } from '@/server/actions/workshop'
-import { formatDuration } from '@/features/agenda/duration'
 import { CreateWorkshop } from './create-workshop'
+import { CreateFolder } from './create-folder'
+import { SearchBox } from './search-box'
+import { WorkshopList } from './workshop-list'
 
 export const dynamic = 'force-dynamic'
 
-const STATUS: Record<string, string> = {
-  draft: 'Entwurf',
-  ready: 'Bereit',
-  delivered: 'Durchgeführt',
-  archived: 'Archiviert',
-}
-
+/**
+ * The library.
+ *
+ * A flat list works until it does not: a few hundred workshops in one column
+ * is a wall you scroll past rather than a place you find something. Folders,
+ * tags and a search box are three different ways in, and the list itself is
+ * paged so the wall never renders in the first place.
+ */
 export default async function LibraryPage({
   searchParams,
 }: {
-  searchParams: Promise<{ folder?: string }>
+  searchParams: Promise<{ folder?: string; tag?: string; q?: string }>
 }) {
-  const { folder } = await searchParams
-  const result = await loadLibrary(folder ?? undefined)
+  const { folder, tag, q } = await searchParams
+  const result = await loadLibrary({ folderId: folder, tagId: tag, search: q })
 
   if (!result.ok) {
     return <p className="text-[var(--danger-fg)]">{result.message}</p>
   }
 
-  const { folders, workshops } = result.data
+  const { folders, tags, workshops, nextCursor } = result.data
+  const filtered = Boolean(folder || tag || q)
 
   return (
     <div className="grid gap-6 md:grid-cols-[200px_1fr]">
-      <nav aria-label="Ordner" className="hidden md:block">
+      <nav aria-label="Ordner und Tags" className="hidden md:block">
         <h2 className="mb-2 text-[12px] font-semibold tracking-wide text-[var(--fg-subtle)] uppercase">
           Ordner
         </h2>
         <ul className="space-y-0.5">
           <li>
-            <Link href="/library" className={navClass(!folder)}>
+            <Link href="/library" className={navClass(!folder && !tag)}>
               Alle Workshops
             </Link>
           </li>
@@ -51,41 +55,52 @@ export default async function LibraryPage({
             </li>
           ))}
         </ul>
+        <div className="mt-2">
+          <CreateFolder parentId={folder ?? null} />
+        </div>
+
+        {tags.length > 0 && (
+          <>
+            <h2 className="mt-6 mb-2 text-[12px] font-semibold tracking-wide text-[var(--fg-subtle)] uppercase">
+              Tags
+            </h2>
+            <ul className="space-y-0.5">
+              {tags.map((entry) => (
+                <li key={entry.id}>
+                  <Link
+                    href={`/library?tag=${entry.id}`}
+                    className={`${navClass(tag === entry.id)} flex items-baseline gap-2`}
+                  >
+                    <span className="min-w-0 flex-1 truncate">{entry.name}</span>
+                    <span className="tabular shrink-0 text-[13px] text-[var(--fg-subtle)]">
+                      {entry.count}
+                    </span>
+                  </Link>
+                </li>
+              ))}
+            </ul>
+          </>
+        )}
       </nav>
 
       <section>
-        <div className="mb-4 flex items-center justify-between gap-4">
+        <div className="mb-4 flex flex-wrap items-center justify-between gap-3">
           <h1 className="text-xl font-semibold tracking-tight">Workshops</h1>
-          <CreateWorkshop folderId={folder ?? null} />
+          <div className="flex items-center gap-2">
+            <SearchBox />
+            <CreateWorkshop folderId={folder ?? null} />
+          </div>
         </div>
 
-        {workshops.length === 0 ? (
-          <div className="rounded border border-dashed border-[var(--border-strong)] px-6 py-10 text-center">
-            <p className="font-medium">Noch kein Workshop hier.</p>
-            <p className="mt-1 text-[15px] text-[var(--fg-muted)]">
-              Leg einen an — der erste Tag ist gleich mit dabei.
-            </p>
-          </div>
-        ) : (
-          <ul className="divide-y divide-[var(--border)] rounded border border-[var(--border)]">
-            {workshops.map((workshop) => (
-              <li key={workshop.id}>
-                <Link
-                  href={`/w/${workshop.id}`}
-                  className="flex items-baseline gap-3 px-4 py-3 hover:bg-[var(--surface-raised)]"
-                >
-                  <span className="min-w-0 flex-1 truncate font-medium">{workshop.title}</span>
-                  <span className="tabular shrink-0 text-[14px] text-[var(--fg-muted)]">
-                    {workshop.dayCount} {workshop.dayCount === 1 ? 'Tag' : 'Tage'}
-                  </span>
-                  <span className="shrink-0 rounded bg-[var(--surface-raised)] px-1.5 py-0.5 text-[13px] text-[var(--fg-muted)]">
-                    {STATUS[workshop.status] ?? workshop.status}
-                  </span>
-                </Link>
-              </li>
-            ))}
-          </ul>
-        )}
+        <WorkshopList
+          // The key is the filter: React would otherwise reuse the component
+          // and keep the previous page's rows in state while the props change.
+          key={`${folder ?? ''}|${tag ?? ''}|${q ?? ''}`}
+          initial={workshops}
+          initialCursor={nextCursor}
+          query={{ folderId: folder ?? null, tagId: tag, search: q }}
+          filtered={filtered}
+        />
       </section>
     </div>
   )
@@ -97,6 +112,3 @@ const navClass = (active: boolean) =>
       ? 'bg-[var(--brand-subtle-bg)] text-[var(--brand-subtle-fg)]'
       : 'hover:bg-[var(--surface-raised)]'
   }`
-
-// Referenced so the import is not dropped when the summary line changes.
-void formatDuration

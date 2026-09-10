@@ -108,6 +108,27 @@ MCP-Schreibpfad den Kollaborations-Dienst — läuft er nicht, schlägt der Aufr
 einer benannten Fehlermeldung fehl, statt Daten zu schreiben, die kurz darauf wieder
 verschwinden.
 
+## Bibliothek
+
+Workshops liegen in Ordnern und tragen Tags; beides ist optional. Die Liste ist seitenweise
+und wird serverseitig gefiltert — Ordner, Tag und Suche stehen in der URL, also ist eine
+gefilterte Bibliothek ein Link, den man weitergeben und wiederfinden kann.
+
+Die Sichtbarkeitsregel steht dabei im SQL und nicht als Filter danach. Das ist der Grund,
+warum Seiten überhaupt funktionieren: filtert man erst in der Anwendung, liefert eine Seite
+von zwanzig Zeilen drei sichtbare, `LIMIT` gibt zu kurze Seiten zurück und `OFFSET`
+überspringt Zeilen, die nie jemand gesehen hat. Geblättert wird über einen Schlüssel, nicht
+über `OFFSET`: wer nebenbei einen Workshop bearbeitet, schiebt ihn nach oben, und mit
+`OFFSET` bekäme man dieselbe Zeile zweimal oder eine gar nicht.
+
+Gesucht wird mit `ILIKE` über den Titel, nicht mit einem tsvector. Bei ein paar tausend
+Zeilen kostet das nichts, spart eine Migration — und „strat" findet weiterhin „Strategie",
+was gestemmte Indizes ohne Präfixabfrage nicht tun.
+
+Tags entstehen beim Tippen. Ein eigener Verwaltungsbildschirm, den man vorher besuchen muss,
+ist ein Schritt, den niemand will, und ein Bildschirm, den niemand pflegt; ein Tag, auf den
+nichts mehr zeigt, verschwindet von selbst.
+
 ## Mitglieder und Zugriff
 
 Ein Tenant-Admin lädt unter **Mitglieder** jemanden per E-Mail-Adresse ein. Die Mitgliedschaft
