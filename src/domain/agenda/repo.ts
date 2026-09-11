@@ -4,7 +4,7 @@ import type { Tx } from '@/server/db'
 import { cluster, moduleType, workshopDay, workshopModule } from '@/server/db/schema'
 import type { CategoryColor } from '@/lib/category-colors'
 import type { ClusterDto, DayDoc, ModuleDto, ModuleTypeDto } from './types'
-import { bumpContentVersion, type WorkshopAccess } from './access'
+import { bumpContentVersion, NotFoundError, type WorkshopAccess } from './access'
 import { keyAtEnd, placeAfter, sortByPosition } from './ordering'
 
 /**
@@ -22,6 +22,41 @@ import { keyAtEnd, placeAfter, sortByPosition } from './ordering'
  */
 
 export type DayDocResult = { doc: DayDoc; contentVersion: bigint }
+
+/**
+ * The other half of the access check.
+ *
+ * `WorkshopAccess` proves that a permission was verified. It does not prove
+ * that the row about to be written belongs to the workshop it was verified for
+ * -- and every mutation below used to address its row by primary key alone.
+ * RLS does not help here: both workshops sit in the same tenant, which is the
+ * normal case and the entire point of a tenant.
+ *
+ * Ids are not a secret to ration. A viewer reads them out of the page, an
+ * export carries them, MCP hands them out. Treating them as unguessable is the
+ * assumption these helpers exist to remove.
+ */
+export async function assertDayInWorkshop(
+  tx: Tx,
+  access: WorkshopAccess,
+  dayId: string,
+): Promise<void> {
+  const rows = await tx
+    .select({ id: workshopDay.id })
+    .from(workshopDay)
+    .where(and(eq(workshopDay.id, dayId), eq(workshopDay.workshopId, access.workshopId)))
+    .limit(1)
+
+  if (!rows[0]) throw new NotFoundError('Workshoptag nicht gefunden.')
+}
+
+/**
+ * Not-found rather than forbidden, deliberately: telling a caller that an id
+ * exists but belongs to somebody else is itself an answer they had no right to.
+ */
+function assertTouched(rowCount: number | undefined, what: string): void {
+  if (!rowCount) throw new NotFoundError(`${what} nicht gefunden.`)
+}
 
 export async function loadDay(
   tx: Tx,
@@ -116,9 +151,11 @@ export type MoveTarget = { dayId: string; clusterId: string | null }
  * index. The write itself is a single row -- that is the whole reason for
  * fractional keys.
  *
- * The day-consistency composite FK does the cross-day validation in the
- * database, so moving a module into a cluster on another day fails even if this
- * function forgets to check.
+ * Two composite FKs back this up in the database, so a bug here is caught
+ * rather than written: (tenant_id, cluster_id, day_id) keeps a module's cluster
+ * on the module's own day, and (tenant_id, workshop_id, day_id) keeps the day
+ * inside the workshop. The second one was missing for a long time while this
+ * comment claimed both -- which is why the checks below are explicit anyway.
  */
 export async function moveModule(
   tx: Tx,
@@ -128,6 +165,8 @@ export async function moveModule(
   afterId: string | null,
   expectedVersion?: bigint,
 ): Promise<bigint> {
+  await assertDayInWorkshop(tx, access, target.dayId)
+
   const siblings = await siblingsOf(tx, target)
   const placement = placeAfter(
     siblings.filter((s) => s.id !== moduleId),
@@ -139,7 +178,7 @@ export async function moveModule(
     position = await applyRebalance(tx, placement.rebalance)
   }
 
-  await tx
+  const moved = await tx
     .update(workshopModule)
     .set({
       dayId: target.dayId,
@@ -148,8 +187,10 @@ export async function moveModule(
       updatedAt: sql`now()`,
       updatedBy: access.actor.memberId,
     })
-    .where(eq(workshopModule.id, moduleId))
+    .where(and(eq(workshopModule.id, moduleId), eq(workshopModule.workshopId, access.workshopId)))
+    .returning({ id: workshopModule.id })
 
+  assertTouched(moved.length, 'Modul')
   return bumpContentVersion(tx, access, expectedVersion)
 }
 
@@ -161,6 +202,8 @@ export async function moveCluster(
   afterId: string | null,
   expectedVersion?: bigint,
 ): Promise<bigint> {
+  await assertDayInWorkshop(tx, access, dayId)
+
   const siblings = await siblingsOf(tx, { dayId, clusterId: null })
   const placement = placeAfter(
     siblings.filter((s) => s.id !== clusterId),
@@ -172,11 +215,13 @@ export async function moveCluster(
     position = await applyRebalance(tx, placement.rebalance)
   }
 
-  await tx
+  const moved = await tx
     .update(cluster)
     .set({ dayId, position, updatedAt: sql`now()` })
-    .where(eq(cluster.id, clusterId))
+    .where(and(eq(cluster.id, clusterId), eq(cluster.workshopId, access.workshopId)))
+    .returning({ id: cluster.id })
 
+  assertTouched(moved.length, 'Cluster')
   return bumpContentVersion(tx, access, expectedVersion)
 }
 
@@ -196,6 +241,8 @@ export async function addModule(
   input: NewModule,
   expectedVersion?: bigint,
 ): Promise<{ id: string; contentVersion: bigint }> {
+  await assertDayInWorkshop(tx, access, input.dayId)
+
   const siblings = await siblingsOf(tx, { dayId: input.dayId, clusterId: input.clusterId })
   const placement =
     input.afterId === undefined
@@ -248,6 +295,8 @@ export async function addCluster(
   input: NewCluster,
   expectedVersion?: bigint,
 ): Promise<{ id: string; contentVersion: bigint }> {
+  await assertDayInWorkshop(tx, access, input.dayId)
+
   const siblings = await siblingsOf(tx, { dayId: input.dayId, clusterId: null })
   const placement =
     input.afterId === undefined
@@ -302,6 +351,12 @@ export async function applyAgenda(
   items: AgendaItem[],
   expectedVersion?: bigint,
 ): Promise<{ created: number; contentVersion: bigint }> {
+  // Before anything else, and especially before the delete below. This is the
+  // single most destructive call in the codebase: `replace` empties a day, and
+  // it is reachable from MCP, where the day id is simply an argument. Checking
+  // it here rather than at the callers means a future tool cannot forget.
+  await assertDayInWorkshop(tx, access, dayId)
+
   if (mode === 'replace') {
     await tx.delete(workshopModule).where(eq(workshopModule.dayId, dayId))
     await tx.delete(cluster).where(eq(cluster.dayId, dayId))
@@ -393,7 +448,12 @@ export async function deleteModule(
   moduleId: string,
   expectedVersion?: bigint,
 ): Promise<bigint> {
-  await tx.delete(workshopModule).where(eq(workshopModule.id, moduleId))
+  const deleted = await tx
+    .delete(workshopModule)
+    .where(and(eq(workshopModule.id, moduleId), eq(workshopModule.workshopId, access.workshopId)))
+    .returning({ id: workshopModule.id })
+
+  assertTouched(deleted.length, 'Modul')
   return bumpContentVersion(tx, access, expectedVersion)
 }
 

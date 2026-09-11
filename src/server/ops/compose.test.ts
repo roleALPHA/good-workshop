@@ -70,7 +70,7 @@ describe('compose.yaml', () => {
   it('pins the application image instead of tracking a moving tag', () => {
     // Every GitHub Action in this repo is pinned to a full-length SHA. The
     // image the operator actually runs defaults to `latest`.
-    expect(compose.services.app.image ?? '').not.toMatch(/:-latest/)
+    expect(compose.services.app?.image ?? '').not.toMatch(/:-latest/)
   })
 })
 

@@ -39,7 +39,13 @@ try {
 
   // Runs after the tables exist, and is re-applied every time so an edit to the
   // function is picked up without a new migration file.
-  await db.execute(sql.raw(await readFile(join(root, 'drizzle/sql/900_pat_resolver.sql'), 'utf8')))
+  //
+  // Over the admin connection, because the file ends by handing the function to
+  // gw_ops. After the first run gw_owner no longer owns it, and `create or
+  // replace` by a non-owner is refused with 42501 -- so every migration after
+  // the first one failed, and compose runs this on every `up` with the app
+  // waiting on it. First install worked; the second start did not come up.
+  await applyPatResolver()
 
   await forceRowLevelSecurity(db)
   await regrant(db)
@@ -48,6 +54,33 @@ try {
 } finally {
   await db.execute(sql`select pg_advisory_unlock(hashtext('gw_migrate'))`).catch(() => {})
   await client.end()
+}
+
+/**
+ * The one statement in the migration path that needs more than gw_owner.
+ *
+ * ADMIN_DATABASE_URL is the same superuser connection db-bootstrap uses, and
+ * compose already gives it to the migrate service for exactly this kind of
+ * work. Where it is absent -- a first run driven by hand, or a database whose
+ * operator kept migrations unprivileged -- gw_owner still owns the function and
+ * can replace it itself, so falling back is correct rather than lenient.
+ */
+async function applyPatResolver() {
+  const source = await readFile(join(root, 'drizzle/sql/900_pat_resolver.sql'), 'utf8')
+  const adminUrl = process.env.ADMIN_DATABASE_URL
+
+  if (!adminUrl) {
+    await db.execute(sql.raw(source))
+    return
+  }
+
+  const admin = new pg.Client({ connectionString: adminUrl })
+  await admin.connect()
+  try {
+    await admin.query(source)
+  } finally {
+    await admin.end()
+  }
 }
 
 /**

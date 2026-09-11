@@ -6,6 +6,8 @@ import * as encoding from 'lib0/encoding'
 import * as syncProtocol from 'y-protocols/sync'
 import { encodeAwarenessUpdate } from 'y-protocols/awareness'
 import { assertWorkshopAccess } from '@/domain/agenda/access'
+import { assertDayInWorkshop } from '@/domain/agenda/repo'
+import { authConfig } from '@/server/auth/config'
 import { SESSION_COOKIE_NAMES, verifySessionCookie } from '@/server/auth/session'
 import { withTenant, type Actor } from '@/server/db'
 import { hasScope, resolveBearer } from '@/server/mcp/auth'
@@ -25,6 +27,8 @@ import { DEFAULT_TIMINGS, Room, type Connection, type RoomTimings } from './room
  * A personal access token is accepted the same way, because an LLM writing
  * through MCP is a participant here and not a special case.
  */
+
+const MAX_FRAME_BYTES = 1024 * 1024
 
 const MESSAGE_SYNC = 0
 const MESSAGE_AWARENESS = 1
@@ -65,14 +69,20 @@ export function startCollabServer(options: CollabServerOptions) {
     res.end('WebSocket erwartet.\n')
   })
 
-  const wss = new WebSocketServer({ noServer: true })
+  // Yjs updates for a workshop day are kilobytes. The ws default is 100 MiB per
+  // frame, and every frame is applied to the document and then buffered towards
+  // a bytea column -- so one authenticated editor could fill memory and disk
+  // without doing anything the protocol forbids.
+  const wss = new WebSocketServer({ noServer: true, maxPayload: MAX_FRAME_BYTES })
 
   http.on('upgrade', (request, socket, head) => {
     void (async () => {
       const target = parseTarget(request, path)
       if (!target) return reject(socket, 400, 'Ungültiger Pfad.')
 
-      const actor = await authenticate(request, target.workshopId)
+      if (!sameOrigin(request)) return reject(socket, 403, 'Fremde Herkunft.')
+
+      const actor = await authenticate(request, target.workshopId, target.dayId)
       if (!actor) return reject(socket, 401, 'Nicht angemeldet oder kein Zugriff.')
 
       wss.handleUpgrade(request, socket, head, (ws) => {
@@ -114,22 +124,57 @@ function parseTarget(request: IncomingMessage, path: string) {
 }
 
 /**
+ * Where the browser says it is.
+ *
+ * A cross-site handshake already fails today, because the session cookie is
+ * SameSite=Lax and a WebSocket upgrade is not a top-level navigation. That is a
+ * real defence, but it lives in another file and protects this one by accident;
+ * anybody loosening `sameSite` would have no reason to look here.
+ *
+ * A missing Origin is allowed through: non-browser clients do not send one, and
+ * the MCP path is exactly that. Origin is a browser's statement about itself,
+ * so its absence carries no claim to reject.
+ */
+function sameOrigin(request: IncomingMessage): boolean {
+  const origin = request.headers.origin
+  if (!origin) return true
+
+  try {
+    return new URL(origin).origin === authConfig.origin
+  } catch {
+    return false
+  }
+}
+
+/**
  * A session cookie or a personal access token, then the same per-workshop
- * capability check the web app uses.
+ * capability check the web app uses -- and then the part that was missing: that
+ * the day this socket is about is a day of that workshop.
  *
  * Read access is not enough: a socket that can only read still receives every
  * keystroke, so a viewer gets a connection but their updates are ignored
  * (see `attach`). Write access is checked here so a reader never even opens
  * one under the impression they can edit.
+ *
+ * The day check belongs here rather than in `Room.load()`, which is where it
+ * used to half-live: load() returns early for a day that already has CRDT
+ * state, so the check it does run is the one nobody needed -- an unopened day
+ * -- while every real workshop took the early return. Checking before the room
+ * is opened also covers MCP, whose writes come through this same socket.
  */
-async function authenticate(request: IncomingMessage, workshopId: string): Promise<Actor | null> {
+async function authenticate(
+  request: IncomingMessage,
+  workshopId: string,
+  dayId: string,
+): Promise<Actor | null> {
   const actor = await identify(request)
   if (!actor) return null
 
   try {
-    await withTenant(actor, (tx) =>
-      assertWorkshopAccess(tx, actor, workshopId, 'workshop.content.write'),
-    )
+    await withTenant(actor, async (tx) => {
+      const access = await assertWorkshopAccess(tx, actor, workshopId, 'workshop.content.write')
+      await assertDayInWorkshop(tx, access, dayId)
+    })
     return actor
   } catch {
     return null

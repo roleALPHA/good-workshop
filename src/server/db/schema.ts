@@ -546,6 +546,11 @@ export const workshopDay = pgTable(
   (t) => [
     primaryKey({ columns: [t.id] }),
     unique('workshop_day_tenant_id_uq').on(t.tenantId, t.id),
+    // The target of the workshop-consistency FK on cluster and module. Without
+    // it those two tables can name a workshop and a day that have nothing to do
+    // with each other, and the only thing standing between a stray id and the
+    // data is the repository remembering to check.
+    unique('workshop_day_tenant_workshop_id_uq').on(t.tenantId, t.workshopId, t.id),
     foreignKey({
       columns: [t.tenantId, t.workshopId],
       foreignColumns: [workshop.tenantId, workshop.id],
@@ -590,9 +595,13 @@ export const cluster = pgTable(
       columns: [t.tenantId, t.workshopId],
       foreignColumns: [workshop.tenantId, workshop.id],
     }).onDelete('cascade'),
+    // A day this row points at must belong to the workshop this row claims.
+    // Not two independent references: with those, (workshop A, day of B) is a
+    // perfectly valid row, and the application is the only thing that would
+    // ever notice.
     foreignKey({
-      columns: [t.tenantId, t.dayId],
-      foreignColumns: [workshopDay.tenantId, workshopDay.id],
+      columns: [t.tenantId, t.workshopId, t.dayId],
+      foreignColumns: [workshopDay.tenantId, workshopDay.workshopId, workshopDay.id],
     }).onDelete('cascade'),
     check('cluster_position_format', sql`${t.position} ~ '^[0-9A-Za-z]{1,64}$'`),
     check(
@@ -662,9 +671,13 @@ export const workshopModule = pgTable(
       columns: [t.tenantId, t.workshopId],
       foreignColumns: [workshop.tenantId, workshop.id],
     }).onDelete('cascade'),
+    // A day this row points at must belong to the workshop this row claims.
+    // Not two independent references: with those, (workshop A, day of B) is a
+    // perfectly valid row, and the application is the only thing that would
+    // ever notice.
     foreignKey({
-      columns: [t.tenantId, t.dayId],
-      foreignColumns: [workshopDay.tenantId, workshopDay.id],
+      columns: [t.tenantId, t.workshopId, t.dayId],
+      foreignColumns: [workshopDay.tenantId, workshopDay.workshopId, workshopDay.id],
     }).onDelete('cascade'),
     // THE key constraint: a module's cluster must be on the module's own day.
     foreignKey({

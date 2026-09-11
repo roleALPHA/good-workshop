@@ -1,6 +1,6 @@
 'use server'
 
-import { eq, sql } from 'drizzle-orm'
+import { and, eq, sql } from 'drizzle-orm'
 import { z } from 'zod'
 import { bumpContentVersion } from '@/domain/agenda/access'
 import { addModule, deleteModule, loadDay, moveCluster, moveModule } from '@/domain/agenda/repo'
@@ -219,7 +219,12 @@ export async function patchModuleAction(raw: {
           })
           .from(moduleType)
           .innerJoin(workshopModule, eq(workshopModule.moduleTypeId, moduleType.id))
-          .where(eq(workshopModule.id, input.moduleId))
+          .where(
+            and(
+              eq(workshopModule.id, input.moduleId),
+              eq(workshopModule.workshopId, access.workshopId),
+            ),
+          )
           .limit(1)
 
         const type = rows[0]
@@ -235,10 +240,21 @@ export async function patchModuleAction(raw: {
       }
 
       if (Object.keys(patch).length > 0) {
-        await tx
+        // Bound to the workshop that was actually authorised, not just to the
+        // id that was passed in. `access` proves a permission was checked; it
+        // says nothing about which row this is.
+        const patched = await tx
           .update(workshopModule)
           .set({ ...patch, updatedAt: sql`now()`, updatedBy: access.actor.memberId })
-          .where(eq(workshopModule.id, input.moduleId))
+          .where(
+            and(
+              eq(workshopModule.id, input.moduleId),
+              eq(workshopModule.workshopId, access.workshopId),
+            ),
+          )
+          .returning({ id: workshopModule.id })
+
+        if (patched.length === 0) throw new Error('Modul nicht gefunden.')
       }
 
       return {
