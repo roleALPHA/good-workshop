@@ -20,7 +20,7 @@ export default defineConfig({
       reporter: ['text', 'lcov'],
       // Deliberately not a global target: coverage thresholds only guard the
       // zones where a bug is silent. A repo-wide number just breeds alibi tests.
-      include: ['src/domain/**', 'src/features/**'],
+      include: ['src/domain/**', 'src/features/**', 'src/i18n/**'],
       // Modules whose tests live in another suite. Counting them here would
       // report them as untested and make the threshold measure the wrong thing
       // -- and lowering the threshold to accommodate that would quietly weaken
@@ -52,10 +52,18 @@ export default defineConfig({
         // would only assert that the mock was called.
         'src/features/collab/provider.ts',
         'src/features/collab/use-collab-document.ts',
+        // Request-scoped wiring: reads cookies(), headers() and the session.
+        // The branching worth guarding lives in resolve.ts, which is pure.
+        'src/i18n/request.ts',
+        'src/i18n/catalogs.ts',
       ],
       thresholds: {
         'src/domain/**': { statements: 80, branches: 80, functions: 80, lines: 80 },
         'src/features/**': { statements: 80, branches: 80, functions: 80, lines: 80 },
+        // Language resolution is exactly the silent branching these thresholds
+        // exist for: every wrong answer renders a readable page in the wrong
+        // language, which no other check notices.
+        'src/i18n/**': { statements: 80, branches: 80, functions: 80, lines: 80 },
       },
     },
   },

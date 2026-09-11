@@ -1,5 +1,6 @@
 import { dirname } from 'node:path'
 import { fileURLToPath } from 'node:url'
+import createNextIntlPlugin from 'next-intl/plugin'
 import type { NextConfig } from 'next'
 
 const nextConfig: NextConfig = {
@@ -30,4 +31,21 @@ const nextConfig: NextConfig = {
   typedRoutes: true,
 }
 
-export default nextConfig
+/**
+ * Required even though this application has no locale routing.
+ *
+ * The plugin's job here is to alias `next-intl/config` to the request file
+ * below; without it `getTranslations()` and `getLocale()` in a Server Component
+ * have no configuration and throw. What "without i18n routing" removes is the
+ * middleware and the [locale] segment -- not this.
+ *
+ * `createMessagesDeclaration` types every message key off the German catalog,
+ * which turns a typo into a compile error instead of a string that renders as
+ * its own key in production.
+ */
+const withNextIntl = createNextIntlPlugin({
+  requestConfig: './src/i18n/request.ts',
+  experimental: { createMessagesDeclaration: './src/messages/de.json' },
+})
+
+export default withNextIntl(nextConfig)

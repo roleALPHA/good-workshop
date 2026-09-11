@@ -12,6 +12,13 @@
     "module": "esnext",
     "moduleResolution": "bundler",
     "resolveJsonModule": true,
+    // next-intl generates src/messages/de.d.json.ts from the German catalog so
+    // that a mistyped message key is a compile error rather than a string that
+    // renders as its own key. TypeScript prefers that declaration when
+    // resolving "@/messages/de.json", and reading a .d.json.ts needs this flag.
+    // The file is types only (`declare const`) -- the runtime import still
+    // reads the real JSON, so a stale declaration can never change behaviour.
+    "allowArbitraryExtensions": true,
     "isolatedModules": true,
     "jsx": "preserve",
     "incremental": true,

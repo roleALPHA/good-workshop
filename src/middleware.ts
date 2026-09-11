@@ -76,6 +76,12 @@ export function middleware(request: NextRequest): NextResponse {
 
   response.headers.set('content-security-policy', csp)
   response.headers.set('x-nonce', nonce)
+  // The language is resolved from the session, the gw_locale cookie and
+  // Accept-Language (src/i18n/request.ts), so the same URL legitimately has
+  // four different bodies. Caddy is a proxy and caches nothing, but the moment
+  // anyone puts a CDN in front of an install, a German page served to a French
+  // visitor is the bug -- and it is the kind nobody reproduces.
+  response.headers.set('vary', 'accept-language, cookie')
   response.headers.set('x-content-type-options', 'nosniff')
   response.headers.set('referrer-policy', 'strict-origin-when-cross-origin')
   // Belt and braces next to frame-ancestors: still honoured by older browsers

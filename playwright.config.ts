@@ -31,6 +31,21 @@ export default defineConfig({
 
   use: {
     baseURL,
+    /**
+     * Pinned, and this is load-bearing rather than tidy.
+     *
+     * The application resolves its language from Accept-Language when there is
+     * no session and no cookie. Playwright sends the host's locale, which in a
+     * CI container is en-US -- so without this line the suite would render in
+     * English and every German accessible name in e2e/ would stop matching at
+     * once, with a failure that looks like broken markup rather than a language
+     * switch. German is the source text; the suite asserts against it.
+     *
+     * English is covered deliberately, by e2e/locale.spec.ts, which sets its
+     * own locale rather than relying on the environment.
+     */
+    locale: 'de-DE',
+    extraHTTPHeaders: { 'Accept-Language': 'de-DE,de;q=0.9' },
     // Only on a retry: traces and video on every run turn a fast suite into a
     // slow one and bury the interesting artefact among hundreds of boring ones.
     trace: 'on-first-retry',
