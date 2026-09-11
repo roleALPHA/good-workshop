@@ -192,7 +192,7 @@ describe('an MCP write', () => {
       [strangerMember, TENANT, strangerIdentity],
     )
     await ops.query(
-      `insert into workshop (id, tenant_id, title, owner_id, position) values ($1, $2, 'Fremd', $3, 'c0')`,
+      `insert into workshop (id, tenant_id, title, owner_id, position) values ($1, $2, 'Fremd', $3, 'a3')`,
       [strangerWorkshop, TENANT, strangerMember],
     )
     await ops.query(

@@ -120,7 +120,7 @@ beforeEach(async () => {
   foreignModuleId = uuidv7()
 
   await ops.query(
-    `insert into workshop (id, tenant_id, title, owner_id, position) values ($1, $2, 'Fremd', $3, 'b0')`,
+    `insert into workshop (id, tenant_id, title, owner_id, position) values ($1, $2, 'Fremd', $3, 'a2')`,
     [foreignWorkshopId, TENANT, strangerId],
   )
   await ops.query(

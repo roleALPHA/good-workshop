@@ -80,7 +80,16 @@ export function startCollabServer(options: CollabServerOptions) {
       const target = parseTarget(request, path)
       if (!target) return reject(socket, 400, 'Ungültiger Pfad.')
 
-      if (!sameOrigin(request)) return reject(socket, 403, 'Fremde Herkunft.')
+      if (!sameOrigin(request)) {
+        // Logged, because the failure mode is a document that silently stays
+        // "offline" -- and the usual cause is a misconfigured GW_APP_URL
+        // rather than an attack.
+        console.warn('collab: upgrade refused, foreign origin', {
+          origin: request.headers.origin,
+          expected: authConfig.origin,
+        })
+        return reject(socket, 403, 'Fremde Herkunft.')
+      }
 
       const actor = await authenticate(request, target.workshopId, target.dayId)
       if (!actor) return reject(socket, 401, 'Nicht angemeldet oder kein Zugriff.')

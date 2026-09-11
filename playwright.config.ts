@@ -103,6 +103,13 @@ export default defineConfig({
             stderr: 'pipe' as const,
             env: {
               GW_COLLAB_PORT: String(COLLAB_PORT),
+              // The socket refuses an upgrade from a foreign Origin, and it
+              // works out what "foreign" means from GW_APP_URL. In the image
+              // this process shares an environment with the app; here it is a
+              // separate one, so it has to be told -- otherwise it compares
+              // the browser's Origin against the default localhost:3000 and
+              // every authenticated test sees a document stuck at "offline".
+              GW_APP_URL: baseURL,
               // Short enough that a test can wait for a write instead of
               // guessing at one.
               GW_COLLAB_PERSIST_MS: '50',

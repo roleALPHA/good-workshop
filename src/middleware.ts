@@ -14,8 +14,9 @@ import { NextResponse, type NextRequest } from 'next/server'
  * A note on `style-src`, because it is the one place this policy is not strict
  * and that should be visible rather than buried:
  *
- *   script-src carries a per-response nonce and neither 'unsafe-inline' nor
- *   'unsafe-eval'. That is the half that stops injected script.
+ *   script-src carries a per-response nonce and no 'unsafe-inline'. That is
+ *   the half that stops injected script. It does carry 'unsafe-eval', for the
+ *   reason documented at the directive itself.
  *
  *   style-src keeps 'unsafe-inline'. Next inlines styles of its own during
  *   streaming, and the tenant brand ramp is an inline <style> whose content is
@@ -30,7 +31,22 @@ export function middleware(request: NextRequest): NextResponse {
 
   const csp = [
     "default-src 'self'",
-    `script-src 'self' 'nonce-${nonce}'`,
+    // 'unsafe-eval' is here for one reason, found by the E2E suite rather than
+    // by reasoning: Ajv compiles a module type's JSON Schema with
+    // `new Function`, in the browser, and the schemas are tenant-defined so
+    // they cannot be precompiled at build time. Without it the field editor
+    // throws on every commit and the edit is lost.
+    //
+    // It is not free. It re-opens eval, which an attacker who already controls
+    // a string reaching eval could use. What it does NOT re-open is the main
+    // event: injected <script> still needs the per-response nonce, because
+    // 'unsafe-inline' is absent.
+    //
+    // Removing it means replacing Ajv in the browser with an interpreting
+    // validator. Worth doing; not something to do in a security fix at the
+    // same time as everything else. See the note on the collaborative write
+    // path in src/server/collab/materialize.ts.
+    `script-src 'self' 'nonce-${nonce}' 'unsafe-eval'`,
     "style-src 'self' 'unsafe-inline'",
     // data: for the tenant logo, which is served from the row as a data URI in
     // some paths; blob: for nothing yet, so it stays out.

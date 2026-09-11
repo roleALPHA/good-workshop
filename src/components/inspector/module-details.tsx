@@ -65,10 +65,21 @@ export function ModuleDetails({ module: mod, type, onChange }: ModuleDetailsProp
   function commit() {
     if (!type) return
 
-    const result = validateModuleDesc(
-      { id: type.id, schemaVersion: 1, jsonSchema: type.jsonSchema },
-      values,
-    )
+    let result: ReturnType<typeof validateModuleDesc>
+    try {
+      result = validateModuleDesc(
+        { id: type.id, schemaVersion: 1, jsonSchema: type.jsonSchema },
+        values,
+      )
+    } catch {
+      // The validator itself failed -- a schema it cannot compile, or an
+      // environment that will not let it. Whatever the reason, the person
+      // typed something and pressed on; dropping their input on the floor is
+      // the one response that is certainly wrong, and it is silent.
+      setErrors({})
+      onChange(values)
+      return
+    }
 
     if (!result.ok) {
       setErrors(firstErrorPerField(result.errors))

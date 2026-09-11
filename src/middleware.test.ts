@@ -46,12 +46,29 @@ describe('security headers', () => {
   })
 
   it('carries a nonce instead of blanket-allowing inline script', () => {
+    // The assertion that matters: an injected <script> has no nonce, so it
+    // does not run. 'unsafe-inline' would make that untrue.
     const csp = headersFor().get('content-security-policy') ?? ''
     const scriptSrc = csp.split('; ').find((d) => d.startsWith('script-src')) ?? ''
 
     expect(scriptSrc).toMatch(/'nonce-[A-Za-z0-9+/_-]{16,}'/)
     expect(scriptSrc).not.toMatch(/'unsafe-inline'/)
-    expect(scriptSrc).not.toMatch(/'unsafe-eval'/)
+  })
+
+  it('documents the eval exception rather than hiding it', () => {
+    // This test asserts a WEAKNESS on purpose, so that removing it is a
+    // deliberate act with a red test to prove it worked.
+    //
+    // Ajv compiles a module type's JSON Schema with `new Function` in the
+    // browser, and the schemas are tenant-defined, so precompiling them is not
+    // available. Dropping 'unsafe-eval' without replacing Ajv makes every
+    // field edit throw and silently lose the edit -- which is how this was
+    // found, in the E2E suite, after the unit tests were green.
+    const scriptSrc = (headersFor().get('content-security-policy') ?? '')
+      .split('; ')
+      .find((d) => d.startsWith('script-src'))
+
+    expect(scriptSrc).toContain("'unsafe-eval'")
   })
 
   it('allows inline style, and only inline style', () => {
@@ -70,7 +87,6 @@ describe('security headers', () => {
       .map((d) => d.split(' ')[0])
 
     expect(withUnsafeInline).toEqual(['style-src'])
-    expect(csp).not.toMatch(/'unsafe-eval'/)
   })
 
   it('shuts the doors that need no exception at all', () => {
