@@ -30,6 +30,13 @@ jobs:
       - run: pnpm lint
       - run: pnpm format:check
       - run: pnpm typecheck
+      # Die README ist Teil des Produkts: sie ist der einzige Weg, auf dem eine
+      # Betreiberin erfährt, was zu setzen ist. Dieser Schritt prüft nicht, ob
+      # ihre Sätze stimmen, sondern die Kopplungen, an denen sie bisher still
+      # falsch wurde -- eine dokumentierte Variable, die keinen Container
+      # erreicht, ein Befehl, den es nicht mehr gibt.
+      - name: Doku und Code stimmen überein
+        run: pnpm check:docs
 
   unit:
     name: Unit & Component Tests
@@ -83,6 +90,11 @@ jobs:
 
       - name: Bootstrap roles
         run: pnpm db:bootstrap
+      # Dieselbe Reihenfolge wie in compose.yaml: erst lesen und abbrechen, dann
+      # schreiben. Steht der Schritt hier, bleibt er auch dann geprüft, wenn
+      # niemand das Image baut.
+      - name: Preflight
+        run: pnpm db:preflight
       - name: Apply migrations
         run: pnpm db:migrate
       - name: Provision built-in module types
@@ -157,6 +169,122 @@ jobs:
             exit 1
           }
 
+  # DER WEG, DEN EINE BETREIBERIN WIRKLICH GEHT.
+  #
+  # Alle anderen Jobs sprechen eine Datenbank an, die der Runner gestartet hat,
+  # mit `trust` und über TCP. Damit war compose.yaml ungetestet -- und genau
+  # dort lagen zwei Fehler, die jede frische Installation unbrauchbar machten:
+  # der Postgres-Entrypoint initialisiert ohne Passwort oder `trust` gar nicht,
+  # und Peer-Authentifizierung über die Containergrenze kann nie treffen, weil
+  # die uid des App-Containers im Datenbank-Container niemandem gehört.
+  #
+  # Beides hätte dieser Job am Tag seiner Entstehung gemeldet.
+  compose:
+    name: On-Prem-Stack
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@fbc6f3992d24b796d5a048ff273f7fcc4a7b6c09 # v5
+      - uses: docker/setup-buildx-action@8d2750c68a42422c14e847fe6c8ac0403b4cbd6f # v3
+      - uses: docker/build-push-action@10e90e3645eae34f1e60eeb005ba3a3d33f178e8 # v6
+        with:
+          context: .
+          load: true
+          push: false
+          tags: ghcr.io/rolealpha/good-workshop:ci
+          cache-from: type=gha
+          cache-to: type=gha,mode=max
+
+      - name: .env wie in der Anleitung
+        run: |
+          cat > .env <<'ENV'
+          GW_VERSION=ci
+          GW_APP_URL=http://127.0.0.1:3000
+          GW_MAIL_TRANSPORT=console
+          GW_OPS_TOKEN=ci-token
+          GW_BOOTSTRAP_ADMIN_EMAIL=ci@example.test
+          ENV
+
+      # Ohne --profile tls, und das ist Absicht: der Proxy braucht einen
+      # öffentlich auflösenden Hostnamen, den ein Runner nicht hat. Geprüft wird
+      # damit zugleich, dass ein `up` ohne das Profil nicht an einem Wert
+      # scheitert, den nur der Proxy braucht -- das tat es schon einmal.
+      - name: Stack hochfahren
+        run: docker compose up -d --wait --wait-timeout 180
+
+      - name: Die Startkette hat getan, was sie verspricht
+        run: |
+          docker compose logs migrate
+          for expected in "Bootstrap complete" "Vorprüfung" "Migrations applied" "Provisioned"; do
+            docker compose logs migrate | grep -q "$expected" || {
+              echo "::error::In der Startkette fehlt: $expected"
+              exit 1
+            }
+          done
+
+      - name: Healthcheck
+        run: |
+          curl -fsS --retry 10 --retry-delay 2 --retry-all-errors             http://127.0.0.1:3000/api/health > /tmp/health.json
+          cat /tmp/health.json
+          grep -q '"status":"ok"' /tmp/health.json || {
+            echo "::error::Der Stack meldet sich nicht gesund"
+            exit 1
+          }
+          # GW_OPS_TOKEN und GW_VERSION müssen den Container erreichen. Beide
+          # standen schon einmal in der Anleitung, ohne durchgereicht zu werden.
+          curl -fsS -H 'x-ops-token: ci-token' http://127.0.0.1:3000/api/health > /tmp/ops.json
+          grep -q '"version":"ci"' /tmp/ops.json || {
+            echo "::error::Der ausführliche Healthcheck meldet nicht die Version aus der .env"
+            cat /tmp/ops.json
+            exit 1
+          }
+
+      # Der Web-Container darf ausschließlich das Geheimnis von gw_app kennen.
+      # Läge das Superuser-Passwort mit darin, wäre die Rollentrennung, auf der
+      # RLS und NOINHERIT aufbauen, eine Zeile wert.
+      - name: Der App-Container kennt nur seine eigene Rolle
+        run: |
+          # `xargs` ohne Argumente: trimmt und fügt mit einfachen Leerzeichen
+          # zusammen, damit der Vergleich nicht an einem \r oder einem
+          # nachgestellten Leerzeichen scheitert.
+          secrets=$(docker compose exec -T app ls /run/db-secrets | tr -d '\r' | sort | xargs)
+          echo "app sieht: $secrets"
+          [ "$secrets" = "gw_app" ] || {
+            echo "::error::Der App-Container sieht mehr als gw_app: $secrets"
+            exit 1
+          }
+          if docker compose exec -T app node -e "
+            const pg = require('pg')
+            new pg.Client({ connectionString: 'postgres://postgres@db:5432/goodworkshop' })
+              .connect().then(() => process.exit(0)).catch(() => process.exit(1))"; then
+            echo "::error::Der App-Container konnte sich als postgres verbinden"
+            exit 1
+          fi
+
+      # Die Regression, die eine Installation beim ZWEITEN Start verlor: der
+      # erste `up` gelang, der zweite nicht.
+      - name: Ein zweiter up ändert nichts
+        run: |
+          docker compose up -d --wait --wait-timeout 180
+          docker compose logs migrate | grep -q "Migrations applied" || {
+            echo "::error::Der zweite Start ist nicht sauber durchgelaufen"
+            docker compose logs migrate
+            exit 1
+          }
+          curl -fsS http://127.0.0.1:3000/api/health | grep -q '"status":"ok"'
+
+      - name: Die dokumentierte Sicherung funktioniert
+        run: |
+          docker compose exec -T -u postgres db pg_dump goodworkshop > /tmp/dump.sql
+          grep -q 'CREATE TABLE' /tmp/dump.sql || {
+            echo "::error::Der Dump enthält kein Schema"
+            exit 1
+          }
+
+      - if: ${{ failure() }}
+        run: docker compose logs
+      - if: ${{ always() }}
+        run: docker compose down -v
+
   e2e:
     name: E2E (shard ${{ matrix.shard }}/2)
     runs-on: ubuntu-latest
@@ -204,7 +332,7 @@ jobs:
         run: pnpm exec playwright install --with-deps chromium
 
       - name: Prepare the database
-        run: pnpm db:bootstrap && pnpm db:migrate && pnpm db:provision
+        run: pnpm db:bootstrap && pnpm db:preflight && pnpm db:migrate && pnpm db:provision
 
       # Built as its own step so a compile error is reported as one, and so the
       # suite runs against the standalone output the Docker image ships.
