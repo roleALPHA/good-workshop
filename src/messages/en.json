@@ -1,4 +1,101 @@
 {
+  "errors": {
+    "conflict": "Somebody else has changed this workshop in the meantime.",
+    "domain": {
+      "brand": {
+        "notHex": "Please give a colour as a hex value, e.g. #7c3aed.",
+        "grey": "Grey has no hue to build an accent colour from. Pick something with colour in it.",
+        "contrastOnBrand": "In {theme, select, light {light} dark {dark} other {}} mode this shade only reaches {ratio}:1 for text on the accent surface. 4.5:1 is required.",
+        "contrastSubtle": "In {theme, select, light {light} dark {dark} other {}} mode this shade only reaches {ratio}:1 for muted text on a muted surface. 4.5:1 is required.",
+        "checkNameAndColour": "Please check the name and the colour."
+      },
+      "logo": {
+        "unsupportedType": "SVG, PNG and WebP are allowed.",
+        "empty": "The file is empty.",
+        "tooLarge": "The logo may be at most {max} KB (this file: {actual} KB).",
+        "notSvg": "That does not look like an SVG file.",
+        "unsafeActive": "The SVG contains {what}. Export it without scripts and without interactivity — most programs call that “plain SVG”.",
+        "unsafeExternal": "The SVG points outwards via {what}. Export it with fonts and images embedded, without external references.",
+        "unsafeDoctype": "The SVG contains {what}. Export it without a DTD and without entities.",
+        "typeMismatch": "The file does not match the format it claims."
+      },
+      "member": {
+        "adminOnly": "Only tenant admins may manage members.",
+        "invalidEmail": "That is not a valid e-mail address.",
+        "gone": "There is no such member.",
+        "cannotDisableSelf": "You cannot disable yourself.",
+        "lastAdmin": "That is the last active admin. Make somebody else an admin first — otherwise nobody can reach the administration any more.",
+        "checkEmailAndRole": "Please check the e-mail address and the role."
+      },
+      "setup": {
+        "wrongKey": "That setup key is not correct.",
+        "invalidEmail": "That is not a valid e-mail address.",
+        "alreadyClaimed": "This installation already has an administrator.",
+        "identityFailed": "The identity could not be created."
+      },
+      "sharing": {
+        "memberGone": "There is no such member.",
+        "memberDisabled": "This member is disabled.",
+        "ownerHasAccess": "The owner already has full access."
+      },
+      "tags": {
+        "tooMany": "At most {max} tags per workshop.",
+        "tooLong": "A tag may be at most {max} characters long.",
+        "createFailed": "The tag “{name}” could not be created."
+      },
+      "token": {
+        "nameRequired": "Give the token a name — otherwise you will not know later what it was for.",
+        "nameTooLong": "The name may be at most {max} characters long.",
+        "unknownScopes": "Unknown scopes: {scopes}.",
+        "noScopes": "A token with no scopes can do nothing. Pick at least one.",
+        "gone": "This token no longer exists."
+      },
+      "workshop": {
+        "notFound": "Not found.",
+        "forbidden": "You do not have permission for that: {capability}",
+        "versionConflict": "The workshop has changed in the meantime (expected {expected}, found {actual}).",
+        "unknownModuleType": "There is no such block type.",
+        "unknownModuleTypeOptions": "Unknown block type “{key}”. Available: {available}",
+        "descInvalid": "Invalid values: {issues}"
+      }
+    },
+    "failed": "That did not work. Try again.",
+    "field": {
+      "desc": {
+        "notObject": "desc must be an object."
+      },
+      "field": {
+        "enum": "must be one of these values: {allowed}",
+        "required": "is required",
+        "unexpected": "is not part of this block type",
+        "type": "must be of type {type}",
+        "invalid": "is invalid ({keyword})"
+      },
+      "schema": {
+        "broken": "The schema of this block type is invalid.",
+        "notObject": "The schema must be an object.",
+        "tooLarge": "The schema is too large (max. {max} bytes).",
+        "tooDeep": "Nested too deeply (max. {max} levels).",
+        "uncompilable": "The schema cannot be compiled: {reason}",
+        "patternForbidden": "pattern is not allowed: a hand-written regular expression can block the server. Use format or enum instead.",
+        "keywordForbidden": "The keyword “{key}” is not allowed."
+      }
+    },
+    "forbidden": "You do not have permission for that.",
+    "invalidField": "Invalid input: {field}",
+    "invalid_input": "Invalid input.",
+    "mail": {
+      "invalidAddress": "Please give a valid address.",
+      "checkSettings": "These settings do not fit together."
+    },
+    "not_found": "Not found.",
+    "passkey": {
+      "unknown": "This passkey is unknown.",
+      "notYours": "This passkey does not belong to your account."
+    },
+    "setupFailed": "Setup failed. The details are in the log.",
+    "unauthenticated": "Please sign in."
+  },
   "meta": {
     "description": "Open-source workshop planning. Self-hosted, MCP-ready.",
     "printTitle": "Print view"

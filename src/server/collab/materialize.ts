@@ -261,7 +261,9 @@ async function validatedDescs(
     console.warn('materialize: desc failed validation, keeping the stored value', {
       moduleId: block.id,
       moduleTypeId: block.moduleTypeId,
-      errors: result.errors.map((e) => `${e.path} ${e.message}`),
+      // The key, not a sentence: this is a log, and an operator grepping for
+      // `field.required` finds every instance across four languages.
+      errors: result.errors.map((e) => `${e.path} ${e.messageKey}`),
     })
   }
 

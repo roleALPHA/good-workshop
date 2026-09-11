@@ -1,6 +1,7 @@
 'use client'
 
 import { useEffect, useMemo, useState } from 'react'
+import { useTranslations } from 'next-intl'
 import type { ModuleDto, ModuleTypeDto } from '@/domain/agenda/types'
 import { isVisible, parseSchema } from '@/domain/moduleType/profile'
 import { validateModuleDesc, type FieldError } from '@/domain/moduleType/validate'
@@ -27,6 +28,7 @@ export type ModuleDetailsProps = {
 }
 
 export function ModuleDetails({ module: mod, type, onChange }: ModuleDetailsProps) {
+  const t = useTranslations('errors.field')
   const [values, setValues] = useState<Record<string, unknown>>(mod.desc)
   const [errors, setErrors] = useState<Record<string, string>>({})
 
@@ -82,7 +84,7 @@ export function ModuleDetails({ module: mod, type, onChange }: ModuleDetailsProp
     }
 
     if (!result.ok) {
-      setErrors(firstErrorPerField(result.errors))
+      setErrors(firstErrorPerField(result.errors, t))
       return
     }
 
@@ -165,9 +167,18 @@ function LegacyFields({ entries }: { entries: [string, unknown][] }) {
   )
 }
 
-/** One complaint per field: four messages about one input is noise. */
-function firstErrorPerField(errors: FieldError[]): Record<string, string> {
+/**
+ * One complaint per field: four messages about one input is noise.
+ *
+ * The validator hands back keys rather than sentences -- the same list also
+ * goes to a server action and to an MCP client, which need different languages
+ * -- so rendering happens here, where the person's own language is known.
+ */
+function firstErrorPerField(
+  errors: FieldError[],
+  t: (key: string, params?: Record<string, string | number>) => string,
+): Record<string, string> {
   const map: Record<string, string> = {}
-  for (const error of errors) map[error.path] ??= error.message
+  for (const error of errors) map[error.path] ??= t(error.messageKey, error.params)
   return map
 }

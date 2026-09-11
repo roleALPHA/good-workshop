@@ -29,7 +29,10 @@ import { action, workshopAction, type ActionResult } from './context'
  * a resolved capability before a single row is read.
  */
 
-const Title = z.string().trim().min(1, 'Ein Titel ist nötig.').max(300)
+// No custom message: only the field path leaves this layer now, because
+// zod's own text is English and an override here would be one language out of
+// four. See firstIssue in ./context.
+const Title = z.string().trim().min(1).max(300)
 
 export async function createWorkshopAction(raw: {
   title: string
@@ -127,7 +130,7 @@ export async function purgeWorkshopAction(raw: {
     async (tx, access) => {
       const removed = await purgeWorkshop(tx, access)
       if (removed === 0) {
-        throw new NotFoundError('Workshop im Papierkorb')
+        throw new NotFoundError()
       }
       return null
     },
@@ -175,7 +178,7 @@ export async function createFolderAction(raw: {
 }): Promise<ActionResult<{ id: string }>> {
   const result = await action(
     z.object({
-      name: z.string().trim().min(1, 'Ein Name ist nötig.').max(120),
+      name: z.string().trim().min(1).max(120),
       parentId: z.string().uuid().nullable().optional(),
     }),
     raw,

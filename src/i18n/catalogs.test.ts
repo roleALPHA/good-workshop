@@ -1,6 +1,9 @@
 import { describe, expect, it } from 'vitest'
+import { DOMAIN_ERROR_KEYS } from '@/domain/errors'
+import { FIELD_ERROR_KEYS } from '@/domain/moduleType/validate'
 import { CATALOGS } from './catalogs'
 import { DEFAULT_LOCALE, LOCALES, type Locale } from './config'
+import { icuShape } from './icu'
 
 /**
  * The guard that keeps four catalogs from drifting into three good ones and a
@@ -26,26 +29,6 @@ function flatten(value: unknown, prefix = '', into: Flat = new Map()): Flat {
     }
   }
   return into
-}
-
-/** `{count, plural, …}` and `{name}` alike -- the argument name is what matters. */
-function placeholders(message: string): Set<string> {
-  const names = new Set<string>()
-  for (const match of message.matchAll(/\{\s*([a-zA-Z0-9_]+)\s*[,}]/g)) {
-    names.add(match[1]!)
-  }
-  return names
-}
-
-function pluralCategories(message: string): Set<string> {
-  const names = new Set<string>()
-  // The categories declared inside a `plural` block: `one {…}`, `other {…}`.
-  const block = /\{\s*[a-zA-Z0-9_]+\s*,\s*plural\s*,([\s\S]*)\}/.exec(message)
-  if (!block) return names
-  for (const match of block[1]!.matchAll(/(?:^|\s)(zero|one|two|few|many|other)\s*\{/g)) {
-    names.add(match[1]!)
-  }
-  return names
 }
 
 const source = flatten(CATALOGS[DEFAULT_LOCALE])
@@ -85,8 +68,8 @@ describe('message catalogs', () => {
         .filter(([key, german]) => {
           const translated = target.get(key)
           if (translated === undefined) return false // already reported above
-          const a = [...placeholders(german)].sort()
-          const b = [...placeholders(translated)].sort()
+          const a = [...icuShape(german).args].sort()
+          const b = [...icuShape(translated).args].sort()
           return a.join() !== b.join()
         })
         .map(([key]) => key)
@@ -98,16 +81,48 @@ describe('message catalogs', () => {
      * that declares only the German pair reads fine and is wrong.
      */
     it('declares every plural category its language requires', () => {
-      const required = new Set(new Intl.PluralRules(locale).resolvedOptions().pluralCategories)
-      const incomplete = [...target.entries()]
-        .filter(([key, message]) => {
-          if (!source.get(key)?.includes('plural')) return false
-          const declared = pluralCategories(message)
-          if (declared.size === 0) return true
-          return [...required].some((category) => !declared.has(category))
-        })
-        .map(([key]) => key)
+      const required = new Intl.PluralRules(locale).resolvedOptions().pluralCategories
+      const incomplete: string[] = []
+
+      for (const [key, message] of target) {
+        const germanPlurals = icuShape(source.get(key) ?? '').plurals
+        if (germanPlurals.size === 0) continue
+
+        const declared = icuShape(message).plurals
+        for (const argument of germanPlurals.keys()) {
+          const categories = declared.get(argument)
+          if (!categories || required.some((category) => !categories.has(category))) {
+            incomplete.push(`${key} (${argument})`)
+          }
+        }
+      }
+
       expect(incomplete).toEqual([])
+    })
+  })
+})
+
+/**
+ * Key parity keeps the four catalogs equal to each other. This keeps them equal
+ * to the CODE -- a domain error whose key nobody translated renders as the key
+ * itself, in production, at the exact moment somebody hit the failure.
+ *
+ * Reads the runtime lists rather than the TypeScript unions, which is why those
+ * are `as const` arrays: a union cannot be iterated at half past four on a
+ * Friday, and a check nobody can run is not a check.
+ */
+describe('every key the code can throw', () => {
+  describe.each(LOCALES)('%s', (locale: Locale) => {
+    const catalog = flatten(CATALOGS[locale])
+
+    it('has a sentence for every domain error', () => {
+      const missing = DOMAIN_ERROR_KEYS.filter((key) => !catalog.has(`errors.domain.${key}`))
+      expect(missing).toEqual([])
+    })
+
+    it('has a sentence for every field error', () => {
+      const missing = FIELD_ERROR_KEYS.filter((key) => !catalog.has(`errors.field.${key}`))
+      expect(missing).toEqual([])
     })
   })
 })

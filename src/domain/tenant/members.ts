@@ -3,6 +3,7 @@ import { and, asc, eq, inArray, ne, sql } from 'drizzle-orm'
 import type { Actor, Tx } from '@/server/db'
 import { withAuth, withTenant } from '@/server/db'
 import { identity, member } from '@/server/db/schema'
+import { DomainError } from '@/domain/errors'
 
 /**
  * Who belongs to this tenant.
@@ -26,17 +27,12 @@ export type MemberRow = {
   isSelf: boolean
 }
 
-export class MemberError extends Error {
-  constructor(message: string) {
-    super(message)
-    this.name = 'MemberError'
-  }
-}
+export class MemberError extends DomainError {}
 
 /** Tenant administration is not a per-workshop capability; it is this check. */
 export function assertTenantAdmin(actor: Actor): void {
   if (actor.tenantRole !== 'admin') {
-    throw new MemberError('Nur Tenant-Admins dürfen Mitglieder verwalten.')
+    throw new MemberError('member.adminOnly')
   }
 }
 
@@ -123,7 +119,7 @@ export async function inviteMember(
 
   const email = emailAddress.trim().toLowerCase()
   if (!/^[^@\s]+@[^@\s]+\.[^@\s]+$/.test(email)) {
-    throw new MemberError('Das ist keine gültige E-Mail-Adresse.')
+    throw new MemberError('member.invalidEmail')
   }
 
   const identityId = await withAuth(async (tx) => {
@@ -190,7 +186,7 @@ export async function setMemberRole(
       .where(eq(member.id, memberId))
       .returning({ id: member.id })
 
-    if (!updated[0]) throw new MemberError('Dieses Mitglied gibt es nicht.')
+    if (!updated[0]) throw new MemberError('member.gone')
   })
 }
 
@@ -202,7 +198,7 @@ export async function setMemberStatus(
   assertTenantAdmin(actor)
 
   if (memberId === actor.memberId && status === 'disabled') {
-    throw new MemberError('Du kannst dich nicht selbst abschalten.')
+    throw new MemberError('member.cannotDisableSelf')
   }
 
   await withTenant(actor, async (tx) => {
@@ -214,7 +210,7 @@ export async function setMemberStatus(
       .where(eq(member.id, memberId))
       .returning({ id: member.id })
 
-    if (!updated[0]) throw new MemberError('Dieses Mitglied gibt es nicht.')
+    if (!updated[0]) throw new MemberError('member.gone')
   })
 }
 
@@ -227,8 +223,6 @@ async function assertAnotherAdminRemains(tx: Tx, exceptMemberId: string): Promis
     )
 
   if ((others[0]?.count ?? 0) === 0) {
-    throw new MemberError(
-      'Das ist der letzte aktive Admin. Mach zuerst jemand anderen zum Admin — sonst kommt niemand mehr an die Verwaltung.',
-    )
+    throw new MemberError('member.lastAdmin')
   }
 }

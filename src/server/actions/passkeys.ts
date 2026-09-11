@@ -5,7 +5,7 @@ import { z } from 'zod'
 import { authConfig } from '@/server/auth/config'
 import { deletePasskey, listPasskeys } from '@/server/auth/passkey'
 import { readSession } from '@/server/auth/session'
-import type { ActionError, ActionResult } from './context'
+import { fail, type ActionResult } from './context'
 
 /**
  * The passkeys on your own account.
@@ -34,7 +34,7 @@ export type PasskeyPage = {
 
 export async function loadPasskeys(): Promise<ActionResult<PasskeyPage>> {
   const session = await readSession()
-  if (!session) return fail('unauthenticated', 'Bitte melde dich an.')
+  if (!session) return fail('unauthenticated', 'unauthenticated')
 
   const rows = await listPasskeys(session.identityId)
 
@@ -57,22 +57,16 @@ export async function loadPasskeys(): Promise<ActionResult<PasskeyPage>> {
 
 export async function removePasskey(raw: { id: string }): Promise<ActionResult<null>> {
   const session = await readSession()
-  if (!session) return fail('unauthenticated', 'Bitte melde dich an.')
+  if (!session) return fail('unauthenticated', 'unauthenticated')
 
   const parsed = z.object({ id: z.string().uuid() }).safeParse(raw)
-  if (!parsed.success) return fail('invalid_input', 'Dieser Passkey ist unbekannt.')
+  if (!parsed.success) return fail('invalid_input', 'passkey.unknown')
 
   // Scoped to the session's identity inside the statement itself -- see
   // deletePasskey. A caller cannot strip somebody else's device by id.
   const removed = await deletePasskey(session.identityId, parsed.data.id)
-  if (!removed) return fail('not_found', 'Dieser Passkey gehört nicht zu deinem Konto.')
+  if (!removed) return fail('not_found', 'passkey.notYours')
 
   revalidatePath('/settings/passkeys')
   return { ok: true, data: null }
 }
-
-const fail = <T>(error: ActionError, message: string): ActionResult<T> => ({
-  ok: false,
-  error,
-  message,
-})

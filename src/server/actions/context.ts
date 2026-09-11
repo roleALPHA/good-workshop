@@ -1,4 +1,5 @@
 import 'server-only'
+import { getTranslations } from 'next-intl/server'
 import type { z } from 'zod'
 import type { Actor, Tx } from '@/server/db'
 import { withTenant } from '@/server/db'
@@ -11,8 +12,8 @@ import {
   type Capability,
   type WorkshopAccess,
 } from '@/domain/agenda/access'
-import { TokenError } from '@/domain/tenant/tokens'
-import { TagError } from '@/domain/workshop/tags'
+import { DomainError } from '@/domain/errors'
+import { ModuleDescError } from '@/domain/moduleType/validate'
 
 /**
  * The one way a server action reaches the database.
@@ -30,7 +31,18 @@ import { TagError } from '@/domain/workshop/tags'
 
 export type ActionResult<T> =
   | { ok: true; data: T }
-  | { ok: false; error: ActionError; message: string; contentVersion?: string }
+  | {
+      ok: false
+      /** The coarse category, unchanged: what a caller branches on. */
+      error: ActionError
+      /** The catalog key, for a client that wants to render this its own way. */
+      messageKey: string
+      /** Primitives only -- this crosses the RSC boundary. */
+      params?: Record<string, string | number>
+      /** The same key, already rendered in the requesting person's language. */
+      message: string
+      contentVersion?: string
+    }
 
 export type ActionError =
   'unauthenticated' | 'not_found' | 'forbidden' | 'conflict' | 'invalid_input' | 'failed'
@@ -53,11 +65,12 @@ export async function action<Input, Output>(
   fn: (tx: Tx, actor: Actor, input: Input) => Promise<Output>,
 ): Promise<ActionResult<Output>> {
   const actor = await currentActor()
-  if (!actor) return fail('unauthenticated', 'Bitte melde dich an.')
+  if (!actor) return fail('unauthenticated', 'unauthenticated')
 
   const parsed = schema.safeParse(raw)
   if (!parsed.success) {
-    return fail('invalid_input', firstIssue(parsed.error))
+    const issue = firstIssue(parsed.error)
+    return fail('invalid_input', issue.key, issue.params)
   }
 
   try {
@@ -84,41 +97,91 @@ export async function workshopAction<Input extends { workshopId: string }, Outpu
   })
 }
 
-function toResult<T>(error: unknown): ActionResult<T> {
-  if (error instanceof NotFoundError) {
-    return fail('not_found', 'Nicht gefunden.')
+/**
+ * One of the two places a message key becomes a sentence.
+ *
+ * The other is src/server/mcp/errors.ts, which renders the same keys in
+ * English because its audience is a model. Neither lives in src/domain -- that
+ * layer also serves the collaboration server, which runs outside a request and
+ * has no language to render in. See src/domain/errors.ts.
+ */
+export async function toResult<T>(error: unknown): Promise<ActionResult<T>> {
+  // Before the general case: the field errors have keys of their own, and this
+  // is the layer that knows which language to render them in.
+  if (error instanceof ModuleDescError) {
+    const t = await getTranslations('errors')
+    const issues = error.issues
+      .map((issue) => `${issue.path} ${t(`field.${issue.messageKey}`, issue.params)}`.trim())
+      .join('; ')
+    return fail('invalid_input', 'domain.workshop.descInvalid', { issues })
   }
-  if (error instanceof ForbiddenError) {
-    return fail('forbidden', error.message)
-  }
-  // Both carry a sentence written for the person reading it. Flattening them
-  // into "that did not work" would throw away the only useful part.
-  if (error instanceof TagError || error instanceof TokenError) {
-    return fail('invalid_input', error.message)
-  }
-  if (error instanceof VersionConflictError) {
-    return {
-      ok: false,
-      error: 'conflict',
-      // Deliberately not "please reload": the client has the current version
-      // and can offer a real choice instead of throwing the edit away.
-      message: 'Jemand anderes hat diesen Workshop inzwischen geändert.',
-      contentVersion: error.actual.toString(),
-    }
+
+  if (error instanceof DomainError) {
+    const result = await fail<T>(categoryOf(error), `domain.${error.messageKey}`, error.params)
+    if (result.ok || !(error instanceof VersionConflictError)) return result
+    // Deliberately not "please reload": the client has the current version and
+    // can offer a real choice instead of throwing the edit away.
+    return { ...result, contentVersion: error.actual.toString() }
   }
 
   console.error('server action failed', error)
-  return fail('failed', 'Das hat nicht geklappt. Versuch es noch einmal.')
+  return fail('failed', 'failed')
 }
 
-const fail = <T>(error: ActionError, message: string): ActionResult<T> => ({
-  ok: false,
-  error,
-  message,
-})
+/** Which of the six coarse categories a domain error belongs to. */
+function categoryOf(error: DomainError): ActionError {
+  if (error instanceof NotFoundError) return 'not_found'
+  if (error instanceof ForbiddenError) return 'forbidden'
+  if (error instanceof VersionConflictError) return 'conflict'
+  // Everything else is something the person can correct in the form they are
+  // looking at -- a name too long, a colour with no hue, a scope that does not
+  // exist.
+  return error.messageKey === 'member.adminOnly' ? 'forbidden' : 'invalid_input'
+}
 
-function firstIssue(error: z.ZodError): string {
-  const issue = error.issues[0]
-  if (!issue) return 'Ungültige Eingabe.'
-  return issue.path.length > 0 ? `${issue.path.join('.')}: ${issue.message}` : issue.message
+export async function fail<T>(
+  error: ActionError,
+  messageKey: string,
+  params: Record<string, string | number> = {},
+): Promise<ActionResult<T>> {
+  const t = await getTranslations('errors')
+  return {
+    ok: false,
+    error,
+    messageKey: `errors.${messageKey}`,
+    ...(Object.keys(params).length > 0 ? { params } : {}),
+    message: t(messageKey as Parameters<typeof t>[0], params),
+  }
+}
+
+/**
+ * Zod's own messages are English, and two schemas in this tree override them
+ * with German ones. Surfacing either would put the wrong language in front of
+ * somebody in the third. The field path is the part that is worth showing and
+ * is language-neutral; the rest is "check this input", which the catalog says
+ * in four languages.
+ */
+function firstIssue(error: z.ZodError): { key: string; params?: Record<string, string> } {
+  const path = error.issues[0]?.path ?? []
+  return path.length > 0
+    ? { key: 'invalidField', params: { field: path.join('.') } }
+    : { key: 'invalid_input' }
+}
+
+/**
+ * A failure whose text is NOT a catalog key.
+ *
+ * There is exactly one legitimate reason to reach for this: relaying a message
+ * that came from somewhere else and is the entire point of the screen -- an
+ * SMTP relay answering "535 authentication failed", say. Translating that
+ * would mean inventing a sentence the relay did not say.
+ *
+ * Anything the application itself has to say belongs in the catalog. If you are
+ * about to pass a German string literal here, use `fail` instead.
+ */
+export function failRelayed<T>(error: ActionError, text: string): ActionResult<T> {
+  // The key is the generic failure, so a client that chooses to render from the
+  // key rather than from `message` still gets a sentence in its own language
+  // instead of a missing-message error.
+  return { ok: false, error, messageKey: 'errors.failed', message: text }
 }

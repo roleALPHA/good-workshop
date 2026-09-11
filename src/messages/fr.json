@@ -1,4 +1,101 @@
 {
+  "errors": {
+    "conflict": "Quelqu'un d'autre a modifié cet atelier entre-temps.",
+    "domain": {
+      "brand": {
+        "notHex": "Indique une couleur en hexadécimal, par exemple #7c3aed.",
+        "grey": "Le gris n'a pas de teinte dont on puisse tirer une couleur d'accent. Choisis un ton coloré.",
+        "contrastOnBrand": "En mode {theme, select, light {clair} dark {sombre} other {}}, cette teinte n'atteint que {ratio}:1 pour le texte sur la surface d'accent. Il en faut 4,5:1.",
+        "contrastSubtle": "En mode {theme, select, light {clair} dark {sombre} other {}}, cette teinte n'atteint que {ratio}:1 pour le texte atténué sur surface atténuée. Il en faut 4,5:1.",
+        "checkNameAndColour": "Vérifie le nom et la couleur."
+      },
+      "logo": {
+        "unsupportedType": "Formats autorisés : SVG, PNG et WebP.",
+        "empty": "Le fichier est vide.",
+        "tooLarge": "Le logo ne peut pas dépasser {max} Ko (ce fichier : {actual} Ko).",
+        "notSvg": "Cela ne ressemble pas à un fichier SVG.",
+        "unsafeActive": "Le SVG contient {what}. Exporte-le sans scripts ni interactivité — la plupart des programmes appellent cela « SVG simple ».",
+        "unsafeExternal": "Le SVG pointe vers l'extérieur via {what}. Exporte-le avec les polices et les images intégrées, sans références externes.",
+        "unsafeDoctype": "Le SVG contient {what}. Exporte-le sans DTD ni entités.",
+        "typeMismatch": "Le fichier ne correspond pas au format annoncé."
+      },
+      "member": {
+        "adminOnly": "Seuls les admins de l'espace peuvent gérer les membres.",
+        "invalidEmail": "Ce n'est pas une adresse e-mail valide.",
+        "gone": "Ce membre n'existe pas.",
+        "cannotDisableSelf": "Tu ne peux pas te désactiver toi-même.",
+        "lastAdmin": "C'est le dernier admin actif. Nomme d'abord quelqu'un d'autre admin — sinon plus personne n'accédera à l'administration.",
+        "checkEmailAndRole": "Vérifie l'adresse e-mail et le rôle."
+      },
+      "setup": {
+        "wrongKey": "La clé d'installation est incorrecte.",
+        "invalidEmail": "Ce n'est pas une adresse e-mail valide.",
+        "alreadyClaimed": "Cette installation a déjà une administratrice.",
+        "identityFailed": "L'identité n'a pas pu être créée."
+      },
+      "sharing": {
+        "memberGone": "Ce membre n'existe pas.",
+        "memberDisabled": "Ce membre est désactivé.",
+        "ownerHasAccess": "Le propriétaire a déjà un accès complet."
+      },
+      "tags": {
+        "tooMany": "{max} tags au maximum par atelier.",
+        "tooLong": "Un tag ne peut pas dépasser {max} caractères.",
+        "createFailed": "Le tag « {name} » n'a pas pu être créé."
+      },
+      "token": {
+        "nameRequired": "Donne un nom au jeton — sinon tu ne sauras plus à quoi il servait.",
+        "nameTooLong": "Le nom ne peut pas dépasser {max} caractères.",
+        "unknownScopes": "Portées inconnues : {scopes}.",
+        "noScopes": "Un jeton sans portée ne peut rien faire. Choisis-en au moins une.",
+        "gone": "Ce jeton n'existe plus."
+      },
+      "workshop": {
+        "notFound": "Introuvable.",
+        "forbidden": "Tu n'as pas l'autorisation pour cela : {capability}",
+        "versionConflict": "L'atelier a été modifié entre-temps (attendu {expected}, trouvé {actual}).",
+        "unknownModuleType": "Ce type de bloc n'existe pas.",
+        "unknownModuleTypeOptions": "Type de bloc inconnu « {key} ». Disponibles : {available}",
+        "descInvalid": "Valeurs invalides : {issues}"
+      }
+    },
+    "failed": "Ça n'a pas marché. Réessaie.",
+    "field": {
+      "desc": {
+        "notObject": "desc doit être un objet."
+      },
+      "field": {
+        "enum": "doit être l'une de ces valeurs : {allowed}",
+        "required": "est obligatoire",
+        "unexpected": "ne fait pas partie de ce type de bloc",
+        "type": "doit être du type {type}",
+        "invalid": "est invalide ({keyword})"
+      },
+      "schema": {
+        "broken": "Le schéma de ce type de bloc est invalide.",
+        "notObject": "Le schéma doit être un objet.",
+        "tooLarge": "Le schéma est trop volumineux (max. {max} octets).",
+        "tooDeep": "Imbrication trop profonde (max. {max} niveaux).",
+        "uncompilable": "Le schéma ne peut pas être compilé : {reason}",
+        "patternForbidden": "pattern n'est pas autorisé : une expression régulière écrite à la main peut bloquer le serveur. Utilise plutôt format ou enum.",
+        "keywordForbidden": "Le mot-clé « {key} » n'est pas autorisé."
+      }
+    },
+    "forbidden": "Tu n'as pas l'autorisation pour cela.",
+    "invalidField": "Saisie invalide : {field}",
+    "invalid_input": "Saisie invalide.",
+    "mail": {
+      "invalidAddress": "Indique une adresse valide.",
+      "checkSettings": "Ces réglages ne vont pas ensemble."
+    },
+    "not_found": "Introuvable.",
+    "passkey": {
+      "unknown": "Ce passkey est inconnu.",
+      "notYours": "Ce passkey n'appartient pas à ton compte."
+    },
+    "setupFailed": "L'installation a échoué. Les détails sont dans le journal.",
+    "unauthenticated": "Connecte-toi, s'il te plaît."
+  },
   "meta": {
     "description": "Planification d'ateliers open source. Auto-hébergée, compatible MCP.",
     "printTitle": "Aperçu avant impression"

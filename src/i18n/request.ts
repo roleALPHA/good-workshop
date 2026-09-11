@@ -3,7 +3,7 @@ import { cookies, headers } from 'next/headers'
 import { readSessionCached } from '@/server/auth/session'
 import { CATALOGS } from './catalogs'
 import { asLocale, resolveLocale } from './resolve'
-import { LOCALE_COOKIE } from './config'
+import { LOCALE_COOKIE, type Locale } from './config'
 
 /**
  * The one place a request learns its language.
@@ -19,10 +19,18 @@ import { LOCALE_COOKIE } from './config'
  * that exists.
  */
 export default getRequestConfig(async ({ locale: requested }) => {
-  // An explicit locale wins. This is how the Markdown exporter, the mail
-  // templates and MCP get a language that is not the current viewer's:
-  // `getTranslations({locale: 'fr'})` arrives here as `requested`.
+  /**
+   * An explicit locale short-circuits everything below.
+   *
+   * This is how the Markdown exporter, the mail templates and MCP render in a
+   * language that is not the current viewer's: `getTranslations({locale: 'fr'})`
+   * arrives here as `requested`. Returning before `cookies()` matters as much
+   * as the answer -- those are request-scoped, and a mail sent from a retry or
+   * a background job has no request to read. Rendering with an explicit locale
+   * has to work outside one, or it works until the day something moves.
+   */
   const explicit = asLocale(requested)
+  if (explicit) return configFor(explicit)
 
   const [cookieStore, headerList, session] = await Promise.all([
     cookies(),
@@ -32,14 +40,16 @@ export default getRequestConfig(async ({ locale: requested }) => {
     readSessionCached().catch(() => null),
   ])
 
-  const locale =
-    explicit ??
+  return configFor(
     resolveLocale({
       user: session?.locale,
       cookie: cookieStore.get(LOCALE_COOKIE)?.value,
       acceptLanguage: headerList.get('accept-language'),
-    })
+    }),
+  )
+})
 
+function configFor(locale: Locale) {
   return {
     locale,
     messages: CATALOGS[locale],
@@ -59,5 +69,5 @@ export default getRequestConfig(async ({ locale: requested }) => {
         short: { dateStyle: 'medium' },
       },
     },
-  }
-})
+  } as const
+}

@@ -5,8 +5,6 @@ import { uuidv7 } from 'uuidv7'
 import type { McpServer } from '@modelcontextprotocol/sdk/server/mcp.js'
 import {
   assertWorkshopAccess,
-  ForbiddenError,
-  NotFoundError,
   VersionConflictError,
   type WorkshopAccess,
 } from '@/domain/agenda/access'
@@ -576,17 +574,18 @@ function unknownTypes(keys: string[], types: Map<string, ResolvedType>): string 
  * will retry the same call forever.
  */
 function toolError(error: unknown) {
+  // Every domain error -- not-found, forbidden, unknown block type -- is an
+  // answer to the request and reaches the caller intact; everything else is an
+  // internal failure and gets an id instead of its innards. See
+  // publicToolError, which now renders them all in English from the same
+  // catalog the interface uses.
+  const { message } = publicToolError(error)
+
   if (error instanceof VersionConflictError) {
-    return fail(
-      `Der Workshop wurde inzwischen geändert (aktuelle Version: ${error.actual}). ` +
-        'Lies ihn mit get_workshop neu und schicke die neue contentVersion mit.',
-    )
+    // The one error that has to say what to do next, or a model retries the
+    // same call forever.
+    return fail(`${message} Read it again with get_workshop and send the new contentVersion.`)
   }
-  // NotFoundError and ForbiddenError are answers to the request and say so;
-  // everything else is an internal failure and gets an id instead of its
-  // innards. See publicToolError.
-  if (error instanceof NotFoundError || error instanceof ForbiddenError) {
-    return fail(error.message)
-  }
-  return fail(publicToolError(error).message)
+
+  return fail(message)
 }

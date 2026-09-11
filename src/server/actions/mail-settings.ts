@@ -11,7 +11,8 @@ import {
   writeStoredMail,
 } from '@/server/settings/mail-settings'
 import { mailConfigFor } from '@/server/auth/mail'
-import { currentActor, type ActionError, type ActionResult } from './context'
+import { DomainError } from '@/domain/errors'
+import { currentActor, fail, failRelayed, toResult, type ActionResult } from './context'
 
 /**
  * Mail configuration in the browser, for installations whose operator has no
@@ -33,14 +34,14 @@ export type MailSettingsView = ReturnType<typeof describeMailSettings>
 
 export async function loadMailSettings(): Promise<ActionResult<MailSettingsView>> {
   const actor = await currentActor()
-  if (!actor) return fail('unauthenticated', 'Bitte melde dich an.')
+  if (!actor) return fail('unauthenticated', 'unauthenticated')
 
   try {
     assertTenantAdmin(actor)
     const stored = await withTenant(actor, (tx) => readStoredMail(tx, actor.tenantId))
     return { ok: true, data: describeMailSettings(stored, await mailConfigFor(actor.tenantId)) }
   } catch (error) {
-    return fail('forbidden', message(error))
+    return toResult(error)
   }
 }
 
@@ -48,7 +49,7 @@ export async function saveMailSettings(
   formData: FormData,
 ): Promise<ActionResult<MailSettingsView>> {
   const actor = await currentActor()
-  if (!actor) return fail('unauthenticated', 'Bitte melde dich an.')
+  if (!actor) return fail('unauthenticated', 'unauthenticated')
 
   const parsed = mailSettingsInput.safeParse({
     transport: formData.get('transport'),
@@ -59,7 +60,7 @@ export async function saveMailSettings(
     graphClientSecret: str(formData.get('graphClientSecret')),
     graphSender: str(formData.get('graphSender')),
   })
-  if (!parsed.success) return fail('invalid_input', 'Diese Eingaben passen nicht.')
+  if (!parsed.success) return fail('invalid_input', 'mail.checkSettings')
 
   try {
     assertTenantAdmin(actor)
@@ -73,7 +74,7 @@ export async function saveMailSettings(
     const stored = await withTenant(actor, (tx) => readStoredMail(tx, actor.tenantId))
     return { ok: true, data: describeMailSettings(stored, await mailConfigFor(actor.tenantId)) }
   } catch (error) {
-    return fail('failed', message(error))
+    return toResult(error)
   }
 }
 
@@ -87,11 +88,11 @@ export async function saveMailSettings(
  */
 export async function sendTestMail(formData: FormData): Promise<ActionResult<string>> {
   const actor = await currentActor()
-  if (!actor) return fail('unauthenticated', 'Bitte melde dich an.')
+  if (!actor) return fail('unauthenticated', 'unauthenticated')
 
   const to = str(formData.get('to')) ?? ''
   if (!/^[^@\s]+@[^@\s]+\.[^@\s]+$/.test(to)) {
-    return fail('invalid_input', 'Bitte eine gültige Adresse angeben.')
+    return fail('invalid_input', 'mail.invalidAddress')
   }
 
   try {
@@ -115,18 +116,13 @@ export async function sendTestMail(formData: FormData): Promise<ActionResult<str
 
     return { ok: true, data: to }
   } catch (error) {
-    // Shown verbatim, on purpose: this is an admin screen, and the message from
-    // the relay -- "535 authentication failed", "Access denied" -- is the whole
-    // reason to press the button.
-    return fail('failed', message(error))
+    // A permission failure is ours and gets translated; anything else came from
+    // the relay and is shown verbatim, on purpose. This is an admin screen, and
+    // "535 authentication failed" is the whole reason to press the button.
+    if (error instanceof DomainError) return toResult(error)
+    return failRelayed('failed', message(error))
   }
 }
-
-const fail = <T>(error: ActionError, text: string): ActionResult<T> => ({
-  ok: false,
-  error,
-  message: text,
-})
 
 function str(value: FormDataEntryValue | null): string | undefined {
   const text = typeof value === 'string' ? value.trim() : ''

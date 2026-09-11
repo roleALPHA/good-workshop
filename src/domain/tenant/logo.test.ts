@@ -37,19 +37,36 @@ describe('readLogo', () => {
     ).not.toThrow()
   })
 
+  /**
+   * Asserted as key plus the construct that tripped it, rather than as words.
+   * That pins WHICH rule fired -- a test matching /externe Verweise/ passed
+   * just as happily when a different rule caught the same file first.
+   */
   it.each([
-    ['<script>alert(1)</script>', /<script>/],
-    ['<foreignObject><b>x</b></foreignObject>', /foreignObject/],
-    ['<style>@import url(https://evil.test/x.css)</style>', /<style>/],
-    ['<rect onload="alert(1)" width="10" height="10"/>', /Event-Handler/],
-    ['<a href="javascript:alert(1)"><rect width="10" height="10"/></a>', /javascript/],
-    ['<image href="https://evil.test/pixel.png"/>', /externe Verweise/],
-    ['<use xlink:href="https://evil.test/x.svg#a"/>', /externe Verweise/],
-    ['<iframe src="https://evil.test"></iframe>', /Fremdinhalte/],
-  ])('refuses %s', (inner, message) => {
+    ['<script>alert(1)</script>', 'logo.unsafeActive', '<script>'],
+    ['<foreignObject><b>x</b></foreignObject>', 'logo.unsafeActive', '<foreignObject>'],
+    ['<style>@import url(https://evil.test/x.css)</style>', 'logo.unsafeActive', '<style>'],
+    ['<rect onload="alert(1)" width="10" height="10"/>', 'logo.unsafeActive', 'on…='],
+    [
+      '<a href="javascript:alert(1)"><rect width="10" height="10"/></a>',
+      'logo.unsafeActive',
+      'javascript:',
+    ],
+    ['<image href="https://evil.test/pixel.png"/>', 'logo.unsafeExternal', 'href'],
+    ['<use xlink:href="https://evil.test/x.svg#a"/>', 'logo.unsafeExternal', 'href'],
+    ['<iframe src="https://evil.test"></iframe>', 'logo.unsafeActive', '<iframe>/<embed>/<object>'],
+  ])('refuses %s', (inner, key, what) => {
     // Refused, not cleaned: a near-miss in a cleaning pass leaves a file that
     // passed the check and still runs.
-    expect(() => readLogo(svg(inner), 'image/svg+xml')).toThrow(message)
+    expect(() => readLogo(svg(inner), 'image/svg+xml')).toThrow(LogoError)
+    try {
+      readLogo(svg(inner), 'image/svg+xml')
+      expect.unreachable('the upload should have been refused')
+    } catch (error) {
+      expect(error).toBeInstanceOf(LogoError)
+      expect((error as LogoError).messageKey).toBe(key)
+      expect((error as LogoError).params.what).toBe(what)
+    }
   })
 
   it('refuses a file that is not an SVG at all', () => {
@@ -64,21 +81,30 @@ describe('readLogo', () => {
   it('refuses a file whose content contradicts its declared type', () => {
     // The declared type is the client's claim; the first bytes are the file's
     // own answer, and it is the file that gets served back with that header.
-    expect(() => readLogo(png(), 'image/webp')).toThrow(/passt nicht/)
+    expect(() => readLogo(png(), 'image/webp')).toThrow('logo.typeMismatch')
   })
 
   it('refuses a type that is not on the list', () => {
-    expect(() => readLogo(png(), 'image/gif')).toThrow(/SVG, PNG und WebP/)
+    expect(() => readLogo(png(), 'image/gif')).toThrow('logo.unsupportedType')
   })
 
   it('refuses an empty file', () => {
-    expect(() => readLogo(new Uint8Array(0), 'image/png')).toThrow(/leer/)
+    expect(() => readLogo(new Uint8Array(0), 'image/png')).toThrow('logo.empty')
   })
 
   it('refuses one that is too big, and says by how much', () => {
     const huge = new Uint8Array(MAX_LOGO_BYTES + 1024)
     huge.set([0x89, 0x50, 0x4e, 0x47])
-    expect(() => readLogo(huge, 'image/png')).toThrow(/256 KB/)
+    expect(() => readLogo(huge, 'image/png')).toThrow('logo.tooLarge')
+    try {
+      readLogo(huge, 'image/png')
+      expect.unreachable('the upload should have been refused')
+    } catch (error) {
+      // "says by how much" is the point of this test, and the numbers survive
+      // the move to keys as arguments.
+      expect((error as LogoError).params).toMatchObject({ max: 256 })
+      expect(Number((error as LogoError).params.actual)).toBeGreaterThan(256)
+    }
   })
 })
 

@@ -10,7 +10,7 @@ import {
   workshopDay,
 } from '@/server/db/schema'
 import { keyAtEnd } from '@/domain/agenda/ordering'
-import type { WorkshopAccess } from '@/domain/agenda/access'
+import { NotFoundError, type WorkshopAccess } from '@/domain/agenda/access'
 
 /**
  * The workshop library: folders, and the workshops inside them.
@@ -274,7 +274,7 @@ export async function createWorkshop(
     .from(member)
     .where(eq(member.id, actor.memberId))
     .limit(1)
-  if (!memberships[0]) throw new Error('Mitgliedschaft nicht gefunden.')
+  if (!memberships[0]) throw new Error('membership row missing for the current actor')
 
   const siblings = await tx
     .select({ id: workshop.id, position: workshop.position })
@@ -402,7 +402,7 @@ export async function deleteFolder(tx: Tx, id: string): Promise<void> {
     .limit(1)
 
   const found = rows[0]
-  if (!found) throw new Error('Ordner nicht gefunden.')
+  if (!found) throw new NotFoundError()
   const parentId = found.parentId
 
   // The descendants keep their shape; they only lose this one ancestor.
@@ -452,7 +452,7 @@ export async function createFolder(
       .from(folder)
       .where(eq(folder.id, parentId))
       .limit(1)
-    if (!parents[0]) throw new Error('Übergeordneter Ordner nicht gefunden.')
+    if (!parents[0]) throw new NotFoundError()
     ancestors = [...parents[0].ancestors, parentId]
   }
 

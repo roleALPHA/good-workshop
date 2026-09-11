@@ -5,7 +5,23 @@ import { fileURLToPath } from 'node:url'
 export default defineConfig({
   plugins: [react()],
   resolve: {
-    alias: { '@': fileURLToPath(new URL('./src', import.meta.url)) },
+    alias: {
+      '@': fileURLToPath(new URL('./src', import.meta.url)),
+      /**
+       * What the next-intl plugin does in a Next build, done by hand here.
+       *
+       * Without it `getTranslations` has no configuration and throws, so
+       * anything that renders a message would have to be tested against a mock
+       * -- which would assert that the mock was called, not that the catalog
+       * says what the test claims. With the alias, a test renders the real
+       * German or English sentence out of the real messages/*.json.
+       *
+       * Only reachable for calls that pass an explicit locale: the other branch
+       * of src/i18n/request.ts reads cookies() and headers(), which do not
+       * exist outside a request. That is the same boundary production has.
+       */
+      'next-intl/config': fileURLToPath(new URL('./src/i18n/request.ts', import.meta.url)),
+    },
   },
   test: {
     environment: 'jsdom',

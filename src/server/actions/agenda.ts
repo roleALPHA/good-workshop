@@ -2,9 +2,9 @@
 
 import { and, eq, sql } from 'drizzle-orm'
 import { z } from 'zod'
-import { bumpContentVersion } from '@/domain/agenda/access'
+import { NotFoundError, bumpContentVersion } from '@/domain/agenda/access'
 import { addModule, deleteModule, loadDay, moveCluster, moveModule } from '@/domain/agenda/repo'
-import { validateModuleDesc } from '@/domain/moduleType/validate'
+import { ModuleDescError, validateModuleDesc } from '@/domain/moduleType/validate'
 import { moduleType, workshopModule } from '@/server/db/schema'
 import { workshopAction, type ActionResult } from './context'
 
@@ -228,14 +228,10 @@ export async function patchModuleAction(raw: {
           .limit(1)
 
         const type = rows[0]
-        if (!type) throw new Error('Modul nicht gefunden.')
+        if (!type) throw new NotFoundError()
 
         const validated = validateModuleDesc(type, input.desc)
-        if (!validated.ok) {
-          throw new Error(
-            `Ungültige Angaben: ${validated.errors.map((e) => `${e.path} ${e.message}`).join('; ')}`,
-          )
-        }
+        if (!validated.ok) throw new ModuleDescError(validated.errors)
         patch.jsonDesc = validated.value
       }
 

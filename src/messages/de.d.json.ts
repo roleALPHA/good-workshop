@@ -2,6 +2,103 @@
 // See: https://next-intl.dev/docs/workflows/typescript#messages-arguments
 
 declare const messages: {
+  errors: {
+    conflict: 'Jemand anderes hat diesen Workshop inzwischen geändert.'
+    domain: {
+      brand: {
+        notHex: 'Bitte eine Farbe als Hex-Wert angeben, z. B. #7c3aed.'
+        grey: 'Grau hat keinen Farbton, aus dem sich eine Akzentfarbe bauen lässt. Nimm einen bunten Ton.'
+        contrastOnBrand: 'Dieser Ton erreicht {theme, select, light {im hellen} dark {im dunklen} other {}} Modus nur {ratio}:1 für Text auf der Akzentfläche. Nötig sind 4,5:1.'
+        contrastSubtle: 'Dieser Ton erreicht {theme, select, light {im hellen} dark {im dunklen} other {}} Modus nur {ratio}:1 für gedämpften Text auf gedämpfter Fläche. Nötig sind 4,5:1.'
+        checkNameAndColour: 'Bitte Name und Farbe prüfen.'
+      }
+      logo: {
+        unsupportedType: 'Erlaubt sind SVG, PNG und WebP.'
+        empty: 'Die Datei ist leer.'
+        tooLarge: 'Das Logo darf höchstens {max} KB groß sein (diese Datei: {actual} KB).'
+        notSvg: 'Das sieht nicht nach einer SVG-Datei aus.'
+        unsafeActive: 'Das SVG enthält {what}. Exportiere es ohne Skripte und ohne Interaktivität — die meisten Programme nennen das „einfaches SVG“.'
+        unsafeExternal: 'Das SVG verweist über {what} nach außen. Exportiere es mit eingebetteten Schriften und Bildern, ohne externe Verweise.'
+        unsafeDoctype: 'Das SVG enthält {what}. Exportiere es ohne DTD und ohne Entities.'
+        typeMismatch: 'Die Datei passt nicht zum angegebenen Format.'
+      }
+      member: {
+        adminOnly: 'Nur Tenant-Admins dürfen Mitglieder verwalten.'
+        invalidEmail: 'Das ist keine gültige E-Mail-Adresse.'
+        gone: 'Dieses Mitglied gibt es nicht.'
+        cannotDisableSelf: 'Du kannst dich nicht selbst abschalten.'
+        lastAdmin: 'Das ist der letzte aktive Admin. Mach zuerst jemand anderen zum Admin — sonst kommt niemand mehr an die Verwaltung.'
+        checkEmailAndRole: 'Bitte E-Mail-Adresse und Rolle prüfen.'
+      }
+      setup: {
+        wrongKey: 'Der Einrichtungsschlüssel stimmt nicht.'
+        invalidEmail: 'Das ist keine gültige E-Mail-Adresse.'
+        alreadyClaimed: 'Diese Installation hat bereits eine Administratorin.'
+        identityFailed: 'Die Identität konnte nicht angelegt werden.'
+      }
+      sharing: {
+        memberGone: 'Dieses Mitglied gibt es nicht.'
+        memberDisabled: 'Dieses Mitglied ist abgeschaltet.'
+        ownerHasAccess: 'Der Eigentümer hat bereits vollen Zugriff.'
+      }
+      tags: {
+        tooMany: 'Höchstens {max} Tags pro Workshop.'
+        tooLong: 'Ein Tag darf höchstens {max} Zeichen haben.'
+        createFailed: 'Der Tag „{name}“ konnte nicht angelegt werden.'
+      }
+      token: {
+        nameRequired: 'Gib dem Token einen Namen — sonst weißt du später nicht, wofür es war.'
+        nameTooLong: 'Der Name darf höchstens {max} Zeichen haben.'
+        unknownScopes: 'Unbekannte Bereiche: {scopes}.'
+        noScopes: 'Ein Token ohne Bereiche kann nichts. Wähl mindestens einen.'
+        gone: 'Dieses Token gibt es nicht mehr.'
+      }
+      workshop: {
+        notFound: 'Nicht gefunden.'
+        forbidden: 'Dafür fehlt die Berechtigung: {capability}'
+        versionConflict: 'Der Workshop wurde inzwischen geändert (erwartet {expected}, ist {actual}).'
+        unknownModuleType: 'Diesen Modultyp gibt es nicht.'
+        unknownModuleTypeOptions: 'Unbekannter Modultyp „{key}“. Verfügbar: {available}'
+        descInvalid: 'Ungültige Angaben: {issues}'
+      }
+    }
+    failed: 'Das hat nicht geklappt. Versuch es noch einmal.'
+    field: {
+      desc: {
+        notObject: 'desc muss ein Objekt sein.'
+      }
+      field: {
+        enum: 'muss einer dieser Werte sein: {allowed}'
+        required: 'ist erforderlich'
+        unexpected: 'ist in diesem Modultyp nicht vorgesehen'
+        type: 'muss vom Typ {type} sein'
+        invalid: 'ist ungültig ({keyword})'
+      }
+      schema: {
+        broken: 'Das Schema dieses Modultyps ist ungültig.'
+        notObject: 'Das Schema muss ein Objekt sein.'
+        tooLarge: 'Das Schema ist zu groß (max. {max} Bytes).'
+        tooDeep: 'Zu tief verschachtelt (max. {max} Ebenen).'
+        uncompilable: 'Das Schema lässt sich nicht übersetzen: {reason}'
+        patternForbidden: 'pattern ist nicht erlaubt: ein selbst geschriebener regulärer Ausdruck kann den Server blockieren. Nutze stattdessen format oder enum.'
+        keywordForbidden: 'Das Schlüsselwort „{key}“ ist nicht erlaubt.'
+      }
+    }
+    forbidden: 'Dafür fehlt die Berechtigung.'
+    invalidField: 'Ungültige Eingabe: {field}'
+    invalid_input: 'Ungültige Eingabe.'
+    mail: {
+      invalidAddress: 'Bitte eine gültige Adresse angeben.'
+      checkSettings: 'Diese Eingaben passen nicht.'
+    }
+    not_found: 'Nicht gefunden.'
+    passkey: {
+      unknown: 'Dieser Passkey ist unbekannt.'
+      notYours: 'Dieser Passkey gehört nicht zu deinem Konto.'
+    }
+    setupFailed: 'Die Einrichtung ist fehlgeschlagen. Details stehen im Log.'
+    unauthenticated: 'Bitte melde dich an.'
+  }
   meta: {
     description: 'Open-Source-Workshopplanung. Selbst gehostet, MCP-fähig.'
     printTitle: 'Druckansicht'

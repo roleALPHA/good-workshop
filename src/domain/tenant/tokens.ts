@@ -3,6 +3,7 @@ import { and, asc, eq, isNull, sql } from 'drizzle-orm'
 import type { Actor, Tx } from '@/server/db'
 import { generatePersonalAccessToken } from '@/server/auth/tokens'
 import { personalAccessToken } from '@/server/db/schema'
+import { DomainError } from '@/domain/errors'
 
 /**
  * Personal access tokens, for MCP clients.
@@ -42,12 +43,10 @@ export type TokenRow = {
   createdAt: Date
 }
 
-export class TokenError extends Error {
-  constructor(message: string) {
-    super(message)
-    this.name = 'TokenError'
-  }
-}
+/** Named because the limit now reaches the person as a number in a sentence. */
+const MAX_TOKEN_NAME_LENGTH = 80
+
+export class TokenError extends DomainError {}
 
 export async function listTokens(tx: Tx, actor: Actor): Promise<TokenRow[]> {
   return tx
@@ -78,17 +77,17 @@ export async function createToken(
   input: { name: string; scopes: string[] },
 ): Promise<{ token: string; row: TokenRow }> {
   const name = input.name.trim()
-  if (!name)
-    throw new TokenError('Gib dem Token einen Namen — sonst weißt du später nicht, wofür es war.')
-  if (name.length > 80) throw new TokenError('Der Name darf höchstens 80 Zeichen haben.')
+  if (!name) throw new TokenError('token.nameRequired')
+  if (name.length > MAX_TOKEN_NAME_LENGTH)
+    throw new TokenError('token.nameTooLong', { max: MAX_TOKEN_NAME_LENGTH })
 
   const scopes = [...new Set(input.scopes)]
   const unknown = scopes.filter((scope) => !SCOPES.includes(scope as Scope))
   if (unknown.length > 0) {
-    throw new TokenError(`Unbekannte Bereiche: ${unknown.join(', ')}.`)
+    throw new TokenError('token.unknownScopes', { scopes: unknown.join(', ') })
   }
   if (scopes.length === 0) {
-    throw new TokenError('Ein Token ohne Bereiche kann nichts. Wähl mindestens einen.')
+    throw new TokenError('token.noScopes')
   }
 
   const generated = generatePersonalAccessToken()
@@ -135,5 +134,5 @@ export async function revokeToken(tx: Tx, actor: Actor, id: string): Promise<voi
     )
     .returning({ id: personalAccessToken.id })
 
-  if (!updated[0]) throw new TokenError('Dieses Token gibt es nicht mehr.')
+  if (!updated[0]) throw new TokenError('token.gone')
 }

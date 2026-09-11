@@ -4,7 +4,12 @@ import type { Tx } from '@/server/db'
 import { cluster, moduleType, workshopDay, workshopModule } from '@/server/db/schema'
 import type { CategoryColor } from '@/lib/category-colors'
 import type { ClusterDto, DayDoc, ModuleDto, ModuleTypeDto } from './types'
-import { bumpContentVersion, NotFoundError, type WorkshopAccess } from './access'
+import {
+  bumpContentVersion,
+  NotFoundError,
+  UnknownModuleTypeError,
+  type WorkshopAccess,
+} from './access'
 import { keyAtEnd, placeAfter, sortByPosition } from './ordering'
 
 /**
@@ -47,15 +52,15 @@ export async function assertDayInWorkshop(
     .where(and(eq(workshopDay.id, dayId), eq(workshopDay.workshopId, access.workshopId)))
     .limit(1)
 
-  if (!rows[0]) throw new NotFoundError('Workshoptag nicht gefunden.')
+  if (!rows[0]) throw new NotFoundError()
 }
 
 /**
  * Not-found rather than forbidden, deliberately: telling a caller that an id
  * exists but belongs to somebody else is itself an answer they had no right to.
  */
-function assertTouched(rowCount: number | undefined, what: string): void {
-  if (!rowCount) throw new NotFoundError(`${what} nicht gefunden.`)
+function assertTouched(rowCount: number | undefined): void {
+  if (!rowCount) throw new NotFoundError()
 }
 
 export async function loadDay(
@@ -192,7 +197,7 @@ export async function moveModule(
     .where(and(eq(workshopModule.id, moduleId), eq(workshopModule.workshopId, access.workshopId)))
     .returning({ id: workshopModule.id })
 
-  assertTouched(moved.length, 'Modul')
+  assertTouched(moved.length)
   return bumpContentVersion(tx, access, expectedVersion)
 }
 
@@ -223,7 +228,7 @@ export async function moveCluster(
     .where(and(eq(cluster.id, clusterId), eq(cluster.workshopId, access.workshopId)))
     .returning({ id: cluster.id })
 
-  assertTouched(moved.length, 'Cluster')
+  assertTouched(moved.length)
   return bumpContentVersion(tx, access, expectedVersion)
 }
 
@@ -261,7 +266,7 @@ export async function addModule(
     .from(moduleType)
     .where(eq(moduleType.id, input.moduleTypeId))
     .limit(1)
-  if (!types[0]) throw new Error('Unbekannter Modultyp.')
+  if (!types[0]) throw new UnknownModuleTypeError()
 
   // UUIDv7 so ids sort by creation time -- index locality, and the client can
   // generate one before the round trip for an optimistic row.
@@ -415,10 +420,10 @@ async function insertModule(
   const type = byKey.get(input.typeKey)
   if (!type) {
     // Named, with the alternatives, so a model can fix its next call rather
-    // than guess again.
-    throw new Error(
-      `Unbekannter Modultyp "${input.typeKey}". Verfügbar: ${[...byKey.keys()].join(', ')}`,
-    )
+    // than guess again. It reaches one now: until DomainError set `expose`,
+    // src/server/mcp/errors.ts flattened every one of these into "the call
+    // failed" and the list never left the server.
+    throw new UnknownModuleTypeError(input.typeKey, [...byKey.keys()])
   }
 
   const { id } = await addModule(tx, access, {
@@ -455,7 +460,7 @@ export async function deleteModule(
     .where(and(eq(workshopModule.id, moduleId), eq(workshopModule.workshopId, access.workshopId)))
     .returning({ id: workshopModule.id })
 
-  assertTouched(deleted.length, 'Modul')
+  assertTouched(deleted.length)
   return bumpContentVersion(tx, access, expectedVersion)
 }
 

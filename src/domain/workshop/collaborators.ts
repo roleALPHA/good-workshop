@@ -2,6 +2,7 @@ import { and, eq } from 'drizzle-orm'
 import type { WorkshopAccess } from '@/domain/agenda/access'
 import type { Tx } from '@/server/db'
 import { member, workshop, workshopCollaborator } from '@/server/db/schema'
+import { DomainError } from '@/domain/errors'
 
 /**
  * Who may open one workshop.
@@ -19,12 +20,7 @@ export type Collaborator = {
   role: CollaboratorRole
 }
 
-export class SharingError extends Error {
-  constructor(message: string) {
-    super(message)
-    this.name = 'SharingError'
-  }
-}
+export class SharingError extends DomainError {}
 
 export async function listCollaborators(
   tx: Tx,
@@ -64,9 +60,9 @@ export async function setCollaborator(
 
   // RLS already makes a member of another tenant invisible, so this reads as
   // "no such member" rather than leaking that they exist elsewhere.
-  if (!exists[0]) throw new SharingError('Dieses Mitglied gibt es nicht.')
+  if (!exists[0]) throw new SharingError('sharing.memberGone')
   if (exists[0].status === 'disabled') {
-    throw new SharingError('Dieses Mitglied ist abgeschaltet.')
+    throw new SharingError('sharing.memberDisabled')
   }
 
   const owner = await tx
@@ -78,7 +74,7 @@ export async function setCollaborator(
   // The owner already has more than any collaborator role could grant, and a
   // row saying otherwise would read as a demotion that never took effect.
   if (owner[0]?.ownerId === memberId) {
-    throw new SharingError('Der Eigentümer hat bereits vollen Zugriff.')
+    throw new SharingError('sharing.ownerHasAccess')
   }
 
   await tx

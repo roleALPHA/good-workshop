@@ -1,4 +1,101 @@
 {
+  "errors": {
+    "conflict": "Otra persona ha cambiado este taller mientras tanto.",
+    "domain": {
+      "brand": {
+        "notHex": "Indica un color en hexadecimal, por ejemplo #7c3aed.",
+        "grey": "El gris no tiene un tono del que construir un color de acento. Elige un tono con color.",
+        "contrastOnBrand": "En modo {theme, select, light {claro} dark {oscuro} other {}} este tono solo alcanza {ratio}:1 para el texto sobre la superficie de acento. Hacen falta 4,5:1.",
+        "contrastSubtle": "En modo {theme, select, light {claro} dark {oscuro} other {}} este tono solo alcanza {ratio}:1 para el texto atenuado sobre superficie atenuada. Hacen falta 4,5:1.",
+        "checkNameAndColour": "Revisa el nombre y el color."
+      },
+      "logo": {
+        "unsupportedType": "Se permiten SVG, PNG y WebP.",
+        "empty": "El archivo está vacío.",
+        "tooLarge": "El logotipo puede ocupar como máximo {max} KB (este archivo: {actual} KB).",
+        "notSvg": "Esto no parece un archivo SVG.",
+        "unsafeActive": "El SVG contiene {what}. Expórtalo sin scripts ni interactividad — la mayoría de los programas lo llaman «SVG simple».",
+        "unsafeExternal": "El SVG apunta hacia fuera mediante {what}. Expórtalo con las fuentes y las imágenes incrustadas, sin referencias externas.",
+        "unsafeDoctype": "El SVG contiene {what}. Expórtalo sin DTD y sin entidades.",
+        "typeMismatch": "El archivo no coincide con el formato indicado."
+      },
+      "member": {
+        "adminOnly": "Solo los administradores del espacio pueden gestionar miembros.",
+        "invalidEmail": "Esa no es una dirección de correo válida.",
+        "gone": "Ese miembro no existe.",
+        "cannotDisableSelf": "No puedes desactivarte a ti misma.",
+        "lastAdmin": "Es la última administradora activa. Nombra antes a otra persona administradora — si no, nadie podrá acceder a la administración.",
+        "checkEmailAndRole": "Revisa la dirección de correo y el rol."
+      },
+      "setup": {
+        "wrongKey": "La clave de instalación no es correcta.",
+        "invalidEmail": "Esa no es una dirección de correo válida.",
+        "alreadyClaimed": "Esta instalación ya tiene una administradora.",
+        "identityFailed": "No se ha podido crear la identidad."
+      },
+      "sharing": {
+        "memberGone": "Ese miembro no existe.",
+        "memberDisabled": "Ese miembro está desactivado.",
+        "ownerHasAccess": "La propietaria ya tiene acceso completo."
+      },
+      "tags": {
+        "tooMany": "Como máximo {max} etiquetas por taller.",
+        "tooLong": "Una etiqueta puede tener como máximo {max} caracteres.",
+        "createFailed": "No se ha podido crear la etiqueta «{name}»."
+      },
+      "token": {
+        "nameRequired": "Dale un nombre al token — si no, más adelante no sabrás para qué era.",
+        "nameTooLong": "El nombre puede tener como máximo {max} caracteres.",
+        "unknownScopes": "Ámbitos desconocidos: {scopes}.",
+        "noScopes": "Un token sin ámbitos no puede hacer nada. Elige al menos uno.",
+        "gone": "Este token ya no existe."
+      },
+      "workshop": {
+        "notFound": "No encontrado.",
+        "forbidden": "No tienes permiso para eso: {capability}",
+        "versionConflict": "El taller ha cambiado mientras tanto (esperado {expected}, encontrado {actual}).",
+        "unknownModuleType": "Ese tipo de bloque no existe.",
+        "unknownModuleTypeOptions": "Tipo de bloque desconocido «{key}». Disponibles: {available}",
+        "descInvalid": "Valores inválidos: {issues}"
+      }
+    },
+    "failed": "No ha funcionado. Inténtalo de nuevo.",
+    "field": {
+      "desc": {
+        "notObject": "desc debe ser un objeto."
+      },
+      "field": {
+        "enum": "debe ser uno de estos valores: {allowed}",
+        "required": "es obligatorio",
+        "unexpected": "no forma parte de este tipo de bloque",
+        "type": "debe ser del tipo {type}",
+        "invalid": "no es válido ({keyword})"
+      },
+      "schema": {
+        "broken": "El esquema de este tipo de bloque no es válido.",
+        "notObject": "El esquema debe ser un objeto.",
+        "tooLarge": "El esquema es demasiado grande (máx. {max} bytes).",
+        "tooDeep": "Anidamiento demasiado profundo (máx. {max} niveles).",
+        "uncompilable": "El esquema no se puede compilar: {reason}",
+        "patternForbidden": "pattern no está permitido: una expresión regular escrita a mano puede bloquear el servidor. Usa format o enum en su lugar.",
+        "keywordForbidden": "La palabra clave «{key}» no está permitida."
+      }
+    },
+    "forbidden": "No tienes permiso para eso.",
+    "invalidField": "Entrada inválida: {field}",
+    "invalid_input": "Entrada inválida.",
+    "mail": {
+      "invalidAddress": "Indica una dirección válida.",
+      "checkSettings": "Estos ajustes no encajan."
+    },
+    "not_found": "No encontrado.",
+    "passkey": {
+      "unknown": "Este passkey es desconocido.",
+      "notYours": "Este passkey no pertenece a tu cuenta."
+    },
+    "setupFailed": "La instalación ha fallado. Los detalles están en el registro.",
+    "unauthenticated": "Inicia sesión, por favor."
+  },
   "meta": {
     "description": "Planificación de talleres de código abierto. Autoalojada, lista para MCP.",
     "printTitle": "Vista de impresión"
