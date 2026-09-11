@@ -2,5 +2,23 @@
   "meta": {
     "description": "Open-source workshop planning. Self-hosted, MCP-ready.",
     "printTitle": "Print view"
+  },
+  "settings": {
+    "title": "Settings",
+    "intro": "Your account: language, passkeys and access tokens.",
+    "language": {
+      "title": "Language",
+      "intro": "Applies to the interface, your exports and the e-mails you receive.",
+      "label": "Language",
+      "apply": "Apply"
+    },
+    "passkeys": {
+      "title": "Passkeys",
+      "intro": "Sign in without a password."
+    },
+    "tokens": {
+      "title": "Access tokens",
+      "intro": "For MCP clients such as Claude Desktop or Claude Code."
+    }
   }
 }

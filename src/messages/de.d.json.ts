@@ -2,9 +2,27 @@
 // See: https://next-intl.dev/docs/workflows/typescript#messages-arguments
 
 declare const messages: {
-  "meta": {
-    "description": "Open-Source-Workshopplanung. Selbst gehostet, MCP-fähig.",
-    "printTitle": "Druckansicht"
+  meta: {
+    description: 'Open-Source-Workshopplanung. Selbst gehostet, MCP-fähig.'
+    printTitle: 'Druckansicht'
   }
-};
-export default messages;
+  settings: {
+    title: 'Einstellungen'
+    intro: 'Dein Konto: Sprache, Passkeys und Zugangstoken.'
+    language: {
+      title: 'Sprache'
+      intro: 'Gilt für die Oberfläche, deine Exporte und die E-Mails, die du bekommst.'
+      label: 'Sprache'
+      apply: 'Übernehmen'
+    }
+    passkeys: {
+      title: 'Passkeys'
+      intro: 'Anmelden ohne Passwort.'
+    }
+    tokens: {
+      title: 'Zugangstoken'
+      intro: 'Für MCP-Clients wie Claude Desktop oder Claude Code.'
+    }
+  }
+}
+export default messages

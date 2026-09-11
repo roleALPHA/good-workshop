@@ -2,5 +2,23 @@
   "meta": {
     "description": "Planificación de talleres de código abierto. Autoalojada, lista para MCP.",
     "printTitle": "Vista de impresión"
+  },
+  "settings": {
+    "title": "Ajustes",
+    "intro": "Tu cuenta: idioma, passkeys y tokens de acceso.",
+    "language": {
+      "title": "Idioma",
+      "intro": "Se aplica a la interfaz, a tus exportaciones y a los correos que recibes.",
+      "label": "Idioma",
+      "apply": "Aplicar"
+    },
+    "passkeys": {
+      "title": "Passkeys",
+      "intro": "Inicia sesión sin contraseña."
+    },
+    "tokens": {
+      "title": "Tokens de acceso",
+      "intro": "Para clientes MCP como Claude Desktop o Claude Code."
+    }
   }
 }

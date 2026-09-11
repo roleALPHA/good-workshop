@@ -43,9 +43,12 @@ export default defineConfig({
      *
      * English is covered deliberately, by e2e/locale.spec.ts, which sets its
      * own locale rather than relying on the environment.
+     *
+     * `locale` and not an explicit Accept-Language header: Playwright derives
+     * the header from this, and a header set here would override -- silently --
+     * the locale that project sets for itself.
      */
     locale: 'de-DE',
-    extraHTTPHeaders: { 'Accept-Language': 'de-DE,de;q=0.9' },
     // Only on a retry: traces and video on every run turn a fast suite into a
     // slow one and bury the interesting artefact among hundreds of boring ones.
     trace: 'on-first-retry',
@@ -64,6 +67,20 @@ export default defineConfig({
       testMatch: /(entry|setup)\.spec\.ts/,
     },
     { name: 'mobile', use: { ...devices['Pixel 5'] }, testMatch: /(entry|setup)\.spec\.ts/ },
+
+    /**
+     * The one project that is deliberately NOT German.
+     *
+     * Everything else pins de-DE so the suite keeps asserting the source text.
+     * This one sets its own locale and no cookie, which is the only way to
+     * exercise the Accept-Language leg of the resolution -- the leg a signed-out
+     * first-time visitor actually arrives on.
+     */
+    {
+      name: 'locale',
+      testMatch: /locale\.spec\.ts/,
+      use: { ...devices['Desktop Chrome'], locale: 'en-US' },
+    },
 
     // Everything past the login needs a database, so the authenticated tests
     // are skipped where there is none rather than failing confusingly.

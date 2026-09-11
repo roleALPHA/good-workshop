@@ -2,5 +2,23 @@
   "meta": {
     "description": "Open-Source-Workshopplanung. Selbst gehostet, MCP-fähig.",
     "printTitle": "Druckansicht"
+  },
+  "settings": {
+    "title": "Einstellungen",
+    "intro": "Dein Konto: Sprache, Passkeys und Zugangstoken.",
+    "language": {
+      "title": "Sprache",
+      "intro": "Gilt für die Oberfläche, deine Exporte und die E-Mails, die du bekommst.",
+      "label": "Sprache",
+      "apply": "Übernehmen"
+    },
+    "passkeys": {
+      "title": "Passkeys",
+      "intro": "Anmelden ohne Passwort."
+    },
+    "tokens": {
+      "title": "Zugangstoken",
+      "intro": "Für MCP-Clients wie Claude Desktop oder Claude Code."
+    }
   }
 }

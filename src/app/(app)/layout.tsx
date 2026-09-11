@@ -1,9 +1,11 @@
 import { redirect } from 'next/navigation'
 import Link from 'next/link'
+import { NextIntlClientProvider } from 'next-intl'
 import { Fingerprint, KeyRound, LogOut, Mail, Palette, Users } from 'lucide-react'
 import { AppFooter } from '@/components/layout/app-footer'
 import { BrandMark, BrandStyle } from '@/components/layout/tenant-brand'
-import { readSession } from '@/server/auth/session'
+import { getClientMessages } from '@/i18n/client-messages'
+import { readSessionCached } from '@/server/auth/session'
 
 export const dynamic = 'force-dynamic'
 
@@ -15,8 +17,12 @@ export const dynamic = 'force-dynamic'
  * add a guard.
  */
 export default async function AppLayout({ children }: { children: React.ReactNode }) {
-  const session = await readSession()
+  const session = await readSessionCached()
   if (!session) redirect('/login')
+
+  // Not in the root layout: src/app/print/layout.tsx nests inside that one, and
+  // the print view deliberately ships no client JavaScript at all.
+  const messages = await getClientMessages()
 
   return (
     <div className="flex min-h-dvh flex-col">
@@ -72,9 +78,15 @@ export default async function AppLayout({ children }: { children: React.ReactNod
             <KeyRound aria-hidden className="size-4" />
             <span className="hidden sm:inline">Token</span>
           </Link>
-          <span className="hidden text-[14px] text-[var(--fg-muted)] sm:inline">
+          {/* The account entry point. It was a dead <span>; the header already
+              carries eight controls, so the language switcher went behind this
+              rather than becoming a ninth. */}
+          <Link
+            href="/settings"
+            className="hidden rounded px-2 py-1 text-[14px] text-[var(--fg-muted)] hover:bg-[var(--surface-raised)] sm:inline"
+          >
             {session.displayName || session.email}
-          </span>
+          </Link>
           <form action="/api/auth/logout" method="post">
             <button
               type="submit"
@@ -88,7 +100,9 @@ export default async function AppLayout({ children }: { children: React.ReactNod
         </div>
       </header>
 
-      <main className="mx-auto w-full max-w-5xl flex-1 px-4 py-6">{children}</main>
+      <main className="mx-auto w-full max-w-5xl flex-1 px-4 py-6">
+        <NextIntlClientProvider messages={messages}>{children}</NextIntlClientProvider>
+      </main>
       <AppFooter />
     </div>
   )

@@ -98,9 +98,7 @@ describe('message catalogs', () => {
      * that declares only the German pair reads fine and is wrong.
      */
     it('declares every plural category its language requires', () => {
-      const required = new Set(
-        new Intl.PluralRules(locale).resolvedOptions().pluralCategories,
-      )
+      const required = new Set(new Intl.PluralRules(locale).resolvedOptions().pluralCategories)
       const incomplete = [...target.entries()]
         .filter(([key, message]) => {
           if (!source.get(key)?.includes('plural')) return false

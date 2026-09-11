@@ -2,5 +2,23 @@
   "meta": {
     "description": "Planification d'ateliers open source. Auto-hébergée, compatible MCP.",
     "printTitle": "Aperçu avant impression"
+  },
+  "settings": {
+    "title": "Paramètres",
+    "intro": "Ton compte : langue, passkeys et jetons d'accès.",
+    "language": {
+      "title": "Langue",
+      "intro": "S'applique à l'interface, à tes exports et aux e-mails que tu reçois.",
+      "label": "Langue",
+      "apply": "Appliquer"
+    },
+    "passkeys": {
+      "title": "Passkeys",
+      "intro": "Se connecter sans mot de passe."
+    },
+    "tokens": {
+      "title": "Jetons d'accès",
+      "intro": "Pour les clients MCP comme Claude Desktop ou Claude Code."
+    }
   }
 }

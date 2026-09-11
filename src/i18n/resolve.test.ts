@@ -9,9 +9,7 @@ import { asLocale, negotiate, resolveLocale } from './resolve'
 
 describe('resolveLocale', () => {
   it('prefers the signed-in person over everything else', () => {
-    expect(
-      resolveLocale({ user: 'fr', cookie: 'es', acceptLanguage: 'en-US' }),
-    ).toBe('fr')
+    expect(resolveLocale({ user: 'fr', cookie: 'es', acceptLanguage: 'en-US' })).toBe('fr')
   })
 
   it('falls to the cookie when there is no session', () => {
