@@ -213,6 +213,11 @@
         "unsafeDoctype": "Das SVG enthält {what}. Exportiere es ohne DTD und ohne Entities.",
         "typeMismatch": "Die Datei passt nicht zum angegebenen Format."
       },
+      "mail": {
+        "noSmtpUrl": "Transport SMTP, aber keine SMTP-URL konfiguriert — weder in der Umgebung noch in den Einstellungen.",
+        "transportNone": "Transport „kein Versand“: es kann keine Mail verschickt werden. Nimm `node scripts/cli.mjs login-link --email …` oder wähle einen Transport in den Einstellungen.",
+        "graphMissing": "Transport Microsoft Graph, aber {field} fehlt."
+      },
       "member": {
         "adminOnly": "Nur Tenant-Admins dürfen Mitglieder verwalten.",
         "invalidEmail": "Das ist keine gültige E-Mail-Adresse.",

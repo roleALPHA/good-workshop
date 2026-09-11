@@ -62,6 +62,10 @@ export const DOMAIN_ERROR_KEYS = [
   'sharing.memberGone',
   'sharing.memberDisabled',
   'sharing.ownerHasAccess',
+  // Mail transport configuration -- shown verbatim on the admin screen
+  'mail.noSmtpUrl',
+  'mail.transportNone',
+  'mail.graphMissing',
   // Live collaboration
   'collab.unavailable',
   // First-run setup

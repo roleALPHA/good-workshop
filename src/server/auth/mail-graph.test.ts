@@ -208,7 +208,12 @@ describe('sending through Graph', () => {
     )
 
     const { sendMail } = await load()
-    await expect(sendMail(MAIL, TENANT)).rejects.toThrow(/Absenderpostfach/)
+    // The key plus the field it names: which VALUE is missing is the claim,
+    // and the sentence around it is chosen by whoever renders the error.
+    await expect(sendMail(MAIL, TENANT)).rejects.toThrow('mail.graphMissing')
+    await expect(sendMail(MAIL, TENANT)).rejects.toMatchObject({
+      params: { field: expect.stringContaining('GW_GRAPH_SENDER') },
+    })
   })
 
   it('counts as delivery to the recipient, unlike console', async () => {

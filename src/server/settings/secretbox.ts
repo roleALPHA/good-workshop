@@ -47,8 +47,8 @@ export function secretKey(): Buffer {
 
   if (!raw) {
     throw new SecretKeyError(
-      'GW_SECRET_KEY (oder GW_SECRET_KEY_FILE) ist nicht gesetzt. Ohne den Schlüssel können ' +
-        'die verschlüsselten Einstellungen weder gelesen noch geschrieben werden.',
+      'GW_SECRET_KEY (or GW_SECRET_KEY_FILE) is not set. Without the key the encrypted ' +
+        'settings can be neither read nor written.',
     )
   }
 
@@ -83,7 +83,7 @@ export function decryptSecret(envelope: string): string {
   const [prefix, iv, tag, body] = envelope.split('.')
 
   if (prefix !== PREFIX || !iv || !tag || !body) {
-    throw new SecretKeyError(`Unlesbares Format für einen verschlüsselten Wert: ${prefix ?? '?'}`)
+    throw new SecretKeyError(`Unreadable format for an encrypted value: ${prefix ?? '?'}`)
   }
 
   const decipher = createDecipheriv('aes-256-gcm', secretKey(), Buffer.from(iv, 'base64url'))
@@ -98,8 +98,8 @@ export function decryptSecret(envelope: string): string {
     // GCM refuses rather than returning nonsense. The realistic cause is a
     // restored dump meeting a different key, and saying so saves an hour.
     throw new SecretKeyError(
-      'Ein verschlüsselter Wert lässt sich mit diesem GW_SECRET_KEY nicht entschlüsseln. ' +
-        'Stammt die Datenbank aus einer Sicherung, gehört der Schlüssel von damals dazu.',
+      'An encrypted value cannot be decrypted with this GW_SECRET_KEY. If the database ' +
+        'came from a backup, the key from back then belongs with it.',
     )
   }
 }

@@ -4,6 +4,7 @@ import { readStoredMail, resolveMailConfig, type MailConfig } from '@/server/set
 import { authConfig } from './config'
 import type { Locale } from '@/i18n/config'
 import { translator } from '@/i18n/translator'
+import { DomainError } from '@/domain/errors'
 
 /**
  * Mail delivery, with `console` as a first-class transport rather than a
@@ -70,9 +71,7 @@ export async function sendMail(mail: Mail, tenantId: string): Promise<void> {
 
     case 'smtp': {
       if (!config.smtpUrl) {
-        throw new Error(
-          'Transport smtp, aber keine SMTP-URL konfiguriert -- weder in der Umgebung noch in den Einstellungen.',
-        )
+        throw new MailConfigError('mail.noSmtpUrl')
       }
       const { createTransport } = await import('nodemailer')
       await createTransport(config.smtpUrl).sendMail({
@@ -89,10 +88,7 @@ export async function sendMail(mail: Mail, tenantId: string): Promise<void> {
       return
 
     case 'none':
-      throw new Error(
-        'Transport none: es kann keine Mail versendet werden. `node scripts/cli.mjs login-link --email ...` ' +
-          'oder einen Transport in den Einstellungen wählen.',
-      )
+      throw new MailConfigError('mail.transportNone')
   }
 }
 
@@ -109,7 +105,7 @@ export async function sendMail(mail: Mail, tenantId: string): Promise<void> {
  * in an image that ships to other people's servers.
  */
 async function sendViaGraph(mail: Mail, config: MailConfig): Promise<void> {
-  const sender = required(config.graphSender, 'Absenderpostfach (GW_GRAPH_SENDER)')
+  const sender = required(config.graphSender, 'the sender mailbox (GW_GRAPH_SENDER)')
 
   const response = await fetch(
     `https://graph.microsoft.com/v1.0/users/${encodeURIComponent(sender)}/sendMail`,
@@ -144,15 +140,18 @@ let cachedToken: { value: string; expiresAt: number } | undefined
 async function graphToken(config: MailConfig): Promise<string> {
   if (cachedToken && Date.now() < cachedToken.expiresAt) return cachedToken.value
 
-  const tenant = required(config.graphTenantId, 'Mandant (GW_GRAPH_TENANT_ID)')
+  const tenant = required(config.graphTenantId, 'the tenant (GW_GRAPH_TENANT_ID)')
   const response = await fetch(
     `https://login.microsoftonline.com/${encodeURIComponent(tenant)}/oauth2/v2.0/token`,
     {
       method: 'POST',
       headers: { 'content-type': 'application/x-www-form-urlencoded' },
       body: new URLSearchParams({
-        client_id: required(config.graphClientId, 'Anwendungs-ID (GW_GRAPH_CLIENT_ID)'),
-        client_secret: required(config.graphClientSecret, 'Client Secret'),
+        client_id: required(config.graphClientId, 'the application id (GW_GRAPH_CLIENT_ID)'),
+        client_secret: required(
+          config.graphClientSecret,
+          'the client secret (GW_GRAPH_CLIENT_SECRET)',
+        ),
         scope: 'https://graph.microsoft.com/.default',
         grant_type: 'client_credentials',
       }),
@@ -210,8 +209,20 @@ async function graphError(response: Response): Promise<string> {
  * "GW_GRAPH_SENDER is not set" would be misleading for somebody who has never
  * touched a .env.
  */
+/**
+ * A misconfiguration, not a relay failure.
+ *
+ * These three reach the admin screen verbatim -- which is the point of that
+ * screen -- so they are ours to say, in the reader's language. What is NOT
+ * translated is what the relay itself answers ("535 authentication failed");
+ * see failRelayed in src/server/actions/context.ts.
+ *
+ * The `field` argument stays English: it names an environment variable.
+ */
+export class MailConfigError extends DomainError {}
+
 function required(value: string | undefined, label: string): string {
-  if (!value) throw new Error(`Transport graph, aber ${label} fehlt.`)
+  if (!value) throw new MailConfigError('mail.graphMissing', { field: label })
   return value
 }
 
