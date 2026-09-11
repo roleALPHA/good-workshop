@@ -28,7 +28,7 @@ describe('magicLinkMail', () => {
   })
 
   it.each(LOCALES)('keeps the attribution line untranslated in %s', (locale) => {
-    // docs/konventionen-ui.md says this string is not in the catalogs and is
+    // docs/ui-conventions.md says this string is not in the catalogs and is
     // not interpolated from tenant data. A mail reaches the same person as the
     // footer does.
     expect(magicLinkMail('a@b.test', LINK, locale).text).toContain(

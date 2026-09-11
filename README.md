@@ -1,99 +1,105 @@
 # GoodWorkshop
 
-Open-Source-Workshopplanung. Selbst gehostet, MCP-fähig.
+Open-source workshop planning. Self-hosted, MCP-ready.
 
-Agenden aus Modulen, Clustern und Workshoptagen bauen, per Drag & Drop umsortieren, als
-Markdown exportieren — und die Daten bleiben auf der eigenen Maschine.
+Build agendas out of blocks, clusters and workshop days, reorder them by drag and drop,
+export them as Markdown — and the data stays on your own machine.
 
-> **Status: in Entwicklung.** Meilenstein 1 (Editor-Kern) ist im Bau. Noch kein Release.
+> **Status: in development.** Milestone 1 (the editor core) is being built. No release yet.
 
-## Was GoodWorkshop kann
+## What GoodWorkshop does
 
-**Agenden bauen.** Ein Workshop besteht aus Tagen, ein Tag aus Modulen — Übungen, Inputs,
-Pausen —, die sich zu Clustern gruppieren lassen. Umsortiert wird per Drag & Drop; Zeiten
-rechnen sich mit. Es gibt 15 eingebaute Modultypen, und eigene lassen sich anlegen.
+**Builds agendas.** A workshop is made of days, a day of blocks — exercises, inputs, breaks —
+which can be grouped into clusters. Reordering happens by drag and drop; the times follow. It
+comes with 15 built-in block types, and you can add your own.
 
-**Zu zweit am selben Tag arbeiten.** Mehrere Personen können denselben Workshoptag
-gleichzeitig bearbeiten. Wer gerade dabei ist, steht in der Anwesenheitsliste; Änderungen
-erscheinen sofort bei allen und führen zusammen, statt sich zu überschreiben.
+**Lets two people work on the same day.** Several people can edit the same workshop day at
+once. Whoever is there is listed in the presence bar; changes appear immediately for
+everybody and merge rather than overwrite each other.
 
-**Wiederfinden.** Workshops liegen in Ordnern und tragen Tags, beides optional. Ordner, Tag
-und Suche stehen in der URL — eine gefilterte Bibliothek ist also ein Link, den man
-weitergeben und wiederfinden kann. Tags entstehen beim Tippen; ein Tag, auf den nichts mehr
-zeigt, verschwindet von selbst.
+**Speaks four languages.** German, English, French and Spanish — the interface, the error
+messages, the e-mails, the Markdown export and the built-in block types. Everybody picks
+their own under **Settings**; a workshop shared between a German and a French facilitator
+shows each of them their own language, and the text they wrote themselves stays exactly as
+they wrote it.
 
-**Im Team arbeiten.** Ein Admin lädt unter **Mitglieder** per E-Mail-Adresse ein. Zugriff auf
-einen einzelnen Workshop vergibt die Eigentümerin unter **Zugriff**: Bearbeiten oder Lesen,
-pro Mitglied.
+**Finds things again.** Workshops live in folders and carry tags, both optional. The folder,
+the tag and the search are in the URL — so a filtered library is a link you can pass on and
+come back to. Tags appear as you type; a tag nothing points at any more disappears by itself.
 
-**Nach eigenem Aussehen.** Unter **Branding** lassen sich ein Logo und eine Akzentfarbe
-setzen; die passenden Abstufungen für hell und dunkel erzeugt der Server selbst. Die
-Fußzeile bleibt `GoodWorkshop · powered by roleALPHA`.
+**Works for a team.** An admin invites people by e-mail address under **Members**. Access to
+a single workshop is granted by its owner under **Access**: edit or read, per member.
 
-**Mit einem KI-Client verbinden.** GoodWorkshop ist ein MCP-Server: Claude Desktop, Claude
-Code oder ein anderer MCP-Client kann Workshops lesen und schreiben. Ein Token legst du unter
-**Token** in deinen Einstellungen an; im Client trägst du es als `Authorization: Bearer gwp_…`
-gegen `https://<host>/api/mcp` ein. Ein Token handelt als die Person, die es angelegt hat —
-es kann nie mehr, als diese Person selbst darf, und Nutzerverwaltung kann es gar nicht.
+**Looks like you.** Under **Branding** you can set a logo and an accent colour; the server
+derives the light and dark steps itself. The footer stays `GoodWorkshop · powered by
+roleALPHA`.
 
-Wie das innen gebaut ist und warum, steht in [docs/architektur.md](docs/architektur.md).
+**Connects to an AI client.** GoodWorkshop is an MCP server: Claude Desktop, Claude Code or
+any other MCP client can read and write workshops. You create a token under **Tokens** in
+your settings; in the client you enter it as `Authorization: Bearer gwp_…` against
+`https://<host>/api/mcp`. A token acts as the person who created it — it can never do more
+than that person can, and it cannot touch user administration at all.
 
-## Mitwirken
+How this is built on the inside, and why, is in [docs/architecture.md](docs/architecture.md).
+
+## Contributing
 
 ```bash
 pnpm install
-pnpm db:up      # Postgres und ein Mailfänger für die Entwicklung
+pnpm db:up      # Postgres and a mail catcher for development
 pnpm dev
 ```
 
-| Befehl               | Zweck                                                                    |
+| Command              | Purpose                                                                  |
 | -------------------- | ------------------------------------------------------------------------ |
-| `pnpm lint`          | ESLint inkl. der Projekt-Guardrails                                      |
+| `pnpm lint`          | ESLint including the project guardrails                                  |
 | `pnpm typecheck`     | `tsc --noEmit`                                                           |
-| `pnpm test`          | Vitest (Unit + Komponente)                                               |
-| `pnpm test:coverage` | mit Coverage-Schwellen auf `src/domain` und `src/features`               |
-| `pnpm test:db`       | Mandantentrennung und Auth gegen eine echte Datenbank                    |
-| `pnpm test:e2e`      | Playwright (Desktop + Pixel 5) gegen den gebauten Standalone-Server      |
+| `pnpm test`          | Vitest (unit + component)                                                |
+| `pnpm test:coverage` | with coverage thresholds on `src/domain`, `src/features`, `src/i18n`     |
+| `pnpm test:db`       | tenant isolation and auth against a real database                        |
+| `pnpm test:e2e`      | Playwright (desktop + Pixel 5) against the built standalone server       |
 | `pnpm format`        | Prettier                                                                 |
-| `pnpm build`         | Produktions-Build (`output: 'standalone'`)                               |
-| `pnpm check:docs`    | prüft, ob README, `.env.example` und `compose.yaml` noch zum Code passen |
+| `pnpm build`         | production build (`output: 'standalone'`)                                |
+| `pnpm check:docs`    | checks that README, `.env.example` and `compose.yaml` still fit the code |
 
-Drei verbindliche Konventionen, für jeden Beitrag:
+Three binding conventions, for every contribution:
 
-- [UI und UX](docs/konventionen-ui.md) — Mobile-first, Bearbeiten an Ort und Stelle statt in
-  Dialogen, Farbtokens, Branding, Accessibility
-- [Tests](docs/konventionen-tests.md) — Testpyramide, Mandantentrennungs-Tests, Flake-Politik
-- [CI/CD](docs/konventionen-ci.md) — GitHub Actions, Docker-Build, Release nach `ghcr.io`
+- [UI and UX](docs/ui-conventions.md) — mobile-first, editing in place rather than in
+  dialogs, colour tokens, branding, accessibility
+- [Tests](docs/testing-conventions.md) — the test pyramid, tenant-isolation tests, flake policy
+- [CI/CD](docs/ci-conventions.md) — GitHub Actions, Docker build, release to `ghcr.io`
 
-Zwei Guardrails werden von ESLint erzwungen und sind kein Stilthema:
+Three guardrails are enforced by ESLint and are not a matter of style:
 
-- **Keine rohen Hex-Farben** in `src/components`, `src/features`, `src/app`.
-  Kategoriefarben laufen über die `.cat-*`-OKLCH-Tokens, Akzente über `--brand-*`.
-- **Kein Import des rohen `db`-Handles** außerhalb von `src/server/db`. Jede Query läuft
-  durch `withTenant()`, damit `app.tenant_id` gesetzt ist — davon hängt die
-  Mandantentrennung ab.
+- **No raw hex colours** in `src/components`, `src/features`, `src/app`. Category colours go
+  through the `.cat-*` OKLCH tokens, accents through `--brand-*`.
+- **No German prose** in those same directories. Every string a person reads lives in
+  `src/messages`; see [Languages](docs/languages.md).
+- **No import of the raw `db` handle** outside `src/server/db`. Every query runs through
+  `withTenant()` so that `app.tenant_id` is set — tenant isolation depends on it.
 
-Wer an Installation, Migrationen oder der Dokumentation arbeitet, findet die Details hier:
+If you work on the installation, the migrations or the documentation, the details are here:
 
-- [Doku mitziehen](docs/doku-mitziehen.md) — was `pnpm check:docs` prüft, was er nicht kann,
-  und was bei welcher Änderung nachzuziehen ist
-- [Installation und Upgrade](docs/installation-und-upgrade.md) — die Startkette, die
-  Vorprüfung, die Datenbankrollen und woran sich beim Ändern leicht etwas bricht
+- [Keeping the docs honest](docs/keeping-docs-honest.md) — what `pnpm check:docs` checks, what
+  it cannot, and what to update after which change
+- [Installation and upgrade](docs/installation-and-upgrade.md) — the startup chain, the
+  preflight, the database roles and what breaks easily when changing them
+- [Languages](docs/languages.md) — how the catalogs are cut, where the language comes from,
+  and what deliberately stays untranslated
 
-## Installation (On-Premise)
+## Installation (on-premise)
 
-### Voraussetzungen
+### Requirements
 
-- Docker mit Compose v2 (`docker compose version`), amd64 oder arm64
-- Ein Hostname, der öffentlich auf diesen Server auflöst, und die Ports 80 und 443 frei —
-  beides braucht Let's Encrypt für die Zertifikatsausstellung
-- Kein Postgres nötig: die Datenbank läuft im Stack und ist von außen nicht erreichbar
-- Keine Passwörter zu vergeben: der Stack erzeugt die Datenbank-Geheimnisse beim ersten
-  Start selbst
+- Docker with Compose v2 (`docker compose version`), amd64 or arm64
+- A hostname that resolves publicly to this server, and ports 80 and 443 free — Let's Encrypt
+  needs both to issue the certificate
+- No Postgres needed: the database runs inside the stack and is not reachable from outside
+- No passwords to hand out: the stack generates the database secrets itself on first start
 
-### 1. Dateien holen
+### 1. Get the files
 
-Gebraucht werden `compose.yaml`, `Caddyfile` und eine `.env`:
+You need `compose.yaml`, `Caddyfile` and a `.env`:
 
 ```bash
 git clone https://github.com/roleALPHA/good-workshop.git
@@ -101,224 +107,226 @@ cd good-workshop
 cp .env.example .env
 ```
 
-### 2. Image bereitstellen
+### 2. Provide the image
 
-**Es gibt noch kein veröffentlichtes Release.** Bis der erste `v*`-Tag steht, wird das Image
-selbst gebaut und bekommt den Tag, den `compose.yaml` erwartet:
+**There is no published release yet.** Until the first `v*` tag exists, the image is built
+locally and gets the tag `compose.yaml` expects:
 
 ```bash
 docker build -t ghcr.io/rolealpha/good-workshop:local .
 ```
 
-In der `.env` dann `GW_VERSION=local`. Sobald es Releases gibt, entfällt dieser Schritt.
+Then set `GW_VERSION=local` in the `.env`. Once there are releases, this step goes away.
 
-### 3. `.env` ausfüllen
+### 3. Fill in the `.env`
 
-Vier Werte sind Pflicht; ohne sie startet der Stack nicht und sagt, welcher fehlt:
+Four values are required; without them the stack does not start and says which one is
+missing:
 
 ```bash
-GW_APP_URL=https://workshop.example.com   # die Adresse, unter der die App erreichbar ist
-GW_HOSTNAME=workshop.example.com          # der Name im Zertifikat (Profil `tls`)
+GW_APP_URL=https://workshop.example.com   # the address the app is reachable at
+GW_HOSTNAME=workshop.example.com          # the name in the certificate (profile `tls`)
 GW_MAIL_TRANSPORT=smtp                    # smtp | graph | console | none
-GW_VERSION=local                          # oder der Release-Tag
+GW_VERSION=local                          # or the release tag
 ```
 
-Bei `GW_MAIL_TRANSPORT=smtp` zusätzlich `SMTP_URL` und `SMTP_FROM`. Enthält die `SMTP_URL`
-ein Passwort, gehört sie besser in eine Datei: `SMTP_URL_FILE=/run/secrets/smtp_url`. Eine
-Environment-Variable steht in `docker inspect`, in `/proc/<pid>/environ` und in jedem
-Core-Dump.
+With `GW_MAIL_TRANSPORT=smtp` you also need `SMTP_URL` and `SMTP_FROM`. If the `SMTP_URL`
+contains a password, it belongs in a file instead: `SMTP_URL_FILE=/run/secrets/smtp_url`. An
+environment variable shows up in `docker inspect`, in `/proc/<pid>/environ` and in every core
+dump.
 
-**Microsoft 365 ohne SMTP:** Viele Mandanten haben SMTP AUTH abgeschaltet — dort ist
-`GW_MAIL_TRANSPORT=graph` nicht der bequemere, sondern der einzige Weg. Gebraucht wird eine
-App-Registrierung in Entra ID mit der **Anwendungsberechtigung** `Mail.Send` (nicht der
-delegierten) samt Administratorzustimmung, dazu das Postfach, aus dem gesendet wird:
+**Microsoft 365 without SMTP:** many tenants have SMTP AUTH switched off — there
+`GW_MAIL_TRANSPORT=graph` is not the more convenient way but the only one. You need an app
+registration in Entra ID with the **application permission** `Mail.Send` (not the delegated
+one) plus admin consent, and the mailbox to send from:
 
 ```bash
 GW_MAIL_TRANSPORT=graph
-GW_GRAPH_TENANT_ID=contoso.onmicrosoft.com   # oder die Verzeichnis-ID
+GW_GRAPH_TENANT_ID=contoso.onmicrosoft.com   # or the directory id
 GW_GRAPH_CLIENT_ID=00000000-0000-0000-0000-000000000000
 GW_GRAPH_CLIENT_SECRET_FILE=/run/secrets/graph_secret
 GW_GRAPH_SENDER=workshop@contoso.com
 ```
 
-Fehlt einer dieser Werte, sagt die Anwendung das beim Start — nicht erst, wenn sich jemand
-nicht anmelden kann. Mit `Mail.Send` allein kann Graph nichts außer senden: die Berechtigung
-erlaubt kein Lesen von Postfächern.
+If one of these is missing, the application says so at startup — not when somebody first
+fails to sign in. With `Mail.Send` alone Graph can do nothing but send: the permission does
+not allow reading mailboxes.
 
-**Den Hostnamen jetzt festlegen** — eine spätere Änderung macht jeden registrierten Passkey
-ungültig. Siehe [Stolperfallen](#stolperfallen).
+**Decide the hostname now** — changing it later invalidates every registered passkey. See
+[Things that trip people up](#things-that-trip-people-up).
 
-### 4. Starten
+### 4. Start
 
 ```bash
 docker compose --profile tls up -d
 ```
 
-Der Reihe nach: `secrets` erzeugt die Datenbank-Passwörter, `db` startet, `migrate` legt die
-Rollen an, prüft die vorhandenen Daten, wandert die Migrationen durch und provisioniert die
-Modultypen. `app` startet erst, wenn `migrate` sauber durch ist, dann nimmt `caddy` 80 und
-443 und holt das Zertifikat.
+In order: `secrets` generates the database passwords, `db` starts, `migrate` creates the
+roles, checks the existing data, walks through the migrations and provisions the block types.
+`app` starts only once `migrate` has come through cleanly, then `caddy` takes 80 and 443 and
+fetches the certificate.
 
-Läuft es, meldet sich der Healthcheck:
+Once it runs, the healthcheck answers:
 
 ```bash
 curl -fsS https://workshop.example.com/api/health
 # {"status":"ok","checks":[{"name":"database","ok":true},{"name":"migrations","ok":true}]}
 ```
 
-Ein `503` ist kein Absturz, sondern die ehrliche Antwort „dieser Container kann nicht
-ausliefern" — `checks` sagt, ob es an der Datenbank oder am Migrationsstand liegt.
+A `503` is not a crash but the honest answer "this container cannot serve" — `checks` says
+whether it is the database or the migration state.
 
-### 5. Den ersten Admin anlegen
+### 5. Create the first admin
 
-Ohne Admin gibt es keinen Weg in die Oberfläche. Zwei Wege:
+Without an admin there is no way into the interface. Two routes:
 
-**Über die CLI** — funktioniert immer, auch ohne Mailversand:
+**Through the CLI** — always works, even without mail delivery:
 
 ```bash
-docker compose exec app node scripts/cli.mjs admin create --email du@example.com
+docker compose exec app node scripts/cli.mjs admin create --email you@example.com
 ```
 
-Der Befehl druckt einen einmaligen Anmeldelink. Alles Weitere geht dann in der Oberfläche.
+The command prints a one-time sign-in link. Everything else then happens in the interface.
 
-**Oder beim allerersten Start automatisch:** `GW_BOOTSTRAP_ADMIN_EMAIL=du@example.com` in die
-`.env`, bevor der Stack das erste Mal hochkommt. Der Link steht dann in
-`docker compose logs migrate`, ist eine Stunde gültig und wird genau einmal gedruckt — bei
-späteren Starts passiert nichts mehr, auch wenn die Variable stehen bleibt.
+**Or automatically on the very first start:** put `GW_BOOTSTRAP_ADMIN_EMAIL=you@example.com`
+into the `.env` before the stack comes up for the first time. The link is then in
+`docker compose logs migrate`, is valid for an hour and is printed exactly once — later
+starts do nothing, even if the variable stays.
 
-### Aktualisieren
+### Updating
 
 ```bash
-# 1. Sichern. Ein Upgrade ohne Sicherung ist eine Wette.
-docker compose exec -u postgres db pg_dump goodworkshop > vor-upgrade-$(date +%F).sql
+# 1. Back up. An upgrade without a backup is a bet.
+docker compose exec -u postgres db pg_dump goodworkshop > before-upgrade-$(date +%F).sql
 
-# 2. Neues Image bereitstellen, GW_VERSION in der .env darauf setzen.
-#    Solange es kein Release gibt, heißt das: neu bauen statt ziehen.
+# 2. Provide the new image and point GW_VERSION in the .env at it.
+#    While there is no release, that means building rather than pulling.
 git pull
 docker build -t ghcr.io/rolealpha/good-workshop:local .
 
-# 3. Hochfahren.
+# 3. Bring it up.
 docker compose --profile tls up -d
 ```
 
-Sobald es Releases gibt, tritt in Schritt 2 `docker compose pull` an die Stelle des Baus.
+Once there are releases, `docker compose pull` takes the place of the build in step 2.
 
-`migrate` läuft bei jedem Start mit, und `app` wartet darauf — ein Container, der gegen ein
-Schema ausliefert, das er nicht versteht, kommt gar nicht erst hoch.
+`migrate` runs on every start and `app` waits for it — a container that would serve against a
+schema it does not understand never comes up in the first place.
 
-**Vor den Migrationen läuft eine Vorprüfung, die nur liest.** Sie stellt fest, ob die
-vorhandenen Daten die Bedingungen erfüllen, die eine ausstehende Migration stellt. Bricht sie
-ab, ist die Datenbank **unverändert** — es gibt nichts zurückzurollen. Die Meldung nennt die
-betroffenen Zeilen, die Abfrage zum Nachsehen und die Entscheidung, die zu treffen ist.
+**A read-only preflight runs before the migrations.** It establishes whether the existing data
+meets the conditions a pending migration imposes. If it stops, the database is **unchanged** —
+there is nothing to roll back. The message names the affected rows, the query to look at them
+and the decision to be made.
 
-Ohne Upgrade nachsehen, was ein Upgrade vorfände:
+To see what an upgrade would find, without upgrading:
 
 ```bash
 docker compose run --rm migrate node scripts/preflight.mjs
 ```
 
-> **Konkret beim Upgrade auf diese Version.** Eine Migration verlangt, dass Modul und Cluster
-> zu dem Workshop gehören, auf dessen Tag sie liegen. Bestehende Installationen können Zeilen
-> haben, bei denen das nicht stimmt. Die Vorprüfung findet sie und benennt sie einzeln; wohin
-> sie gehören, ist eine inhaltliche Frage, die kein Skript raten sollte.
+> **Specifically when upgrading to this version.** One migration requires that a block and a
+> cluster belong to the workshop whose day they sit on. Existing installations may have rows
+> where that is not true. The preflight finds them and names them one by one; where they
+> belong is a question about content, which no script should guess.
 
-### Sichern
+### Backing up
 
-Die Datenbank ist die vollständige Akte, Logos eingeschlossen — sie liegen als Zeile, nicht
-im Dateisystem. Ein `pg_dump` genügt also:
+The database is the complete record, logos included — they are rows, not files. So a `pg_dump`
+is enough:
 
 ```bash
 docker compose exec -u postgres db pg_dump goodworkshop > goodworkshop-$(date +%F).sql
 ```
 
-Das `-u postgres` ist nötig: im Datenbank-Container meldet sich der Prozess über den lokalen
-Socket an, und dort entscheidet der Benutzername.
+The `-u postgres` is necessary: inside the database container the process authenticates over
+the local socket, and there the user name decides.
 
-Die Datenbank-Passwörter liegen in eigenen Docker-Volumes (`secret_*`) und sind **nicht** im
-Dump enthalten. Für eine Wiederherstellung auf einem neuen Server braucht es sie auch nicht:
-`secrets` erzeugt neue, und `migrate` setzt sie auf den Rollen.
+The database passwords live in their own Docker volumes (`secret_*`) and are **not** in the
+dump. A restore onto a new server does not need them either: `secrets` generates new ones and
+`migrate` sets them on the roles.
 
-**Eine Ausnahme: der Anwendungsschlüssel.** Er entschlüsselt die Mail-Zugangsdaten, die in der
-Oberfläche hinterlegt wurden, und ist das Einzige, was Werte lesen kann, die schon in der
-Datenbank stehen. Er gehört deshalb zur Sicherung dazu:
+**One exception: the application key.** It decrypts the mail credentials entered in the
+interface, and it is the only thing that can read values already in the database. So it
+belongs in the backup:
 
 ```bash
 docker compose exec -T app cat /run/db-secrets/app/secret-key > goodworkshop-key.txt
 ```
 
-Geht er verloren, kommt der Dump mit **leeren** Mail-Zugangsdaten zurück. Sonst bleibt alles
-heil — Workshops, Mitglieder, Branding —, und die Zugangsdaten werden einmal neu eingetragen.
+If it is lost, the dump comes back with **empty** mail credentials. Everything else survives —
+workshops, members, branding — and the credentials get entered once more.
 
-### Ohne HTTPS betreiben
+### Running without HTTPS
 
-Möglich, mit drei Konsequenzen: **keine Passkeys**, das Session-Cookie trägt kein `Secure`
-und reist im Klartext, und Anmeldelinks tun das ebenfalls.
+Possible, with three consequences: **no passkeys**, the session cookie carries no `Secure` and
+travels in the clear, and sign-in links do the same.
 
-`app` bindet bewusst nur auf `127.0.0.1` — ohne Proxy ist von außen nichts erreichbar, auch
-bei falsch stehender Firewall nicht. Für einen Zugang ohne das `tls`-Profil braucht es also
-einen eigenen Reverse Proxy auf dem Host oder einen SSH-Tunnel:
+`app` deliberately binds to `127.0.0.1` only — without a proxy nothing is reachable from
+outside, not even with a misconfigured firewall. So access without the `tls` profile needs
+either a reverse proxy of your own on the host or an SSH tunnel:
 
 ```bash
 docker compose up -d
 ssh -L 3000:127.0.0.1:3000 server
 ```
 
-`GW_APP_URL` muss dann auf die Adresse zeigen, die der Browser tatsächlich benutzt.
+`GW_APP_URL` then has to point at the address the browser actually uses.
 
-### Konfiguration
+### Configuration
 
-| Variable                                                 | Pflicht     | Bedeutung                                                                                                                                               |
-| -------------------------------------------------------- | ----------- | ------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| `GW_APP_URL`                                             | ja          | Adresse, unter der die App erreichbar ist. Leitet Anmeldelinks und die WebAuthn-Origin ab.                                                              |
-| `GW_HOSTNAME`                                            | für `tls`   | Name im Zertifikat. Wird an Caddy durchgereicht.                                                                                                        |
-| `GW_MAIL_TRANSPORT`                                      | ja          | `smtp`, `graph`, `console` oder `none`.                                                                                                                 |
-| `GW_GRAPH_TENANT_ID`                                     | bei `graph` | Microsoft-365-Mandant, als Domäne oder Verzeichnis-ID.                                                                                                  |
-| `GW_GRAPH_CLIENT_ID`                                     | bei `graph` | Anwendungs-ID der App-Registrierung.                                                                                                                    |
-| `GW_GRAPH_CLIENT_SECRET` / `GW_GRAPH_CLIENT_SECRET_FILE` | bei `graph` | Das Geheimnis der Registrierung, direkt oder aus einer Datei.                                                                                           |
-| `GW_GRAPH_SENDER`                                        | bei `graph` | Postfach, aus dem gesendet wird.                                                                                                                        |
-| `GW_VERSION`                                             | ja          | Image-Tag. Bewusst ohne Standardwert — ein beweglicher Tag ist kein Deployment.                                                                         |
-| `SMTP_URL` / `SMTP_URL_FILE`                             | bei `smtp`  | Relay-URL, direkt oder aus einer Datei.                                                                                                                 |
-| `SMTP_FROM`                                              | bei `smtp`  | Absenderadresse.                                                                                                                                        |
-| `GW_RP_ID`                                               | nein        | WebAuthn Relying Party ID. Leer = Host aus `GW_APP_URL`. Nachträgliche Änderung entwertet alle Passkeys.                                                |
-| `GW_BOOTSTRAP_ADMIN_EMAIL`                               | nein        | Legt beim allerersten Start einen Admin an und druckt dessen Link.                                                                                      |
-| `GW_OPS_TOKEN`                                           | nein        | Macht `/api/health` mit Header `x-ops-token` ausführlich (Version, Migrationsstand, Treiberfehler). Ohne ihn bleibt der öffentliche Endpunkt wortkarg.  |
-| `GW_SECRET_KEY` / `GW_SECRET_KEY_FILE`                   | nein        | Verschlüsselt die in der Oberfläche hinterlegten Mail-Zugangsdaten. Leer lassen: der Stack erzeugt ihn selbst. **Gehört ins Backup** — siehe „Sichern“. |
-| `GW_TRUSTED_PROXIES`                                     | nein        | Zahl der Proxys davor (Standard 1). Nur für Drosselung und Logs, nie für eine Berechtigung.                                                             |
-| `GW_SESSION_IDLE_DAYS`                                   | nein        | Nach wie vielen Tagen ohne Nutzung eine Session verfällt (Standard 14).                                                                                 |
-| `GW_PORT`, `GW_COLLAB_PORT`                              | nein        | Ports auf `127.0.0.1`, falls die Standardwerte belegt sind.                                                                                             |
-| `GW_COLLAB_URL`, `GW_COLLAB_INTERNAL_URL`                | nein        | Nur nötig, wenn der Kollaborations-Dienst nicht unter `/collab` auf demselben Host liegt.                                                               |
+| Variable                                                 | Required     | Meaning                                                                                                                                      |
+| -------------------------------------------------------- | ------------ | -------------------------------------------------------------------------------------------------------------------------------------------- |
+| `GW_APP_URL`                                             | yes          | Address the app is reachable at. Sign-in links and the WebAuthn origin are derived from it.                                                  |
+| `GW_HOSTNAME`                                            | for `tls`    | Name in the certificate. Passed through to Caddy.                                                                                            |
+| `GW_MAIL_TRANSPORT`                                      | yes          | `smtp`, `graph`, `console` or `none`.                                                                                                        |
+| `GW_GRAPH_TENANT_ID`                                     | with `graph` | Microsoft 365 tenant, as a domain or a directory id.                                                                                         |
+| `GW_GRAPH_CLIENT_ID`                                     | with `graph` | Application id of the app registration.                                                                                                      |
+| `GW_GRAPH_CLIENT_SECRET` / `GW_GRAPH_CLIENT_SECRET_FILE` | with `graph` | The registration's secret, directly or from a file.                                                                                          |
+| `GW_GRAPH_SENDER`                                        | with `graph` | Mailbox to send from.                                                                                                                        |
+| `GW_VERSION`                                             | yes          | Image tag. Deliberately without a default — a moving tag is not a deployment.                                                                |
+| `SMTP_URL` / `SMTP_URL_FILE`                             | with `smtp`  | Relay URL, directly or from a file.                                                                                                          |
+| `SMTP_FROM`                                              | with `smtp`  | Sender address.                                                                                                                              |
+| `GW_RP_ID`                                               | no           | WebAuthn relying party id. Empty = host from `GW_APP_URL`. Changing it afterwards invalidates every passkey.                                 |
+| `GW_TIMEZONE`                                            | no           | Time zone for dates in the interface (default `Europe/Berlin`). Set explicitly so server and browser format the same instant identically.    |
+| `GW_BOOTSTRAP_ADMIN_EMAIL`                               | no           | Creates an admin on the very first start and prints their link.                                                                              |
+| `GW_OPS_TOKEN`                                           | no           | Makes `/api/health` verbose with the header `x-ops-token` (version, migration state, driver error). Without it the public endpoint is terse. |
+| `GW_SECRET_KEY` / `GW_SECRET_KEY_FILE`                   | no           | Encrypts the mail credentials entered in the interface. Leave empty: the stack generates it. **Belongs in the backup** — see "Backing up".   |
+| `GW_TRUSTED_PROXIES`                                     | no           | Number of proxies in front (default 1). Only for throttling and logs, never for a permission.                                                |
+| `GW_SESSION_IDLE_DAYS`                                   | no           | After how many unused days a session expires (default 14).                                                                                   |
+| `GW_PORT`, `GW_COLLAB_PORT`                              | no           | Ports on `127.0.0.1`, in case the defaults are taken.                                                                                        |
+| `GW_COLLAB_URL`, `GW_COLLAB_INTERNAL_URL`                | no           | Only needed if the collaboration service is not at `/collab` on the same host.                                                               |
 
-## Stolperfallen
+## Things that trip people up
 
-**1. Passkeys brauchen HTTPS.** Außer auf `localhost` funktionieren WebAuthn-Passkeys nicht
-über `http://`. Wer auf `http://192.168.1.50:3000` hostet, kann sie gar nicht nutzen. Deshalb
-sind E-Mail-Anmeldelinks ein vollwertiger eigener Weg und kein Notbehelf — und das
-`tls`-Profil ist der empfohlene Weg, nicht der Anhang.
+**1. Passkeys need HTTPS.** Except on `localhost`, WebAuthn passkeys do not work over
+`http://`. Anybody hosting on `http://192.168.1.50:3000` cannot use them at all. That is why
+e-mail sign-in links are a full route of their own and not a stopgap — and why the `tls`
+profile is the recommended path, not an appendix.
 
-**2. `GW_RP_ID` hängt am Hostnamen.** Eine Hostname-Änderung nach der Passkey-Registrierung
-macht _jeden_ registrierten Passkey ungültig. Vorher festlegen.
+**2. `GW_RP_ID` hangs off the hostname.** Changing the hostname after passkeys have been
+registered invalidates _every_ registered passkey. Decide it beforehand.
 
-**3. `GW_MAIL_TRANSPORT=console` ist eine bewusste Entscheidung.** Ohne HTTPS und ohne SMTP
-kommt man damit trotzdem hinein: Anmeldelinks werden auf stdout gedruckt. Aber wer
-`docker logs` lesen kann — die Docker-Gruppe, ein Log-Aggregator, ein an den Support
-geschickter Auszug —, kann sich für **jede** Adresse einen Link ausstellen lassen. Die
-Anwendung sagt das beim Start noch einmal.
+**3. `GW_MAIL_TRANSPORT=console` is a deliberate decision.** Without HTTPS and without SMTP it
+still gets you in: sign-in links are printed to stdout. But anybody who can read
+`docker logs` — the docker group, a log aggregator, an excerpt sent to support — can have a
+link issued for **any** address. The application says so again at startup.
 
-### Wenn es nicht läuft
+### When it does not run
 
-| Symptom                                              | Ursache                                                                                                                                                                        |
-| ---------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
-| `GW_APP_URL muss gesetzt sein` beim `up`             | Pflichtwert fehlt in der `.env`. Die Meldung nennt ihn.                                                                                                                        |
-| Caddy startet nicht, „GW_HOSTNAME muss gesetzt sein" | `tls`-Profil ohne Hostnamen.                                                                                                                                                   |
-| Zertifikat wird nicht ausgestellt                    | Hostname löst nicht auf diesen Server auf, oder 80/443 sind belegt.                                                                                                            |
-| `/api/health` meldet 503 mit `database`              | Datenbank nicht erreichbar oder noch im Hochlauf.                                                                                                                              |
-| `/api/health` meldet 503 mit `migrations`            | `migrate` ist nicht durchgelaufen: `docker compose logs migrate`.                                                                                                              |
-| `migrate` bricht mit „MIGRATION GESTOPPT" ab         | Die Vorprüfung hat Zeilen gefunden, die einer Migration im Weg stehen. Die Datenbank ist unverändert; die Meldung nennt die Zeilen und die Entscheidung.                       |
-| Kein Anmeldelink im Postfach                         | `GW_MAIL_TRANSPORT` prüfen. Bei `console` steht er in `docker compose logs app`.                                                                                               |
-| Graph meldet `403` oder `invalid_client`             | Die App-Registrierung hat nicht die **Anwendungsberechtigung** `Mail.Send` mit Administratorzustimmung, oder das Geheimnis ist abgelaufen. Die Meldung steht im Log von `app`. |
-| Anmeldung klappt, Passkey-Angebot fehlt              | Kein HTTPS — erwartetes Verhalten, siehe oben.                                                                                                                                 |
-| Editor zeigt dauerhaft „offline"                     | Der Kollaborations-Dienst ist nicht erreichbar oder `GW_APP_URL` passt nicht zur Adresse im Browser: der Socket weist fremde Herkunft ab und schreibt das ins Log.             |
+| Symptom                                         | Cause                                                                                                                                                                   |
+| ----------------------------------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `GW_APP_URL must be set` on `up`                | A required value is missing from the `.env`. The message names it.                                                                                                      |
+| Caddy does not start, "GW_HOSTNAME must be set" | `tls` profile without a hostname.                                                                                                                                       |
+| The certificate is not issued                   | The hostname does not resolve to this server, or 80/443 are taken.                                                                                                      |
+| `/api/health` answers 503 with `database`       | Database unreachable or still starting.                                                                                                                                 |
+| `/api/health` answers 503 with `migrations`     | `migrate` did not come through: `docker compose logs migrate`.                                                                                                          |
+| `migrate` stops with "MIGRATION STOPPED"        | The preflight found rows standing in the way of a migration. The database is unchanged; the message names the rows and the decision.                                    |
+| No sign-in link in the inbox                    | Check `GW_MAIL_TRANSPORT`. With `console` it is in `docker compose logs app`.                                                                                           |
+| Graph answers `403` or `invalid_client`         | The app registration does not have the **application permission** `Mail.Send` with admin consent, or the secret has expired. The message is in `app`'s log.             |
+| Sign-in works, no passkey offered               | No HTTPS — expected behaviour, see above.                                                                                                                               |
+| The editor permanently shows "offline"          | The collaboration service is unreachable, or `GW_APP_URL` does not match the address in the browser: the socket refuses a foreign origin and writes that to the log.    |
+| The interface is in the wrong language          | The language comes from your account (**Settings**), then a cookie, then the browser's `Accept-Language`. A fresh account starts in the language of whoever invited it. |
 
-## Lizenz
+## Licence
 
 AGPL-3.0-only.

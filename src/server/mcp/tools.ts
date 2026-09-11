@@ -281,7 +281,7 @@ export function registerTools(server: McpServer, ctx: Ctx): void {
     },
   )
 
-  // ── Agenda-Schreibvorgänge ──────────────────────────────────────────────
+  // ── Agenda writes ───────────────────────────────────────────────────────
   //
   // Every one of these goes through the collaboration room rather than through
   // the repository, and that is load-bearing rather than tidy. The room's

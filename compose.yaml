@@ -3,50 +3,49 @@
 #
 #   docker compose --profile tls up -d
 #
-# ZWEI DINGE, DIE HIER ZUERST SCHIEFGEHEN:
+# TWO THINGS THAT GO WRONG HERE FIRST:
 #
-# 1. Passkeys brauchen HTTPS. Außer auf localhost verweigern Browser WebAuthn
-#    über http:// -- eine Installation auf http://192.168.1.50:3000 hat gar
-#    keine Passkeys. Deshalb ist das `tls`-Profil der empfohlene Weg und der
-#    E-Mail-Token ein vollwertiger zweiter Weg, keine Notlösung.
+# 1. Passkeys need HTTPS. Except on localhost, browsers refuse WebAuthn over
+#    http:// -- an installation on http://192.168.1.50:3000 has no passkeys at
+#    all. Which is why the `tls` profile is the recommended route and the e-mail
+#    token is a full second route, not a stopgap.
 #
-# 2. GW_RP_ID hängt am Hostnamen. Wird er nach der Passkey-Registrierung
-#    geändert, sind ALLE registrierten Passkeys ungültig. Vorher festlegen.
+# 2. GW_RP_ID hangs off the hostname. Change it after passkeys have been
+#    registered and ALL registered passkeys are invalid. Decide it beforehand.
 #
-# Ohne HTTPS und ohne SMTP kommt man trotzdem hinein:
-#    docker compose exec app node scripts/cli.mjs login-link --email du@example.com
+# Without HTTPS and without SMTP you still get in:
+#    docker compose exec app node scripts/cli.mjs login-link --email you@example.com
 # ══════════════════════════════════════════════════════════════════════════════
 
-# JEDE ROLLE HAT IHR EIGENES PASSWORT, UND KEINES STEHT IN DIESER DATEI.
+# EVERY ROLE HAS ITS OWN PASSWORD, AND NONE OF THEM IS IN THIS FILE.
 #
-# Der `secrets`-Dienst erzeugt beim ersten Start je ein zufälliges Passwort pro
-# Rolle in ein Volume; db, migrate und app lesen sie von dort. Damit steht kein
-# Geheimnis in der .env, in `docker inspect`, in einem Dump oder in einem
-# Logauszug -- aber die Rollentrennung ist zum ersten Mal tatsächlich
-# durchgesetzt.
+# On first start the `secrets` service generates one random password per role
+# into a volume; db, migrate and app read them from there. So no secret sits in
+# the .env, in `docker inspect`, in a dump or in a log excerpt -- and the
+# separation of roles is enforced for the first time.
 #
-# Vorher stand hier Peer-Authentifizierung über einen geteilten Socket, mit der
-# schöneren Zusage "kein Passwort, nirgends". Sie konnte nicht funktionieren:
-# Peer vergleicht den OS-Benutzer des verbindenden PROZESSES mit dem
-# Rollennamen, und der App-Container läuft als `node` (uid 1000), während der
-# Datenbank-Container uid 70 als `postgres` kennt und bei 1000 niemanden. Keine
-# Verbindung über die Containergrenze konnte je gelingen -- und weil der
-# Entrypoint des Postgres-Images ohne Passwort oder `trust` gar nicht erst
-# initialisiert, startete der Stack auf einer frischen Installation nicht.
+# Before this there was peer authentication over a shared socket, with the nicer
+# promise of "no password, anywhere". It could not work: peer compares the OS
+# user of the connecting PROCESS with the role name, and the app container runs
+# as `node` (uid 1000) while the database container knows uid 70 as `postgres`
+# and nobody at 1000. No connection across the container boundary could ever
+# succeed -- and because the Postgres image's entrypoint does not initialise at
+# all without a password or `trust`, the stack did not start on a fresh
+# installation.
 #
-# `trust` wäre der falsche Ausweg gewesen: es lässt jeden Prozess in jedem
-# Container des Netzes als jede Rolle herein, Superuser eingeschlossen. RLS,
-# NOINHERIT und das revoke auf die Identitätstabellen ruhen alle darauf, dass
-# die Anwendung ausschließlich gw_app ist.
+# `trust` would have been the wrong way out: it lets any process in any
+# container on the network in as any role, superuser included. RLS, NOINHERIT
+# and the revoke on the identity tables all rest on the application being
+# exclusively gw_app.
 #
-# Zwei Anker statt einem. Der Web-Container bekommt ausschließlich gw_app --
-# die unprivilegierte Rolle, für die RLS, NOINHERIT und das revoke auf die
-# Identitätstabellen gebaut sind. Gäbe man ihm den Anker mit, stünde die
-# Superuser-Verbindung fertig im einen Container, den ein Angreifer zuerst
-# erreicht, und der ganze Wall wäre eine Zeile wert.
+# Two anchors rather than one. The web container gets gw_app and nothing else --
+# the unprivileged role that RLS, NOINHERIT and the revoke on the identity
+# tables were built for. Hand it the anchor as well and the superuser connection
+# sits ready in the one container an attacker reaches first, and the whole wall
+# is worth one line.
 #
-# `db` veröffentlicht keinen Port. Erreichbar ist die Datenbank nur aus diesem
-# Compose-Netz -- und dort nur mit dem Passwort der jeweiligen Rolle.
+# `db` publishes no port. The database is reachable only from this compose
+# network -- and there only with the password of the role in question.
 x-app-db: &app-db
   DATABASE_URL: postgres://gw_app@db:5432/goodworkshop
   DATABASE_PASSWORD_FILE: /run/db-secrets/gw_app/password
@@ -60,15 +59,15 @@ x-migrate-db: &migrate-db
   ADMIN_DATABASE_PASSWORD_FILE: /run/db-secrets/postgres/password
 
 services:
-  # Läuft einmal und beendet sich. Erzeugt fehlende Rollen-Passwörter in das
-  # Volume, aus dem db, migrate und app sie lesen -- und rührt vorhandene nicht
+  # Runs once and exits. Creates missing role passwords into the volume that db,
+  # migrate and app read them from -- and does not touch existing ones
   # an, damit ein Neustart keine laufende Installation aussperrt.
   secrets:
-    image: ghcr.io/rolealpha/good-workshop:${GW_VERSION:?GW_VERSION muss gesetzt sein -- ein beweglicher Tag ist kein Deployment}
+    image: ghcr.io/rolealpha/good-workshop:${GW_VERSION:?GW_VERSION must be set -- a moving tag is not a deployment}
     restart: 'no'
-    # Als root, und nur dieser eine Dienst: ein frisches Docker-Volume gehört
-    # root, und sonst könnte niemand die erste Datei hineinschreiben. Er tut
-    # genau eine Sache und endet; app und migrate laufen unverändert als `node`.
+    # As root, and only this one service: a fresh Docker volume belongs to root,
+    # and otherwise nobody could write the first file into it. It does exactly
+    # one thing and exits; app and migrate keep running as `node`.
     user: '0:0'
     command: ['node', 'scripts/db-secrets.mjs']
     # Der einzige Ort, an dem alle vier zusammenliegen -- in einem Container,
@@ -86,13 +85,13 @@ services:
     environment:
       POSTGRES_DB: goodworkshop
       POSTGRES_USER: postgres
-      # Aus der Datei, nicht aus der Umgebung: POSTGRES_PASSWORD stünde in
+      # From the file, not from the environment: POSTGRES_PASSWORD would show up in
       # `docker inspect`. Der Entrypoint verlangt eines von beiden, sonst
       # initialisiert er die Datenbank gar nicht erst.
       POSTGRES_PASSWORD_FILE: /run/db-secrets/postgres/password
-      # `peer` für den lokalen Socket IM Container -- das ist der Weg, den
-      # `docker compose exec -u postgres db pg_dump` geht. Über TCP gilt der
-      # Standard scram-sha-256, und ohne veröffentlichten Port ist das Netz
+      # `peer` for the local socket INSIDE the container -- that is the route
+      # `docker compose exec -u postgres db pg_dump` takes. Over TCP the default
+      # scram-sha-256 applies, and without a published port the network
       # dieses Stacks die einzige Herkunft, aus der jemand es versuchen kann.
       POSTGRES_INITDB_ARGS: '--auth-local=peer'
     volumes:
@@ -107,11 +106,11 @@ services:
       secrets:
         condition: service_completed_successfully
 
-  # Läuft einmal und beendet sich. `app` startet erst, wenn das hier
+  # Runs once and exits. `app` starts only once this has
   # erfolgreich durch ist -- ein Rolling Deploy mit ausstehender Migration
   # liefert damit gar nichts erst aus.
   migrate:
-    image: ghcr.io/rolealpha/good-workshop:${GW_VERSION:?GW_VERSION muss gesetzt sein -- ein beweglicher Tag ist kein Deployment}
+    image: ghcr.io/rolealpha/good-workshop:${GW_VERSION:?GW_VERSION must be set -- a moving tag is not a deployment}
     restart: 'no'
     # Vier Schritte, und die Reihenfolge ist die Aussage: preflight liest nur und
     # bricht ab, BEVOR migrate die erste Zeile anfasst. Eine Migration, die an
@@ -126,14 +125,14 @@ services:
              node scripts/provision.mjs"
     environment:
       <<: *migrate-db
-      GW_APP_URL: ${GW_APP_URL:?GW_APP_URL muss gesetzt sein}
+      GW_APP_URL: ${GW_APP_URL:?GW_APP_URL must be set}
       GW_EDITION: ${GW_EDITION:-community}
       # Legt beim allerersten Lauf einen Admin an und druckt einen einmaligen
-      # Anmeldelink auf stdout -- unabhängig von der Mail-Konfiguration.
+      # sign-in link to stdout -- independently of the mail configuration.
       GW_BOOTSTRAP_ADMIN_EMAIL: ${GW_BOOTSTRAP_ADMIN_EMAIL:-}
-    # Drei, weil dieser Dienst drei Rollen braucht: Superuser für die Rollen
-    # selbst, gw_owner für das Schema, gw_app für das Provisioning durch
-    # dieselbe Tür wie die Anwendung. gw_ops bekommt er nicht.
+    # Three, because this service needs three roles: superuser for the roles
+    # themselves, gw_owner for the schema, gw_app for provisioning through the
+    # same door as the application. It does not get gw_ops.
     volumes:
       - secret_postgres:/run/db-secrets/postgres:ro
       - secret_gw_owner:/run/db-secrets/gw_owner:ro
@@ -143,18 +142,18 @@ services:
         condition: service_healthy
 
   app:
-    image: ghcr.io/rolealpha/good-workshop:${GW_VERSION:?GW_VERSION muss gesetzt sein -- ein beweglicher Tag ist kein Deployment}
+    image: ghcr.io/rolealpha/good-workshop:${GW_VERSION:?GW_VERSION must be set -- a moving tag is not a deployment}
     restart: unless-stopped
     environment:
       <<: *app-db
-      GW_APP_URL: ${GW_APP_URL:?GW_APP_URL muss gesetzt sein}
+      GW_APP_URL: ${GW_APP_URL:?GW_APP_URL must be set}
       GW_RP_ID: ${GW_RP_ID:-}
-      # Ohne Default. `console` druckt vollständige, gültige Anmeldelinks nach
-      # stdout -- eine richtige Entscheidung für eine Installation ohne Relay,
+      # No default. `console` prints complete, valid sign-in links to stdout --
+      # the right decision for an installation with no relay,
       # und eine, die man trifft, statt sie zu bekommen, weil man nichts gesagt
-      # hat. Wer `docker logs` lesen kann, konnte sich sonst für jede beliebige
+      # has. Anybody who can read `docker logs` could otherwise have a link
       # Adresse einen Link ausstellen lassen und abholen.
-      GW_MAIL_TRANSPORT: ${GW_MAIL_TRANSPORT:?GW_MAIL_TRANSPORT muss gesetzt sein -- smtp, graph, console oder none}
+      GW_MAIL_TRANSPORT: ${GW_MAIL_TRANSPORT:?GW_MAIL_TRANSPORT must be set -- smtp, graph, console or none}
       # Entweder die URL direkt -- oder, besser, SMTP_URL_FILE auf ein Docker
       # Secret. Eine Environment-Variable mit Passwort steht in `docker
       # inspect`, in /proc/<pid>/environ und in jedem Core-Dump; ein Secret
@@ -164,7 +163,7 @@ services:
       SMTP_FROM: ${SMTP_FROM:-}
       # Microsoft Graph statt SMTP. Viele Microsoft-365-Mandanten haben SMTP
       # AUTH abgeschaltet -- dort ist das nicht die bequemere, sondern die
-      # einzige Möglichkeit. Das Geheimnis besser als GW_GRAPH_CLIENT_SECRET_FILE
+      # only possibility. The secret is better given as GW_GRAPH_CLIENT_SECRET_FILE
       # aus einer Datei, aus demselben Grund wie bei SMTP_URL_FILE.
       GW_GRAPH_TENANT_ID: ${GW_GRAPH_TENANT_ID:-}
       GW_GRAPH_CLIENT_ID: ${GW_GRAPH_CLIENT_ID:-}
@@ -173,37 +172,41 @@ services:
       GW_GRAPH_SENDER: ${GW_GRAPH_SENDER:-}
       GW_EDITION: ${GW_EDITION:-community}
       # Der Tag, der laut .env laufen soll -- derselbe Wert, der oben das Image
-      # auswählt. Ohne diese Zeile meldet /api/health den ARG-Wert aus dem
+      # picks. Without this line /api/health reports the ARG value from the
       # Dockerfile (`dev` bei einem selbst gebauten Image), und die eine Frage,
-      # für die der Endpunkt existiert -- welcher Stand läuft hier -- wird
+      # the endpoint exists for -- which revision is running here -- becomes
       # falsch beantwortet.
       GW_VERSION: ${GW_VERSION}
       GW_COLLAB_PORT: '3001'
       # Standen in .env.example und in der README, erreichten den Container aber
       # nicht: eine dokumentierte Variable, die nirgends ankommt, ist eine
-      # Anleitung, die ins Leere führt. `check-docs.mjs` prüft das jetzt.
-      # Entschlüsselt die in der Oberfläche hinterlegten Zugangsdaten. Ohne
-      # Wert wird die Datei aus dem Volume benutzt; wer den Schlüssel lieber
+      # instructions that lead nowhere. `check-docs.mjs` checks that now.
+      # Decrypts the credentials entered in the interface. Without a value the
+      # file from the volume is used; anybody who would rather keep the key
       # selbst verwaltet, setzt GW_SECRET_KEY in der .env.
       GW_SECRET_KEY: ${GW_SECRET_KEY:-}
       GW_SECRET_KEY_FILE: ${GW_SECRET_KEY_FILE:-/run/db-secrets/app/secret-key}
       GW_COLLAB_URL: ${GW_COLLAB_URL:-}
       GW_COLLAB_INTERNAL_URL: ${GW_COLLAB_INTERNAL_URL:-}
       # Ohne diesen Wert antwortet /api/health nur mit "ok" bzw. "unhealthy"
-      # und welche Prüfung gescheitert ist -- der Endpunkt steht im Internet.
-      # Wer ihn setzt, bekommt mit `x-ops-token` zusätzlich Version,
+      # and which check failed -- the endpoint faces the internet. Set it and
+      # `x-ops-token` additionally returns the version,
       # Migrationsstand und den Treiberfehler im Klartext.
       GW_OPS_TOKEN: ${GW_OPS_TOKEN:-}
-      # Wie viele Proxys vor der Anwendung stehen. Nur für Drosselung und Logs.
+      # How many proxies stand in front of the application. Throttling and logs only.
       GW_TRUSTED_PROXIES: ${GW_TRUSTED_PROXIES:-1}
       GW_SESSION_IDLE_DAYS: ${GW_SESSION_IDLE_DAYS:-14}
+      # Time zone for dates in the interface. Explicit rather than inferred:
+      # without it the server formats in the CONTAINER's zone and the browser in
+      # the visitor's, so the same timestamp renders two ways on one page.
+      GW_TIMEZONE: ${GW_TIMEZONE:-Europe/Berlin}
     # EINS. Der Web-Container kennt das Passwort von gw_app und von keiner
     # anderen Rolle -- das ist der "zwei Anker"-Punkt von oben, in Dateiform.
-    # Läge hier das Superuser-Geheimnis mit, wäre der ganze Wall eine Zeile wert.
+    # Were the superuser secret here too, the whole wall would be worth one line.
     #
-    # Dazu der Anwendungsschlüssel: er entschlüsselt die Zugangsdaten, die eine
-    # Administratorin in der Oberfläche einträgt. Er gehört ins Backup -- anders
-    # als die Rollen-Passwörter, die jede Installation neu erzeugen kann.
+    # Plus the application key: it decrypts the credentials an administrator
+    # enters in the interface. It belongs in the backup -- unlike the role
+    # passwords, which every installation can generate afresh.
     volumes:
       - secret_gw_app:/run/db-secrets/gw_app:ro
       - secret_app:/run/db-secrets/app:ro
@@ -212,7 +215,7 @@ services:
     #
     # Zwei Ports: die Anwendung, und der Kollaborations-Dienst. Der zweite
     # existiert, weil Next aus einem Route-Handler kein WebSocket-Upgrade
-    # bedienen kann -- er läuft aber im selben Container, aus demselben Image.
+    # from a route handler -- but it runs in the same container, from the same image.
     ports:
       - '127.0.0.1:${GW_PORT:-3000}:3000'
       - '127.0.0.1:${GW_COLLAB_PORT:-3001}:3001'
@@ -229,15 +232,16 @@ services:
     # gemounteten Files, keine Compose-Interpolation -- und Compose reicht .env
     # nicht von sich aus in Container. Ohne diese Zeile hat der Site-Block keine
     # Adresse, der Proxy kommt nicht hoch, und weil `app` nur an 127.0.0.1
-    # hängt, ist die Installation von außen unerreichbar. Der nächste Griff des
+    # depends on it, the installation is unreachable from outside. The next move
     # Betreibers ist dann HTTP ohne TLS.
     environment:
       GW_HOSTNAME: ${GW_HOSTNAME:-}
-    # Geprüft hier statt per `${GW_HOSTNAME:?}` oben: Compose interpoliert die
+    # Checked here rather than with `${GW_HOSTNAME:?}` above: Compose interpolates
     # GANZE Datei beim Laden, auch Dienste, deren Profil gar nicht aktiv ist.
-    # Ein Pflichtfeld an dieser Stelle hätte also jedes `docker compose up`
-    # ohne tls-Profil abgebrochen -- und ohne HTTPS starten zu können, ist ein
-    # ausdrücklich unterstützter Weg. So scheitert es laut, aber nur für die,
+    # A required field at this spot would therefore have broken every
+    # `docker compose up` without the tls profile -- and being able to start
+    # without HTTPS is an explicitly supported route. This way it fails loudly,
+    # but only for those
     # die den Proxy wirklich benutzen.
     command: >-
       sh -c 'test -n "$$GW_HOSTNAME" || {

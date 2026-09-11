@@ -228,10 +228,10 @@ async function bootstrapAdmin(client) {
   const secret = randomBytes(32).toString('base64url')
   const tokenHash = createHash('sha256').update(secret).digest('hex')
   await client.query(
-    // Eine Stunde, nicht 24. Der Link wird beim allerersten Start gedruckt und
-    // von einer Betreiberin gelesen, die in dem Moment vor den Logs sitzt --
-    // ein Tag Gültigkeit war ein Tag, an dem er in jedem Logauszug, jedem
-    // Backup und jeder Support-Anlage ein vollwertiges Admin-Konto ist.
+    // One hour, not 24. The link is printed on the very first start and read by
+    // an operator who is sitting in front of the logs at that moment -- a day of
+    // validity was a day in which it is a full admin account in every log
+    // excerpt, every backup and every support attachment.
     `insert into email_token (id, purpose, email, identity_id, tenant_id, token_hash, expires_at)
      values ($1, 'login', $2, $3, $4, $5, now() + interval '1 hour')`,
     [randomUUID(), email, identityId, DEFAULT_TENANT_ID, tokenHash],
@@ -241,7 +241,7 @@ async function bootstrapAdmin(client) {
   const base = process.env.GW_APP_URL ?? 'http://localhost:3000'
   console.log('')
   console.log('  Admin angelegt: ' + email)
-  console.log('  Einmaliger Anmeldelink (eine Stunde gültig):')
+  console.log('  One-time sign-in link (valid for one hour):')
   console.log('')
   console.log('    ' + new URL('/verify?token=' + secret, base))
   console.log('')

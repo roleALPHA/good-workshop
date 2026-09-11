@@ -20,7 +20,7 @@ import type { Locale } from './config'
  *    file by scripts/build-collab.mjs. Going through next-intl pulled use-intl,
  *    intl-messageformat and a hundred React references into a process whose
  *    entire job is relaying WebSocket frames: 1.0 MB became 1.2 MB, and the
- *    room took measurably longer to come up. docs/architektur.md is explicit
+ *    room took measurably longer to come up. docs/architecture.md is explicit
  *    that this is a separate process in the same image; it should carry what it
  *    uses and nothing else.
  */

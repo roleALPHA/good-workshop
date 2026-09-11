@@ -1,13 +1,14 @@
 ---
 name: goodworkshop-testing
-description: 'Teststrategie für GoodWorkshop (Testpyramide: viele Unit- und Komponententests, wenige E2E). Nutze diesen Skill, wenn Tests geschrieben oder geändert werden, wenn Testlücken bewertet werden, oder wenn eine neue Domänentabelle oder reine Funktion entsteht.'
+description: 'Test strategy for GoodWorkshop: the test pyramid, cross-tenant tests for every domain table, catalog parity, role-based selectors, the flake policy. Use this skill when writing or changing tests, when assessing test gaps, or when a new domain table or pure function appears.'
 ---
 
 # goodworkshop-testing
 
-**Der verbindliche Inhalt steht in [`docs/konventionen-tests.md`](../../../docs/konventionen-tests.md).** Lies diese Datei,
-bevor du an den genannten Stellen etwas änderst.
+**The binding content is in
+[`docs/testing-conventions.md`](../../../docs/testing-conventions.md).** Read that file before
+writing or changing tests.
 
-Sie liegt bewusst dort und nicht hier: die Regeln gelten für jeden Beitrag, nicht nur
-für den, der mit einem bestimmten Werkzeug arbeitet — und `.Codex/` ist nicht Teil des
-Repositorys. Eine zweite Kopie hier würde auseinanderdriften.
+It lives there rather than here on purpose: the rules apply to every contribution, not only to
+somebody working with a particular tool — and `.Codex/` is not part of the repository. A second
+copy here would drift.

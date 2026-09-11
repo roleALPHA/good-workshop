@@ -509,7 +509,7 @@ function LiveRegion({ message }: { message: string }) {
  *
  * Takes a translator rather than reaching for a hook: this is a plain function
  * called from inside a drag callback, and the sentence it builds is read aloud
- * by a screen reader in the facilitator's own language. docs/konventionen-ui.md
+ * by a screen reader in the facilitator's own language. docs/ui-conventions.md
  * is explicit that these announcements name the domain -- "Icebreaker on
  * position 3 in section Warm-up" -- and not coordinates, which is why the
  * pieces are separate messages rather than one string with a slot.

@@ -133,7 +133,7 @@
   /* Category tokens. Equal OKLCH lightness across hues is what keeps the
    legend from looking amateurish -- the same swatches in sRGB hex have
    wildly unequal perceived brightness. A module type stores a token
-   NAME ("rose"), never a hex value. See docs/konventionen-ui.md. */
+   NAME ("rose"), never a hex value. See docs/ui-conventions.md. */
   /* Presence. Deliberately its own token and its own shape language: a
    category colour means "this is a break", and a person is not a category.
    The hue is set per peer from the member id; lightness and chroma are fixed

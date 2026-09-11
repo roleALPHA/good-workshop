@@ -95,6 +95,6 @@ for (const role of [...ROLES, APP_KEY]) {
 
 console.log(
   created === 0
-    ? `Geheimnisse vorhanden (${ROLES.length} Rollen und der Anwendungsschlüssel).`
+    ? `Secrets present (${ROLES.length} roles and the application key).`
     : `${created} Geheimnis/-se erzeugt.`,
 )

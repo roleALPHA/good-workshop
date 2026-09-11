@@ -1,11 +1,11 @@
-# Postgres für lokale Entwicklung und Tests.
+# Postgres for local development and tests.
 #
-# Kein Passwort, nirgends: `trust` auf einem Port, der ausschließlich an
-# 127.0.0.1 gebunden ist. Damit gibt es lokal kein Geheimnis, das in einer
-# .env landen, in ein Log rutschen oder in ein Backup wandern könnte.
+# No password, anywhere: `trust` on a port bound exclusively to 127.0.0.1. So
+# locally there is no secret that could end up in a .env, slip into a log or
+# travel into a backup.
 #
-# In Produktion wird stattdessen der Unix-Socket mit Peer-Authentifizierung
-# benutzt (siehe compose.yaml) -- dort wäre `trust` über TCP fahrlässig.
+# In production the Unix socket with peer authentication is used instead (see
+# compose.yaml) -- `trust` over TCP would be negligent there.
 services:
   db:
     image: postgres:17-alpine
@@ -24,11 +24,10 @@ services:
       timeout: 3s
       retries: 20
 
-  # Fängt Anmeldelinks ab, solange kein echter Mailversand eingerichtet ist.
-  # Steht hier statt in compose.yaml: eine Weboberfläche ohne jede
-  # Authentifizierung, die alle Anmeldelinks zeigt, hat in der Datei für den
-  # Produktivbetrieb nichts verloren -- auch nicht hinter einem Profil, das
-  # jemand einmal versehentlich mitgibt.
+  # Catches sign-in links while no real mail delivery is configured. Here rather
+  # than in compose.yaml: a web interface with no authentication at all that
+  # shows every sign-in link has no business in the file for production use --
+  # not even behind a profile somebody passes by accident one day.
   mailpit:
     image: axllent/mailpit
     restart: unless-stopped

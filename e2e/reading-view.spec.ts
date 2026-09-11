@@ -5,7 +5,7 @@ import { STORAGE_STATE } from './paths'
 /**
  * The phone reading view is not a degraded desktop table -- it is the screen a
  * facilitator actually uses on the day, standing in the room. These assertions
- * are the mechanical half of the checklist in docs/konventionen-ui.md.
+ * are the mechanical half of the checklist in docs/ui-conventions.md.
  *
  * Every one of them is about layout -- overflow, font size, cards instead of a
  * grid, a pinned section header -- so they stayed here when the derivations

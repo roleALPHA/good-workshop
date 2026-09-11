@@ -30,9 +30,8 @@ const SYNC_STEP_2 = 1
  * The collaboration service is not answering.
  *
  * A DomainError, so it reaches the caller as itself rather than as "the call
- * failed" -- docs/architektur.md promises exactly that ("schlägt der Aufruf mit
- * einer benannten Fehlermeldung fehl"), and until DomainError set `expose` the
- * promise was not kept.
+ * failed" -- docs/architecture.md promises exactly that ("the call fails with a
+ * named error"), and until DomainError set `expose` the promise was not kept.
  *
  * `detail` stays on the instance and out of the message. It names the host and
  * port that could not be reached, which is precisely what publicToolError

@@ -23,7 +23,7 @@ const SAMPLE_LIMIT = 10
 /**
  * The checks, one per constraint that a generated migration cannot enforce on
  * its own. A new migration with a data precondition means a new entry here --
- * see docs/installation-und-upgrade.md.
+ * see docs/installation-and-upgrade.md.
  *
  * `relevant` keeps a check silent once its constraint exists: on a database
  * that already carries it, the constraint itself is the guarantee and the query
@@ -39,11 +39,11 @@ const CHECKS = [
             where d.workshop_id is distinct from m.workshop_id
             limit ${SAMPLE_LIMIT}`,
     explain: [
-      'Die neue Composite-FK verlangt, dass ein Modul auf einem Tag DESSELBEN Workshops liegt.',
-      'Zeilen, bei denen das nicht stimmt, konnte der IDOR-Befund erzeugen: ein `moveModule` auf',
-      'einen fremden Tag. Sie zeigen auf einen Workshop, zu dem sie inhaltlich nie gehörten.',
-      'Zu entscheiden ist, ob der Block zum Workshop des Tages gehört (dann `workshop_id`',
-      'angleichen) oder auf einen eigenen Tag zurück (dann `day_id` setzen).',
+      'The new composite FK requires a block to sit on a day of the SAME workshop.',
+      'Rows where that is not true could be produced by the IDOR finding: a `moveModule` onto',
+      'a day that belongs to someone else. They point at a workshop they never belonged to.',
+      'The decision: does the block belong to the workshop of its day (then align',
+      '`workshop_id`) or back onto a day of its own (then set `day_id`)?',
     ],
     inspect: `select m.id, m.title, m.workshop_id, d.id as day_id, d.workshop_id as day_workshop
   from module m join workshop_day d on d.id = m.day_id
@@ -58,9 +58,9 @@ const CHECKS = [
             where d.workshop_id is distinct from k.workshop_id
             limit ${SAMPLE_LIMIT}`,
     explain: [
-      'Dasselbe für Cluster: die Gruppe liegt auf einem Tag, der zu einem anderen Workshop',
-      'gehört. Mit den enthaltenen Modulen zusammen entscheiden -- ein Cluster ohne seine',
-      'Module zu verschieben lässt beide an verschiedenen Orten zurück.',
+      'The same for clusters: the group sits on a day that belongs to a different workshop.',
+      'Decide it together with the blocks inside it -- moving a cluster without its blocks',
+      'leaves the two in different places.',
     ],
     inspect: `select k.id, k.title, k.workshop_id, d.id as day_id, d.workshop_id as day_workshop
   from cluster k join workshop_day d on d.id = k.day_id
@@ -87,10 +87,10 @@ const CHECKS = [
 const url = process.env.ADMIN_DATABASE_URL
 if (!url) {
   fail(
-    'ADMIN_DATABASE_URL fehlt -- die Vorprüfung braucht eine Verbindung, die RLS nicht filtert.',
+    'ADMIN_DATABASE_URL is missing -- the preflight needs a connection RLS does not filter.',
     'Jede Policy dieses Schemas gilt `to gw_app`, und alle Tabellen stehen unter FORCE ROW LEVEL',
-    'SECURITY. Über die Migrationsrolle gelesen wäre jede Tabelle leer und diese Prüfung damit',
-    'eine Zusicherung, die nichts geprüft hat. Lieber laut abbrechen als still durchwinken.',
+    'SECURITY. Read through the migration role every table would come back empty, making this',
+    'a guarantee that checked nothing. Better to stop loudly than to wave it through quietly.',
   )
 }
 
@@ -101,7 +101,7 @@ try {
   await assertSeesEveryRow(client)
 
   if (!(await hasTable(client, 'workshop_day'))) {
-    console.log('Vorprüfung: leere Datenbank, nichts zu prüfen.')
+    console.log('Preflight: empty database, nothing to check.')
   } else {
     const blocking = []
     for (const check of CHECKS) {
@@ -111,7 +111,7 @@ try {
     }
 
     if (blocking.length === 0) {
-      console.log('Vorprüfung bestanden: keine Zeilen stehen den ausstehenden Migrationen im Weg.')
+      console.log('Preflight passed: no rows stand in the way of the pending migrations.')
     } else {
       report(blocking)
       process.exitCode = 1
@@ -123,25 +123,25 @@ try {
 
 function report(blocking) {
   console.error('')
-  console.error('  MIGRATION GESTOPPT -- vor der ersten Änderung, nicht mittendrin.')
+  console.error('  MIGRATION STOPPED -- before the first change, not halfway through.')
   console.error('')
 
   for (const { check, rows } of blocking) {
     const more = rows.length === SAMPLE_LIMIT ? '+' : ''
-    console.error(`  ${check.id}  (Migration ${check.migration})`)
+    console.error(`  ${check.id}  (migration ${check.migration})`)
     console.error('')
     for (const line of check.explain) console.error(`    ${line}`)
     console.error('')
-    console.error(`    Betroffen: ${rows.length}${more} Zeile(n)`)
+    console.error(`    Affected: ${rows.length}${more} row(s)`)
     for (const row of rows) console.error(`      ${JSON.stringify(row)}`)
     console.error('')
-    console.error('    Zum Nachsehen:')
+    console.error('    To look for yourself:')
     for (const line of check.inspect.trim().split('\n')) console.error(`      ${line}`)
     console.error('')
   }
 
-  console.error('  Die Datenbank ist unverändert. Die Entscheidung, wohin diese Zeilen gehören,')
-  console.error('  ist eine inhaltliche -- dieses Skript rät sie nicht.')
+  console.error('  The database is unchanged. Where these rows belong is a question about')
+  console.error('  content -- this script does not guess it.')
   console.error('')
 }
 
@@ -165,7 +165,7 @@ async function assertSeesEveryRow(client) {
   fail(
     `ADMIN_DATABASE_URL verbindet als "${role}" -- diese Rolle unterliegt RLS.`,
     'Unter FORCE ROW LEVEL SECURITY liest sie aus jeder Tabelle dieses Schemas eine leere Menge,',
-    'und die Vorprüfung würde eine kaputte Datenbank für sauber erklären. Erwartet wird die',
+    'and the preflight would declare a broken database clean. What is expected is the',
     'Superuser-Verbindung, die auch db-bootstrap benutzt.',
   )
 }

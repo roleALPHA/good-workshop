@@ -27,7 +27,7 @@ test('refuses to hand out the installation without the setup key', async ({ page
   await page.getByLabel('Einrichtungsschlüssel').fill('geraten')
   await page.getByRole('button', { name: 'Installation einrichten' }).click()
 
-  // Nicht über die Rolle: Nexts Route-Announcer ist ebenfalls role="alert",
-  // und zwei Treffer sind im strict mode ein Fehlschlag statt einer Aussage.
+  // Not by role: Next's route announcer is also role="alert", and two matches
+  // are a failure in strict mode rather than a statement.
   await expect(page.getByText('Der Einrichtungsschlüssel stimmt nicht.')).toBeVisible()
 })

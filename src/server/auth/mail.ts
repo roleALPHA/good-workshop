@@ -252,7 +252,7 @@ export function deliversToRecipient(config: MailConfig): boolean {
  * happened to trigger the send, and there are sends with no request at all.
  *
  * The signature line is NOT translated and not interpolated from tenant data --
- * docs/konventionen-ui.md says so about the footer, and a mail is the same
+ * docs/ui-conventions.md says so about the footer, and a mail is the same
  * surface reaching the same person.
  */
 export function magicLinkMail(to: string, link: string, locale: Locale): Mail {
