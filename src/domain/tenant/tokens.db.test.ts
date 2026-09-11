@@ -81,7 +81,16 @@ describe('createToken', () => {
       row.id,
     ])
     // A stolen dump must yield no working tokens.
-    expect(stored.rows[0].token_hash).not.toContain(token.split('_')[2])
+    //
+    // The secret is everything after the second underscore, not split('_')[2]:
+    // it is base64url, whose alphabet contains '_', so taking one segment
+    // silently shortens the needle. When the secret happened to start with a
+    // single character before an underscore, this asserted that a hex digest
+    // does not contain the letter "d" -- and failed, having proved nothing
+    // either way for a long time before that.
+    const secret = token.split('_').slice(2).join('_')
+    expect(secret.length).toBeGreaterThan(20)
+    expect(stored.rows[0].token_hash).not.toContain(secret)
   })
 
   it('refuses a token with no scopes, which could do nothing anyway', async () => {

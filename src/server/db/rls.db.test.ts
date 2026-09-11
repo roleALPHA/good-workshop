@@ -185,6 +185,43 @@ describe('tenant isolation', () => {
     expect(rows[0].name).toBe('Test')
   })
 
+  it('lets a writer create the tenant it is about to act as', async () => {
+    // The chicken-and-egg the tenant policy creates, and the one this suite
+    // could not see: every test here makes its tenants through the ops
+    // connection, which bypasses RLS -- so nothing exercised the path the
+    // provisioner actually takes. CI found it instead, at `pnpm db:provision`
+    // on a fresh database, which is every first install.
+    //
+    // Creating a tenant means acting as the tenant being created. That is
+    // exactly right, and it has to be written down somewhere that fails.
+    const fresh = { id: randomUUID(), memberId: randomUUID(), identityId: randomUUID() }
+
+    await withTenant(actor(fresh), (tx) =>
+      tx.execute(
+        sql`insert into tenant (id, slug, name)
+            values (${fresh.id}, ${`t-${fresh.id.slice(0, 8)}`}, 'Frisch')`,
+      ),
+    )
+
+    const { rows } = await ops.query('select name from tenant where id = $1', [fresh.id])
+    expect(rows[0]?.name).toBe('Frisch')
+
+    await ops.query('delete from tenant where id = $1', [fresh.id])
+  })
+
+  it('still refuses to create a tenant it is not acting as', async () => {
+    // The other half. If the rule above were relaxed to "any insert goes", the
+    // policy would be decorative: one call, and a writer owns a second tenant.
+    await expect(
+      withTenant(actor(tenantA), (tx) =>
+        tx.execute(
+          sql`insert into tenant (id, slug, name)
+              values (${randomUUID()}, 'untergeschoben', 'Fremd')`,
+        ),
+      ),
+    ).rejects.toThrow()
+  })
+
   it('keeps the identity tables out of reach of the application role', async () => {
     const asApp = new pg.Client({ connectionString: process.env.DATABASE_URL })
     await asApp.connect()

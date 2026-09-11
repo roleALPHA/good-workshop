@@ -31,6 +31,41 @@ const builtins = JSON.parse(
   await readFile(join(root, 'src/domain/moduleType/builtins.json'), 'utf8'),
 )
 
+/**
+ * The tenants to provision.
+ *
+ * Community Edition has exactly one and its id is fixed, so nothing needs to
+ * be enumerated -- which keeps the shipped path entirely on gw_app with no
+ * bypass anywhere, as the note above insists.
+ *
+ * Cloud genuinely has to ask, and `tenant` is now under RLS: as gw_app the
+ * question "which tenants exist" answers "the one you already are". The list
+ * is therefore read through the operator connection -- a read of ids, by the
+ * operator running this script, while every write below still goes through
+ * gw_app with the context set. That is a much smaller thing than provisioning
+ * with a bypass role, and it is the only step that needs it.
+ */
+async function activeTenants() {
+  if (process.env.GW_EDITION !== 'cloud') return [{ id: DEFAULT_TENANT_ID }]
+
+  const operatorUrl = process.env.OPS_DATABASE_URL ?? process.env.ADMIN_DATABASE_URL
+  if (!operatorUrl) {
+    throw new Error(
+      'GW_EDITION=cloud needs OPS_DATABASE_URL (or ADMIN_DATABASE_URL) to enumerate tenants: ' +
+        'under RLS the application role can only ever see the tenant it is currently acting as.',
+    )
+  }
+
+  const operator = new pg.Client({ connectionString: operatorUrl })
+  await operator.connect()
+  try {
+    const { rows } = await operator.query(`select id from tenant where status = 'active'`)
+    return rows
+  } finally {
+    await operator.end()
+  }
+}
+
 const client = new pg.Client({ connectionString: url })
 await client.connect()
 
@@ -38,6 +73,13 @@ try {
   await client.query('begin')
 
   if (process.env.GW_EDITION !== 'cloud') {
+    // The context is set BEFORE the insert, not after. `tenant` is under RLS
+    // like everything else now, and its policy compares the row's own id
+    // against app.current_tenant() -- so creating a tenant means acting as the
+    // tenant being created. Without this the insert is refused by its own
+    // WITH CHECK, which is the correct behaviour for an application writer and
+    // merely the wrong moment for this one.
+    await client.query(`select set_config('app.tenant_id', $1, true)`, [DEFAULT_TENANT_ID])
     await client.query(
       `insert into tenant (id, slug, name) values ($1, 'default', 'GoodWorkshop')
        on conflict (id) do nothing`,
@@ -45,7 +87,7 @@ try {
     )
   }
 
-  const { rows: tenants } = await client.query(`select id from tenant where status = 'active'`)
+  const tenants = await activeTenants()
   let created = 0
   let updated = 0
 
