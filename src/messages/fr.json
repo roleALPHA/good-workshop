@@ -1,4 +1,194 @@
 {
+  "admin": {
+    "branding": {
+      "title": "Identité visuelle",
+      "intro": "Le logo et la couleur d'accent de cette installation. Le pied de page reste tel quel.",
+      "logo": "Logo",
+      "logoHint": "SVG, PNG ou WebP, {max} Ko au maximum. Apparaît dans l'en-tête et sur la page de connexion.",
+      "logoTooLarge": "{max} Ko au maximum.",
+      "currentLogo": "Logo actuel",
+      "logoFile": "Fichier du logo",
+      "replaceLogo": "Remplacer le logo",
+      "uploadLogo": "Téléverser un logo",
+      "removeLogo": "Supprimer",
+      "accent": "Couleur d'accent",
+      "accentHint": "Une seule valeur de couleur. Le serveur en construit les nuances claires et sombres et vérifie le contraste au passage — une couleur qui rendrait l'interface illisible est refusée. Les couleurs des types de blocs ne bougent pas : elles veulent dire quelque chose.",
+      "hex": "Valeur hexadécimale",
+      "brandName": "Nom (si aucun logo n'est défini)",
+      "saved": "Enregistré."
+    },
+    "members": {
+      "title": "Membres",
+      "invite": "Inviter un membre",
+      "email": "Adresse e-mail",
+      "emailPlaceholder": "collegue@example.com",
+      "role": "Rôle",
+      "roleOf": "Rôle de {email}",
+      "inviting": "Invitation …",
+      "inviteAction": "Inviter",
+      "enable": "Réactiver",
+      "disable": "Désactiver",
+      "alreadyMember": "{email} était déjà membre.",
+      "invited": "{email} a été invitée.",
+      "linkOnItsWay": "Le lien de connexion est en route.",
+      "noMailSetUp": "Aucun envoi d'e-mails n'est configuré. Transmets ce lien en personne — qui l'ouvre est connecté en tant que {email}."
+    },
+    "mail": {
+      "title": "Envoi d'e-mails",
+      "intro": "Les liens de connexion et les invitations passent par là. Sans envoi, seule une personne qui a déjà un passkey peut entrer.",
+      "fromEnvironmentNotice": "Certaines valeurs viennent de l'environnement du serveur et ne peuvent pas être modifiées ici. Elles se trouvent dans le <code>.env</code> de l'installation.",
+      "fromEnvironment": "depuis l'environnement",
+      "transportLegend": "Comment les e-mails doivent-ils être envoyés ?",
+      "transport": {
+        "graph": "Microsoft Graph",
+        "graphHint": "Pour Microsoft 365 sans SMTP AUTH.",
+        "smtp": "SMTP",
+        "smtpHint": "Un relais de messagerie classique.",
+        "console": "Écrire dans le journal du serveur",
+        "consoleHint": "Pas d'envoi. Les liens de connexion atterrissent dans le journal — qui peut le lire entre dans n'importe quel compte.",
+        "none": "Pas d'envoi",
+        "noneHint": "Les liens de connexion ne s'obtiennent qu'en ligne de commande."
+      },
+      "graphIntro": "Il faut un enregistrement d'application dans Entra ID avec l'<b>autorisation d'application</b> <code>Mail.Send</code> et le consentement administrateur.",
+      "graphTenantId": "ID d'annuaire ou de locataire",
+      "graphClientId": "ID d'application",
+      "graphClientSecret": "Secret client",
+      "graphSender": "Boîte d'expédition",
+      "smtpUrl": "URL SMTP",
+      "smtpUrlHint": "Par exemple smtps://utilisateur:motdepasse@relay.example.com:465",
+      "smtpFrom": "Adresse d'expéditeur",
+      "secretStored": "enregistré — laisse vide pour le conserver",
+      "saved": "Enregistré.",
+      "testTitle": "Envoyer un message de test",
+      "testIntro": "Le fonctionnement d'un relais se voit à l'envoi. Sinon, le premier essai est le lien de connexion de quelqu'un — et une panne ressemble alors à un compte cassé.",
+      "testTo": "À",
+      "testSend": "Envoyer",
+      "testSent": "Envoyé à {email}. Si rien n'arrive : dossier indésirables."
+    }
+  },
+  "agenda": {
+    "columns": {
+      "time": "Heure",
+      "titleAndDescription": "Titre et description",
+      "info": "Infos complémentaires"
+    },
+    "regionLabel": "Programme {title}",
+    "end": "Fin",
+    "overPlan": "{duration} de dépassement",
+    "content": "{duration} de contenu",
+    "breaks": "{duration} de pauses",
+    "blockCount": "{count, plural, one {# bloc} many {# blocs} other {# blocs}}",
+    "addBlock": "Ajouter un bloc",
+    "searchType": "Rechercher un type de bloc",
+    "filterPlaceholder": "Tape pour filtrer …",
+    "noTypeMatches": "Aucun type de bloc ne correspond.",
+    "moreFields": "Plus de champs",
+    "fewerFields": "Moins",
+    "park": "Mettre de côté",
+    "parkLabel": "Mettre {title} de côté",
+    "parkHint": "Le retirer du déroulé sans le supprimer",
+    "parkedHeading": "De côté ({count})",
+    "parkedHint": "Fait partie de la journée, ne compte pas dans le temps.",
+    "unpark": "Remettre dans le déroulé",
+    "unparkLabel": "Remettre {title} dans le déroulé",
+    "overlap": "Chevauche le bloc précédent de {duration}",
+    "addDayNote": "Ajouter une note sur la journée",
+    "dayNote": "Note sur la journée",
+    "dayNotePlaceholder": "Salle, accès, qui apporte quoi …",
+    "addTag": "Ajouter un tag",
+    "removeTag": "Supprimer le tag {name}",
+    "tagPlaceholder": "+ tag",
+    "presence": "Autres personnes sur cette journée",
+    "connecting": "Connexion …",
+    "saving": "Enregistrement …",
+    "offline": "Pas de connexion. Tes modifications seront transmises dès qu'elle revient.",
+    "drag": {
+      "atDayLevel": "au niveau de la journée",
+      "cancelled": "Déplacement annulé.",
+      "dropped": "{title} déposé {where}, position {position}.",
+      "droppedWithTime": "{title} déposé {where}, position {position}, nouvelle heure de début {time}.",
+      "inSection": "dans la section {title}",
+      "landed": "{title} se pose {where}, position {position}.",
+      "landedWithTime": "{title} se pose {where}, position {position}, nouvelle heure de début {time}.",
+      "picked": "{title} saisi."
+    },
+    "field": {
+      "privateNote": "pour toi seulement",
+      "commaSeparated": "Séparer par des virgules",
+      "richTextReadOnly": "Contient de la mise en forme. L'édition arrivera avec l'éditeur de texte — d'ici là, le contenu reste intact.",
+      "legacyHeading": "Anciens champs ({count})",
+      "legacyHint": "Ces valeurs viennent d'une version antérieure de ce type de bloc. Elles sont conservées, mais ne peuvent plus être modifiées."
+    }
+  },
+  "auth": {
+    "login": {
+      "title": "Se connecter à GoodWorkshop",
+      "intro": "Sans mot de passe. Par passkey ou par un lien envoyé par e-mail.",
+      "email": "Adresse e-mail",
+      "send": "Envoyer un lien de connexion",
+      "passkeyButton": "Se connecter avec un passkey",
+      "passkeyUnavailable": "Les passkeys demandent HTTPS et ne sont pas disponibles sur cette adresse. Le lien de connexion par e-mail fonctionne.",
+      "passkeyFailed": "Le passkey n'a pas pu être confirmé.",
+      "unknownError": "Erreur inconnue",
+      "sentTitle": "Regarde dans ta boîte mail.",
+      "sentBody": "S'il existe un compte pour cette adresse, un lien de connexion est en route. Il est valable {minutes, plural, one {une minute} many {# minutes} other {# minutes}}.",
+      "linkExpired": "Ce lien a expiré ou a déjà été utilisé. Demandes-en un nouveau.",
+      "linkIncomplete": "Le lien était incomplet. Demandes-en un nouveau."
+    },
+    "setup": {
+      "title": "Configurer GoodWorkshop",
+      "intro": "Cette installation n'a encore personne pour l'administrer. Inscris-toi comme première administratrice — tout le reste, y compris l'envoi d'e-mails, se fait ensuite dans l'interface.",
+      "email": "Ton adresse e-mail",
+      "emailHint": "C'est avec elle que tu te connecteras désormais. Tu inviteras les autres personnes ensuite dans l'interface.",
+      "key": "Clé d'installation",
+      "keyHint": "Elle se trouve dans le journal du serveur :",
+      "submit": "Configurer cette installation",
+      "submitting": "Un instant …",
+      "claimed": "L'installation appartient maintenant à {email}.",
+      "linkHere": "Aucun envoi d'e-mails n'est encore configuré, le lien de connexion est donc affiché ici. Il ne sert qu'une fois et expire.",
+      "linkSent": "Le lien de connexion est en route. Regarde dans ta boîte mail."
+    }
+  },
+  "common": {
+    "save": "Enregistrer",
+    "cancel": "Annuler",
+    "delete": "Supprimer",
+    "create": "Créer",
+    "loading": "Chargement …",
+    "loadMore": "Charger plus",
+    "saving": "Enregistrement …",
+    "back": "Retour"
+  },
+  "enums": {
+    "memberRole": {
+      "member": "Membre",
+      "admin": "Admin"
+    },
+    "memberStatus": {
+      "invited": "Invitée",
+      "active": "Active",
+      "disabled": "Désactivée"
+    },
+    "tokenScope": {
+      "workshops:read": "Lire les ateliers",
+      "workshops:write": "Écrire les ateliers",
+      "module_types:read": "Lire les types de blocs",
+      "module_types:write": "Écrire les types de blocs",
+      "tenant:read": "Lire l'espace"
+    },
+    "workshopAccess": {
+      "owner": "Propriétaire",
+      "editor": "Modifier",
+      "viewer": "Lire",
+      "none": "Aucun accès"
+    },
+    "workshopStatus": {
+      "draft": "Brouillon",
+      "ready": "Prêt",
+      "delivered": "Animé",
+      "archived": "Archivé"
+    }
+  },
   "errors": {
     "conflict": "Quelqu'un d'autre a modifié cet atelier entre-temps.",
     "domain": {
@@ -96,12 +286,58 @@
     "setupFailed": "L'installation a échoué. Les détails sont dans le journal.",
     "unauthenticated": "Connecte-toi, s'il te plaît."
   },
+  "library": {
+    "title": "Ateliers",
+    "folders": "Dossiers",
+    "allWorkshops": "Tous les ateliers",
+    "tags": "Tags",
+    "navLabel": "Dossiers et tags",
+    "trash": "Corbeille",
+    "search": "Rechercher",
+    "searchLabel": "Rechercher des ateliers",
+    "newWorkshop": "Nouvel atelier",
+    "workshopTitle": "Titre de l'atelier",
+    "workshopTitleExample": "p. ex. Séminaire stratégie",
+    "creating": "Création …",
+    "newFolder": "Dossier",
+    "folderName": "Nom du dossier",
+    "subfolderName": "Nom du sous-dossier",
+    "name": "Nom",
+    "removeFolder": "Supprimer le dossier — son contenu remonte d'un niveau",
+    "emptyFiltered": "Rien trouvé.",
+    "emptyFilteredHint": "Une autre recherche, un autre dossier ou un autre tag.",
+    "empty": "Pas encore d'atelier ici.",
+    "emptyHint": "Crées-en un — la première journée vient avec.",
+    "dayCount": "{count, plural, one {# journée} many {# journées} other {# journées}}",
+    "moveToTrash": "Mettre à la corbeille",
+    "moveToTrashLabel": "Mettre {title} à la corbeille",
+    "bin": {
+      "title": "Corbeille",
+      "back": "Retour à la bibliothèque",
+      "empty": "La corbeille est vide.",
+      "emptyHint": "Ce qui atterrit ici y reste jusqu'à ce que quelqu'un le supprime définitivement.",
+      "discardedOn": "jeté le {date}",
+      "restore": "Restaurer",
+      "purge": "Supprimer définitivement",
+      "purgeWarning": "Cela supprime <b>{title}</b> avec toutes ses journées et tous ses blocs. Il n'y a pas de retour en arrière.",
+      "purgeConfirmLabel": "Saisis le titre pour confirmer :",
+      "purgeConfirm": "Supprimer irréversiblement"
+    }
+  },
   "meta": {
     "description": "Planification d'ateliers open source. Auto-hébergée, compatible MCP.",
     "printTitle": "Aperçu avant impression"
   },
+  "nav": {
+    "branding": "Identité visuelle",
+    "members": "Membres",
+    "mail": "Envoi d'e-mails",
+    "passkeys": "Passkeys",
+    "tokens": "Jetons",
+    "signOut": "Se déconnecter",
+    "account": "Compte"
+  },
   "settings": {
-    "title": "Paramètres",
     "intro": "Ton compte : langue, passkeys et jetons d'accès.",
     "language": {
       "title": "Langue",
@@ -111,11 +347,53 @@
     },
     "passkeys": {
       "title": "Passkeys",
-      "intro": "Se connecter sans mot de passe."
+      "intro": "Se connecter sans mot de passe, avec une empreinte, le visage ou une clé de sécurité. La clé elle-même ne quitte jamais ton appareil.",
+      "unavailable": "Cette installation tourne sur <code>{origin}</code>. Les navigateurs n'autorisent les passkeys qu'en HTTPS (ou sur <code>localhost</code>) — impossible d'en créer un ici. Le lien de connexion par e-mail reste la porte d'entrée.",
+      "fallbackName": "Passkey",
+      "synced": "synchronisé",
+      "lastUsed": "dernière fois le {date}",
+      "neverUsed": "pas encore utilisé",
+      "remove": "Supprimer",
+      "removeLabel": "Supprimer {name}",
+      "none": "Pas encore de passkey. En attendant, chaque connexion passe par un lien envoyé par e-mail.",
+      "added": "Passkey créé.",
+      "nameLabel": "Nom (facultatif)",
+      "namePlaceholder": "MacBook, iPhone, YubiKey …",
+      "waiting": "En attente de l'appareil …",
+      "enrol": "Créer un passkey",
+      "requestRejected": "La demande a été refusée.",
+      "notConfirmed": "Le passkey n'a pas pu être confirmé."
     },
+    "title": "Paramètres",
     "tokens": {
       "title": "Jetons d'accès",
-      "intro": "Pour les clients MCP comme Claude Desktop ou Claude Code."
+      "intro": "Pour les clients MCP comme Claude Desktop ou Claude Code. Un jeton agit en tant que toi — il ne peut jamais faire plus que toi.",
+      "freshLabel": "Ton nouveau jeton",
+      "freshHint": "Il n'est affiché qu'une fois — seul son hachage est conservé. Saisis-le dans le client comme <code>Authorization: Bearer …</code> vers <code>/api/mcp</code>.",
+      "hide": "Compris, masquer",
+      "lastUsed": "dernière fois le {date}",
+      "neverUsed": "jamais utilisé",
+      "revoke": "Révoquer",
+      "revokeLabel": "Révoquer le jeton {name}",
+      "nameLabel": "À quoi sert-il ?",
+      "namePlaceholder": "p. ex. Claude Desktop",
+      "scopesLabel": "Que peut-il faire ?",
+      "noUserAdmin": "La gestion des utilisateurs n'est délibérément pas proposée : un client MCP ne doit jamais inviter quelqu'un ni nommer un admin.",
+      "creating": "Création …",
+      "create": "Créer un jeton"
     }
+  },
+  "workshop": {
+    "access": "Accès",
+    "accessIntro": "Les personnes qui éditent voient les changements tout de suite — elles sont dans le même document. Celles qui lisent voient le déroulé sans rien changer.",
+    "accessOf": "Accès de {email}",
+    "you": "toi",
+    "print": "Imprimer",
+    "days": "Journées",
+    "untitledDay": "Journée",
+    "untitled": "Atelier",
+    "someone": "Quelqu'un",
+    "materials": "Matériel : {items}",
+    "end": "Fin {time}"
   }
 }

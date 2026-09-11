@@ -11,6 +11,7 @@ import { isRichTextValue } from '@/lib/richtext/schema'
 import { readSession } from '@/server/auth/session'
 import { withTenant } from '@/server/db'
 import { workshop as workshopTable } from '@/server/db/schema'
+import { getTranslations } from 'next-intl/server'
 
 export const runtime = 'nodejs'
 export const dynamic = 'force-dynamic'
@@ -38,6 +39,7 @@ export default async function PrintPage({
   const { workshopId, dayId } = await params
   const { notes } = await searchParams
   const showNotes = notes === '1'
+  const t = await getTranslations('workshop')
 
   const actor = {
     tenantId: session.tenantId,
@@ -56,7 +58,7 @@ export default async function PrintPage({
         .from(workshopTable)
         .where(eq(workshopTable.id, workshopId))
         .limit(1)
-      return { doc, title: meta[0]?.title ?? 'Workshop' }
+      return { doc, title: meta[0]?.title ?? t('untitled') }
     })
   } catch (error) {
     if (error instanceof NotFoundError || error instanceof ForbiddenError) notFound()
@@ -139,7 +141,9 @@ export default async function PrintPage({
                 {Array.isArray(row.module.desc.materials) &&
                   row.module.desc.materials.length > 0 && (
                     <p className="mt-1 text-[14px] text-neutral-600">
-                      Material: {(row.module.desc.materials as string[]).join(', ')}
+                      {t('materials', {
+                        items: (row.module.desc.materials as string[]).join(', '),
+                      })}
                     </p>
                   )}
               </div>
@@ -149,7 +153,7 @@ export default async function PrintPage({
       </div>
 
       <p className="tabular mt-6 border-t border-neutral-300 pt-3 text-neutral-600">
-        Ende {formatTime(schedule.dayEndMinute)}
+        {t('end', { time: formatTime(schedule.dayEndMinute) })}
       </p>
       <p className="mt-6 text-center text-xs text-neutral-500">
         GoodWorkshop · powered by roleALPHA

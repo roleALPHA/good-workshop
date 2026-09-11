@@ -2,6 +2,7 @@ import Link from 'next/link'
 import { notFound } from 'next/navigation'
 import { loadSharing } from '@/server/actions/sharing'
 import { SharingList } from './sharing-list'
+import { getTranslations } from 'next-intl/server'
 
 export const dynamic = 'force-dynamic'
 
@@ -18,6 +19,7 @@ export default async function SharingPage({ params }: { params: Promise<{ worksh
   const result = await loadSharing(workshopId)
   if (!result.ok) notFound()
 
+  const t = await getTranslations('workshop')
   const { title, ownerId, canShare, people } = result.data
 
   return (
@@ -29,11 +31,8 @@ export default async function SharingPage({ params }: { params: Promise<{ worksh
         >
           ← {title}
         </Link>
-        <h1 className="mt-0.5 text-xl font-semibold tracking-tight">Zugriff</h1>
-        <p className="mt-1 text-[15px] text-[var(--fg-muted)]">
-          Bearbeiter:innen sehen Änderungen sofort — sie sind im selben Dokument. Lesende sehen den
-          Ablauf, ändern aber nichts.
-        </p>
+        <h1 className="mt-0.5 text-xl font-semibold tracking-tight">{t('access')}</h1>
+        <p className="mt-1 text-[15px] text-[var(--fg-muted)]">{t('accessIntro')}</p>
       </header>
 
       <SharingList workshopId={workshopId} ownerId={ownerId} canShare={canShare} people={people} />

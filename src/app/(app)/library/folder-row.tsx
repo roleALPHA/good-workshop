@@ -4,6 +4,7 @@ import Link from 'next/link'
 import { useState, useTransition } from 'react'
 import { FolderIcon, X } from 'lucide-react'
 import { deleteFolderAction } from '@/server/actions/workshop'
+import { useTranslations } from 'next-intl'
 
 /**
  * A folder in the sidebar, with a way to remove it.
@@ -25,6 +26,8 @@ export function FolderRow({
   active: boolean
   canDelete: boolean
 }) {
+  const t = useTranslations('library')
+
   const [pending, startTransition] = useTransition()
   const [failed, setFailed] = useState<string | null>(null)
 
@@ -56,7 +59,7 @@ export function FolderRow({
             type="button"
             onClick={remove}
             disabled={pending}
-            title="Ordner entfernen — der Inhalt rückt eine Ebene hoch"
+            title={t('removeFolder')}
             aria-label={`Ordner ${name} entfernen`}
             className="shrink-0 rounded p-1 text-[var(--fg-subtle)] opacity-0 group-hover:opacity-100 hover:bg-[var(--surface-raised)] focus-visible:opacity-100 disabled:opacity-40"
           >

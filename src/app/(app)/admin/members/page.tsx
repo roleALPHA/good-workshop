@@ -1,3 +1,4 @@
+import { getTranslations } from 'next-intl/server'
 import { loadMembers } from '@/server/actions/members'
 import { MembersTable } from './members-table'
 import { InviteMember } from './invite-member'
@@ -12,12 +13,13 @@ export const dynamic = 'force-dynamic'
  * collaboration is worth very little if there is nobody to collaborate with.
  */
 export default async function MembersPage() {
+  const t = await getTranslations('admin.members')
   const result = await loadMembers()
 
   if (!result.ok) {
     return (
       <div>
-        <h1 className="mb-2 text-xl font-semibold tracking-tight">Mitglieder</h1>
+        <h1 className="mb-2 text-xl font-semibold tracking-tight">{t('title')}</h1>
         <p role="alert" className="text-[15px] text-[var(--fg-muted)]">
           {result.message}
         </p>
@@ -28,7 +30,7 @@ export default async function MembersPage() {
   return (
     <div>
       <div className="mb-5 flex flex-wrap items-center justify-between gap-3">
-        <h1 className="text-xl font-semibold tracking-tight">Mitglieder</h1>
+        <h1 className="text-xl font-semibold tracking-tight">{t('title')}</h1>
         <InviteMember />
       </div>
       <MembersTable members={result.data} />

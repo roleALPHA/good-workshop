@@ -23,10 +23,21 @@ import { NotFoundError, type WorkshopAccess } from '@/domain/agenda/access'
 
 export type WorkshopTag = { id: string; name: string; color: string }
 
+/**
+ * The four values the `workshop_status` check constraint allows, as a type.
+ *
+ * It was `string`, which made every lookup keyed on it -- the status chip, now
+ * the message catalog -- a lookup that could silently miss. The database has
+ * always been this strict; the type simply did not say so.
+ */
+export const WORKSHOP_STATUSES = ['draft', 'ready', 'delivered', 'archived'] as const
+
+export type WorkshopStatus = (typeof WORKSHOP_STATUSES)[number]
+
 export type WorkshopSummary = {
   id: string
   title: string
-  status: string
+  status: WorkshopStatus
   folderId: string | null
   updatedAt: Date
   dayCount: number
@@ -168,7 +179,9 @@ export async function listWorkshops(
     workshops: page.map((row) => ({
       id: row.id,
       title: row.title,
-      status: row.status,
+      // Guaranteed by the workshop_status check constraint; drizzle types the
+      // column as plain text.
+      status: row.status as WorkshopStatus,
       folderId: row.folderId,
       updatedAt: row.updatedAt,
       dayCount: row.dayCount,

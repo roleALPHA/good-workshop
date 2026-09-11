@@ -4,6 +4,7 @@ import { NextIntlClientProvider } from 'next-intl'
 import { Fingerprint, KeyRound, LogOut, Mail, Palette, Users } from 'lucide-react'
 import { AppFooter } from '@/components/layout/app-footer'
 import { BrandMark, BrandStyle } from '@/components/layout/tenant-brand'
+import { getTranslations } from 'next-intl/server'
 import { getClientMessages } from '@/i18n/client-messages'
 import { readSessionCached } from '@/server/auth/session'
 
@@ -22,7 +23,7 @@ export default async function AppLayout({ children }: { children: React.ReactNod
 
   // Not in the root layout: src/app/print/layout.tsx nests inside that one, and
   // the print view deliberately ships no client JavaScript at all.
-  const messages = await getClientMessages()
+  const [messages, t] = await Promise.all([getClientMessages(), getTranslations('nav')])
 
   return (
     <div className="flex min-h-dvh flex-col">
@@ -35,48 +36,48 @@ export default async function AppLayout({ children }: { children: React.ReactNod
           {session.tenantRole === 'admin' && (
             <Link
               href="/admin/branding"
-              aria-label="Branding"
+              aria-label={t('branding')}
               className="inline-flex items-center gap-1.5 rounded px-2 py-1 text-[14px] text-[var(--fg-muted)] hover:bg-[var(--surface-raised)]"
             >
               <Palette aria-hidden className="size-4" />
-              <span className="hidden sm:inline">Branding</span>
+              <span className="hidden sm:inline">{t('branding')}</span>
             </Link>
           )}
           {session.tenantRole === 'admin' && (
             <Link
               href="/admin/members"
-              aria-label="Mitglieder"
+              aria-label={t('members')}
               className="inline-flex items-center gap-1.5 rounded px-2 py-1 text-[14px] text-[var(--fg-muted)] hover:bg-[var(--surface-raised)]"
             >
               <Users aria-hidden className="size-4" />
-              <span className="hidden sm:inline">Mitglieder</span>
+              <span className="hidden sm:inline">{t('members')}</span>
             </Link>
           )}
           {session.tenantRole === 'admin' && (
             <Link
               href="/admin/mail"
-              aria-label="Mailversand"
+              aria-label={t('mail')}
               className="inline-flex items-center gap-1.5 rounded px-2 py-1 text-[14px] text-[var(--fg-muted)] hover:bg-[var(--surface-raised)]"
             >
               <Mail aria-hidden className="size-4" />
-              <span className="hidden sm:inline">Mailversand</span>
+              <span className="hidden sm:inline">{t('mail')}</span>
             </Link>
           )}
           <span className="flex-1" />
           <Link
             href="/settings/passkeys"
-            aria-label="Passkeys"
+            aria-label={t('passkeys')}
             className="inline-flex items-center gap-1.5 rounded px-2 py-1 text-[14px] text-[var(--fg-muted)] hover:bg-[var(--surface-raised)]"
           >
             <Fingerprint aria-hidden className="size-4" />
-            <span className="hidden sm:inline">Passkeys</span>
+            <span className="hidden sm:inline">{t('passkeys')}</span>
           </Link>
           <Link
             href="/settings/tokens"
             className="inline-flex items-center gap-1.5 rounded px-2 py-1 text-[14px] text-[var(--fg-muted)] hover:bg-[var(--surface-raised)]"
           >
             <KeyRound aria-hidden className="size-4" />
-            <span className="hidden sm:inline">Token</span>
+            <span className="hidden sm:inline">{t('tokens')}</span>
           </Link>
           {/* The account entry point. It was a dead <span>; the header already
               carries eight controls, so the language switcher went behind this
@@ -90,11 +91,11 @@ export default async function AppLayout({ children }: { children: React.ReactNod
           <form action="/api/auth/logout" method="post">
             <button
               type="submit"
-              aria-label="Abmelden"
+              aria-label={t('signOut')}
               className="inline-flex items-center gap-1.5 rounded px-2 py-1 text-[14px] text-[var(--fg-muted)] hover:bg-[var(--surface-raised)]"
             >
               <LogOut aria-hidden className="size-4" />
-              <span className="hidden sm:inline">Abmelden</span>
+              <span className="hidden sm:inline">{t('signOut')}</span>
             </button>
           </form>
         </div>

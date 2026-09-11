@@ -4,13 +4,7 @@ import { useRouter } from 'next/navigation'
 import { useState, useTransition } from 'react'
 import type { SharingView } from '@/server/actions/sharing'
 import { removeCollaboratorAction, setCollaboratorAction } from '@/server/actions/sharing'
-
-const ACCESS: Record<SharingView['people'][number]['access'], string> = {
-  owner: 'Eigentümer:in',
-  editor: 'Bearbeiten',
-  viewer: 'Lesen',
-  none: 'Kein Zugriff',
-}
+import { useTranslations } from 'next-intl'
 
 /**
  * One row per colleague, one select per row.
@@ -31,6 +25,8 @@ export function SharingList({
   canShare: boolean
   people: SharingView['people']
 }) {
+  const t = useTranslations('workshop')
+  const tAccess = useTranslations('enums.workshopAccess')
   const router = useRouter()
   const [error, setError] = useState<{ memberId: string; message: string } | null>(null)
   const [pending, startTransition] = useTransition()
@@ -59,7 +55,7 @@ export function SharingList({
             <div className="min-w-0 flex-1">
               <p className="truncate text-[15px] font-medium">
                 {person.displayName || person.email}
-                {person.isSelf && <span className="text-[var(--fg-subtle)]"> · du</span>}
+                {person.isSelf && <span className="text-[var(--fg-subtle)]"> · {t('you')}</span>}
               </p>
               {person.displayName && (
                 <p className="truncate text-[13px] text-[var(--fg-muted)]">{person.email}</p>
@@ -67,18 +63,18 @@ export function SharingList({
             </div>
 
             {person.id === ownerId || !canShare ? (
-              <span className="text-[14px] text-[var(--fg-muted)]">{ACCESS[person.access]}</span>
+              <span className="text-[14px] text-[var(--fg-muted)]">{tAccess(person.access)}</span>
             ) : (
               <select
-                aria-label={`Zugriff von ${person.email}`}
+                aria-label={t('accessOf', { email: person.email })}
                 className="rounded border border-[var(--border-strong)] bg-[var(--surface)] px-2 py-1.5 text-[16px]"
                 value={person.access}
                 disabled={pending}
                 onChange={(e) => change(person.id, e.target.value as 'editor' | 'viewer' | 'none')}
               >
-                <option value="none">Kein Zugriff</option>
-                <option value="viewer">Lesen</option>
-                <option value="editor">Bearbeiten</option>
+                <option value="none">{tAccess('none')}</option>
+                <option value="viewer">{tAccess('viewer')}</option>
+                <option value="editor">{tAccess('editor')}</option>
               </select>
             )}
           </div>

@@ -1,6 +1,8 @@
 import { describe, expect, it } from 'vitest'
 import { DOMAIN_ERROR_KEYS } from '@/domain/errors'
 import { FIELD_ERROR_KEYS } from '@/domain/moduleType/validate'
+import { SCOPES } from '@/domain/tenant/tokens'
+import { WORKSHOP_STATUSES } from '@/domain/workshop/repo'
 import { CATALOGS } from './catalogs'
 import { DEFAULT_LOCALE, LOCALES, type Locale } from './config'
 import { icuShape } from './icu'
@@ -122,6 +124,23 @@ describe('every key the code can throw', () => {
 
     it('has a sentence for every field error', () => {
       const missing = FIELD_ERROR_KEYS.filter((key) => !catalog.has(`errors.field.${key}`))
+      expect(missing).toEqual([])
+    })
+
+    /**
+     * Enum values come out of the database as machine keys and are looked up by
+     * value. A missing one renders as the key path -- "enums.tokenScope.tenant:read"
+     * in a checkbox label -- which is the kind of thing that ships.
+     */
+    it('has a label for every token scope', () => {
+      const missing = SCOPES.filter((scope) => !catalog.has(`enums.tokenScope.${scope}`))
+      expect(missing).toEqual([])
+    })
+
+    it('has a label for every workshop status', () => {
+      const missing = WORKSHOP_STATUSES.filter(
+        (status) => !catalog.has(`enums.workshopStatus.${status}`),
+      )
       expect(missing).toEqual([])
     })
   })

@@ -70,5 +70,11 @@ export type DocumentStatus =
   | { kind: 'saved' }
   | { kind: 'connecting' }
   | { kind: 'live'; peers: number }
-  | { kind: 'offline'; message: string }
+  /**
+   * Carries no message: what "offline" means is the same sentence every time,
+   * and it belongs in the catalog next to the rest of the interface rather
+   * than in a hook that has no language. `error` keeps one, because that text
+   * comes from somewhere real and is not ours to write.
+   */
+  | { kind: 'offline' }
   | { kind: 'error'; message: string }

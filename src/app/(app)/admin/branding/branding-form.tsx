@@ -11,6 +11,7 @@ import {
   uploadLogoAction,
   type BrandingView,
 } from '@/server/actions/branding'
+import { useTranslations } from 'next-intl'
 
 /**
  * Edited in place, saved on blur, with the result shown next to the field.
@@ -20,6 +21,7 @@ import {
  * in a banner at the top of the page.
  */
 export function BrandingForm({ initial }: { initial: BrandingView }) {
+  const t = useTranslations('admin.branding')
   const router = useRouter()
   const file = useRef<HTMLInputElement>(null)
 
@@ -52,7 +54,7 @@ export function BrandingForm({ initial }: { initial: BrandingView }) {
     if (chosen.size > MAX_LOGO_BYTES) {
       // Checked here as well as on the server, so an oversized file is refused
       // before it is read and base64-encoded in the browser.
-      setLogoError(`Höchstens ${Math.round(MAX_LOGO_BYTES / 1024)} KB.`)
+      setLogoError(t('logoTooLarge', { max: Math.round(MAX_LOGO_BYTES / 1024) }))
       return
     }
 
@@ -71,10 +73,9 @@ export function BrandingForm({ initial }: { initial: BrandingView }) {
   return (
     <div className="space-y-8">
       <section>
-        <h2 className="mb-1 text-[15px] font-semibold">Logo</h2>
+        <h2 className="mb-1 text-[15px] font-semibold">{t('logo')}</h2>
         <p className="mb-3 text-[14px] text-[var(--fg-muted)]">
-          SVG, PNG oder WebP, höchstens {Math.round(MAX_LOGO_BYTES / 1024)} KB. Erscheint in der
-          Kopfzeile und auf der Anmeldeseite.
+          {t('logoHint', { max: Math.round(MAX_LOGO_BYTES / 1024) })}
         </p>
 
         <div className="flex flex-wrap items-center gap-3">
@@ -82,7 +83,7 @@ export function BrandingForm({ initial }: { initial: BrandingView }) {
             // eslint-disable-next-line @next/next/no-img-element
             <img
               src="/api/tenant/logo"
-              alt="Aktuelles Logo"
+              alt={t('currentLogo')}
               className="h-10 w-auto max-w-48 rounded border border-[var(--border)] bg-[var(--surface)] object-contain p-1"
             />
           )}
@@ -92,7 +93,7 @@ export function BrandingForm({ initial }: { initial: BrandingView }) {
             type="file"
             accept="image/svg+xml,image/png,image/webp"
             className="sr-only"
-            aria-label="Logo-Datei"
+            aria-label={t('logoFile')}
             onChange={(e) => {
               const chosen = e.target.files?.[0]
               if (chosen) upload(chosen)
@@ -106,7 +107,7 @@ export function BrandingForm({ initial }: { initial: BrandingView }) {
             className="inline-flex items-center gap-1.5 rounded border border-[var(--border-strong)] px-3 py-1.5 text-[15px] hover:bg-[var(--surface-raised)] disabled:opacity-60"
           >
             <Upload aria-hidden className="size-4" />
-            {hasLogo ? 'Logo ersetzen' : 'Logo hochladen'}
+            {hasLogo ? t('replaceLogo') : t('uploadLogo')}
           </button>
 
           {hasLogo && (
@@ -123,7 +124,7 @@ export function BrandingForm({ initial }: { initial: BrandingView }) {
               className="inline-flex items-center gap-1.5 rounded px-2.5 py-1.5 text-[15px] text-[var(--fg-muted)] hover:bg-[var(--surface-raised)] disabled:opacity-60"
             >
               <Trash2 aria-hidden className="size-4" />
-              Entfernen
+              {t('removeLogo')}
             </button>
           )}
         </div>
@@ -136,17 +137,13 @@ export function BrandingForm({ initial }: { initial: BrandingView }) {
       </section>
 
       <section>
-        <h2 className="mb-1 text-[15px] font-semibold">Akzentfarbe</h2>
-        <p className="mb-3 text-[14px] text-[var(--fg-muted)]">
-          Ein Farbwert. Der Server baut daraus die Abstufungen für hell und dunkel und prüft dabei
-          den Kontrast — eine Farbe, mit der die Oberfläche unlesbar würde, wird abgelehnt. Die
-          Farben der Modultypen bleiben unberührt: sie bedeuten etwas.
-        </p>
+        <h2 className="mb-1 text-[15px] font-semibold">{t('accent')}</h2>
+        <p className="mb-3 text-[14px] text-[var(--fg-muted)]">{t('accentHint')}</p>
 
         <div className="flex flex-wrap items-end gap-3">
           <div>
             <label htmlFor="brand-hex" className="mb-1 block text-[14px]">
-              Hex-Wert
+              {t('hex')}
             </label>
             <div className="flex items-center gap-2">
               <input
@@ -172,7 +169,7 @@ export function BrandingForm({ initial }: { initial: BrandingView }) {
 
           <div>
             <label htmlFor="brand-name" className="mb-1 block text-[14px]">
-              Name (wenn kein Logo gesetzt ist)
+              {t('brandName')}
             </label>
             <input
               id="brand-name"
@@ -195,7 +192,7 @@ export function BrandingForm({ initial }: { initial: BrandingView }) {
           </p>
         )}
         {saved && !colourError && (
-          <p className="mt-2 text-[14px] text-[var(--fg-muted)]">Gespeichert.</p>
+          <p className="mt-2 text-[14px] text-[var(--fg-muted)]">{t('saved')}</p>
         )}
       </section>
     </div>

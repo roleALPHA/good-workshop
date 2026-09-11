@@ -144,15 +144,13 @@ export function ModuleDetails({ module: mod, type, onChange }: ModuleDetailsProp
  * describes how to edit them.
  */
 function LegacyFields({ entries }: { entries: [string, unknown][] }) {
+  const t = useTranslations('agenda')
   return (
     <details className="mt-4 rounded border border-[var(--border)] bg-[var(--surface-raised)] p-3">
       <summary className="cursor-pointer text-[14px] font-medium">
-        Alte Felder ({entries.length})
+        {t('field.legacyHeading', { count: entries.length })}
       </summary>
-      <p className="mt-1 text-[13px] text-[var(--fg-muted)]">
-        Diese Angaben stammen aus einer früheren Fassung dieses Modultyps. Sie bleiben erhalten,
-        lassen sich aber nicht mehr bearbeiten.
-      </p>
+      <p className="mt-1 text-[13px] text-[var(--fg-muted)]">{t('field.legacyHint')}</p>
       <dl className="mt-2 space-y-1">
         {entries.map(([key, value]) => (
           <div key={key} className="text-[14px]">

@@ -1,4 +1,194 @@
 {
+  "admin": {
+    "branding": {
+      "title": "Identidad visual",
+      "intro": "El logotipo y el color de acento de esta instalación. El pie de página se queda como está.",
+      "logo": "Logotipo",
+      "logoHint": "SVG, PNG o WebP, como máximo {max} KB. Aparece en la cabecera y en la página de acceso.",
+      "logoTooLarge": "Como máximo {max} KB.",
+      "currentLogo": "Logotipo actual",
+      "logoFile": "Archivo del logotipo",
+      "replaceLogo": "Sustituir el logotipo",
+      "uploadLogo": "Subir un logotipo",
+      "removeLogo": "Eliminar",
+      "accent": "Color de acento",
+      "accentHint": "Un solo valor de color. El servidor construye a partir de él los tonos claros y oscuros y comprueba el contraste por el camino — un color que haría ilegible la interfaz se rechaza. Los colores de los tipos de bloque no se tocan: significan algo.",
+      "hex": "Valor hexadecimal",
+      "brandName": "Nombre (si no hay logotipo)",
+      "saved": "Guardado."
+    },
+    "members": {
+      "title": "Miembros",
+      "invite": "Invitar a un miembro",
+      "email": "Dirección de correo",
+      "emailPlaceholder": "companera@example.com",
+      "role": "Rol",
+      "roleOf": "Rol de {email}",
+      "inviting": "Invitando …",
+      "inviteAction": "Invitar",
+      "enable": "Volver a permitir",
+      "disable": "Desactivar",
+      "alreadyMember": "{email} ya era miembro.",
+      "invited": "{email} ha sido invitada.",
+      "linkOnItsWay": "El enlace de acceso va de camino.",
+      "noMailSetUp": "No hay envío de correo configurado. Pasa este enlace en persona — quien lo abra queda con la sesión iniciada como {email}."
+    },
+    "mail": {
+      "title": "Envío de correo",
+      "intro": "Los enlaces de acceso y las invitaciones van por aquí. Sin envío, solo entra quien ya tiene un passkey.",
+      "fromEnvironmentNotice": "Algunos valores vienen del entorno del servidor y no se pueden cambiar aquí. Están en el <code>.env</code> de la instalación.",
+      "fromEnvironment": "del entorno",
+      "transportLegend": "¿Cómo se debe enviar el correo?",
+      "transport": {
+        "graph": "Microsoft Graph",
+        "graphHint": "Para Microsoft 365 sin SMTP AUTH.",
+        "smtp": "SMTP",
+        "smtpHint": "Un relé de correo clásico.",
+        "console": "Escribir en el registro del servidor",
+        "consoleHint": "Sin envío. Los enlaces de acceso acaban en el registro — quien pueda leerlo entra en cualquier cuenta.",
+        "none": "Sin envío",
+        "noneHint": "Los enlaces de acceso solo se obtienen por línea de comandos."
+      },
+      "graphIntro": "Hace falta un registro de aplicación en Entra ID con el <b>permiso de aplicación</b> <code>Mail.Send</code> y el consentimiento del administrador.",
+      "graphTenantId": "ID de directorio o de inquilino",
+      "graphClientId": "ID de aplicación",
+      "graphClientSecret": "Secreto de cliente",
+      "graphSender": "Buzón remitente",
+      "smtpUrl": "URL de SMTP",
+      "smtpUrlHint": "Por ejemplo smtps://usuario:contrasena@relay.example.com:465",
+      "smtpFrom": "Dirección del remitente",
+      "secretStored": "guardado — déjalo vacío para conservarlo",
+      "saved": "Guardado.",
+      "testTitle": "Enviar un mensaje de prueba",
+      "testIntro": "Si un relé funciona se ve al enviar. Si no, el primer intento es el enlace de acceso de alguien — y un fallo parece entonces una cuenta rota.",
+      "testTo": "Para",
+      "testSend": "Enviar",
+      "testSent": "Enviado a {email}. Si no llega nada: carpeta de spam."
+    }
+  },
+  "agenda": {
+    "columns": {
+      "time": "Hora",
+      "titleAndDescription": "Título y descripción",
+      "info": "Información adicional"
+    },
+    "regionLabel": "Agenda {title}",
+    "end": "Fin",
+    "overPlan": "{duration} de más",
+    "content": "{duration} de contenido",
+    "breaks": "{duration} de pausas",
+    "blockCount": "{count, plural, one {# bloque} many {# bloques} other {# bloques}}",
+    "addBlock": "Añadir un bloque",
+    "searchType": "Buscar tipo de bloque",
+    "filterPlaceholder": "Escribe para filtrar …",
+    "noTypeMatches": "Ningún tipo de bloque coincide.",
+    "moreFields": "Más campos",
+    "fewerFields": "Menos",
+    "park": "Apartar",
+    "parkLabel": "Apartar {title}",
+    "parkHint": "Sacarlo del desarrollo sin eliminarlo",
+    "parkedHeading": "Apartados ({count})",
+    "parkedHint": "Pertenece a la jornada, no cuenta para el tiempo.",
+    "unpark": "Volver al desarrollo",
+    "unparkLabel": "Devolver {title} al desarrollo",
+    "overlap": "Se solapa con el bloque anterior en {duration}",
+    "addDayNote": "Añadir una nota sobre la jornada",
+    "dayNote": "Nota sobre la jornada",
+    "dayNotePlaceholder": "Sala, cómo llegar, quién trae qué …",
+    "addTag": "Añadir una etiqueta",
+    "removeTag": "Eliminar la etiqueta {name}",
+    "tagPlaceholder": "+ etiqueta",
+    "presence": "Otras personas en esta jornada",
+    "connecting": "Conectando …",
+    "saving": "Guardando …",
+    "offline": "Sin conexión. Tus cambios se enviarán en cuanto vuelva.",
+    "drag": {
+      "atDayLevel": "al nivel de la jornada",
+      "cancelled": "Movimiento cancelado.",
+      "dropped": "{title} soltado {where}, posición {position}.",
+      "droppedWithTime": "{title} soltado {where}, posición {position}, nueva hora de inicio {time}.",
+      "inSection": "en la sección {title}",
+      "landed": "{title} queda {where}, posición {position}.",
+      "landedWithTime": "{title} queda {where}, posición {position}, nueva hora de inicio {time}.",
+      "picked": "{title} agarrado."
+    },
+    "field": {
+      "privateNote": "solo para ti",
+      "commaSeparated": "Separar con comas",
+      "richTextReadOnly": "Contiene formato. La edición llegará con el editor de texto — hasta entonces el contenido se queda intacto.",
+      "legacyHeading": "Campos antiguos ({count})",
+      "legacyHint": "Estos valores vienen de una versión anterior de este tipo de bloque. Se conservan, pero ya no se pueden editar."
+    }
+  },
+  "auth": {
+    "login": {
+      "title": "Iniciar sesión en GoodWorkshop",
+      "intro": "Sin contraseña. Con un passkey o con un enlace por correo.",
+      "email": "Dirección de correo",
+      "send": "Enviar un enlace de acceso",
+      "passkeyButton": "Iniciar sesión con un passkey",
+      "passkeyUnavailable": "Los passkeys necesitan HTTPS y no están disponibles en esta dirección. El enlace de acceso por correo sí funciona.",
+      "passkeyFailed": "No se ha podido confirmar el passkey.",
+      "unknownError": "Error desconocido",
+      "sentTitle": "Mira en tu bandeja de entrada.",
+      "sentBody": "Si existe una cuenta para esa dirección, un enlace de acceso va de camino. Es válido durante {minutes, plural, one {un minuto} many {# minutos} other {# minutos}}.",
+      "linkExpired": "Este enlace ha caducado o ya se ha usado. Pide uno nuevo.",
+      "linkIncomplete": "El enlace estaba incompleto. Pide uno nuevo."
+    },
+    "setup": {
+      "title": "Configurar GoodWorkshop",
+      "intro": "Esta instalación todavía no tiene a nadie que pueda administrarla. Regístrate como primera administradora — todo lo demás, incluido el envío de correo, se hace después en la interfaz.",
+      "email": "Tu dirección de correo",
+      "emailHint": "Con ella iniciarás sesión a partir de ahora. A las demás personas las invitarás después en la interfaz.",
+      "key": "Clave de instalación",
+      "keyHint": "Está en el registro del servidor:",
+      "submit": "Configurar esta instalación",
+      "submitting": "Un momento …",
+      "claimed": "La instalación pertenece ahora a {email}.",
+      "linkHere": "Todavía no hay envío de correo configurado, así que el enlace de acceso aparece aquí. Sirve una sola vez y caduca.",
+      "linkSent": "El enlace de acceso va de camino. Mira en tu bandeja de entrada."
+    }
+  },
+  "common": {
+    "save": "Guardar",
+    "cancel": "Cancelar",
+    "delete": "Eliminar",
+    "create": "Crear",
+    "loading": "Cargando …",
+    "loadMore": "Cargar más",
+    "saving": "Guardando …",
+    "back": "Volver"
+  },
+  "enums": {
+    "memberRole": {
+      "member": "Miembro",
+      "admin": "Admin"
+    },
+    "memberStatus": {
+      "invited": "Invitada",
+      "active": "Activa",
+      "disabled": "Desactivada"
+    },
+    "tokenScope": {
+      "workshops:read": "Leer talleres",
+      "workshops:write": "Escribir talleres",
+      "module_types:read": "Leer tipos de bloque",
+      "module_types:write": "Escribir tipos de bloque",
+      "tenant:read": "Leer el espacio"
+    },
+    "workshopAccess": {
+      "owner": "Propietaria",
+      "editor": "Editar",
+      "viewer": "Leer",
+      "none": "Sin acceso"
+    },
+    "workshopStatus": {
+      "draft": "Borrador",
+      "ready": "Listo",
+      "delivered": "Impartido",
+      "archived": "Archivado"
+    }
+  },
   "errors": {
     "conflict": "Otra persona ha cambiado este taller mientras tanto.",
     "domain": {
@@ -96,12 +286,58 @@
     "setupFailed": "La instalación ha fallado. Los detalles están en el registro.",
     "unauthenticated": "Inicia sesión, por favor."
   },
+  "library": {
+    "title": "Talleres",
+    "folders": "Carpetas",
+    "allWorkshops": "Todos los talleres",
+    "tags": "Etiquetas",
+    "navLabel": "Carpetas y etiquetas",
+    "trash": "Papelera",
+    "search": "Buscar",
+    "searchLabel": "Buscar talleres",
+    "newWorkshop": "Nuevo taller",
+    "workshopTitle": "Título del taller",
+    "workshopTitleExample": "p. ej. Retiro de estrategia",
+    "creating": "Creando …",
+    "newFolder": "Carpeta",
+    "folderName": "Nombre de la carpeta",
+    "subfolderName": "Nombre de la subcarpeta",
+    "name": "Nombre",
+    "removeFolder": "Eliminar la carpeta — su contenido sube un nivel",
+    "emptyFiltered": "No se ha encontrado nada.",
+    "emptyFilteredHint": "Otra búsqueda, otra carpeta u otra etiqueta.",
+    "empty": "Todavía no hay ningún taller aquí.",
+    "emptyHint": "Crea uno — la primera jornada viene incluida.",
+    "dayCount": "{count, plural, one {# jornada} many {# jornadas} other {# jornadas}}",
+    "moveToTrash": "Mover a la papelera",
+    "moveToTrashLabel": "Mover {title} a la papelera",
+    "bin": {
+      "title": "Papelera",
+      "back": "Volver a la biblioteca",
+      "empty": "La papelera está vacía.",
+      "emptyHint": "Lo que llega aquí se queda hasta que alguien lo elimina definitivamente.",
+      "discardedOn": "tirado el {date}",
+      "restore": "Restaurar",
+      "purge": "Eliminar definitivamente",
+      "purgeWarning": "Esto elimina <b>{title}</b> con todas sus jornadas y bloques. No hay vuelta atrás.",
+      "purgeConfirmLabel": "Escribe el título para confirmar:",
+      "purgeConfirm": "Eliminar irreversiblemente"
+    }
+  },
   "meta": {
     "description": "Planificación de talleres de código abierto. Autoalojada, lista para MCP.",
     "printTitle": "Vista de impresión"
   },
+  "nav": {
+    "branding": "Identidad visual",
+    "members": "Miembros",
+    "mail": "Envío de correo",
+    "passkeys": "Passkeys",
+    "tokens": "Tokens",
+    "signOut": "Cerrar sesión",
+    "account": "Cuenta"
+  },
   "settings": {
-    "title": "Ajustes",
     "intro": "Tu cuenta: idioma, passkeys y tokens de acceso.",
     "language": {
       "title": "Idioma",
@@ -111,11 +347,53 @@
     },
     "passkeys": {
       "title": "Passkeys",
-      "intro": "Inicia sesión sin contraseña."
+      "intro": "Inicia sesión sin contraseña, con huella, cara o llave de seguridad. La llave en sí nunca sale de tu dispositivo.",
+      "unavailable": "Esta instalación funciona en <code>{origin}</code>. Los navegadores solo permiten passkeys por HTTPS (o en <code>localhost</code>) — aquí no se puede crear ninguno. El enlace de acceso por correo sigue siendo la entrada.",
+      "fallbackName": "Passkey",
+      "synced": "sincronizado",
+      "lastUsed": "última vez el {date}",
+      "neverUsed": "aún sin usar",
+      "remove": "Eliminar",
+      "removeLabel": "Eliminar {name}",
+      "none": "Todavía no hay ningún passkey. Hasta entonces, cada acceso pasa por un enlace por correo.",
+      "added": "Passkey creado.",
+      "nameLabel": "Nombre (opcional)",
+      "namePlaceholder": "MacBook, iPhone, YubiKey …",
+      "waiting": "Esperando al dispositivo …",
+      "enrol": "Crear un passkey",
+      "requestRejected": "La solicitud ha sido rechazada.",
+      "notConfirmed": "No se ha podido confirmar el passkey."
     },
+    "title": "Ajustes",
     "tokens": {
       "title": "Tokens de acceso",
-      "intro": "Para clientes MCP como Claude Desktop o Claude Code."
+      "intro": "Para clientes MCP como Claude Desktop o Claude Code. Un token actúa como tú — nunca puede hacer más de lo que puedes tú.",
+      "freshLabel": "Tu nuevo token",
+      "freshHint": "Se muestra una sola vez — lo que se guarda es su hash. Introdúcelo en el cliente como <code>Authorization: Bearer …</code> contra <code>/api/mcp</code>.",
+      "hide": "Entendido, ocultar",
+      "lastUsed": "última vez el {date}",
+      "neverUsed": "nunca usado",
+      "revoke": "Revocar",
+      "revokeLabel": "Revocar el token {name}",
+      "nameLabel": "¿Para qué es?",
+      "namePlaceholder": "p. ej. Claude Desktop",
+      "scopesLabel": "¿Qué puede hacer?",
+      "noUserAdmin": "La gestión de usuarios queda deliberadamente fuera: un cliente MCP nunca debe invitar a nadie ni nombrar a nadie administrador.",
+      "creating": "Creando …",
+      "create": "Crear un token"
     }
+  },
+  "workshop": {
+    "access": "Acceso",
+    "accessIntro": "Quien edita ve los cambios al momento — está en el mismo documento. Quien lee ve el desarrollo pero no cambia nada.",
+    "accessOf": "Acceso de {email}",
+    "you": "tú",
+    "print": "Imprimir",
+    "days": "Jornadas",
+    "untitledDay": "Jornada",
+    "untitled": "Taller",
+    "someone": "Alguien",
+    "materials": "Material: {items}",
+    "end": "Fin {time}"
   }
 }

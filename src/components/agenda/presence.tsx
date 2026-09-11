@@ -4,6 +4,7 @@ import { Bot } from 'lucide-react'
 import type { CSSProperties } from 'react'
 import type { Peer } from '@/features/agenda/document'
 import { cn } from '@/lib/cn'
+import { useTranslations } from 'next-intl'
 
 /**
  * Who else is on this day, and where they are.
@@ -34,13 +35,14 @@ function initials(name: string): string {
 }
 
 export function PresenceBar({ peers }: { peers: Peer[] }) {
+  const t = useTranslations('agenda')
   // Nobody else here: no badge, no empty row. A permanent "1 person" chip is
   // the kind of chrome people stop seeing.
   if (peers.length === 0) return null
 
   return (
     <ul
-      aria-label="Weitere Personen an diesem Tag"
+      aria-label={t('presence')}
       className="flex flex-wrap items-center gap-1.5 px-4 py-2 md:px-2"
     >
       {peers.map((peer) => (

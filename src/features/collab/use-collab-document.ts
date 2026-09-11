@@ -105,12 +105,10 @@ export function useCollabDocument(initial: DayDoc, target: CollabTarget): Agenda
 
   const status: DocumentStatus = useMemo(() => {
     if (connection === 'offline') {
-      return {
-        kind: 'offline',
-        // Honest about what is and is not lost: the CRDT keeps local changes
-        // and replays them on reconnect.
-        message: 'Keine Verbindung. Deine Änderungen werden übertragen, sobald sie wieder steht.',
-      }
+      // Honest about what is and is not lost: the CRDT keeps local changes and
+      // replays them on reconnect. The sentence saying so lives in the catalog;
+      // see StatusLine in agenda-editor.tsx.
+      return { kind: 'offline' }
     }
     if (connection === 'connecting') return { kind: 'connecting' }
     // Reported while bytes are still queued, so "has this left my machine" is

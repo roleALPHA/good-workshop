@@ -11,6 +11,7 @@ import { RichText } from '@/lib/richtext/render'
 import { PeerMarks } from './presence'
 import { TitleInput } from './inline-inputs'
 import { OverlapWarning, TimeCell } from './time-cell'
+import { useTranslations } from 'next-intl'
 
 /**
  * The agenda, rendered from a flat row list.
@@ -70,6 +71,7 @@ export type RowChrome = {
 
 /** Hidden on phones: the card layout carries its own labels. */
 export function HeaderRow() {
+  const t = useTranslations('agenda')
   return (
     <div
       className={cn(
@@ -78,10 +80,10 @@ export function HeaderRow() {
       )}
     >
       <span />
-      <span className="px-2">Zeit</span>
+      <span className="px-2">{t('columns.time')}</span>
       <span />
-      <span className="px-3">Titel und Beschreibung</span>
-      <span className="px-3">Zusatzinfo</span>
+      <span className="px-3">{t('columns.titleAndDescription')}</span>
+      <span className="px-3">{t('columns.info')}</span>
       <span />
     </div>
   )
@@ -102,6 +104,7 @@ export function ModuleRow({
   chrome?: RowChrome
   editing?: RowEditing
 }) {
+  const t = useTranslations('agenda')
   const description = isRichTextValue(mod.desc.description) ? mod.desc.description : null
   const info = additionalInfo(mod)
 
@@ -172,19 +175,19 @@ export function ModuleRow({
                   aria-hidden
                   className={cn('size-3.5 transition-transform', editing.expanded && 'rotate-180')}
                 />
-                {editing.expanded ? 'Weniger' : 'Mehr Felder'}
+                {editing.expanded ? t('fewerFields') : t('moreFields')}
               </button>
 
               {editing.onPark && (
                 <button
                   type="button"
                   onClick={editing.onPark}
-                  aria-label={`${mod.title} parken`}
-                  title="Aus dem Ablauf nehmen, ohne ihn zu löschen"
+                  aria-label={t('parkLabel', { title: mod.title })}
+                  title={t('parkHint')}
                   className="mt-1.5 inline-flex items-center gap-1 rounded px-1 py-0.5 text-[13px] text-[var(--fg-muted)] hover:bg-[var(--surface-raised)]"
                 >
                   <Inbox aria-hidden className="size-3.5" />
-                  Parken
+                  {t('park')}
                 </button>
               )}
             </div>
@@ -221,6 +224,7 @@ export function ClusterRow({
   childCount: number
   chrome?: RowChrome
 }) {
+  const t = useTranslations('agenda')
   const titleId = `cluster-title-${cluster.id}`
 
   return (
@@ -258,7 +262,7 @@ export function ClusterRow({
             {cluster.title}
           </h2>
           <span className="tabular text-[13px] text-[var(--cat-fg)] opacity-80">
-            {childCount} {childCount === 1 ? 'Block' : 'Blöcke'} ·{' '}
+            {t('blockCount', { count: childCount })} ·{' '}
             {formatDuration(entry.durationMinutes, { spaced: true })}
           </span>
         </div>
@@ -296,15 +300,16 @@ export function EndOfDay({
   schedule: Schedule
   targetEndMinute: number | null
 }) {
+  const t = useTranslations('agenda')
   const over = targetEndMinute !== null ? schedule.dayEndMinute - targetEndMinute : 0
 
   return (
     <p className="tabular flex flex-wrap items-baseline gap-2 px-4 py-3 text-[15px] text-[var(--fg-muted)] md:px-2">
       <span className="font-medium text-[var(--fg)]">{formatTime(schedule.dayEndMinute)}</span>
-      <span>Ende</span>
+      <span>{t('end')}</span>
       {over > 0 && (
         <span className="rounded bg-[var(--warn-bg)] px-1.5 py-0.5 text-[13px] text-[var(--warn-fg)]">
-          {formatDuration(over, { spaced: true })} über Plan
+          {t('overPlan', { duration: formatDuration(over, { spaced: true }) })}
         </span>
       )}
     </p>

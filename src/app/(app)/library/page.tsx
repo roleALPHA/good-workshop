@@ -1,5 +1,6 @@
 import Link from 'next/link'
-import { readSession } from '@/server/auth/session'
+import { getTranslations } from 'next-intl/server'
+import { readSessionCached } from '@/server/auth/session'
 import { loadLibrary } from '@/server/actions/workshop'
 import { CreateWorkshop } from './create-workshop'
 import { CreateFolder } from './create-folder'
@@ -27,25 +28,26 @@ export default async function LibraryPage({
 
   // Folders belong to the tenant rather than to a person, so tidying them up is
   // an admin's call -- the workshops inside may well be somebody else's.
-  const isAdmin = (await readSession())?.tenantRole === 'admin'
+  const isAdmin = (await readSessionCached())?.tenantRole === 'admin'
 
   if (!result.ok) {
     return <p className="text-[var(--danger-fg)]">{result.message}</p>
   }
 
+  const t = await getTranslations('library')
   const { folders, tags, workshops, nextCursor } = result.data
   const filtered = Boolean(folder || tag || q)
 
   return (
     <div className="grid gap-6 md:grid-cols-[200px_1fr]">
-      <nav aria-label="Ordner und Tags" className="hidden md:block">
+      <nav aria-label={t('navLabel')} className="hidden md:block">
         <h2 className="mb-2 text-[12px] font-semibold tracking-wide text-[var(--fg-subtle)] uppercase">
-          Ordner
+          {t('folders')}
         </h2>
         <ul className="space-y-0.5">
           <li>
             <Link href="/library" className={navClass(!folder && !tag)}>
-              Alle Workshops
+              {t('allWorkshops')}
             </Link>
           </li>
           {folders.map((node) => (
@@ -67,13 +69,13 @@ export default async function LibraryPage({
           href="/library/trash"
           className="mt-3 inline-block px-2 text-[14px] text-[var(--fg-muted)] hover:underline"
         >
-          Papierkorb
+          {t('trash')}
         </Link>
 
         {tags.length > 0 && (
           <>
             <h2 className="mt-6 mb-2 text-[12px] font-semibold tracking-wide text-[var(--fg-subtle)] uppercase">
-              Tags
+              {t('tags')}
             </h2>
             <ul className="space-y-0.5">
               {tags.map((entry) => (
@@ -96,7 +98,7 @@ export default async function LibraryPage({
 
       <section>
         <div className="mb-4 flex flex-wrap items-center justify-between gap-3">
-          <h1 className="text-xl font-semibold tracking-tight">Workshops</h1>
+          <h1 className="text-xl font-semibold tracking-tight">{t('title')}</h1>
           <div className="flex items-center gap-2">
             <SearchBox />
             <CreateWorkshop folderId={folder ?? null} />

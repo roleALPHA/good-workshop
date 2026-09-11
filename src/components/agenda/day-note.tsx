@@ -2,6 +2,7 @@
 
 import { useEffect, useRef, useState } from 'react'
 import type { DayDoc } from '@/domain/agenda/types'
+import { useTranslations } from 'next-intl'
 
 /**
  * What belongs to the DAY rather than to any one block: the room, how to get
@@ -22,6 +23,7 @@ export function DayNote({
   /** Absent for readers: the note is then shown and not editable. */
   onChange?: (desc: Record<string, unknown>) => void
 }) {
+  const t = useTranslations('agenda')
   const stored = typeof doc.desc?.text === 'string' ? doc.desc.text : ''
   const [text, setText] = useState(stored)
 
@@ -55,7 +57,7 @@ export function DayNote({
         onClick={() => setOpen(true)}
         className="mt-3 text-[14px] text-[var(--fg-subtle)] hover:underline"
       >
-        Notiz zum Tag hinzufügen
+        {t('addDayNote')}
       </button>
     )
   }
@@ -63,14 +65,14 @@ export function DayNote({
   return (
     <div className="mt-3">
       <label htmlFor="day-note" className="text-[13px] text-[var(--fg-subtle)]">
-        Notiz zum Tag
+        {t('dayNote')}
       </label>
       <textarea
         id="day-note"
         ref={area}
         value={text}
         rows={2}
-        placeholder="Raum, Anfahrt, wer was mitbringt …"
+        placeholder={t('dayNotePlaceholder')}
         onChange={(event) => setText(event.target.value)}
         // Written on blur, not on every keystroke: this goes through the shared
         // document to everybody who has the day open, and a character at a time
