@@ -11,7 +11,7 @@ test.describe('reading view on a phone', () => {
   test.skip(({ isMobile }) => !isMobile, 'Phone layout only')
 
   test.beforeEach(async ({ page }) => {
-    await page.goto('/')
+    await page.goto('/demo')
   })
 
   test('never scrolls horizontally', async ({ page }) => {
@@ -80,7 +80,7 @@ test.describe('editor gating', () => {
   test.skip(({ isMobile }) => isMobile === true, 'Desktop layout only')
 
   test('shows the agenda table with its column headers on a wide screen', async ({ page }) => {
-    await page.goto('/')
+    await page.goto('/demo')
     await expect(page.getByText('Titel und Beschreibung')).toBeVisible()
     await expect(page.getByText('Zusatzinfo')).toBeVisible()
   })

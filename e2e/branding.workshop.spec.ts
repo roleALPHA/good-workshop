@@ -92,7 +92,7 @@ test('puts the default back', async ({ page }) => {
   // all and therefore shows whatever the stylesheet ships with. Writing that
   // number here instead would mean this test starts failing the day somebody
   // legitimately changes the default.
-  await page.goto('/')
+  await page.goto('/demo')
   const shipped = await hueOf(page)
   await page.goto('/library')
   expect(await hueOf(page)).toBe(shipped)

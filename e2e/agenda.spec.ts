@@ -22,7 +22,7 @@ const section_ = (page: Page, name: string) => page.getByRole('group', { name })
 const agenda = (page: Page) => page.getByRole('region', { name: /^Agenda/ })
 
 test.beforeEach(async ({ page }) => {
-  await page.goto('/')
+  await page.goto('/demo')
 })
 
 test('renders the day in agenda order with computed start times', async ({ page }) => {
