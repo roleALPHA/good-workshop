@@ -2,12 +2,21 @@ import { NextResponse, type NextRequest } from 'next/server'
 import { authConfig } from '@/server/auth/config'
 import { authenticationOptions, verifyAuthentication } from '@/server/auth/passkey'
 import { createSession } from '@/server/auth/session'
+import { rateLimiter } from '@/server/auth/ratelimit'
+import { clientAddress } from '@/server/auth/client-address'
 
 export const runtime = 'nodejs'
 export const dynamic = 'force-dynamic'
 
+// Anonymous and it writes a row per call. Nobody legitimately asks for
+// challenges faster than this; a script can ask forever.
+const challenges = rateLimiter({ limit: 20, windowMs: 60_000 })
+
 /** Step one: hand the browser a challenge. */
-export async function GET() {
+export async function GET(request: NextRequest) {
+  if (!challenges.take(clientAddress(request.headers))) {
+    return NextResponse.json({ error: 'rate_limited' }, { status: 429 })
+  }
   if (!authConfig.passkeysAvailable) {
     return NextResponse.json(
       { error: 'passkeys_unavailable', reason: 'WebAuthn requires HTTPS.' },

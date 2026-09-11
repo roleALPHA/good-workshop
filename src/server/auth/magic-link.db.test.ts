@@ -15,26 +15,39 @@ const ops = new pg.Client({ connectionString: process.env.OPS_DATABASE_URL })
 const email = `magic-${randomUUID()}@example.test`
 const identityId = randomUUID()
 
+// The throttling test deliberately exhausts an address's window. It gets its
+// own so it cannot decide the outcome of whatever runs next -- a test that
+// leaves the fixture spent is a test that breaks its neighbours.
+const burstEmail = `burst-${randomUUID()}@example.test`
+const burstIdentityId = randomUUID()
+
 beforeAll(async () => {
   await ops.connect()
   await ops.query(
     `insert into tenant (id, slug, name) values ($1, $2, 'Test') on conflict (id) do nothing`,
     [authConfig.defaultTenantId, 'default'],
   )
-  await ops.query('insert into identity (id, email, status) values ($1, $2, $3)', [
-    identityId,
-    email,
-    'active',
-  ])
-  await ops.query(
-    `insert into member (id, tenant_id, identity_id, role, status)
-     values ($1, $2, $3, 'member', 'invited')`,
-    [randomUUID(), authConfig.defaultTenantId, identityId],
-  )
+  for (const [id, address] of [
+    [identityId, email],
+    [burstIdentityId, burstEmail],
+  ]) {
+    await ops.query('insert into identity (id, email, status) values ($1, $2, $3)', [
+      id,
+      address,
+      'active',
+    ])
+    await ops.query(
+      `insert into member (id, tenant_id, identity_id, role, status)
+       values ($1, $2, $3, 'member', 'invited')`,
+      [randomUUID(), authConfig.defaultTenantId, id],
+    )
+  }
 })
 
 afterAll(async () => {
-  await ops.query('delete from identity where id = $1', [identityId])
+  await ops.query('delete from identity where id = any($1::uuid[])', [
+    [identityId, burstIdentityId],
+  ])
   await ops.end()
 })
 
@@ -98,7 +111,7 @@ describe('magic links', () => {
     // call. Through the operator's own relay, which is what makes it their
     // reputation problem rather than only their disk.
     const results = []
-    for (let i = 0; i < 12; i++) results.push(await issueMagicLink(email))
+    for (let i = 0; i < 12; i++) results.push(await issueMagicLink(burstEmail))
 
     expect(results.filter(Boolean).length).toBeLessThan(12)
   })

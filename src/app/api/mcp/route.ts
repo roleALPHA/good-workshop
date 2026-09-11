@@ -3,6 +3,8 @@ import { createServer, type ServerResponse } from 'node:http'
 import { StreamableHTTPServerTransport } from '@modelcontextprotocol/sdk/server/streamableHttp.js'
 import { NextResponse, type NextRequest } from 'next/server'
 import { resolveBearer } from '@/server/mcp/auth'
+import { rateLimiter } from '@/server/auth/ratelimit'
+import { clientAddress } from '@/server/auth/client-address'
 import { buildMcpServer } from '@/server/mcp/server'
 
 export const runtime = 'nodejs'
@@ -19,7 +21,16 @@ export const maxDuration = 60
  * The adapter below is the one place the "Next.js monolith" decision costs
  * something: the SDK speaks Node's req/res, Next speaks Request/Response.
  */
+// Presented-token checks, before the database is asked. The secret is 256 bits
+// so guessing is not the worry -- an unauthenticated caller driving a query per
+// request is.
+const tokenChecks = rateLimiter({ limit: 60, windowMs: 60_000 })
+
 export async function POST(request: NextRequest) {
+  if (!tokenChecks.take(clientAddress(request.headers))) {
+    return NextResponse.json({ error: 'rate_limited' }, { status: 429 })
+  }
+
   const authorization = request.headers.get('authorization')
   const actor = await resolveBearer(authorization)
 

@@ -1,5 +1,5 @@
 import { randomUUID } from 'node:crypto'
-import { and, eq, gt, isNull, sql } from 'drizzle-orm'
+import { and, count, eq, gt, isNull, sql } from 'drizzle-orm'
 import { withAuth, withTenantOnly } from '@/server/db'
 import { emailToken, identity, member } from '@/server/db/schema'
 import { authConfig } from './config'
@@ -24,6 +24,15 @@ export type IssueResult = { link: string; email: string }
  * addresses have accounts is an enumeration oracle, and this endpoint is
  * reachable by anyone.
  */
+/**
+ * How many links one address may be sent in the window. Generous on purpose: a
+ * person who lost the first mail, opened the second on the wrong device and
+ * asked again must not be locked out of their own account. The number that
+ * matters is the one an attacker cannot use to fill an inbox.
+ */
+const MAGIC_LINK_BURST = 5
+const MAGIC_LINK_WINDOW_MS = 15 * 60_000
+
 export async function issueMagicLink(
   emailAddress: string,
   tenantId: string = authConfig.defaultTenantId,
@@ -41,6 +50,25 @@ export async function issueMagicLink(
 
     const found = rows[0]
     if (!found || found.status !== 'active') return null
+
+    // Counted in the database rather than in this process: /login is anonymous,
+    // the mail goes out through the operator's relay, and a limit that resets
+    // per replica is not a limit. `email_token_rate_idx` on (email, created_at)
+    // has existed since the first migration for exactly this query -- it was
+    // simply never asked.
+    //
+    // Silent, like every other refusal on this path: telling the caller they
+    // hit a limit for this address confirms the address has an account.
+    const recent = await tx
+      .select({ n: count() })
+      .from(emailToken)
+      .where(
+        and(
+          eq(emailToken.email, normalised),
+          gt(emailToken.createdAt, new Date(Date.now() - MAGIC_LINK_WINDOW_MS)),
+        ),
+      )
+    if ((recent[0]?.n ?? 0) >= MAGIC_LINK_BURST) return null
 
     const secret = generateSecret(32)
     await tx.insert(emailToken).values({
