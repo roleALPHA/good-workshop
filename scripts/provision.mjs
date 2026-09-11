@@ -171,8 +171,12 @@ async function bootstrapAdmin(client) {
   const secret = randomBytes(32).toString('base64url')
   const tokenHash = createHash('sha256').update(secret).digest('hex')
   await client.query(
+    // Eine Stunde, nicht 24. Der Link wird beim allerersten Start gedruckt und
+    // von einer Betreiberin gelesen, die in dem Moment vor den Logs sitzt --
+    // ein Tag Gültigkeit war ein Tag, an dem er in jedem Logauszug, jedem
+    // Backup und jeder Support-Anlage ein vollwertiges Admin-Konto ist.
     `insert into email_token (id, purpose, email, identity_id, tenant_id, token_hash, expires_at)
-     values ($1, 'login', $2, $3, $4, $5, now() + interval '24 hours')`,
+     values ($1, 'login', $2, $3, $4, $5, now() + interval '1 hour')`,
     [randomUUID(), email, identityId, DEFAULT_TENANT_ID, tokenHash],
   )
   await client.query('reset role')

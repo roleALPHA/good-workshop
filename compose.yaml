@@ -139,14 +139,6 @@ services:
       - caddy_config:/config
     depends_on: [app]
 
-  # Fängt Anmeldelinks ab, solange kein echter Mailversand eingerichtet ist.
-  mailpit:
-    profiles: [dev]
-    image: axllent/mailpit
-    restart: unless-stopped
-    ports:
-      - '127.0.0.1:8025:8025'
-
 volumes:
   pgdata:
   pgsocket:

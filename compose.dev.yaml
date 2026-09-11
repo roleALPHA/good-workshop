@@ -24,5 +24,16 @@ services:
       timeout: 3s
       retries: 20
 
+  # Fängt Anmeldelinks ab, solange kein echter Mailversand eingerichtet ist.
+  # Steht hier statt in compose.yaml: eine Weboberfläche ohne jede
+  # Authentifizierung, die alle Anmeldelinks zeigt, hat in der Datei für den
+  # Produktivbetrieb nichts verloren -- auch nicht hinter einem Profil, das
+  # jemand einmal versehentlich mitgibt.
+  mailpit:
+    image: axllent/mailpit
+    restart: unless-stopped
+    ports:
+      - '127.0.0.1:8025:8025'
+
 volumes:
   dev-pgdata:

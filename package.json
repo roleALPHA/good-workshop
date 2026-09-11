@@ -88,5 +88,10 @@
     "typescript": "^5.9.2",
     "vitest": "^3.2.4",
     "yaml": "^2.9.0"
+  },
+  "pnpm": {
+    "overrides": {
+      "@esbuild-kit/core-utils>esbuild": "^0.25.12"
+    }
   }
 }

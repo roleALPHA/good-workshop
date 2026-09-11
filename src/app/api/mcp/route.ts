@@ -1,3 +1,4 @@
+import { randomUUID } from 'node:crypto'
 import { Readable } from 'node:stream'
 import { createServer, type ServerResponse } from 'node:http'
 import { StreamableHTTPServerTransport } from '@modelcontextprotocol/sdk/server/streamableHttp.js'
@@ -93,8 +94,20 @@ async function handleThroughNode(
   let status = 200
   const headers = new Headers()
 
+  // The bridge listens on loopback for the lifetime of this one request, and a
+  // loopback port is reachable by every other process on the host. Without this
+  // the first connection to win the race -- not necessarily ours -- would be
+  // answered with the already-authenticated caller's context. A nonce costs
+  // nothing and closes the window.
+  const bridgeKey = randomUUID()
+
   await new Promise<void>((resolve, reject) => {
     const bridge = createServer((req, res) => {
+      if (req.headers['x-bridge-key'] !== bridgeKey) {
+        res.writeHead(403).end()
+        return
+      }
+
       captureInto(res, chunks, (code, outHeaders) => {
         status = code
         for (const [key, value] of Object.entries(outHeaders)) {
@@ -117,6 +130,7 @@ async function handleThroughNode(
         headers: {
           'content-type': 'application/json',
           accept: request.headers.get('accept') ?? 'application/json, text/event-stream',
+          'x-bridge-key': bridgeKey,
         },
         body: JSON.stringify(body),
       })
