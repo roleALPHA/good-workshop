@@ -1,17 +1,24 @@
 import { expect, test } from '@playwright/test'
+import { seedReferenceDay } from './fixtures/seed-day'
 
 /**
  * The phone reading view is not a degraded desktop table -- it is the screen a
  * facilitator actually uses on the day, standing in the room. These assertions
- * are the mechanical half of the checklist in
- * docs/konventionen-ui.md.
+ * are the mechanical half of the checklist in docs/konventionen-ui.md.
+ *
+ * Every one of them is about layout -- overflow, font size, cards instead of a
+ * grid, a pinned section header -- so they stayed here when the derivations
+ * moved into component tests. jsdom has no layout engine to ask.
+ *
+ * They run against a real, seeded workshop now. The public demo page that used
+ * to serve them is gone: it looked like the product and saved nothing.
  */
 
 test.describe('reading view on a phone', () => {
   test.skip(({ isMobile }) => !isMobile, 'Phone layout only')
 
-  test.beforeEach(async ({ page }) => {
-    await page.goto('/demo')
+  test.beforeEach(async ({ page, request }) => {
+    await seedReferenceDay(page, request)
   })
 
   test('never scrolls horizontally', async ({ page }) => {
@@ -79,8 +86,11 @@ test.describe('reading view on a phone', () => {
 test.describe('editor gating', () => {
   test.skip(({ isMobile }) => isMobile === true, 'Desktop layout only')
 
-  test('shows the agenda table with its column headers on a wide screen', async ({ page }) => {
-    await page.goto('/demo')
+  test('shows the agenda table with its column headers on a wide screen', async ({
+    page,
+    request,
+  }) => {
+    await seedReferenceDay(page, request)
     await expect(page.getByText('Titel und Beschreibung')).toBeVisible()
     await expect(page.getByText('Zusatzinfo')).toBeVisible()
   })

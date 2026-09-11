@@ -20,14 +20,47 @@ beforeAll(async () => {
 })
 
 afterAll(async () => {
+  await restore()
   await ops.end()
 })
 
-// A clean slate before and after: the other files in this suite leave members
-// behind, and "is there an admin" is the entire question this one asks.
+/**
+ * The precondition is "no active admin", and producing it must not destroy
+ * anybody else's data.
+ *
+ * An earlier version simply deleted every member of the tenant. Against a
+ * development database that throws away the developer's own membership, and
+ * against a database that has workshops it fails outright on the foreign key
+ * from workshop.owner_id -- which is how the flaw surfaced.
+ *
+ * So foreign members are demoted for the duration and put back afterwards,
+ * and only the identities this file creates are removed.
+ */
+const suspended: string[] = []
+
 const reset = async () => {
-  await ops.query(`delete from member where tenant_id = $1`, [TENANT])
+  const { rows } = await ops.query(
+    `update member set role = 'member'
+      where tenant_id = $1 and role = 'admin' and status = 'active'
+        and identity_id not in (select id from identity where email like 'setup-%@example.test')
+      returning id`,
+    [TENANT],
+  )
+  suspended.push(...rows.map((r) => r.id))
+
+  await ops.query(
+    `delete from member
+      where tenant_id = $1
+        and identity_id in (select id from identity where email like 'setup-%@example.test')`,
+    [TENANT],
+  )
   await ops.query(`delete from identity where email like 'setup-%@example.test'`)
+}
+
+const restore = async () => {
+  if (suspended.length === 0) return
+  await ops.query(`update member set role = 'admin' where id = any($1::uuid[])`, [suspended])
+  suspended.length = 0
 }
 
 beforeEach(reset)

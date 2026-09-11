@@ -1,80 +1,27 @@
 import { expect, test, type Page } from '@playwright/test'
+import { seedReferenceDay } from './fixtures/seed-day'
 
 /**
- * What this file adds over the unit tests: proof that the whole pipeline
- * survives a real browser. flattenDay -> computeSchedule -> withGapRows ->
- * AgendaTable is exercised in Vitest; here we check that the server-rendered
- * result is actually readable, that the OKLCH token system resolves, and that
- * state conveyed visually is also in the accessibility tree.
+ * What this file adds over the component tests: proof that the whole thing
+ * survives a real browser on a real workshop.
+ *
+ * The derivations -- computed start times, the overlap stated in words, a
+ * cluster duration summed from its children -- moved to
+ * components/agenda/agenda-surface.test.tsx when the public demo page they used
+ * to load was removed. What stayed is everything jsdom cannot answer: layout,
+ * the OKLCH token system, and dragging.
  *
  * Blocks are queried as `article` named by their title and sections as `group`
  * named by theirs -- not by test ids, and not as generic list items, which
  * would collide with the bullet lists inside descriptions.
- *
- * Flows still to be added as their features land (see
- * docs/konventionen-tests.md): magic-link login, creating a
- * workshop, setting a pin in the UI, Markdown export, and the 409 conflict
- * banner across two browser contexts.
  */
 
 const block = (page: Page, name: string) => page.getByRole('article', { name })
 const section_ = (page: Page, name: string) => page.getByRole('group', { name })
 const agenda = (page: Page) => page.getByRole('region', { name: /^Agenda/ })
 
-test.beforeEach(async ({ page }) => {
-  await page.goto('/demo')
-})
-
-test('renders the day in agenda order with computed start times', async ({ page }) => {
-  // 13:00 is pinned; everything after it is derived from durations alone.
-  await expect(block(page, 'Check-in & Start')).toContainText('13:00')
-  await expect(block(page, 'Agenda & Spielregeln')).toContainText('13:15')
-  await expect(block(page, 'Energizer: Zwei Wahrheiten')).toContainText('13:25')
-  await expect(block(page, 'Druckpunkte')).toContainText('13:35')
-
-  // Asserted on accessible names rather than on text, because the two views
-  // hold the title in different places: an input value in the editor,
-  // document text in the reading view. The name is identical either way, and
-  // that is the property that actually matters.
-  const rows = page.getByRole('article')
-  await expect(rows.nth(0)).toHaveAccessibleName('Check-in & Start')
-  await expect(rows.nth(1)).toHaveAccessibleName('Agenda & Spielregeln')
-  await expect(rows.nth(2)).toHaveAccessibleName('Energizer: Zwei Wahrheiten')
-  await expect(rows.nth(3)).toHaveAccessibleName('Druckpunkte')
-})
-
-test('announces a pinned start time instead of signalling it with an icon alone', async ({
-  page,
-}) => {
-  await expect(block(page, 'Check-in & Start').getByText('Startzeit fixiert:')).toBeAttached()
-  await expect(block(page, 'Agenda & Spielregeln').getByText('Startzeit fixiert:')).toHaveCount(0)
-})
-
-test('states an overlap in words rather than silently shortening a block', async ({ page }) => {
-  const lunch = block(page, 'Mittagessen')
-
-  await expect(lunch).toContainText('14:30')
-  await expect(lunch).toContainText('Überschneidet den vorherigen Block um 30m')
-
-  // Nothing was auto-shortened: lunch still runs its full hour, and the block
-  // after it starts accordingly. Asserted through the schedule rather than
-  // through the duration control, which only exists in the editor.
-  await expect(block(page, 'IT-Management verorten')).toContainText('15:30')
-})
-
-test('derives a cluster duration from its children', async ({ page }) => {
-  // 15 + 10 + 10 = 35, and it starts where its first (pinned) child starts.
-  await expect(section_(page, 'Ankommen & Rahmen')).toContainText('3 Blöcke · 35m')
-  await expect(section_(page, 'Ankommen & Rahmen')).toContainText('13:00')
-})
-
-test('shows the running end time and flags going over plan', async ({ page }) => {
-  // Located through its own label rather than by hunting for the time: the
-  // same time appears in the running totals, and scoping to the agenda stopped
-  // separating them once those totals moved in there with it.
-  const end = agenda(page).getByText('Ende', { exact: true }).locator('..')
-  await expect(end).toContainText('17:30')
-  await expect(end).toContainText('30m über Plan')
+test.beforeEach(async ({ page, request }) => {
+  await seedReferenceDay(page, request)
 })
 
 test('carries the attribution footer on every view', async ({ page }) => {

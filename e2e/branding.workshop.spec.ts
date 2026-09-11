@@ -88,15 +88,24 @@ test('puts the default back', async ({ page }) => {
   await page.getByLabel('Name (wenn kein Logo gesetzt ist)').click()
   await expect(page.getByText('Gespeichert.')).toBeVisible()
 
-  // Compared against the public demo, which emits no tenant style block at
-  // all and therefore shows whatever the stylesheet ships with. Writing that
-  // number here instead would mean this test starts failing the day somebody
-  // legitimately changes the default.
-  await page.goto('/demo')
-  const shipped = await hueOf(page)
   await page.goto('/library')
-  expect(await hueOf(page)).toBe(shipped)
   await expect(page.getByRole('img', { name: 'Logo' })).toHaveCount(0)
+
+  // Asserted as the ABSENCE of a tenant style block rather than as a
+  // particular hue. BrandStyle renders nothing at all when no colour is set,
+  // so this is the exact property, and it survives somebody legitimately
+  // changing the shipped default.
+  //
+  // It used to compare the hue against the public demo page, which emitted no
+  // such block either and no longer exists.
+  const injected = await page.evaluate(() =>
+    [...document.querySelectorAll('style')].some((el) => el.textContent?.includes('--brand-h')),
+  )
+  expect(injected, 'kein Tenant-Stilblock mehr im Dokument').toBe(false)
+
+  // And the page still resolves the shipped ramp, rather than falling back to
+  // an unstyled document.
+  expect(Number.isFinite(await hueOf(page))).toBe(true)
 })
 
 const hueOf = (page: Page) =>

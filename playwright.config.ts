@@ -31,12 +31,16 @@ export default defineConfig({
   },
 
   projects: [
-    // The public demo needs no database, so these two always run.
-    { name: 'desktop', use: { ...devices['Desktop Chrome'] }, testIgnore: /workshop\.spec\.ts/ },
-    // The reading view is the most-used screen of this product per workshop --
-    // a facilitator reads the agenda on a phone, in the room. It gets its own
-    // project rather than a viewport tweak inside one test.
-    { name: 'mobile', use: { ...devices['Pixel 5'] }, testIgnore: /workshop\.spec\.ts/ },
+    // What is left of the database-free half: the door. Everything about the
+    // agenda itself moved -- the derivations into component tests, the layout
+    // and interaction assertions into the authenticated projects below --
+    // when the public demo page that used to host them was removed.
+    {
+      name: 'desktop',
+      use: { ...devices['Desktop Chrome'] },
+      testMatch: /(entry|setup)\.spec\.ts/,
+    },
+    { name: 'mobile', use: { ...devices['Pixel 5'] }, testMatch: /(entry|setup)\.spec\.ts/ },
 
     // Everything past the login needs a database, so the authenticated tests
     // are skipped where there is none rather than failing confusingly.
@@ -45,8 +49,19 @@ export default defineConfig({
           { name: 'setup', testMatch: /auth\.setup\.ts/ },
           {
             name: 'authenticated',
-            testMatch: /workshop\.spec\.ts/,
+            testMatch: /(workshop|agenda)\.spec\.ts/,
             use: { ...devices['Desktop Chrome'], storageState: STORAGE_STATE },
+            dependencies: ['setup'],
+          },
+          // The reading view is the most-used screen of this product per
+          // workshop -- a facilitator reads the agenda on a phone, in the room.
+          // It gets its own project rather than a viewport tweak inside one
+          // test, and it needs a signed-in session now that the agenda it reads
+          // is a real one.
+          {
+            name: 'authenticated-mobile',
+            testMatch: /(reading-view|agenda)\.spec\.ts/,
+            use: { ...devices['Pixel 5'], storageState: STORAGE_STATE },
             dependencies: ['setup'],
           },
         ]
