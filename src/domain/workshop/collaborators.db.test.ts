@@ -133,12 +133,12 @@ describe('setCollaborator', () => {
 
   it('refuses somebody who is switched off', async () => {
     await ops.query(`update member set status = 'disabled' where id = $1`, [colleagueId])
-    await expect(share(colleagueId, 'editor')).rejects.toThrow(/abgeschaltet/)
+    await expect(share(colleagueId, 'editor')).rejects.toThrow('sharing.memberDisabled')
     await ops.query(`update member set status = 'active' where id = $1`, [colleagueId])
   })
 
   it('refuses a member id that is not in this tenant', async () => {
-    await expect(share(randomUUID(), 'editor')).rejects.toThrow(/gibt es nicht/)
+    await expect(share(randomUUID(), 'editor')).rejects.toThrow('sharing.memberGone')
   })
 })
 

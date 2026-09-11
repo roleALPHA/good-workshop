@@ -6,6 +6,8 @@ import { loadDay } from '@/domain/agenda/repo'
 import { renderDayMarkdown } from '@/server/export/markdown'
 import { workshop as workshopTable } from '@/server/db/schema'
 import { eq } from 'drizzle-orm'
+import { getLocale } from 'next-intl/server'
+import { asLocale } from '@/i18n/resolve'
 
 export const runtime = 'nodejs'
 export const dynamic = 'force-dynamic'
@@ -19,6 +21,17 @@ export async function GET(
 
   const { workshopId, dayId } = await context.params
   const params = request.nextUrl.searchParams
+
+  /**
+   * `?locale=fr` beats the exporter's own language.
+   *
+   * The common case is a facilitator exporting for themselves, so their
+   * language is the default. The case that made this a parameter is the other
+   * one: a German facilitator handing a French agenda to French participants.
+   * Without it the only way through is to change your account language, export,
+   * and change it back -- and people do the first half of that.
+   */
+  const locale = asLocale(params.get('locale')) ?? (await getLocale())
 
   try {
     const { markdown, title, contentVersion } = await withTenant(
@@ -36,7 +49,7 @@ export async function GET(
           source: 'web' as const,
         }
         const access = await assertWorkshopAccess(tx, actor, workshopId, 'workshop.export')
-        const { doc } = await loadDay(tx, access, dayId)
+        const { doc } = await loadDay(tx, access, dayId, locale)
 
         const meta = await tx
           .select({ title: workshopTable.title, status: workshopTable.status })

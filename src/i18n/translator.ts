@@ -23,7 +23,17 @@ import type { Locale } from './config'
  * these is src/i18n/catalogs.test.ts, which walks DOMAIN_ERROR_KEYS and
  * FIELD_ERROR_KEYS against all four catalogs.
  */
-export type Translate = (key: string, params?: Record<string, string | number>) => string
+export type Translate = ((key: string, params?: Record<string, string | number>) => string) & {
+  /**
+   * Whether the catalog actually has that key.
+   *
+   * Needed wherever a key is assembled from data -- a module type's system_key,
+   * a field name out of a tenant's JSON Schema -- because "not translated" and
+   * "translated to the empty string" are different answers, and the first one
+   * has to fall back to what is stored rather than render a key at somebody.
+   */
+  has(key: string): boolean
+}
 
 export function translator(locale: Locale, namespace?: string): Translate {
   const t = createTranslator({

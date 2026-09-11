@@ -1,0 +1,195 @@
+{
+  "groups": {
+    "Ablauf": "Ablauf",
+    "Inhalt": "Inhalt",
+    "Moderation": "Moderation",
+    "Vorbereitung": "Vorbereitung",
+    "_default": "Weitere Angaben"
+  },
+  "fields": {
+    "activity": {
+      "title": "Aktivität"
+    },
+    "agenda_overview": {
+      "title": "Agenda-Überblick"
+    },
+    "catering_note": {
+      "title": "Verpflegung"
+    },
+    "deadline_field": {
+      "title": "Fristen erfassen"
+    },
+    "debrief": {
+      "title": "Auswertung"
+    },
+    "deliverable": {
+      "title": "Ergebnis"
+    },
+    "description": {
+      "title": "Beschreibung"
+    },
+    "facilitator_notes": {
+      "title": "Moderationsnotizen",
+      "description": "Nur für dich sichtbar, nicht im Teilnehmer-Export."
+    },
+    "format": {
+      "title": "Format",
+      "enum": {
+        "round": "Reihum",
+        "popcorn": "Popcorn",
+        "written": "Schriftlich",
+        "temperature": "Stimmungsbild",
+        "pairs": "Zu zweit"
+      }
+    },
+    "group_size": {
+      "title": "Gruppengröße"
+    },
+    "individual_first": {
+      "title": "Erst einzeln, dann geteilt"
+    },
+    "instructions": {
+      "title": "Anleitung"
+    },
+    "key_points": {
+      "title": "Kernaussagen"
+    },
+    "materials": {
+      "title": "Material",
+      "help": "Alles, was auf dem Tisch liegen muss"
+    },
+    "method": {
+      "title": "Verfahren",
+      "enum": {
+        "dot_voting": "Punktabfrage",
+        "fist_of_five": "Fist of Five",
+        "consent": "Konsent",
+        "majority": "Mehrheit"
+      }
+    },
+    "method_url": {
+      "title": "Methodenbeschreibung"
+    },
+    "number_of_groups": {
+      "title": "Anzahl Gruppen"
+    },
+    "options": {
+      "title": "Optionen"
+    },
+    "owner_field": {
+      "title": "Verantwortliche erfassen"
+    },
+    "participation": {
+      "title": "Sozialform",
+      "enum": {
+        "plenary": "Plenum",
+        "small_groups": "Kleingruppen",
+        "pairs": "Paare",
+        "individual": "Einzelarbeit",
+        "none": "keine"
+      }
+    },
+    "presenter": {
+      "title": "Vortragende:r"
+    },
+    "prompt": {
+      "title": "Impulsfrage"
+    },
+    "question": {
+      "title": "Leitfrage"
+    },
+    "room_setup": {
+      "title": "Raumaufbau"
+    },
+    "slides_url": {
+      "title": "Folien"
+    },
+    "space_needed": {
+      "title": "Platzbedarf",
+      "enum": {
+        "seated": "Im Sitzen",
+        "standing": "Im Stehen",
+        "room": "Ganzer Raum",
+        "outdoor": "Draußen"
+      }
+    },
+    "task": {
+      "title": "Arbeitsauftrag"
+    },
+    "timebox_per_person_seconds": {
+      "title": "Zeit je Person (Sek.)"
+    }
+  },
+  "types": {
+    "admin": {
+      "name": "Begrüßung & Organisatorisches",
+      "description": "Ankommen, Ablauf, Spielregeln."
+    },
+    "break": {
+      "name": "Pause",
+      "description": ""
+    },
+    "buffer": {
+      "name": "Puffer",
+      "description": ""
+    },
+    "check_in": {
+      "name": "Check-in",
+      "description": "Alle kommen einmal zu Wort."
+    },
+    "check_out": {
+      "name": "Check-out",
+      "description": "",
+      "fields": {
+        "prompt": {
+          "title": "Abschlussfrage"
+        }
+      }
+    },
+    "decision": {
+      "name": "Entscheidung / Abstimmung",
+      "description": ""
+    },
+    "discussion": {
+      "name": "Plenumsdiskussion",
+      "description": ""
+    },
+    "energizer": {
+      "name": "Energizer",
+      "description": ""
+    },
+    "exercise": {
+      "name": "Übung",
+      "description": ""
+    },
+    "group_work": {
+      "name": "Gruppenarbeit",
+      "description": ""
+    },
+    "lunch": {
+      "name": "Mittagessen",
+      "description": ""
+    },
+    "next_steps": {
+      "name": "Nächste Schritte",
+      "description": ""
+    },
+    "note": {
+      "name": "Notiz",
+      "description": ""
+    },
+    "presentation": {
+      "name": "Impuls / Präsentation",
+      "description": ""
+    },
+    "reflection": {
+      "name": "Reflexion",
+      "description": "",
+      "fields": {
+        "prompt": {
+          "title": "Reflexionsfrage"
+        }
+      }
+    }
+  }
+}

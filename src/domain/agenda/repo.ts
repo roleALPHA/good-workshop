@@ -11,6 +11,8 @@ import {
   type WorkshopAccess,
 } from './access'
 import { keyAtEnd, placeAfter, sortByPosition } from './ordering'
+import type { Locale } from '@/i18n/config'
+import { localiseModuleType } from '@/domain/moduleType/localise'
 
 /**
  * Every structural mutation to an agenda goes through here.
@@ -63,10 +65,21 @@ function assertTouched(rowCount: number | undefined): void {
   if (!rowCount) throw new NotFoundError()
 }
 
+/**
+ * @param locale which language the block types are named in.
+ *
+ * A parameter rather than something read from the request, and that is
+ * load-bearing: an export is often handed to somebody other than the person
+ * producing it, and MCP has no viewer at all. Each of the six callers decides
+ * for itself -- the app page and the collaboration room take the session's
+ * language, the export route takes `?locale` if there is one, MCP answers in
+ * English.
+ */
 export async function loadDay(
   tx: Tx,
   access: WorkshopAccess,
   dayId: string,
+  locale: Locale,
 ): Promise<DayDocResult> {
   const days = await tx
     .select()
@@ -75,7 +88,7 @@ export async function loadDay(
     .limit(1)
 
   const day = days[0]
-  if (!day) throw new Error('Workshoptag nicht gefunden.')
+  if (!day) throw new NotFoundError()
 
   const [clusters, modules, types] = await Promise.all([
     tx.select().from(cluster).where(eq(cluster.dayId, dayId)).orderBy(asc(cluster.position)),
@@ -129,20 +142,36 @@ export async function loadDay(
         parked: m.parked,
         order: (m.clusterId === null ? dayOrder.get(m.id) : childOrder.get(m.id)) ?? 0,
       })),
+      /**
+       * The one place a stored block type becomes something a person reads.
+       *
+       * Everything downstream goes through this map: the inspector, the block
+       * picker, the agenda table, the category legend, the Markdown exporter,
+       * the print view and MCP's get_workshop. Translating here rather than at
+       * any one of them is the difference between five surfaces agreeing and
+       * four of them being fixed later.
+       *
+       * systemKey and customizedAt deliberately do NOT reach the DTO: it
+       * travels to the browser and into the Yjs payload, and neither has a use
+       * for them.
+       */
       moduleTypes: Object.fromEntries(
-        types.map((t): [string, ModuleTypeDto] => [
-          t.id,
-          {
-            id: t.id,
-            key: t.key,
-            name: t.name,
-            color: t.color as CategoryColor,
-            icon: t.icon,
-            defaultDurationMinutes: t.defaultDurationMinutes,
-            countsAsContent: t.countsAsContent,
-            jsonSchema: t.jsonSchema,
-          },
-        ]),
+        types.map((row): [string, ModuleTypeDto] => {
+          const t = localiseModuleType(row, locale)
+          return [
+            t.id,
+            {
+              id: t.id,
+              key: t.key,
+              name: t.name,
+              color: t.color as CategoryColor,
+              icon: t.icon,
+              defaultDurationMinutes: t.defaultDurationMinutes,
+              countsAsContent: t.countsAsContent,
+              jsonSchema: t.jsonSchema,
+            },
+          ]
+        }),
       ),
     },
   }

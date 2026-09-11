@@ -134,7 +134,7 @@ async function seedLog() {
 const relationalShape = () =>
   withTenant(actor(), async (tx) => {
     const access = await assertWorkshopAccess(tx, actor(), workshopId, 'workshop.read')
-    const { doc } = await loadDay(tx, access, dayId)
+    const { doc } = await loadDay(tx, access, dayId, 'de')
     return flattenDay(doc).map((row) => (row.depth === 1 ? `  ${row.id}` : row.id))
   })
 
@@ -244,7 +244,7 @@ describe('the note on the day', () => {
     // And it comes back out again, which is what the page renders from.
     const loaded = await withTenant(actor(), async (tx) => {
       const access = await assertWorkshopAccess(tx, actor(), workshopId, 'workshop.read')
-      return loadDay(tx, access, dayId)
+      return loadDay(tx, access, dayId, 'de')
     })
     expect(loaded.doc.desc).toEqual({ text: 'Raum 2.14, Schlüssel beim Empfang.' })
   })

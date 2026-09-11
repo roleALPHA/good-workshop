@@ -233,6 +233,6 @@ describe('tags', () => {
           Array.from({ length: 20 }, (_, i) => `t${i}`),
         )
       }),
-    ).rejects.toThrow(/Höchstens 12/)
+    ).rejects.toThrow('tags.tooMany')
   })
 })

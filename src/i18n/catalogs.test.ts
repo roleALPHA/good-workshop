@@ -54,9 +54,15 @@ describe('message catalogs', () => {
       expect(extra).toEqual([])
     })
 
+    /**
+     * An empty string is only a fault where the German source has something to
+     * say. Several built-in block types legitimately carry no description --
+     * "Pause" needs none -- and an empty German source means an empty
+     * translation is correct, not missing.
+     */
     it('is never empty where German has text', () => {
       const blank = [...target.entries()]
-        .filter(([, value]) => value.trim() === '')
+        .filter(([key, value]) => value.trim() === '' && (source.get(key) ?? '').trim() !== '')
         .map(([key]) => key)
       expect(blank).toEqual([])
     })

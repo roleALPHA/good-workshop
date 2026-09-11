@@ -52,7 +52,7 @@ export default async function PrintPage({
   try {
     data = await withTenant(actor, async (tx) => {
       const access = await assertWorkshopAccess(tx, actor, workshopId, 'workshop.export')
-      const { doc } = await loadDay(tx, access, dayId)
+      const { doc } = await loadDay(tx, access, dayId, locale)
       const meta = await tx
         .select({ title: workshopTable.title })
         .from(workshopTable)

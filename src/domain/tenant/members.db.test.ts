@@ -112,7 +112,7 @@ describe('inviteMember', () => {
   })
 
   it('refuses somebody who is not a tenant admin', async () => {
-    await expect(inviteMember(plain(), address(), 'member')).rejects.toThrow(/Tenant-Admins/)
+    await expect(inviteMember(plain(), address(), 'member')).rejects.toThrow('member.adminOnly')
   })
 })
 
@@ -129,7 +129,7 @@ describe('listMembers', () => {
   })
 
   it('is refused to an ordinary member', async () => {
-    await expect(listMembers(plain())).rejects.toThrow(/Tenant-Admins/)
+    await expect(listMembers(plain())).rejects.toThrow('member.adminOnly')
   })
 })
 
@@ -152,14 +152,14 @@ describe('the last admin', () => {
   it('cannot be demoted', async () => {
     // Not a matter of taste: a tenant with no admins can only be repaired from
     // a shell on the server.
-    await expect(setMemberRole(admin(), adminMember, 'member')).rejects.toThrow(/letzte aktive/)
+    await expect(setMemberRole(admin(), adminMember, 'member')).rejects.toThrow('member.lastAdmin')
   })
 
   it('cannot be switched off', async () => {
     const other = await invite(address())
     await expect(setMemberStatus(admin(), other.memberId, 'disabled')).resolves.toBeUndefined()
     await expect(setMemberStatus(admin(), adminMember, 'disabled')).rejects.toThrow(
-      /nicht selbst abschalten/,
+      'member.cannotDisableSelf',
     )
   })
 

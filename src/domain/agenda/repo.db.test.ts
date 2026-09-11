@@ -142,7 +142,7 @@ beforeEach(async () => {
 const shape = async () =>
   withTenant(owner(), async (tx) => {
     const access = await assertWorkshopAccess(tx, owner(), workshopId, 'workshop.read')
-    const { doc } = await loadDay(tx, access, dayId)
+    const { doc } = await loadDay(tx, access, dayId, 'de')
     return flattenDay(doc).map((r) => (r.depth === 1 ? `  ${r.id}` : r.id))
   })
 

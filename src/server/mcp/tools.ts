@@ -9,6 +9,7 @@ import {
   type WorkshopAccess,
 } from '@/domain/agenda/access'
 import { loadDay } from '@/domain/agenda/repo'
+import { localiseModuleType } from '@/domain/moduleType/localise'
 import { publicToolError } from './errors'
 
 /**
@@ -102,9 +103,13 @@ export function registerTools(server: McpServer, ctx: Ctx): void {
     },
     async () => {
       requireScope(actor, 'module_types:read')
-      const types = await withTenant(actor, (tx) =>
+      // list_module_types reads the table directly rather than going through
+      // loadDay, so the localisation has to happen here too -- in English,
+      // like everything else this surface says.
+      const rows = await withTenant(actor, (tx) =>
         tx.select().from(moduleType).where(eq(moduleType.isActive, true)),
       )
+      const types = rows.map((row) => localiseModuleType(row, MCP_LOCALE))
 
       return ok(
         types
@@ -174,7 +179,7 @@ export function registerTools(server: McpServer, ctx: Ctx): void {
         const resolvedDayId = dayId ?? (await firstDayOf(tx, workshopId))
         if (!resolvedDayId) return fail('Dieser Workshop hat noch keinen Tag.')
 
-        const { doc, contentVersion } = await loadDay(tx, access, resolvedDayId)
+        const { doc, contentVersion } = await loadDay(tx, access, resolvedDayId, MCP_LOCALE)
         const meta = await tx
           .select({ title: workshop.title })
           .from(workshop)
@@ -563,6 +568,16 @@ function moduleFrom(
   const type = types.get(input.typeKey)!
   return {
     moduleTypeId: type.id,
+    /**
+     * The STORED name, deliberately not the English one this surface otherwise
+     * speaks.
+     *
+     * This is persisted into workshop_module.title, where a person reads it in
+     * their own interface afterwards. The canonical row is the honest default
+     * there; filling a German facilitator's agenda with English block titles
+     * because a model created them would be the wrong kind of consistent. A
+     * model that wants a particular title passes one.
+     */
     title: input.title ?? type.name,
     durationMinutes: input.durationMinutes ?? type.defaultDurationMinutes,
     pinnedStartMinute: input.pinnedStartMinute ?? null,

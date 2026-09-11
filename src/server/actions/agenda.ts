@@ -7,6 +7,9 @@ import { addModule, deleteModule, loadDay, moveCluster, moveModule } from '@/dom
 import { ModuleDescError, validateModuleDesc } from '@/domain/moduleType/validate'
 import { moduleType, workshopModule } from '@/server/db/schema'
 import { workshopAction, type ActionResult } from './context'
+import { getLocale } from 'next-intl/server'
+import { localiseModuleType } from '@/domain/moduleType/localise'
+import { UnknownModuleTypeError } from '@/domain/agenda/access'
 
 /**
  * Agenda mutations.
@@ -29,7 +32,7 @@ export async function loadDayAction(raw: { workshopId: string; dayId: string }) 
     raw,
     'workshop.read',
     async (tx, access, input) => {
-      const { doc, contentVersion } = await loadDay(tx, access, input.dayId)
+      const { doc, contentVersion } = await loadDay(tx, access, input.dayId, await getLocale())
       // bigint does not survive the boundary to the client; the version is a
       // token to hand back, not a number to compute with.
       return { doc, contentVersion: contentVersion.toString() }
@@ -126,12 +129,32 @@ export async function addModuleAction(raw: {
     'workshop.content.write',
     async (tx, access, input) => {
       const types = await tx
-        .select({ id: moduleType.id, name: moduleType.name })
+        .select({
+          id: moduleType.id,
+          name: moduleType.name,
+          description: moduleType.description,
+          jsonSchema: moduleType.jsonSchema,
+          isSystem: moduleType.isSystem,
+          systemKey: moduleType.systemKey,
+          customizedAt: moduleType.customizedAt,
+        })
         .from(moduleType)
         .where(eq(moduleType.key, input.typeKey))
         .limit(1)
       const type = types[0]
-      if (!type) throw new Error(`Unbekannter Modultyp: ${input.typeKey}`)
+      if (!type) throw new UnknownModuleTypeError()
+
+      /**
+       * The LOCALISED name, and this is the sharp edge of translating block
+       * types at all.
+       *
+       * `title` here is persisted into workshop_module.title -- it is tenant
+       * content from this point on. If the picker offered "Tour de table" and
+       * the insert stored "Begrüßung & Organisatorisches", a French
+       * facilitator's own agenda would contradict what they just clicked, and
+       * it would stay that way.
+       */
+      const localised = localiseModuleType(type, await getLocale())
 
       const created = await addModule(
         tx,
@@ -140,7 +163,7 @@ export async function addModuleAction(raw: {
           dayId: input.dayId,
           clusterId: input.clusterId,
           moduleTypeId: type.id,
-          title: input.title ?? type.name,
+          title: input.title ?? localised.name,
         },
         asVersion(input.expectedVersion),
       )

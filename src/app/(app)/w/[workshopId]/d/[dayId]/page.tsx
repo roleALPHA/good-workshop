@@ -13,7 +13,7 @@ import { readSession } from '@/server/auth/session'
 import { withTenant } from '@/server/db'
 import { workshop as workshopTable } from '@/server/db/schema'
 import { redirect } from 'next/navigation'
-import { getTranslations } from 'next-intl/server'
+import { getLocale, getTranslations } from 'next-intl/server'
 
 export const dynamic = 'force-dynamic'
 
@@ -52,12 +52,12 @@ export default async function DayPage({
   // The name other people see. A member id would be honest and useless -- the
   // point of presence is recognising a colleague.
   const session = await readSession()
-  const t = await getTranslations('workshop')
+  const [t, locale] = await Promise.all([getTranslations('workshop'), getLocale()])
   const displayName = session?.displayName?.trim() || (session?.email ?? t('someone'))
 
   const data = await withTenant(actor, async (tx) => {
     const access = await assertWorkshopAccess(tx, actor, workshopId, 'workshop.read')
-    const { doc, contentVersion } = await loadDay(tx, access, dayId)
+    const { doc, contentVersion } = await loadDay(tx, access, dayId, locale)
     const meta = await tx
       .select({ title: workshopTable.title })
       .from(workshopTable)
