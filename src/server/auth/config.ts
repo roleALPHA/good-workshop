@@ -41,8 +41,18 @@ export const authConfig = {
     const url = appUrl()
     return url.protocol === 'https:' || url.hostname === 'localhost' || url.hostname === '127.0.0.1'
   },
-  get mailTransport(): MailTransport {
-    const value = process.env.GW_MAIL_TRANSPORT ?? 'console'
+  /**
+   * The transport the ENVIRONMENT dictates, or undefined when it says nothing.
+   *
+   * Undefined is not "console" any more: an admin can configure mail in the
+   * browser, and that is where an install with an empty .env now gets its
+   * answer. What is actually used is resolved per send in
+   * server/settings/mail-settings -- the environment first, the stored settings
+   * after it.
+   */
+  get mailTransport(): MailTransport | undefined {
+    const value = process.env.GW_MAIL_TRANSPORT
+    if (!value) return undefined
     if (value !== 'smtp' && value !== 'graph' && value !== 'console' && value !== 'none') {
       throw new Error(`GW_MAIL_TRANSPORT must be smtp | graph | console | none, got: ${value}`)
     }
@@ -114,6 +124,16 @@ export function auditAuthConfig(): string[] {
     warnings.push(
       'GW_MAIL_TRANSPORT=none: no magic links can be delivered. ' +
         'Use `cli.mjs login-link` to get in, or set GW_MAIL_TRANSPORT=console.',
+    )
+  }
+  if (authConfig.mailTransport === undefined) {
+    // Not a complaint, a statement of where to look. An install that configures
+    // mail in the browser is the intended path now, and warning about it on
+    // every boot would train people to ignore this list.
+    warnings.push(
+      'GW_MAIL_TRANSPORT ist nicht gesetzt: der Mailversand richtet sich nach den ' +
+        'Einstellungen in der Oberfläche. Solange dort nichts konfiguriert ist, kann keine ' +
+        'Mail zugestellt werden.',
     )
   }
   if (!authConfig.passkeysAvailable && authConfig.mailTransport === 'none') {

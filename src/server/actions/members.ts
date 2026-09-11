@@ -12,7 +12,7 @@ import {
 } from '@/domain/tenant/members'
 import { inviteDisclosure } from '@/domain/tenant/invite'
 import { issueMagicLink } from '@/server/auth/magic-link'
-import { deliversToRecipient, sendMail, magicLinkMail } from '@/server/auth/mail'
+import { deliversToRecipient, mailConfigFor, sendMail, magicLinkMail } from '@/server/auth/mail'
 import { currentActor, type ActionResult } from './context'
 
 /**
@@ -73,9 +73,13 @@ export async function inviteMemberAction(raw: {
     const issued = await issueMagicLink(invited.email, actor.tenantId)
 
     let mailed = false
-    if (issued && deliversToRecipient()) {
+    // Asked once, for this tenant: whether mail reaches a person decides what
+    // the screen may claim, and the answer now depends on configuration that
+    // lives in the database rather than only on the environment.
+    const deliverable = deliversToRecipient(await mailConfigFor(actor.tenantId))
+    if (issued && deliverable) {
       try {
-        await sendMail(magicLinkMail(issued.email, issued.link))
+        await sendMail(magicLinkMail(issued.email, issued.link), actor.tenantId)
         mailed = true
       } catch {
         // Reported as "not sent" rather than as a failed invitation: the

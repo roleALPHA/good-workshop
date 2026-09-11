@@ -1,4 +1,6 @@
 import { readFileSync } from 'node:fs'
+import { withTenantOnly } from '@/server/db'
+import { readStoredMail, resolveMailConfig, type MailConfig } from '@/server/settings/mail-settings'
 import { authConfig } from './config'
 
 /**
@@ -16,8 +18,39 @@ import { authConfig } from './config'
 
 export type Mail = { to: string; subject: string; text: string }
 
-export async function sendMail(mail: Mail): Promise<void> {
-  switch (authConfig.mailTransport) {
+/**
+ * The configuration in force for a tenant: what the environment sets, filled up
+ * with what an admin configured in the browser.
+ *
+ * Read per send rather than cached. Mail is not a hot path -- a login link, an
+ * invitation -- and the alternative is an operator changing the relay and
+ * wondering why it takes a restart.
+ *
+ * The two *_FILE variables are resolved here because only this layer should
+ * touch the filesystem; resolveMailConfig stays a pure function.
+ */
+export async function mailConfigFor(tenantId: string): Promise<MailConfig> {
+  const stored = await withTenantOnly(tenantId, (tx) => readStoredMail(tx, tenantId))
+
+  return resolveMailConfig(stored, {
+    ...process.env,
+    SMTP_URL: fromFileOrValue(process.env.SMTP_URL_FILE, process.env.SMTP_URL),
+    GW_GRAPH_CLIENT_SECRET: fromFileOrValue(
+      process.env.GW_GRAPH_CLIENT_SECRET_FILE,
+      process.env.GW_GRAPH_CLIENT_SECRET,
+    ),
+  })
+}
+
+function fromFileOrValue(file: string | undefined, value: string | undefined) {
+  if (file) return readFileSync(file, 'utf8').trim()
+  return value || undefined
+}
+
+export async function sendMail(mail: Mail, tenantId: string): Promise<void> {
+  const config = await mailConfigFor(tenantId)
+
+  switch (config.transport) {
     case 'console':
       console.log(
         [
@@ -34,13 +67,14 @@ export async function sendMail(mail: Mail): Promise<void> {
       return
 
     case 'smtp': {
-      const url = smtpUrl()
-      if (!url) {
-        throw new Error('GW_MAIL_TRANSPORT=smtp but neither SMTP_URL nor SMTP_URL_FILE is set.')
+      if (!config.smtpUrl) {
+        throw new Error(
+          'Transport smtp, aber keine SMTP-URL konfiguriert -- weder in der Umgebung noch in den Einstellungen.',
+        )
       }
       const { createTransport } = await import('nodemailer')
-      await createTransport(url).sendMail({
-        from: process.env.SMTP_FROM ?? 'goodworkshop@localhost',
+      await createTransport(config.smtpUrl).sendMail({
+        from: config.smtpFrom ?? 'goodworkshop@localhost',
         to: mail.to,
         subject: mail.subject,
         text: mail.text,
@@ -49,12 +83,13 @@ export async function sendMail(mail: Mail): Promise<void> {
     }
 
     case 'graph':
-      await sendViaGraph(mail)
+      await sendViaGraph(mail, config)
       return
 
     case 'none':
       throw new Error(
-        'GW_MAIL_TRANSPORT=none: no mail can be sent. Use `node scripts/cli.mjs login-link --email ...`.',
+        'Transport none: es kann keine Mail versendet werden. `node scripts/cli.mjs login-link --email ...` ' +
+          'oder einen Transport in den Einstellungen wählen.',
       )
   }
 }
@@ -71,15 +106,15 @@ export async function sendMail(mail: Mail): Promise<void> {
  * stable, documented API, against a dependency tree of a hundred-odd packages
  * in an image that ships to other people's servers.
  */
-async function sendViaGraph(mail: Mail): Promise<void> {
-  const sender = required('GW_GRAPH_SENDER')
+async function sendViaGraph(mail: Mail, config: MailConfig): Promise<void> {
+  const sender = required(config.graphSender, 'Absenderpostfach (GW_GRAPH_SENDER)')
 
   const response = await fetch(
     `https://graph.microsoft.com/v1.0/users/${encodeURIComponent(sender)}/sendMail`,
     {
       method: 'POST',
       headers: {
-        authorization: `Bearer ${await graphToken()}`,
+        authorization: `Bearer ${await graphToken(config)}`,
         'content-type': 'application/json',
       },
       body: JSON.stringify({
@@ -104,18 +139,18 @@ async function sendViaGraph(mail: Mail): Promise<void> {
  *  and fetching one per mail costs a round trip on every login attempt. */
 let cachedToken: { value: string; expiresAt: number } | undefined
 
-async function graphToken(): Promise<string> {
+async function graphToken(config: MailConfig): Promise<string> {
   if (cachedToken && Date.now() < cachedToken.expiresAt) return cachedToken.value
 
-  const tenant = required('GW_GRAPH_TENANT_ID')
+  const tenant = required(config.graphTenantId, 'Mandant (GW_GRAPH_TENANT_ID)')
   const response = await fetch(
     `https://login.microsoftonline.com/${encodeURIComponent(tenant)}/oauth2/v2.0/token`,
     {
       method: 'POST',
       headers: { 'content-type': 'application/x-www-form-urlencoded' },
       body: new URLSearchParams({
-        client_id: required('GW_GRAPH_CLIENT_ID'),
-        client_secret: graphClientSecret(),
+        client_id: required(config.graphClientId, 'Anwendungs-ID (GW_GRAPH_CLIENT_ID)'),
+        client_secret: required(config.graphClientSecret, 'Client Secret'),
         scope: 'https://graph.microsoft.com/.default',
         grant_type: 'client_credentials',
       }),
@@ -165,22 +200,16 @@ async function graphError(response: Response): Promise<string> {
   return `${response.status} ${detail}`.trim()
 }
 
-/** Same file-over-environment argument as SMTP_URL_FILE, and read on demand so
- *  a rotated secret takes effect on the next mail. */
-function graphClientSecret(): string {
-  const file = process.env.GW_GRAPH_CLIENT_SECRET_FILE
-  const secret = file ? readFileSync(file, 'utf8').trim() : process.env.GW_GRAPH_CLIENT_SECRET
-  if (!secret) {
-    throw new Error(
-      'GW_MAIL_TRANSPORT=graph but neither GW_GRAPH_CLIENT_SECRET nor GW_GRAPH_CLIENT_SECRET_FILE is set.',
-    )
-  }
-  return secret
-}
-
-function required(name: string): string {
-  const value = process.env[name]
-  if (!value) throw new Error(`GW_MAIL_TRANSPORT=graph but ${name} is not set.`)
+/**
+ * A value the transport cannot work without.
+ *
+ * Named in the message the way an operator sees it -- the form label and the
+ * environment variable -- because it is now configurable in two places and
+ * "GW_GRAPH_SENDER is not set" would be misleading for somebody who has never
+ * touched a .env.
+ */
+function required(value: string | undefined, label: string): string {
+  if (!value) throw new Error(`Transport graph, aber ${label} fehlt.`)
   return value
 }
 
@@ -191,24 +220,6 @@ export function resetGraphTokenCache(): void {
 }
 
 /**
- * The one real secret in the stack, read from a file when there is one.
- *
- * `SMTP_URL` carries user and password by convention. As an environment
- * variable it is visible in `docker inspect`, in /proc/<pid>/environ to every
- * process in the container, and in any core dump. `SMTP_URL_FILE` is the
- * ordinary Docker/Compose secrets shape, and it keeps the value on a tmpfs
- * mount instead.
- *
- * Read on demand rather than at import: a rotated secret then takes effect on
- * the next mail rather than on the next restart.
- */
-function smtpUrl(): string | undefined {
-  const file = process.env.SMTP_URL_FILE
-  if (file) return readFileSync(file, 'utf8').trim()
-  return process.env.SMTP_URL || undefined
-}
-
-/**
  * Whether mail actually reaches the person it is addressed to.
  *
  * `console` delivers to the server log, which is the right behaviour for an
@@ -216,8 +227,8 @@ function smtpUrl(): string | undefined {
  * link has to know the difference, or it will tell an admin their invitation
  * was sent when it went to stdout on a machine they may not have.
  */
-export function deliversToRecipient(): boolean {
-  return authConfig.mailTransport === 'smtp' || authConfig.mailTransport === 'graph'
+export function deliversToRecipient(config: MailConfig): boolean {
+  return config.transport === 'smtp' || config.transport === 'graph'
 }
 
 export function magicLinkMail(to: string, link: string): Mail {

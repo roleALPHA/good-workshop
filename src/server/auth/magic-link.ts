@@ -90,10 +90,11 @@ export async function issueMagicLink(
 }
 
 export async function sendMagicLink(emailAddress: string, tenantId?: string): Promise<void> {
-  const issued = await issueMagicLink(emailAddress, tenantId)
+  const tenant = tenantId ?? authConfig.defaultTenantId
+  const issued = await issueMagicLink(emailAddress, tenant)
   // Nothing to send is not an error the caller may distinguish -- see above.
   if (!issued) return
-  await sendMail(magicLinkMail(issued.email, issued.link))
+  await sendMail(magicLinkMail(issued.email, issued.link), tenant)
 }
 
 export type ConsumedToken = { identityId: string; tenantId: string; email: string }

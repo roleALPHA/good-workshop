@@ -1,4 +1,7 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
+import type * as MailSettings from '@/server/settings/mail-settings'
+
+type MailSettingsModule = typeof MailSettings
 
 /**
  * The Microsoft Graph transport.
@@ -55,7 +58,23 @@ function tokenCalls(mock: { mock: { calls: unknown[][] } }): Call[] {
   return callsOf(mock).filter((call) => String(call[0]).includes('login.microsoftonline.com'))
 }
 
+const TENANT = '00000000-0000-0000-0000-000000000001'
+
+/**
+ * The database is stubbed away: this file is about what happens between the
+ * application and Microsoft, and the stored half of the configuration has its
+ * own tests in server/settings. Everything here comes from the environment,
+ * which resolveMailConfig prefers anyway.
+ */
 async function load() {
+  vi.doMock('@/server/db', () => ({
+    withTenantOnly: async (_id: string, fn: (tx: unknown) => Promise<unknown>) => fn({}),
+  }))
+  vi.doMock('@/server/settings/mail-settings', async () => {
+    const actual = await vi.importActual<MailSettingsModule>('@/server/settings/mail-settings')
+    return { ...actual, readStoredMail: async () => ({}) }
+  })
+
   const mod = await import('./mail')
   mod.resetGraphTokenCache()
   return mod
@@ -72,7 +91,7 @@ describe('sending through Graph', () => {
     vi.stubGlobal('fetch', fetchMock)
 
     const { sendMail } = await load()
-    await sendMail(MAIL)
+    await sendMail(MAIL, TENANT)
 
     const [token, send] = callsOf(fetchMock)
     const [tokenUrl, tokenInit] = token!
@@ -101,8 +120,8 @@ describe('sending through Graph', () => {
     vi.stubGlobal('fetch', fetchMock)
 
     const { sendMail } = await load()
-    await sendMail(MAIL)
-    await sendMail(MAIL)
+    await sendMail(MAIL, TENANT)
+    await sendMail(MAIL, TENANT)
 
     expect(tokenCalls(fetchMock)).toHaveLength(1)
   })
@@ -117,9 +136,9 @@ describe('sending through Graph', () => {
     vi.stubGlobal('fetch', fetchMock)
 
     const { sendMail } = await load()
-    await sendMail(MAIL)
+    await sendMail(MAIL, TENANT)
     vi.spyOn(Date, 'now').mockReturnValue(Date.now() + 60_000)
-    await sendMail(MAIL)
+    await sendMail(MAIL, TENANT)
 
     expect(tokenCalls(fetchMock)).toHaveLength(2)
   })
@@ -134,7 +153,7 @@ describe('sending through Graph', () => {
     vi.stubGlobal('fetch', fetchMock)
 
     const { sendMail } = await load()
-    await expect(sendMail(MAIL)).rejects.toThrow(/403.*Access denied/)
+    await expect(sendMail(MAIL, TENANT)).rejects.toThrow(/403.*Access denied/)
   })
 
   it('never puts the client secret into the error it throws', async () => {
@@ -149,7 +168,7 @@ describe('sending through Graph', () => {
     vi.stubGlobal('fetch', fetchMock)
 
     const { sendMail } = await load()
-    const error = await sendMail(MAIL).catch((e: Error) => e)
+    const error = await sendMail(MAIL, TENANT).catch((e: Error) => e)
 
     expect(String(error)).toContain('Secret is expired')
     expect(String(error)).not.toContain('client-secret')
@@ -172,7 +191,7 @@ describe('sending through Graph', () => {
     vi.stubGlobal('fetch', fetchMock)
 
     const { sendMail } = await load()
-    await sendMail(MAIL)
+    await sendMail(MAIL, TENANT)
 
     // Trimmed: a file written by `echo` ends in a newline, and a newline in a
     // form body is a credential that does not match.
@@ -189,11 +208,11 @@ describe('sending through Graph', () => {
     )
 
     const { sendMail } = await load()
-    await expect(sendMail(MAIL)).rejects.toThrow(/GW_GRAPH_SENDER/)
+    await expect(sendMail(MAIL, TENANT)).rejects.toThrow(/Absenderpostfach/)
   })
 
   it('counts as delivery to the recipient, unlike console', async () => {
-    const { deliversToRecipient } = await load()
-    expect(deliversToRecipient()).toBe(true)
+    const { deliversToRecipient, mailConfigFor } = await load()
+    expect(deliversToRecipient(await mailConfigFor(TENANT))).toBe(true)
   })
 })
