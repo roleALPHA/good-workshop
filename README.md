@@ -22,7 +22,185 @@ festlegen.
 
 Falls weder HTTPS noch SMTP verfügbar sind: `GW_MAIL_TRANSPORT=console` druckt Magic
 Links auf stdout, und `GW_BOOTSTRAP_ADMIN_EMAIL` legt beim ersten Start einen Admin an
-und gibt dessen Login-Link ebenfalls auf stdout aus.
+und gibt dessen Login-Link ebenfalls auf stdout aus. Das ist ein unterstützter Weg und
+kein Notbehelf — aber eine bewusste Entscheidung, kein Standardwert: wer
+`docker logs` lesen kann, kann sich damit für **jede** Adresse einen Anmeldelink
+ausstellen lassen. Die Anwendung sagt das beim Start noch einmal.
+
+## Installation (On-Premise)
+
+### Voraussetzungen
+
+- Docker mit Compose v2 (`docker compose version`), amd64 oder arm64
+- Ein Hostname, der öffentlich auf diesen Server auflöst, und die Ports 80 und 443 frei —
+  beides braucht Let's Encrypt für die Zertifikatsausstellung
+- Kein Postgres nötig: die Datenbank läuft im Stack und ist von außen nicht erreichbar
+
+### 1. Dateien holen
+
+Gebraucht werden `compose.yaml`, `Caddyfile` und eine `.env`. Am einfachsten über das
+Repository:
+
+```bash
+git clone https://github.com/roleALPHA/good-workshop.git
+cd good-workshop
+cp .env.example .env
+```
+
+### 2. Image bereitstellen
+
+**Es gibt noch kein veröffentlichtes Release.** Bis der erste `v*`-Tag steht, gibt es auf
+`ghcr.io` nichts zu ziehen — das Image wird selbst gebaut und bekommt den Tag, den
+`compose.yaml` erwartet:
+
+```bash
+docker build -t ghcr.io/rolealpha/good-workshop:local .
+```
+
+In der `.env` dann `GW_VERSION=local`. Sobald es Releases gibt, entfällt dieser Schritt
+und `GW_VERSION` trägt den Release-Tag.
+
+### 3. `.env` ausfüllen
+
+Vier Werte sind Pflicht; ohne sie startet der Stack nicht und sagt welcher fehlt:
+
+```bash
+GW_APP_URL=https://workshop.example.com   # muss exakt der Adresse entsprechen, unter der die App erreichbar ist
+GW_HOSTNAME=workshop.example.com          # der Name im Zertifikat (Profil `tls`)
+GW_MAIL_TRANSPORT=smtp                    # smtp | console | none -- siehe oben
+GW_VERSION=local                          # oder der Release-Tag
+```
+
+Bei `GW_MAIL_TRANSPORT=smtp` zusätzlich `SMTP_URL` und `SMTP_FROM`. Enthält die
+`SMTP_URL` ein Passwort, gehört sie besser in ein Docker Secret: Datei anlegen,
+`SMTP_URL_FILE=/run/secrets/smtp_url` setzen. Eine Environment-Variable steht in
+`docker inspect`, in `/proc/<pid>/environ` und in jedem Core-Dump.
+
+**Den Hostnamen jetzt festlegen.** `GW_RP_ID` leitet sich daraus ab, und eine spätere
+Änderung macht jeden registrierten Passkey ungültig — siehe oben.
+
+### 4. Starten
+
+```bash
+docker compose --profile tls up -d
+```
+
+Der Reihe nach: `db` startet, `migrate` legt Rollen an, wandert die Migrationen durch und
+provisioniert die 15 eingebauten Modultypen, `app` startet erst, wenn `migrate` sauber
+durch ist, dann nimmt `caddy` 80 und 443 und holt das Zertifikat.
+
+Läuft es, meldet sich der Healthcheck:
+
+```bash
+curl -fsS https://workshop.example.com/api/health
+# {"status":"ok","checks":[{"name":"database","ok":true},{"name":"migrations","ok":true}]}
+```
+
+Ein `503` ist kein Absturz, sondern die ehrliche Antwort „dieser Container kann nicht
+ausliefern" — `checks` sagt, ob es an der Datenbank oder am Migrationsstand liegt.
+
+### 5. Den ersten Admin anlegen
+
+Ohne Admin gibt es keinen Weg in die Oberfläche. Zwei Wege:
+
+**Über die CLI** — funktioniert immer, auch ohne Mailversand:
+
+```bash
+docker compose exec app node scripts/cli.mjs admin create --email du@example.com
+```
+
+Der Befehl druckt einen einmaligen Anmeldelink. Danach geht alles Weitere in der
+Oberfläche: Mitglieder einladen, Rollen setzen, Branding, Token.
+
+**Oder beim allerersten Start automatisch:** `GW_BOOTSTRAP_ADMIN_EMAIL=du@example.com` in
+die `.env`, bevor der Stack das erste Mal hochkommt. Der Link steht dann in
+`docker compose logs migrate`, ist eine Stunde gültig und wird genau einmal gedruckt — bei
+späteren Starts passiert nichts mehr, auch wenn die Variable stehen bleibt.
+
+### Ohne HTTPS betreiben
+
+Möglich, mit drei Konsequenzen, die man kennen sollte: **keine Passkeys** (WebAuthn läuft
+außerhalb von `localhost` nicht über `http://`), das Session-Cookie trägt kein `Secure` und
+reist im Klartext, und Anmeldelinks tun das ebenfalls.
+
+`app` bindet bewusst nur auf `127.0.0.1` — ohne den Proxy ist von außen nichts erreichbar,
+auch bei falsch stehender Firewall nicht. Für einen Zugang ohne das `tls`-Profil braucht es
+also einen eigenen Reverse Proxy auf dem Host oder einen SSH-Tunnel:
+
+```bash
+docker compose up -d          # ohne --profile tls
+ssh -L 3000:127.0.0.1:3000 server
+```
+
+`GW_APP_URL` muss dann auf die Adresse zeigen, die der Browser tatsächlich benutzt.
+
+### Aktualisieren
+
+```bash
+# .env: GW_VERSION auf den neuen Tag setzen
+docker compose pull
+docker compose --profile tls up -d
+```
+
+`migrate` läuft bei jedem Start mit und `app` wartet darauf — ein Container, der gegen ein
+Schema ausliefert, das er nicht versteht, kommt damit gar nicht erst hoch.
+
+> **Einmalig beim Upgrade auf diese Version.** Eine neue Migration verlangt, dass Modul und
+> Cluster zu dem Workshop gehören, auf dessen Tag sie liegen. Bestehende Installationen
+> können Zeilen haben, bei denen das nicht stimmt; die Migration bricht dann ab. Vorher
+> prüfen:
+>
+> ```sql
+> select m.id from module m join workshop_day d on d.id = m.day_id
+> where d.workshop_id <> m.workshop_id;
+> ```
+>
+> Leeres Ergebnis heißt: der Lauf geht durch. Sonst ist erst zu klären, wohin diese Blöcke
+> gehören — das ist eine inhaltliche Frage, keine technische.
+
+### Sichern
+
+Die Datenbank ist die vollständige Akte, Logos eingeschlossen — sie liegen als Zeile, nicht
+im Dateisystem. Ein `pg_dump` genügt also:
+
+```bash
+docker compose exec -u postgres db pg_dump goodworkshop > goodworkshop-$(date +%F).sql
+```
+
+Das `-u postgres` ist nötig: die Rollen haben keine Passwörter und authentifizieren sich
+über den Unix-Socket per Peer-Auth, also muss der Prozess im Container dem Rollennamen
+entsprechen.
+
+### Konfiguration
+
+| Variable                                  | Pflicht    | Bedeutung                                                                                                                                              |
+| ----------------------------------------- | ---------- | ------------------------------------------------------------------------------------------------------------------------------------------------------ |
+| `GW_APP_URL`                              | ja         | Adresse, unter der die App erreichbar ist. Leitet Anmeldelinks und die WebAuthn-Origin ab.                                                             |
+| `GW_HOSTNAME`                             | für `tls`  | Name im Zertifikat. Wird an Caddy durchgereicht.                                                                                                       |
+| `GW_MAIL_TRANSPORT`                       | ja         | `smtp`, `console` oder `none`.                                                                                                                         |
+| `GW_VERSION`                              | ja         | Image-Tag. Bewusst ohne Standardwert — ein beweglicher Tag ist kein Deployment.                                                                        |
+| `SMTP_URL` / `SMTP_URL_FILE`              | bei `smtp` | Relay-URL, direkt oder aus einer Datei (Docker Secret).                                                                                                |
+| `SMTP_FROM`                               | bei `smtp` | Absenderadresse.                                                                                                                                       |
+| `GW_RP_ID`                                | nein       | WebAuthn Relying Party ID. Leer = Host aus `GW_APP_URL`. Nachträgliche Änderung entwertet alle Passkeys.                                               |
+| `GW_BOOTSTRAP_ADMIN_EMAIL`                | nein       | Legt beim allerersten Start einen Admin an und druckt dessen Link.                                                                                     |
+| `GW_OPS_TOKEN`                            | nein       | Macht `/api/health` mit Header `x-ops-token` ausführlich (Version, Migrationsstand, Treiberfehler). Ohne ihn bleibt der öffentliche Endpunkt wortkarg. |
+| `GW_TRUSTED_PROXIES`                      | nein       | Zahl der Proxys davor (Standard 1). Nur für Drosselung und Logs, nie für eine Berechtigung.                                                            |
+| `GW_SESSION_IDLE_DAYS`                    | nein       | Nach wie vielen Tagen ohne Nutzung eine Session verfällt (Standard 14).                                                                                |
+| `GW_PORT`, `GW_COLLAB_PORT`               | nein       | Ports auf `127.0.0.1`, falls die Standardwerte belegt sind.                                                                                            |
+| `GW_COLLAB_URL`, `GW_COLLAB_INTERNAL_URL` | nein       | Nur nötig, wenn der Kollaborations-Dienst nicht unter `/collab` auf demselben Host liegt.                                                              |
+
+### Wenn es nicht läuft
+
+| Symptom                                              | Ursache                                                                                                                                                            |
+| ---------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
+| `GW_APP_URL muss gesetzt sein` beim `up`             | Pflichtwert fehlt in der `.env`. Die Meldung nennt ihn.                                                                                                            |
+| Caddy startet nicht, „GW_HOSTNAME muss gesetzt sein" | `tls`-Profil ohne Hostnamen.                                                                                                                                       |
+| Zertifikat wird nicht ausgestellt                    | Hostname löst nicht auf diesen Server auf, oder 80/443 sind belegt.                                                                                                |
+| `/api/health` meldet 503 mit `database`              | Datenbank nicht erreichbar oder noch im Hochlauf.                                                                                                                  |
+| `/api/health` meldet 503 mit `migrations`            | `migrate` ist nicht durchgelaufen: `docker compose logs migrate`.                                                                                                  |
+| Kein Anmeldelink im Postfach                         | `GW_MAIL_TRANSPORT` prüfen. Bei `console` steht er in `docker compose logs app`.                                                                                   |
+| Anmeldung klappt, Passkey-Angebot fehlt              | Kein HTTPS — erwartetes Verhalten, siehe oben.                                                                                                                     |
+| Editor zeigt dauerhaft „offline"                     | Der Kollaborations-Dienst ist nicht erreichbar oder `GW_APP_URL` passt nicht zur Adresse im Browser: der Socket weist fremde Herkunft ab und schreibt das ins Log. |
 
 ## Entwicklung
 
@@ -60,10 +238,15 @@ Zwei Guardrails werden von ESLint erzwungen und sind kein Stilthema:
 
 ## Docker
 
+Für eine Installation siehe oben — `compose.yaml` bringt Datenbank, Migration, Anwendung
+und Proxy mit. Das Image allein baut man so:
+
 ```bash
 docker build -t goodworkshop .
-docker run -p 3000:3000 goodworkshop
 ```
+
+Ohne Datenbank startet es zwar, liefert aber nichts aus und sagt das: `/api/health`
+antwortet mit 503 und nennt `database` als Ursache.
 
 Das Image ist multi-stage gebaut, läuft als non-root `node`, lädt rund 70 MB herunter
 (entpackt etwa 316 MB) und hat einen `HEALTHCHECK` auf `/api/health`, der auch meldet,
@@ -142,9 +325,10 @@ beginnt als „eingeladen"; erst das Öffnen des Anmeldelinks aktiviert sie. Ein
 niemanden per Beschluss aktivieren — sonst könnte er eine fremde Adresse einladen und das
 daraus entstehende Konto übernehmen.
 
-Ist kein Mailversand eingerichtet (`GW_MAIL_TRANSPORT=console`, der Standard für
-On-Premise ohne Relay), zeigt die Oberfläche den Link an, statt zu behaupten, er sei
-verschickt. Wer ihn öffnet, ist als die eingeladene Person angemeldet — das steht dabei.
+Ist kein Mailversand eingerichtet (`GW_MAIL_TRANSPORT=console`, für On-Premise ohne
+Relay), zeigt die Oberfläche den Link an, statt zu behaupten, er sei verschickt. Gehört
+die Adresse schon einem aktiven Mitglied, wird kein Link gezeigt: für jemanden mit Konto
+wäre das keine Einladung, sondern dessen Anmeldung. Wer ihn öffnet, ist als die eingeladene Person angemeldet — das steht dabei.
 
 Der letzte aktive Admin lässt sich weder degradieren noch abschalten. Ein Tenant ohne
 Admin ist nur noch über eine Shell auf dem Server zu reparieren.
@@ -220,6 +404,16 @@ Ohne Datenbank antwortet der Endpunkt mit 503. Das ist beabsichtigt: der Contain
 Anwendung dann nicht ausliefern. Die Testumgebung wartet deshalb auf die Startseite und
 nicht auf diesen Endpunkt — „lauscht der Server" und „kann dieser Container die Anwendung
 ausliefern" sind zwei verschiedene Fragen.
+
+Der Endpunkt steht hinter dem Catch-all des Proxys, antwortet also dem offenen Internet.
+Deshalb sagt er von sich aus nur, ob es geht und welche Prüfung gescheitert ist — nicht,
+welcher Commit läuft, welche Migrationen fehlen oder was der Datenbanktreiber gemeldet hat.
+Das alles braucht eine Betreiberin, nicht ein Fremder: mit gesetztem `GW_OPS_TOKEN` und dem
+Header `x-ops-token` kommt die ausführliche Fassung.
+
+```bash
+curl -fsS -H "x-ops-token: $GW_OPS_TOKEN" https://workshop.example.com/api/health
+```
 
 ## Architektur in drei Sätzen
 

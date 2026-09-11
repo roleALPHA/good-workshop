@@ -102,6 +102,14 @@ services:
       SMTP_FROM: ${SMTP_FROM:-}
       GW_EDITION: ${GW_EDITION:-community}
       GW_COLLAB_PORT: '3001'
+      # Ohne diesen Wert antwortet /api/health nur mit "ok" bzw. "unhealthy"
+      # und welche Prüfung gescheitert ist -- der Endpunkt steht im Internet.
+      # Wer ihn setzt, bekommt mit `x-ops-token` zusätzlich Version,
+      # Migrationsstand und den Treiberfehler im Klartext.
+      GW_OPS_TOKEN: ${GW_OPS_TOKEN:-}
+      # Wie viele Proxys vor der Anwendung stehen. Nur für Drosselung und Logs.
+      GW_TRUSTED_PROXIES: ${GW_TRUSTED_PROXIES:-1}
+      GW_SESSION_IDLE_DAYS: ${GW_SESSION_IDLE_DAYS:-14}
     volumes:
       - pgsocket:/var/run/postgresql
     # Nur an 127.0.0.1, nie an 0.0.0.0: ohne den Proxy davor ist nichts
@@ -129,7 +137,20 @@ services:
     # hängt, ist die Installation von außen unerreichbar. Der nächste Griff des
     # Betreibers ist dann HTTP ohne TLS.
     environment:
-      GW_HOSTNAME: ${GW_HOSTNAME:?GW_HOSTNAME muss gesetzt sein}
+      GW_HOSTNAME: ${GW_HOSTNAME:-}
+    # Geprüft hier statt per `${GW_HOSTNAME:?}` oben: Compose interpoliert die
+    # GANZE Datei beim Laden, auch Dienste, deren Profil gar nicht aktiv ist.
+    # Ein Pflichtfeld an dieser Stelle hätte also jedes `docker compose up`
+    # ohne tls-Profil abgebrochen -- und ohne HTTPS starten zu können, ist ein
+    # ausdrücklich unterstützter Weg. So scheitert es laut, aber nur für die,
+    # die den Proxy wirklich benutzen.
+    command: >-
+      sh -c 'test -n "$$GW_HOSTNAME" || {
+               echo "GW_HOSTNAME muss gesetzt sein: der Hostname, auf den das TLS-Zertifikat lautet." >&2
+               echo "Er muss oeffentlich auf diesen Server aufloesen, sonst schlaegt die Ausstellung fehl." >&2
+               exit 1
+             }
+             exec caddy run --config /etc/caddy/Caddyfile --adapter caddyfile'
     ports:
       - '80:80'
       - '443:443'
