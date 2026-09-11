@@ -141,7 +141,12 @@ jobs:
 
           ready=
           for i in $(seq 1 40); do
-            if [ "$(curl -s -o /dev/null -w '%{http_code}' http://localhost:3000/)" = "200" ]; then
+            # /demo, nicht /. Die Startseite leitet auf die Bibliothek weiter, und
+            # die braucht eine Datenbank -- hier läuft absichtlich keine. /demo
+            # rendert die Agenda aus einer Fixture und ist damit die Route, an
+            # der sich prüfen lässt, worum es diesem Job geht: bootet das
+            # Standalone-Bundle mit allen Dateien, die es braucht.
+            if [ "$(curl -s -o /dev/null -w '%{http_code}' http://localhost:3000/demo)" = "200" ]; then
               echo "serving after ${i}s"
               ready=1
               break
@@ -150,7 +155,7 @@ jobs:
           done
 
           if [ -z "$ready" ]; then
-            echo "::error::Der Container liefert die Startseite nicht aus"
+            echo "::error::Der Container liefert /demo nicht aus"
             docker logs gw-ci
             docker rm -f gw-ci
             exit 1
