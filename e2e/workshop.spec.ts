@@ -226,6 +226,15 @@ test('exports the day as Markdown', async ({ page }) => {
 test('renders a printable day without any editor JavaScript', async ({ page }) => {
   await addBlock(page, 'Gruppenarbeit')
 
+  // Waited on BEFORE navigating away, not just retried afterwards.
+  //
+  // This test failed about one run in three, and the retry loop below could
+  // never fix it: leaving the page with bytes still queued on the socket loses
+  // them, so the block never reached the tables the print view reads, and ten
+  // seconds of reloading a page that will never change is just a slower way to
+  // fail. `connected` is the same signal reloadUntil waits for.
+  await connected(page)
+
   const url = (await page.getByRole('link', { name: 'Drucken' }).getAttribute('href'))!
 
   // Same one-debounce lag as the export: the print view renders from the tables.

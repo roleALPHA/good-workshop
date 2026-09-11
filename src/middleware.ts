@@ -43,9 +43,12 @@ export function middleware(request: NextRequest): NextResponse {
     // 'unsafe-inline' is absent.
     //
     // Removing it means replacing Ajv in the browser with an interpreting
-    // validator. Worth doing; not something to do in a security fix at the
-    // same time as everything else. See the note on the collaborative write
-    // path in src/server/collab/materialize.ts.
+    // validator. Worth doing -- and cheaper now than it was: the browser check
+    // is no longer the only one. Every edit reaches the tables through
+    // materializeDay, which validates each block's desc against its module
+    // type on the way in (see validatedDescs there), so what the browser does
+    // here is instant feedback rather than the guarantee. Replacing it can
+    // therefore be judged on ergonomics alone.
     `script-src 'self' 'nonce-${nonce}' 'unsafe-eval'`,
     "style-src 'self' 'unsafe-inline'",
     // data: for the tenant logo, which is served from the row as a data URI in

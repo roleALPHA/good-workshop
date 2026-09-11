@@ -2,7 +2,8 @@ import type * as Y from 'yjs'
 import { and, eq, inArray, notInArray, sql } from 'drizzle-orm'
 import { readBlocks, readDayFields, type RawBlock } from '@/domain/collab/doc'
 import type { Tx } from '@/server/db'
-import { cluster, workshop, workshopDay, workshopModule } from '@/server/db/schema'
+import { cluster, moduleType, workshop, workshopDay, workshopModule } from '@/server/db/schema'
+import { validateModuleDesc } from '@/domain/moduleType/validate'
 import { loadDoc, readState, writeState } from './store'
 
 /**
@@ -117,6 +118,7 @@ async function writeBlocks(
   }
 
   const clusterIds = new Set(clusters.map((c) => c.id))
+  const descs = await validatedDescs(tx, modules)
 
   for (const block of modules) {
     // A parent that no longer exists means the cluster was deleted while this
@@ -137,7 +139,7 @@ async function writeBlocks(
         title: block.title,
         durationMinutes: block.durationMinutes,
         pinnedStartTime: block.pinnedStartMinute === null ? null : toTime(block.pinnedStartMinute),
-        jsonDesc: block.desc,
+        jsonDesc: descs.get(block.id) ?? {},
         parked: block.parked,
         position: block.position,
       })
@@ -149,7 +151,9 @@ async function writeBlocks(
           durationMinutes: block.durationMinutes,
           pinnedStartTime:
             block.pinnedStartMinute === null ? null : toTime(block.pinnedStartMinute),
-          jsonDesc: block.desc,
+          // Left out entirely when the document's desc did not validate, so the
+          // row keeps the last value that did. See validatedDescs.
+          ...(descs.has(block.id) ? { jsonDesc: descs.get(block.id) } : {}),
           parked: block.parked,
           position: block.position,
           updatedAt: sql`now()`,
@@ -193,3 +197,73 @@ void inArray
 
 /** Convenience for callers that hold a Y.Doc already (the collab server). */
 export type DocSource = { doc: Y.Doc; upTo: number }
+
+/**
+ * Validates every block's `desc` against its module type, on the way in.
+ *
+ * WHY HERE. The editor runs the same check in the browser for instant feedback,
+ * and a server action re-runs it -- but the editor has not used that action
+ * since the move to CRDT. Everything a person types now arrives through the
+ * collaboration room and lands here, which made this the only place left where
+ * a schema can still be enforced. Until now it simply was not: whatever the
+ * document held went into the column.
+ *
+ * That matters beyond tidiness. `json_desc` is rendered, exported and handed to
+ * MCP clients, and a module type's schema is what everything downstream assumes
+ * about its shape.
+ *
+ * WHAT A FAILURE DOES. The id is left OUT of the returned map, and the caller
+ * then omits the column from its update -- so the row keeps the last value that
+ * did validate, and an insert gets `{}`. Rejecting the whole materialisation
+ * would let one malformed block freeze a whole day for everybody in it, which
+ * is the same reasoning as the orphaned-parent case above.
+ *
+ * The alternative -- write it anyway and log -- is not one: it is exactly the
+ * state this function exists to end.
+ */
+async function validatedDescs(
+  tx: Tx,
+  modules: RawBlock[],
+): Promise<Map<string, Record<string, unknown>>> {
+  const valid = new Map<string, Record<string, unknown>>()
+
+  const typeIds = [
+    ...new Set(modules.map((m) => m.moduleTypeId).filter((id): id is string => !!id)),
+  ]
+  if (typeIds.length === 0) return valid
+
+  const types = await tx
+    .select({
+      id: moduleType.id,
+      schemaVersion: moduleType.schemaVersion,
+      jsonSchema: moduleType.jsonSchema,
+    })
+    .from(moduleType)
+    .where(inArray(moduleType.id, typeIds))
+
+  const byId = new Map(types.map((type) => [type.id, type]))
+
+  for (const block of modules) {
+    const type = block.moduleTypeId ? byId.get(block.moduleTypeId) : undefined
+    // A type that is not in this tenant is somebody else's problem -- the
+    // composite foreign key will refuse the row, and inventing a validation
+    // verdict here would only obscure that.
+    if (!type) continue
+
+    const result = validateModuleDesc(type, block.desc ?? {})
+    if (result.ok) {
+      valid.set(block.id, result.value)
+      continue
+    }
+
+    // Read by an operator, not by a user: the person editing already saw the
+    // browser refuse it, and anybody reaching this line got past that.
+    console.warn('materialize: desc failed validation, keeping the stored value', {
+      moduleId: block.id,
+      moduleTypeId: block.moduleTypeId,
+      errors: result.errors.map((e) => `${e.path} ${e.message}`),
+    })
+  }
+
+  return valid
+}

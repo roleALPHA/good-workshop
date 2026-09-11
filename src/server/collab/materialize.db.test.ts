@@ -140,6 +140,64 @@ const relationalShape = () =>
 
 const materialize = () => withTenant(actor(), (tx) => materializeDay(tx, workshopId, dayId))
 
+describe('what the document is allowed to write into json_desc', () => {
+  it('accepts a desc that matches the module type', async () => {
+    const doc = await seedLog()
+    patchBlock(doc, firstId, { desc: { materials: ['Moderationskarten'] } })
+    await withTenant(actor(), (tx) => appendUpdate(tx, dayId, Y.encodeStateAsUpdate(doc)))
+    await materialize()
+
+    const { rows } = await ops.query('select json_desc from module where id = $1', [firstId])
+    expect(rows[0]?.json_desc).toMatchObject({ materials: ['Moderationskarten'] })
+  })
+
+  /**
+   * The gap this closes: the editor stopped using the server action that
+   * validated `desc`, so between the CRDT move and now, whatever the shared
+   * document held went into the column unchecked -- and json_desc is rendered,
+   * exported and handed to MCP clients.
+   */
+  it('keeps the last valid value when the document holds something the schema refuses', async () => {
+    const doc = await seedLog()
+    patchBlock(doc, firstId, { desc: { materials: ['Gültig'] } })
+    await withTenant(actor(), (tx) => appendUpdate(tx, dayId, Y.encodeStateAsUpdate(doc)))
+    await materialize()
+
+    // additionalProperties: false -- an invented field is refused.
+    patchBlock(doc, firstId, { desc: { erfundenesFeld: 'kommt hier nicht durch' } })
+    await withTenant(actor(), (tx) => appendUpdate(tx, dayId, Y.encodeStateAsUpdate(doc)))
+    await materialize()
+
+    const { rows } = await ops.query('select json_desc from module where id = $1', [firstId])
+    expect(rows[0]?.json_desc).toMatchObject({ materials: ['Gültig'] })
+    expect(rows[0]?.json_desc).not.toHaveProperty('erfundenesFeld')
+  })
+
+  it('lets the rest of the day through rather than freezing it for one bad block', async () => {
+    const doc = await seedLog()
+    patchBlock(doc, firstId, { desc: { erfundenesFeld: 'ungültig' } })
+    patchBlock(doc, secondId, { title: 'Umbenannt, während der andere kaputt ist' })
+    await withTenant(actor(), (tx) => appendUpdate(tx, dayId, Y.encodeStateAsUpdate(doc)))
+
+    // Does not throw, and the healthy block lands.
+    await materialize()
+
+    const { rows } = await ops.query('select title from module where id = $1', [secondId])
+    expect(rows[0]?.title).toBe('Umbenannt, während der andere kaputt ist')
+  })
+
+  it('gives a new block an empty desc rather than an unchecked one', async () => {
+    const doc = await seedLog()
+    patchBlock(doc, firstId, { desc: { erfundenesFeld: 'ungültig' } })
+    await withTenant(actor(), (tx) => appendUpdate(tx, dayId, Y.encodeStateAsUpdate(doc)))
+    await materialize()
+
+    // Never materialised with a valid value, so there is nothing to keep.
+    const { rows } = await ops.query('select json_desc from module where id = $1', [firstId])
+    expect(rows[0]?.json_desc).toEqual({})
+  })
+})
+
 describe('a parked block', () => {
   it('keeps its row, marked as parked', async () => {
     const doc = await seedLog()
