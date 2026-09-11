@@ -11,8 +11,14 @@ import {
   listWorkshops,
   renameWorkshop,
   trashWorkshop,
+  restoreWorkshop,
+  purgeWorkshop,
+  listTrashedWorkshops,
+  deleteFolder,
 } from '@/domain/workshop/repo'
 import { pruneUnusedTags, setWorkshopTags } from '@/domain/workshop/tags'
+import { assertTenantAdmin } from '@/domain/tenant/members'
+import { NotFoundError } from '@/domain/agenda/access'
 import { action, workshopAction, type ActionResult } from './context'
 
 /**
@@ -81,6 +87,83 @@ export async function trashWorkshopAction(raw: {
       return null
     },
   )
+
+  if (result.ok) revalidatePath('/library')
+  return result
+}
+
+export async function restoreWorkshopAction(raw: {
+  workshopId: string
+}): Promise<ActionResult<null>> {
+  const result = await workshopAction(
+    z.object({ workshopId: z.string().uuid() }),
+    raw,
+    'workshop.delete',
+    async (tx, access) => {
+      await restoreWorkshop(tx, access)
+      return null
+    },
+    { includeTrashed: true },
+  )
+
+  if (result.ok) revalidatePath('/library')
+  return result
+}
+
+/**
+ * Irreversible, and only from the bin.
+ *
+ * purgeWorkshop refuses a row whose deleted_at is null, so "delete" and "delete
+ * for good" stay two decisions taken at two moments -- there is no single click
+ * anywhere that ends weeks of preparation.
+ */
+export async function purgeWorkshopAction(raw: {
+  workshopId: string
+}): Promise<ActionResult<null>> {
+  const result = await workshopAction(
+    z.object({ workshopId: z.string().uuid() }),
+    raw,
+    'workshop.delete',
+    async (tx, access) => {
+      const removed = await purgeWorkshop(tx, access)
+      if (removed === 0) {
+        throw new NotFoundError('Workshop im Papierkorb')
+      }
+      return null
+    },
+    { includeTrashed: true },
+  )
+
+  if (result.ok) revalidatePath('/library')
+  return result
+}
+
+export async function loadTrash(): Promise<
+  ActionResult<{ id: string; title: string; deletedAt: string | null }[]>
+> {
+  return action(z.object({}), {}, async (tx, actor) => {
+    const rows = await listTrashedWorkshops(tx, actor)
+    return rows.map((row) => ({
+      id: row.id,
+      title: row.title,
+      deletedAt: row.deletedAt ? row.deletedAt.toISOString() : null,
+    }))
+  })
+}
+
+/**
+ * Deletes a folder; everything inside moves up one level.
+ *
+ * Guarded by the tenant admin check rather than by workshop capabilities: a
+ * folder belongs to the tenant, not to a workshop, and the workshops inside it
+ * may well belong to other people. None of them is touched beyond where it sits.
+ */
+export async function deleteFolderAction(raw: { id: string }): Promise<ActionResult<null>> {
+  const result = await action(z.object({ id: z.string().uuid() }), raw, async (tx, actor) => {
+    assertTenantAdmin(actor)
+    await deleteFolder(tx, raw.id)
+    return null
+  })
 
   if (result.ok) revalidatePath('/library')
   return result

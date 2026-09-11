@@ -1,8 +1,9 @@
 import Link from 'next/link'
-import { Folder as FolderIcon } from 'lucide-react'
+import { readSession } from '@/server/auth/session'
 import { loadLibrary } from '@/server/actions/workshop'
 import { CreateWorkshop } from './create-workshop'
 import { CreateFolder } from './create-folder'
+import { FolderRow } from './folder-row'
 import { SearchBox } from './search-box'
 import { WorkshopList } from './workshop-list'
 
@@ -24,6 +25,10 @@ export default async function LibraryPage({
   const { folder, tag, q } = await searchParams
   const result = await loadLibrary({ folderId: folder, tagId: tag, search: q })
 
+  // Folders belong to the tenant rather than to a person, so tidying them up is
+  // an admin's call -- the workshops inside may well be somebody else's.
+  const isAdmin = (await readSession())?.tenantRole === 'admin'
+
   if (!result.ok) {
     return <p className="text-[var(--danger-fg)]">{result.message}</p>
   }
@@ -44,20 +49,26 @@ export default async function LibraryPage({
             </Link>
           </li>
           {folders.map((node) => (
-            <li key={node.id} style={{ paddingLeft: node.depth * 12 }}>
-              <Link
-                href={`/library?folder=${node.id}`}
-                className={`${navClass(folder === node.id)} inline-flex items-center gap-1.5`}
-              >
-                <FolderIcon aria-hidden className="size-3.5 shrink-0" />
-                {node.name}
-              </Link>
-            </li>
+            <FolderRow
+              key={node.id}
+              id={node.id}
+              name={node.name}
+              depth={node.depth}
+              active={folder === node.id}
+              canDelete={isAdmin}
+            />
           ))}
         </ul>
         <div className="mt-2">
           <CreateFolder parentId={folder ?? null} />
         </div>
+
+        <Link
+          href="/library/trash"
+          className="mt-3 inline-block px-2 text-[14px] text-[var(--fg-muted)] hover:underline"
+        >
+          Papierkorb
+        </Link>
 
         {tags.length > 0 && (
           <>

@@ -1,5 +1,5 @@
 import { uuidv7 } from 'uuidv7'
-import { and, asc, desc, eq, ilike, isNull, or, sql } from 'drizzle-orm'
+import { and, asc, desc, eq, ilike, isNotNull, isNull, or, sql } from 'drizzle-orm'
 import type { Actor, Tx } from '@/server/db'
 import {
   folder,
@@ -324,6 +324,96 @@ export async function trashWorkshop(tx: Tx, access: WorkshopAccess): Promise<voi
     .update(workshop)
     .set({ deletedAt: sql`now()`, updatedBy: access.actor.memberId })
     .where(eq(workshop.id, access.workshopId))
+}
+
+/**
+ * Puts a workshop back where it was.
+ *
+ * Nothing else changes -- it kept its folder, its tags and its collaborators
+ * while it sat in the bin, because the row never went anywhere.
+ */
+export async function restoreWorkshop(tx: Tx, access: WorkshopAccess): Promise<void> {
+  await tx
+    .update(workshop)
+    .set({ deletedAt: null, updatedBy: access.actor.memberId })
+    .where(eq(workshop.id, access.workshopId))
+}
+
+/**
+ * The one irreversible operation in the application.
+ *
+ * Only from the bin, never straight from the library: `deleted_at` has to be
+ * set already, so "delete" and "delete for good" are two decisions taken at two
+ * moments. Days, blocks, tags and shares go with it through the foreign keys.
+ */
+export async function purgeWorkshop(tx: Tx, access: WorkshopAccess): Promise<number> {
+  const rows = await tx
+    .delete(workshop)
+    .where(and(eq(workshop.id, access.workshopId), isNotNull(workshop.deletedAt)))
+    .returning({ id: workshop.id })
+  return rows.length
+}
+
+/** What is in the bin, newest first -- the order somebody looks for a mistake in. */
+export async function listTrashedWorkshops(tx: Tx, actor: Actor) {
+  return tx
+    .select({
+      id: workshop.id,
+      title: workshop.title,
+      deletedAt: workshop.deletedAt,
+      ownerId: workshop.ownerId,
+    })
+    .from(workshop)
+    .where(
+      and(
+        isNotNull(workshop.deletedAt),
+        // Same visibility rule as the library: a tenant admin sees everything,
+        // everybody else what they own or were given access to.
+        actor.tenantRole === 'admin'
+          ? undefined
+          : or(
+              eq(workshop.ownerId, actor.memberId),
+              sql`exists (select 1 from ${workshopCollaborator} wc
+                           where wc.workshop_id = ${workshop.id}
+                             and wc.member_id = ${actor.memberId})`,
+            ),
+      ),
+    )
+    .orderBy(desc(workshop.deletedAt))
+}
+
+/**
+ * Removes a folder and lifts everything in it one level up.
+ *
+ * Deleting a folder is a decision about ORDER, not about content. Taking the
+ * workshops with it would make tidying up the most expensive mistake in the
+ * product -- and the person doing the tidying is rarely the one who wrote what
+ * is inside.
+ *
+ * Every descendant is touched, not just the direct children: the materialised
+ * path in `ancestor_ids` names this folder in every workshop below it, and a
+ * path that mentions a folder which no longer exists breaks the tree view.
+ */
+export async function deleteFolder(tx: Tx, id: string): Promise<void> {
+  const rows = await tx
+    .select({ parentId: folder.parentId })
+    .from(folder)
+    .where(eq(folder.id, id))
+    .limit(1)
+
+  const found = rows[0]
+  if (!found) throw new Error('Ordner nicht gefunden.')
+  const parentId = found.parentId
+
+  // The descendants keep their shape; they only lose this one ancestor.
+  await tx
+    .update(folder)
+    .set({ ancestorIds: sql`array_remove(${folder.ancestorIds}, ${id}::uuid)` })
+    .where(sql`${id}::uuid = any(${folder.ancestorIds})`)
+
+  await tx.update(folder).set({ parentId }).where(eq(folder.parentId, id))
+  await tx.update(workshop).set({ folderId: parentId }).where(eq(workshop.folderId, id))
+  await tx.delete(folder).where(eq(folder.id, id))
 }
 
 export async function firstDayOf(tx: Tx, workshopId: string): Promise<string | null> {

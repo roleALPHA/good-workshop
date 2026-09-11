@@ -76,9 +76,10 @@ export async function workshopAction<Input extends { workshopId: string }, Outpu
   raw: unknown,
   capability: Capability,
   fn: (tx: Tx, access: WorkshopAccess, input: Input) => Promise<Output>,
+  options: { includeTrashed?: boolean } = {},
 ): Promise<ActionResult<Output>> {
   return action(schema, raw, async (tx, actor, input) => {
-    const access = await assertWorkshopAccess(tx, actor, input.workshopId, capability)
+    const access = await assertWorkshopAccess(tx, actor, input.workshopId, capability, options)
     return fn(tx, access, input)
   })
 }

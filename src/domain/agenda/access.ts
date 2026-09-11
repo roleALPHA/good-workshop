@@ -111,7 +111,7 @@ export async function assertWorkshopAccess(
   actor: Actor,
   workshopId: string,
   capability: Capability,
-  options: { forUpdate?: boolean } = {},
+  options: { forUpdate?: boolean; includeTrashed?: boolean } = {},
 ): Promise<WorkshopAccess> {
   const wantsWrite = capability !== 'workshop.read' && capability !== 'workshop.export'
   const lock = options.forUpdate ?? wantsWrite
@@ -130,7 +130,16 @@ export async function assertWorkshopAccess(
         eq(workshopCollaborator.memberId, actor.memberId),
       ),
     )
-    .where(and(eq(workshop.id, workshopId), isNull(workshop.deletedAt)))
+    // A workshop in the bin is invisible here by default, which is what makes
+    // the library and every editor route agree that it is gone. The two
+    // operations that act ON the bin -- restore and purge -- are the exception,
+    // and they say so: without this they could never find their own subject.
+    .where(
+      and(
+        eq(workshop.id, workshopId),
+        options.includeTrashed ? undefined : isNull(workshop.deletedAt),
+      ),
+    )
     .limit(1)
     .for(lock ? 'update' : 'no key update', { of: workshop })
 
