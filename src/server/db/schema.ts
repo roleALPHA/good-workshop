@@ -667,6 +667,19 @@ export const workshopModule = pgTable(
       .notNull()
       .default(sql`'{}'::jsonb`),
     position: text('position').notNull(),
+    /**
+     * Set aside: in the day, but not in its schedule.
+     *
+     * A flag rather than a fourth parent kind, because a parked block keeps
+     * everything else about itself -- its type, its duration, its description --
+     * and only stops counting towards the clock. The generated parent columns
+     * below stay exactly as they were, so ordering and the composite foreign
+     * key are untouched.
+     *
+     * Its own column rather than a NULL day_id: a block without a day is a
+     * block nobody can find again.
+     */
+    parked: boolean('parked').notNull().default(false),
     parentKind: text('parent_kind').generatedAlwaysAs(
       sql`case when cluster_id is null then 'day' else 'cluster' end`,
     ),

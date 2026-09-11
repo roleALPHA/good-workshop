@@ -1,5 +1,5 @@
 import type { CSSProperties, ReactNode } from 'react'
-import { ChevronDown } from 'lucide-react'
+import { ChevronDown, Inbox } from 'lucide-react'
 import type { ClusterDto, ModuleDto, ModuleTypeDto } from '@/domain/agenda/types'
 import type { Peer } from '@/features/agenda/document'
 import type { Schedule, ScheduleEntry } from '@/domain/schedule/types'
@@ -50,6 +50,8 @@ export type RowEditing = {
   onDurationChange: (minutes: number) => void
   onDescChange: (desc: Record<string, unknown>) => void
   expanded: boolean
+  /** Sets the block aside without deleting it. Absent where parking is not offered. */
+  onPark?: () => void
   onToggleExpanded: () => void
   details?: ReactNode
 }
@@ -158,19 +160,34 @@ export function ModuleRow({
 
         {editing && (
           <>
-            <button
-              type="button"
-              onClick={editing.onToggleExpanded}
-              aria-expanded={editing.expanded}
-              aria-controls={`details-${mod.id}`}
-              className="mt-1.5 -ml-1 inline-flex items-center gap-1 rounded px-1 py-0.5 text-[13px] text-[var(--fg-muted)] hover:bg-[var(--surface-raised)]"
-            >
-              <ChevronDown
-                aria-hidden
-                className={cn('size-3.5 transition-transform', editing.expanded && 'rotate-180')}
-              />
-              {editing.expanded ? 'Weniger' : 'Mehr Felder'}
-            </button>
+            <div className="flex flex-wrap items-center gap-1">
+              <button
+                type="button"
+                onClick={editing.onToggleExpanded}
+                aria-expanded={editing.expanded}
+                aria-controls={`details-${mod.id}`}
+                className="mt-1.5 -ml-1 inline-flex items-center gap-1 rounded px-1 py-0.5 text-[13px] text-[var(--fg-muted)] hover:bg-[var(--surface-raised)]"
+              >
+                <ChevronDown
+                  aria-hidden
+                  className={cn('size-3.5 transition-transform', editing.expanded && 'rotate-180')}
+                />
+                {editing.expanded ? 'Weniger' : 'Mehr Felder'}
+              </button>
+
+              {editing.onPark && (
+                <button
+                  type="button"
+                  onClick={editing.onPark}
+                  aria-label={`${mod.title} parken`}
+                  title="Aus dem Ablauf nehmen, ohne ihn zu löschen"
+                  className="mt-1.5 inline-flex items-center gap-1 rounded px-1 py-0.5 text-[13px] text-[var(--fg-muted)] hover:bg-[var(--surface-raised)]"
+                >
+                  <Inbox aria-hidden className="size-3.5" />
+                  Parken
+                </button>
+              )}
+            </div>
 
             {editing.expanded && (
               <div

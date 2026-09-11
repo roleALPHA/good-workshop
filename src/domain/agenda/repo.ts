@@ -121,6 +121,7 @@ export async function loadDay(
         durationMinutes: m.durationMinutes,
         pinnedStartMinute: m.pinnedStartTime ? timeToMinutes(m.pinnedStartTime) : null,
         desc: m.jsonDesc as Record<string, unknown>,
+        parked: m.parked,
         order: (m.clusterId === null ? dayOrder.get(m.id) : childOrder.get(m.id)) ?? 0,
       })),
       moduleTypes: Object.fromEntries(

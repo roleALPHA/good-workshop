@@ -9,6 +9,7 @@ import { useCollabDocument, type CollabTarget } from '@/features/collab/use-coll
 import { useMediaQuery } from '@/hooks/use-media-query'
 import { AgendaEditor } from './agenda-editor'
 import { AgendaTable } from './agenda-table'
+import { ParkingArea } from './parking'
 import { DayHeader } from './day-header'
 
 /**
@@ -44,6 +45,7 @@ export function AgendaSurface({
       <>
         <DayHeader doc={doc} schedule={readOnly.schedule} />
         <AgendaTable doc={doc} rows={readOnly.rows} schedule={readOnly.schedule} />
+        <ParkingArea doc={doc} />
       </>
     )
   }

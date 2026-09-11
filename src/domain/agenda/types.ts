@@ -51,6 +51,14 @@ export type ModuleDto = {
   pinnedStartMinute: number | null
   /** Type-specific attributes, validated against the module type's JSON Schema. */
   desc: Record<string, unknown>
+  /**
+   * Set aside: kept with the day, left out of its schedule.
+   *
+   * For the block you prepared and did not use, the one that got cut for time,
+   * the alternative you want to keep within reach. Deleting it is the only
+   * thing that used to be on offer.
+   */
+  parked: boolean
   order: number
 }
 

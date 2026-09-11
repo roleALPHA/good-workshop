@@ -4,7 +4,7 @@ import pg from 'pg'
 import { uuidv7 } from 'uuidv7'
 import { afterAll, beforeAll, beforeEach, describe, expect, it } from 'vitest'
 import { blocksOf, seedFromDayDoc } from '@/domain/collab/doc'
-import { setDayFields } from '@/domain/collab/ops'
+import { patchBlock, setDayFields } from '@/domain/collab/ops'
 import { assertWorkshopAccess } from '@/domain/agenda/access'
 import { loadDay } from '@/domain/agenda/repo'
 import { flattenDay } from '@/features/agenda/flatten'
@@ -109,6 +109,7 @@ async function seedLog() {
         durationMinutes: 15,
         pinnedStartMinute: null,
         desc: {},
+        parked: false,
         order: 0,
       },
       {
@@ -119,6 +120,7 @@ async function seedLog() {
         durationMinutes: 30,
         pinnedStartMinute: null,
         desc: {},
+        parked: false,
         order: 1,
       },
     ],
@@ -137,6 +139,36 @@ const relationalShape = () =>
   })
 
 const materialize = () => withTenant(actor(), (tx) => materializeDay(tx, workshopId, dayId))
+
+describe('a parked block', () => {
+  it('keeps its row, marked as parked', async () => {
+    const doc = await seedLog()
+    patchBlock(doc, firstId, { parked: true })
+    await withTenant(actor(), (tx) => appendUpdate(tx, dayId, Y.encodeStateAsUpdate(doc)))
+    await materialize()
+
+    const { rows } = await ops.query('select id, parked, title from module where day_id = $1', [
+      dayId,
+    ])
+    // Still there -- parking is not deleting, which is the entire point.
+    expect(rows).toHaveLength(2)
+    expect(rows.find((r) => r.id === firstId)).toMatchObject({ parked: true })
+    expect(rows.find((r) => r.id === secondId)).toMatchObject({ parked: false })
+  })
+
+  it('comes back into the schedule when it is unparked', async () => {
+    const doc = await seedLog()
+    patchBlock(doc, firstId, { parked: true })
+    await withTenant(actor(), (tx) => appendUpdate(tx, dayId, Y.encodeStateAsUpdate(doc)))
+    await materialize()
+    expect(await relationalShape()).not.toContain(`  ${firstId}`)
+
+    patchBlock(doc, firstId, { parked: false })
+    await withTenant(actor(), (tx) => appendUpdate(tx, dayId, Y.encodeStateAsUpdate(doc)))
+    await materialize()
+    expect(await relationalShape()).toContain(`  ${firstId}`)
+  })
+})
 
 describe('the note on the day', () => {
   it('travels from the shared document into workshop_day.json_desc', async () => {

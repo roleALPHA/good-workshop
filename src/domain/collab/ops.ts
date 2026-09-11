@@ -23,6 +23,8 @@ export type BlockPatch = {
   desc?: Record<string, unknown>
   color?: string | null
   parentId?: string | null
+  /** Set aside: in the day, out of the schedule. */
+  parked?: boolean
 }
 
 export type NewModuleBlock = {

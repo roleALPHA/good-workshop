@@ -40,6 +40,7 @@ import { ModuleDetails } from '@/components/inspector/module-details'
 import { ClusterRow, EndOfDay, GapRow, HeaderRow, ModuleRow, type RowChrome } from './agenda-rows'
 import { BlockPicker } from './block-picker'
 import { DayHeader } from './day-header'
+import { ParkingArea } from './parking'
 import { PresenceBar } from './presence'
 import { DragHandle } from './drag-handle'
 
@@ -198,11 +199,15 @@ export function AgendaEditor({ document: agenda }: { document: AgendaDocument })
    * it either way.
    */
   function patchModule(moduleId: string, patch: Partial<(typeof doc)['modules'][number]>) {
+    // Listed field by field rather than spread: undefined means "not part of
+    // this change", and passing the whole object through would let a caller's
+    // missing key clear a field it never mentioned.
     agenda.patchModule(moduleId, {
       title: patch.title,
       durationMinutes: patch.durationMinutes,
       pinnedStartMinute: patch.pinnedStartMinute,
       desc: patch.desc,
+      parked: patch.parked,
     })
   }
 
@@ -324,6 +329,7 @@ export function AgendaEditor({ document: agenda }: { document: AgendaDocument })
                           onDurationChange: (durationMinutes) =>
                             patchModule(row.id, { durationMinutes }),
                           onDescChange: (desc) => patchModule(row.id, { desc }),
+                          onPark: () => patchModule(row.id, { parked: true }),
                           details: (
                             <ModuleDetails
                               module={row.module}
@@ -384,6 +390,10 @@ export function AgendaEditor({ document: agenda }: { document: AgendaDocument })
           </div>
         ) : null}
       </DragOverlay>
+
+      {/* Below the agenda, outside the sortable tree: parked blocks have no
+          place in the running order, which is the whole point of them. */}
+      <ParkingArea doc={doc} onUnpark={(id) => agenda.patchModule(id, { parked: false })} />
     </DndContext>
   )
 }

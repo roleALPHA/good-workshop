@@ -16,6 +16,8 @@ export type ModulePatch = {
   durationMinutes?: number
   pinnedStartMinute?: number | null
   desc?: Record<string, unknown>
+  /** Set aside, or brought back. See ModuleDto.parked. */
+  parked?: boolean
 }
 
 export type NewBlock = {

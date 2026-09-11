@@ -51,6 +51,7 @@ export function useLocalDocument(initial: DayDoc): AgendaDocument {
           durationMinutes: block.durationMinutes,
           pinnedStartMinute: null,
           desc: {},
+          parked: false,
           order: Number.MAX_SAFE_INTEGER,
         },
       ],

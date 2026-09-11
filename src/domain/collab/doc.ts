@@ -44,6 +44,8 @@ export type BlockFields = {
   color?: string | null
   /** Type-specific attributes that are not rich text. */
   desc?: Record<string, unknown>
+  /** Set aside: in the day, out of the schedule. */
+  parked?: boolean
 }
 
 export function blocksOf(doc: Y.Doc): Y.Map<Y.Map<unknown>> {
@@ -129,6 +131,7 @@ export function seedFromDayDoc(doc: Y.Doc, source: DayDoc): void {
           durationMinutes: mod.durationMinutes,
           pinnedStartMinute: mod.pinnedStartMinute,
           desc: mod.desc,
+          parked: mod.parked ?? false,
         }),
       )
     }
@@ -204,6 +207,7 @@ export function toDayDoc(doc: Y.Doc, moduleTypes: DayDoc['moduleTypes']): DayDoc
       durationMinutes: Number(block.get('durationMinutes') ?? 0),
       pinnedStartMinute: (block.get('pinnedStartMinute') as number | null) ?? null,
       desc: (block.get('desc') as Record<string, unknown>) ?? {},
+      parked: block.get('parked') === true,
       order: (parentId === null ? dayOrder.get(blockId) : childOrder.get(blockId)) ?? 0,
     })
   })
@@ -233,6 +237,7 @@ export type RawBlock = {
   pinnedStartMinute: number | null
   color: string | null
   desc: Record<string, unknown>
+  parked: boolean
 }
 
 /**
@@ -279,6 +284,7 @@ export function readBlocks(doc: Y.Doc): RawBlock[] {
       pinnedStartMinute: (block.get('pinnedStartMinute') as number | null) ?? null,
       color: (block.get('color') as string | null) ?? null,
       desc: (block.get('desc') as Record<string, unknown>) ?? {},
+      parked: block.get('parked') === true,
     })
   })
 

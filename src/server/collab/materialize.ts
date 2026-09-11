@@ -138,6 +138,7 @@ async function writeBlocks(
         durationMinutes: block.durationMinutes,
         pinnedStartTime: block.pinnedStartMinute === null ? null : toTime(block.pinnedStartMinute),
         jsonDesc: block.desc,
+        parked: block.parked,
         position: block.position,
       })
       .onConflictDoUpdate({
@@ -149,6 +150,7 @@ async function writeBlocks(
           pinnedStartTime:
             block.pinnedStartMinute === null ? null : toTime(block.pinnedStartMinute),
           jsonDesc: block.desc,
+          parked: block.parked,
           position: block.position,
           updatedAt: sql`now()`,
         },

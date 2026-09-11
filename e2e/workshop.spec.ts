@@ -145,6 +145,41 @@ test('persists a type-specific field edited inside the row', async ({ page }) =>
   })
 })
 
+test('parks a block out of the schedule and brings it back', async ({ page }) => {
+  await addBlock(page, 'Gruppenarbeit')
+  const title = 'Gruppenarbeit'
+
+  const agenda = page.getByRole('region', { name: /^Agenda/ })
+  await expect(agenda.getByRole('article', { name: title })).toBeVisible()
+
+  await page.getByRole('button', { name: `${title} parken` }).click()
+
+  // Off the schedule, onto the shelf -- and still in the day. Asserted by
+  // WHERE the block is rather than by the running total: the total is proved
+  // against the fixture in features/agenda/parking.test.ts, where the numbers
+  // are known, and reading it off the screen here only restates it vaguely.
+  const shelf = page.getByRole('region', { name: /Geparkt/ })
+  await expect(shelf.getByRole('article', { name: title })).toBeVisible()
+  await expect(agenda.getByRole('article', { name: title })).toHaveCount(0)
+
+  // It survives a reload, which is the difference between a shelf and a
+  // thought: the block went through the room and into the tables.
+  await reloadUntil(page, async () => {
+    await expect(
+      page.getByRole('region', { name: /Geparkt/ }).getByRole('article', { name: title }),
+    ).toBeVisible()
+  })
+
+  await page
+    .getByRole('region', { name: /Geparkt/ })
+    .getByRole('button', { name: `${title} zurück in den Ablauf` })
+    .click()
+
+  // The shelf empties itself when the last block leaves it.
+  await expect(page.getByRole('region', { name: /Geparkt/ })).toHaveCount(0)
+  await expect(agenda.getByRole('article', { name: title })).toBeVisible()
+})
+
 test('keeps a note about the day itself, and survives a reload with it', async ({ page }) => {
   // The information that belongs to nobody's block: room, keys, who brings the
   // flipchart. workshop_day.json_desc had been in the schema from the start and
