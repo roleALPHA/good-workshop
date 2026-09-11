@@ -86,7 +86,7 @@ export default async function DayPage({
         <div className="flex flex-wrap items-baseline justify-between gap-3">
           <div className="min-w-0">
             <Link href="/library" className="text-[13px] text-[var(--fg-muted)] hover:underline">
-              ← Bibliothek
+              {t('backToLibrary')}
             </Link>
             <h1 className="mt-0.5 text-2xl font-semibold tracking-tight">{data.title}</h1>
             {data.canUpdate ? (

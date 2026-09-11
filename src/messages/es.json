@@ -95,11 +95,12 @@
     "end": "Fin",
     "fewerFields": "Menos",
     "field": {
-      "privateNote": "solo para ti",
       "commaSeparated": "Separar con comas",
-      "richTextReadOnly": "Contiene formato. La edición llegará con el editor de texto — hasta entonces el contenido se queda intacto.",
       "legacyHeading": "Campos antiguos ({count, number})",
-      "legacyHint": "Estos valores vienen de una versión anterior de este tipo de bloque. Se conservan, pero ya no se pueden editar."
+      "legacyHint": "Estos valores vienen de una versión anterior de este tipo de bloque. Se conservan, pero ya no se pueden editar.",
+      "privateNote": "solo para ti",
+      "richTextReadOnly": "Contiene formato. La edición llegará con el editor de texto — hasta entonces el contenido se queda intacto.",
+      "unset": "— sin indicar —"
     },
     "filterPlaceholder": "Escribe para filtrar …",
     "moreFields": "Más campos",
@@ -421,13 +422,14 @@
     "access": "Acceso",
     "accessIntro": "Quien edita ve los cambios al momento — está en el mismo documento. Quien lee ve el desarrollo pero no cambia nada.",
     "accessOf": "Acceso de {email}",
-    "you": "tú",
-    "print": "Imprimir",
+    "backToLibrary": "← Biblioteca",
     "days": "Jornadas",
-    "untitledDay": "Jornada",
-    "untitled": "Taller",
-    "someone": "Alguien",
+    "end": "Fin {time}",
     "materials": "Material: {items}",
-    "end": "Fin {time}"
+    "print": "Imprimir",
+    "someone": "Alguien",
+    "untitled": "Taller",
+    "untitledDay": "Jornada",
+    "you": "tú"
   }
 }

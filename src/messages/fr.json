@@ -95,11 +95,12 @@
     "end": "Fin",
     "fewerFields": "Moins",
     "field": {
-      "privateNote": "pour toi seulement",
       "commaSeparated": "Séparer par des virgules",
-      "richTextReadOnly": "Contient de la mise en forme. L'édition arrivera avec l'éditeur de texte — d'ici là, le contenu reste intact.",
       "legacyHeading": "Anciens champs ({count, number})",
-      "legacyHint": "Ces valeurs viennent d'une version antérieure de ce type de bloc. Elles sont conservées, mais ne peuvent plus être modifiées."
+      "legacyHint": "Ces valeurs viennent d'une version antérieure de ce type de bloc. Elles sont conservées, mais ne peuvent plus être modifiées.",
+      "privateNote": "pour toi seulement",
+      "richTextReadOnly": "Contient de la mise en forme. L'édition arrivera avec l'éditeur de texte — d'ici là, le contenu reste intact.",
+      "unset": "— non renseigné —"
     },
     "filterPlaceholder": "Tape pour filtrer …",
     "moreFields": "Plus de champs",
@@ -421,13 +422,14 @@
     "access": "Accès",
     "accessIntro": "Les personnes qui éditent voient les changements tout de suite — elles sont dans le même document. Celles qui lisent voient le déroulé sans rien changer.",
     "accessOf": "Accès de {email}",
-    "you": "toi",
-    "print": "Imprimer",
+    "backToLibrary": "← Bibliothèque",
     "days": "Journées",
-    "untitledDay": "Journée",
-    "untitled": "Atelier",
-    "someone": "Quelqu'un",
+    "end": "Fin {time}",
     "materials": "Matériel : {items}",
-    "end": "Fin {time}"
+    "print": "Imprimer",
+    "someone": "Quelqu'un",
+    "untitled": "Atelier",
+    "untitledDay": "Journée",
+    "you": "toi"
   }
 }

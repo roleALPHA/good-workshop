@@ -2,436 +2,438 @@
 // See: https://next-intl.dev/docs/workflows/typescript#messages-arguments
 
 declare const messages: {
-  "admin": {
-    "branding": {
-      "title": "Branding",
-      "intro": "Logo und Akzentfarbe dieser Installation. Die Fußzeile bleibt, wie sie ist.",
-      "logo": "Logo",
-      "logoHint": "SVG, PNG oder WebP, höchstens {max, number} KB. Erscheint in der Kopfzeile und auf der Anmeldeseite.",
-      "logoTooLarge": "Höchstens {max, number} KB.",
-      "currentLogo": "Aktuelles Logo",
-      "logoFile": "Logo-Datei",
-      "replaceLogo": "Logo ersetzen",
-      "uploadLogo": "Logo hochladen",
-      "removeLogo": "Entfernen",
-      "accent": "Akzentfarbe",
-      "accentHint": "Ein Farbwert. Der Server baut daraus die Abstufungen für hell und dunkel und prüft dabei den Kontrast — eine Farbe, mit der die Oberfläche unlesbar würde, wird abgelehnt. Die Farben der Modultypen bleiben unberührt: sie bedeuten etwas.",
-      "hex": "Hex-Wert",
-      "brandName": "Name (wenn kein Logo gesetzt ist)",
-      "saved": "Gespeichert."
-    },
-    "members": {
-      "title": "Mitglieder",
-      "invite": "Mitglied einladen",
-      "email": "E-Mail-Adresse",
-      "emailPlaceholder": "kollegin@example.com",
-      "role": "Rolle",
-      "roleOf": "Rolle von {email}",
-      "inviting": "Einladen …",
-      "inviteAction": "Einladen",
-      "enable": "Wieder zulassen",
-      "disable": "Abschalten",
-      "alreadyMember": "{email} war schon Mitglied.",
-      "invited": "{email} wurde eingeladen.",
-      "linkOnItsWay": "Der Anmeldelink ist unterwegs.",
-      "noMailSetUp": "Es ist kein Mailversand eingerichtet. Gib diesen Link persönlich weiter — wer ihn öffnet, ist als {email} angemeldet."
-    },
-    "mail": {
-      "title": "Mailversand",
-      "intro": "Anmeldelinks und Einladungen gehen diesen Weg. Ohne Versand kommt nur hinein, wer schon einen Passkey hat.",
-      "fromEnvironmentNotice": "Einige Werte kommen aus der Umgebung des Servers und lassen sich hier nicht ändern. Sie stehen in der <code>.env</code> der Installation.",
-      "fromEnvironment": "aus der Umgebung",
-      "transportLegend": "Wie sollen Mails verschickt werden?",
-      "transport": {
-        "graph": "Microsoft Graph",
-        "graphHint": "Für Microsoft 365 ohne SMTP AUTH.",
-        "smtp": "SMTP",
-        "smtpHint": "Ein klassisches Mailrelay.",
-        "console": "In das Server-Log schreiben",
-        "consoleHint": "Kein Versand. Anmeldelinks landen im Log — wer es lesen kann, kommt in jedes Konto.",
-        "none": "Kein Versand",
-        "noneHint": "Anmeldelinks gibt es nur über die Kommandozeile."
-      },
-      "graphIntro": "Gebraucht wird eine App-Registrierung in Entra ID mit der <b>Anwendungsberechtigung</b> <code>Mail.Send</code> samt Administratorzustimmung.",
-      "graphTenantId": "Verzeichnis- oder Mandant-ID",
-      "graphClientId": "Anwendungs-ID",
-      "graphClientSecret": "Client Secret",
-      "graphSender": "Absenderpostfach",
-      "smtpUrl": "SMTP-URL",
-      "smtpUrlHint": "Etwa smtps://benutzer:passwort@relay.example.com:465",
-      "smtpFrom": "Absenderadresse",
-      "secretStored": "gespeichert — leer lassen, um ihn zu behalten",
-      "saved": "Gespeichert.",
-      "testTitle": "Testnachricht schicken",
-      "testIntro": "Ob ein Relay funktioniert, zeigt sich beim Verschicken. Sonst ist der erste Versuch der Anmeldelink von jemandem — und ein Fehler sieht dann aus wie ein kaputtes Konto.",
-      "testTo": "An",
-      "testSend": "Schicken",
-      "testSent": "Verschickt an {email}. Wenn nichts ankommt: Spam-Ordner."
+  admin: {
+    branding: {
+      title: 'Branding'
+      intro: 'Logo und Akzentfarbe dieser Installation. Die Fußzeile bleibt, wie sie ist.'
+      logo: 'Logo'
+      logoHint: 'SVG, PNG oder WebP, höchstens {max, number} KB. Erscheint in der Kopfzeile und auf der Anmeldeseite.'
+      logoTooLarge: 'Höchstens {max, number} KB.'
+      currentLogo: 'Aktuelles Logo'
+      logoFile: 'Logo-Datei'
+      replaceLogo: 'Logo ersetzen'
+      uploadLogo: 'Logo hochladen'
+      removeLogo: 'Entfernen'
+      accent: 'Akzentfarbe'
+      accentHint: 'Ein Farbwert. Der Server baut daraus die Abstufungen für hell und dunkel und prüft dabei den Kontrast — eine Farbe, mit der die Oberfläche unlesbar würde, wird abgelehnt. Die Farben der Modultypen bleiben unberührt: sie bedeuten etwas.'
+      hex: 'Hex-Wert'
+      brandName: 'Name (wenn kein Logo gesetzt ist)'
+      saved: 'Gespeichert.'
     }
-  },
-  "agenda": {
-    "addBlock": "Block hinzufügen",
-    "addDayNote": "Notiz zum Tag hinzufügen",
-    "addTag": "Tag hinzufügen",
-    "blockCount": "{count, plural, one {# Block} other {# Blöcke}}",
-    "breaks": "{duration} Pausen",
-    "columns": {
-      "time": "Zeit",
-      "titleAndDescription": "Titel und Beschreibung",
-      "info": "Zusatzinfo"
-    },
-    "connecting": "Verbinde …",
-    "content": "{duration} Inhalt",
-    "dayNote": "Notiz zum Tag",
-    "dayNotePlaceholder": "Raum, Anfahrt, wer was mitbringt …",
-    "drag": {
-      "atDayLevel": "auf Tagesebene",
-      "cancelled": "Verschieben abgebrochen.",
-      "dropped": "{title} abgelegt {where}, Position {position, number}.",
-      "droppedWithTime": "{title} abgelegt {where}, Position {position, number}, neue Startzeit {time}.",
-      "inSection": "in Abschnitt {title}",
-      "landed": "{title} landet {where}, Position {position, number}.",
-      "landedWithTime": "{title} landet {where}, Position {position, number}, neue Startzeit {time}.",
-      "picked": "{title} aufgenommen."
-    },
-    "dragHandle": "{title} verschieben",
-    "end": "Ende",
-    "fewerFields": "Weniger",
-    "field": {
-      "privateNote": "nur für dich",
-      "commaSeparated": "Mit Komma trennen",
-      "richTextReadOnly": "Enthält Formatierung. Bearbeiten kommt mit dem Text-Editor — bis dahin bleibt der Inhalt hier unangetastet.",
-      "legacyHeading": "Alte Felder ({count, number})",
-      "legacyHint": "Diese Angaben stammen aus einer früheren Fassung dieses Modultyps. Sie bleiben erhalten, lassen sich aber nicht mehr bearbeiten."
-    },
-    "filterPlaceholder": "Tippen zum Filtern …",
-    "moreFields": "Mehr Felder",
-    "noTypeMatches": "Kein Blocktyp passt dazu.",
-    "offline": "Keine Verbindung. Deine Änderungen werden übertragen, sobald sie wieder steht.",
-    "overPlan": "{duration} über Plan",
-    "overlap": "Überschneidet den vorherigen Block um {duration}",
-    "park": "Parken",
-    "parkHint": "Aus dem Ablauf nehmen, ohne ihn zu löschen",
-    "parkLabel": "{title} parken",
-    "parkedHeading": "Geparkt ({count, number})",
-    "parkedHint": "Gehört zum Tag, zählt nicht zur Zeit.",
-    "presence": "Weitere Personen an diesem Tag",
-    "regionLabel": "Agenda {title}",
-    "removeTag": "Tag {name} entfernen",
-    "saving": "Wird gespeichert …",
-    "searchType": "Blocktyp suchen",
-    "tagPlaceholder": "+ Tag",
-    "unpark": "In den Ablauf",
-    "unparkLabel": "{title} zurück in den Ablauf"
-  },
-  "auth": {
-    "login": {
-      "title": "Bei GoodWorkshop anmelden",
-      "intro": "Ohne Passwort. Entweder per Passkey oder über einen Link per E-Mail.",
-      "email": "E-Mail-Adresse",
-      "send": "Anmeldelink schicken",
-      "passkeyButton": "Mit Passkey anmelden",
-      "passkeyUnavailable": "Passkeys brauchen HTTPS und sind auf dieser Adresse nicht verfügbar. Der Anmeldelink per E-Mail funktioniert.",
-      "passkeyFailed": "Der Passkey konnte nicht bestätigt werden.",
-      "unknownError": "Unbekannter Fehler",
-      "sentTitle": "Schau in dein Postfach.",
-      "sentBody": "Falls es zu dieser Adresse ein Konto gibt, ist ein Anmeldelink unterwegs. Er gilt {minutes, plural, one {eine Minute} other {# Minuten}}.",
-      "linkExpired": "Dieser Link ist abgelaufen oder wurde schon benutzt. Fordere einen neuen an.",
-      "linkIncomplete": "Der Link war unvollständig. Fordere einen neuen an."
-    },
-    "setup": {
-      "title": "GoodWorkshop einrichten",
-      "intro": "Diese Installation hat noch niemanden, der sie verwalten kann. Trag dich als erste Administratorin ein — alles Weitere, auch der Mailversand, geht danach in der Oberfläche.",
-      "email": "Deine E-Mail-Adresse",
-      "emailHint": "Damit meldest du dich künftig an. Weitere Personen lädst du danach in der Oberfläche ein.",
-      "key": "Einrichtungsschlüssel",
-      "keyHint": "Steht im Log des Servers:",
-      "submit": "Installation einrichten",
-      "submitting": "Einen Moment …",
-      "claimed": "Die Installation gehört jetzt {email}.",
-      "linkHere": "Es ist noch kein Mailversand eingerichtet, deshalb steht der Anmeldelink hier. Er gilt einmal und läuft ab.",
-      "linkSent": "Der Anmeldelink ist unterwegs. Schau in dein Postfach."
+    members: {
+      title: 'Mitglieder'
+      invite: 'Mitglied einladen'
+      email: 'E-Mail-Adresse'
+      emailPlaceholder: 'kollegin@example.com'
+      role: 'Rolle'
+      roleOf: 'Rolle von {email}'
+      inviting: 'Einladen …'
+      inviteAction: 'Einladen'
+      enable: 'Wieder zulassen'
+      disable: 'Abschalten'
+      alreadyMember: '{email} war schon Mitglied.'
+      invited: '{email} wurde eingeladen.'
+      linkOnItsWay: 'Der Anmeldelink ist unterwegs.'
+      noMailSetUp: 'Es ist kein Mailversand eingerichtet. Gib diesen Link persönlich weiter — wer ihn öffnet, ist als {email} angemeldet.'
     }
-  },
-  "common": {
-    "save": "Speichern",
-    "cancel": "Abbrechen",
-    "delete": "Löschen",
-    "create": "Anlegen",
-    "loading": "Lädt …",
-    "loadMore": "Mehr laden",
-    "saving": "Speichert …",
-    "back": "Zurück"
-  },
-  "enums": {
-    "memberRole": {
-      "member": "Mitglied",
-      "admin": "Admin"
-    },
-    "memberStatus": {
-      "invited": "Eingeladen",
-      "active": "Aktiv",
-      "disabled": "Abgeschaltet"
-    },
-    "tokenScope": {
-      "workshops:read": "Workshops lesen",
-      "workshops:write": "Workshops schreiben",
-      "module_types:read": "Modultypen lesen",
-      "module_types:write": "Modultypen schreiben",
-      "tenant:read": "Tenant lesen"
-    },
-    "workshopAccess": {
-      "owner": "Eigentümer:in",
-      "editor": "Bearbeiten",
-      "viewer": "Lesen",
-      "none": "Kein Zugriff"
-    },
-    "workshopStatus": {
-      "draft": "Entwurf",
-      "ready": "Bereit",
-      "delivered": "Durchgeführt",
-      "archived": "Archiviert"
-    }
-  },
-  "errors": {
-    "conflict": "Jemand anderes hat diesen Workshop inzwischen geändert.",
-    "domain": {
-      "brand": {
-        "notHex": "Bitte eine Farbe als Hex-Wert angeben, z. B. #7c3aed.",
-        "grey": "Grau hat keinen Farbton, aus dem sich eine Akzentfarbe bauen lässt. Nimm einen bunten Ton.",
-        "contrastOnBrand": "Dieser Ton erreicht {theme, select, light {im hellen} dark {im dunklen} other {}} Modus nur {ratio}:1 für Text auf der Akzentfläche. Nötig sind 4,5:1.",
-        "contrastSubtle": "Dieser Ton erreicht {theme, select, light {im hellen} dark {im dunklen} other {}} Modus nur {ratio}:1 für gedämpften Text auf gedämpfter Fläche. Nötig sind 4,5:1.",
-        "checkNameAndColour": "Bitte Name und Farbe prüfen."
-      },
-      "collab": {
-        "unavailable": "Der Kollaborationsdienst ist nicht erreichbar. Ohne ihn kann nicht geschrieben werden, weil sonst zwei Schreibwege auf denselben Tag zeigen."
-      },
-      "logo": {
-        "unsupportedType": "Erlaubt sind SVG, PNG und WebP.",
-        "empty": "Die Datei ist leer.",
-        "tooLarge": "Das Logo darf höchstens {max, number} KB groß sein (diese Datei: {actual, number} KB).",
-        "notSvg": "Das sieht nicht nach einer SVG-Datei aus.",
-        "unsafeActive": "Das SVG enthält {what}. Exportiere es ohne Skripte und ohne Interaktivität — die meisten Programme nennen das „einfaches SVG“.",
-        "unsafeExternal": "Das SVG verweist über {what} nach außen. Exportiere es mit eingebetteten Schriften und Bildern, ohne externe Verweise.",
-        "unsafeDoctype": "Das SVG enthält {what}. Exportiere es ohne DTD und ohne Entities.",
-        "typeMismatch": "Die Datei passt nicht zum angegebenen Format."
-      },
-      "mail": {
-        "noSmtpUrl": "Transport SMTP, aber keine SMTP-URL konfiguriert — weder in der Umgebung noch in den Einstellungen.",
-        "transportNone": "Transport „kein Versand“: es kann keine Mail verschickt werden. Nimm `node scripts/cli.mjs login-link --email …` oder wähle einen Transport in den Einstellungen.",
-        "graphMissing": "Transport Microsoft Graph, aber {field} fehlt."
-      },
-      "member": {
-        "adminOnly": "Nur Tenant-Admins dürfen Mitglieder verwalten.",
-        "invalidEmail": "Das ist keine gültige E-Mail-Adresse.",
-        "gone": "Dieses Mitglied gibt es nicht.",
-        "cannotDisableSelf": "Du kannst dich nicht selbst abschalten.",
-        "lastAdmin": "Das ist der letzte aktive Admin. Mach zuerst jemand anderen zum Admin — sonst kommt niemand mehr an die Verwaltung.",
-        "checkEmailAndRole": "Bitte E-Mail-Adresse und Rolle prüfen."
-      },
-      "setup": {
-        "wrongKey": "Der Einrichtungsschlüssel stimmt nicht.",
-        "invalidEmail": "Das ist keine gültige E-Mail-Adresse.",
-        "alreadyClaimed": "Diese Installation hat bereits eine Administratorin.",
-        "identityFailed": "Die Identität konnte nicht angelegt werden."
-      },
-      "sharing": {
-        "memberGone": "Dieses Mitglied gibt es nicht.",
-        "memberDisabled": "Dieses Mitglied ist abgeschaltet.",
-        "ownerHasAccess": "Der Eigentümer hat bereits vollen Zugriff."
-      },
-      "tags": {
-        "tooMany": "Höchstens {max, number} Tags pro Workshop.",
-        "tooLong": "Ein Tag darf höchstens {max, number} Zeichen haben.",
-        "createFailed": "Der Tag „{name}“ konnte nicht angelegt werden."
-      },
-      "token": {
-        "nameRequired": "Gib dem Token einen Namen — sonst weißt du später nicht, wofür es war.",
-        "nameTooLong": "Der Name darf höchstens {max, number} Zeichen haben.",
-        "unknownScopes": "Unbekannte Bereiche: {scopes}.",
-        "noScopes": "Ein Token ohne Bereiche kann nichts. Wähl mindestens einen.",
-        "gone": "Dieses Token gibt es nicht mehr."
-      },
-      "workshop": {
-        "notFound": "Nicht gefunden.",
-        "forbidden": "Dafür fehlt die Berechtigung: {capability}",
-        "versionConflict": "Der Workshop wurde inzwischen geändert (erwartet {expected}, ist {actual}).",
-        "unknownModuleType": "Diesen Modultyp gibt es nicht.",
-        "unknownModuleTypeOptions": "Unbekannter Modultyp „{key}“. Verfügbar: {available}",
-        "descInvalid": "Ungültige Angaben: {issues}"
+    mail: {
+      title: 'Mailversand'
+      intro: 'Anmeldelinks und Einladungen gehen diesen Weg. Ohne Versand kommt nur hinein, wer schon einen Passkey hat.'
+      fromEnvironmentNotice: 'Einige Werte kommen aus der Umgebung des Servers und lassen sich hier nicht ändern. Sie stehen in der <code>.env</code> der Installation.'
+      fromEnvironment: 'aus der Umgebung'
+      transportLegend: 'Wie sollen Mails verschickt werden?'
+      transport: {
+        graph: 'Microsoft Graph'
+        graphHint: 'Für Microsoft 365 ohne SMTP AUTH.'
+        smtp: 'SMTP'
+        smtpHint: 'Ein klassisches Mailrelay.'
+        console: 'In das Server-Log schreiben'
+        consoleHint: 'Kein Versand. Anmeldelinks landen im Log — wer es lesen kann, kommt in jedes Konto.'
+        none: 'Kein Versand'
+        noneHint: 'Anmeldelinks gibt es nur über die Kommandozeile.'
       }
-    },
-    "failed": "Das hat nicht geklappt. Versuch es noch einmal.",
-    "field": {
-      "desc": {
-        "notObject": "desc muss ein Objekt sein."
-      },
-      "field": {
-        "enum": "muss einer dieser Werte sein: {allowed}",
-        "required": "ist erforderlich",
-        "unexpected": "ist in diesem Modultyp nicht vorgesehen",
-        "type": "muss vom Typ {type} sein",
-        "invalid": "ist ungültig ({keyword})"
-      },
-      "schema": {
-        "broken": "Das Schema dieses Modultyps ist ungültig.",
-        "notObject": "Das Schema muss ein Objekt sein.",
-        "tooLarge": "Das Schema ist zu groß (max. {max, number} Bytes).",
-        "tooDeep": "Zu tief verschachtelt (max. {max, number} Ebenen).",
-        "uncompilable": "Das Schema lässt sich nicht übersetzen: {reason}",
-        "patternForbidden": "pattern ist nicht erlaubt: ein selbst geschriebener regulärer Ausdruck kann den Server blockieren. Nutze stattdessen format oder enum.",
-        "keywordForbidden": "Das Schlüsselwort „{key}“ ist nicht erlaubt."
-      }
-    },
-    "forbidden": "Dafür fehlt die Berechtigung.",
-    "invalidField": "Ungültige Eingabe: {field}",
-    "invalid_input": "Ungültige Eingabe.",
-    "mail": {
-      "invalidAddress": "Bitte eine gültige Adresse angeben.",
-      "checkSettings": "Diese Eingaben passen nicht."
-    },
-    "not_found": "Nicht gefunden.",
-    "passkey": {
-      "unknown": "Dieser Passkey ist unbekannt.",
-      "notYours": "Dieser Passkey gehört nicht zu deinem Konto."
-    },
-    "setupFailed": "Die Einrichtung ist fehlgeschlagen. Details stehen im Log.",
-    "unauthenticated": "Bitte melde dich an."
-  },
-  "export": {
-    "columns": {
-      "time": "Zeit",
-      "duration": "Dauer",
-      "block": "Block",
-      "info": "Info"
-    },
-    "blockCount": "{count, plural, one {# Block} other {# Blöcke}}",
-    "overlap": "⚠ Überschneidung",
-    "details": "Details",
-    "split": "{content} Inhalt, {breaks} Pausen",
-    "yes": "ja",
-    "no": "nein"
-  },
-  "library": {
-    "title": "Workshops",
-    "folders": "Ordner",
-    "allWorkshops": "Alle Workshops",
-    "tags": "Tags",
-    "navLabel": "Ordner und Tags",
-    "trash": "Papierkorb",
-    "search": "Suchen",
-    "searchLabel": "Workshops durchsuchen",
-    "newWorkshop": "Neuer Workshop",
-    "workshopTitle": "Titel des Workshops",
-    "workshopTitleExample": "z. B. Strategie-Retreat",
-    "creating": "Anlegen …",
-    "newFolder": "Ordner",
-    "folderName": "Name des Ordners",
-    "subfolderName": "Name des Unterordners",
-    "name": "Name",
-    "removeFolder": "Ordner entfernen — der Inhalt rückt eine Ebene hoch",
-    "emptyFiltered": "Nichts gefunden.",
-    "emptyFilteredHint": "Andere Suche, anderer Ordner oder anderes Tag.",
-    "empty": "Noch kein Workshop hier.",
-    "emptyHint": "Leg einen an — der erste Tag ist gleich mit dabei.",
-    "dayCount": "{count, plural, one {# Tag} other {# Tage}}",
-    "moveToTrash": "In den Papierkorb",
-    "moveToTrashLabel": "{title} in den Papierkorb",
-    "bin": {
-      "title": "Papierkorb",
-      "back": "Zurück zur Bibliothek",
-      "empty": "Der Papierkorb ist leer.",
-      "emptyHint": "Was hier landet, bleibt liegen, bis es jemand endgültig entfernt.",
-      "discardedOn": "weggeworfen am {date}",
-      "restore": "Wiederherstellen",
-      "purge": "Endgültig löschen",
-      "purgeWarning": "Das entfernt <b>{title}</b> mit allen Tagen und Blöcken. Es gibt keinen Weg zurück.",
-      "purgeConfirmLabel": "Zum Bestätigen den Titel eingeben:",
-      "purgeConfirm": "Unwiderruflich löschen"
+      graphIntro: 'Gebraucht wird eine App-Registrierung in Entra ID mit der <b>Anwendungsberechtigung</b> <code>Mail.Send</code> samt Administratorzustimmung.'
+      graphTenantId: 'Verzeichnis- oder Mandant-ID'
+      graphClientId: 'Anwendungs-ID'
+      graphClientSecret: 'Client Secret'
+      graphSender: 'Absenderpostfach'
+      smtpUrl: 'SMTP-URL'
+      smtpUrlHint: 'Etwa smtps://benutzer:passwort@relay.example.com:465'
+      smtpFrom: 'Absenderadresse'
+      secretStored: 'gespeichert — leer lassen, um ihn zu behalten'
+      saved: 'Gespeichert.'
+      testTitle: 'Testnachricht schicken'
+      testIntro: 'Ob ein Relay funktioniert, zeigt sich beim Verschicken. Sonst ist der erste Versuch der Anmeldelink von jemandem — und ein Fehler sieht dann aus wie ein kaputtes Konto.'
+      testTo: 'An'
+      testSend: 'Schicken'
+      testSent: 'Verschickt an {email}. Wenn nichts ankommt: Spam-Ordner.'
     }
-  },
-  "mail": {
-    "magicLink": {
-      "subject": "Dein Anmeldelink für GoodWorkshop",
-      "body": "Hallo,\n\nhier ist dein Anmeldelink:\n{link}\n\nEr gilt {minutes, plural, one {eine Minute} other {# Minuten}} und lässt sich nur einmal verwenden.\n\nWenn du das nicht angefordert hast, kannst du diese Nachricht ignorieren —\nohne den Link passiert nichts."
-    },
-    "test": {
-      "subject": "GoodWorkshop: Testnachricht",
-      "body": "Diese Nachricht bestätigt, dass der Mailversand funktioniert.\n\nAnmeldelinks und Einladungen gehen ab jetzt denselben Weg."
-    }
-  },
-  "meta": {
-    "description": "Open-Source-Workshopplanung. Selbst gehostet, MCP-fähig.",
-    "printTitle": "Druckansicht"
-  },
-  "nav": {
-    "branding": "Branding",
-    "members": "Mitglieder",
-    "mail": "Mailversand",
-    "passkeys": "Passkeys",
-    "tokens": "Token",
-    "signOut": "Abmelden",
-    "account": "Konto"
-  },
-  "settings": {
-    "intro": "Dein Konto: Sprache, Passkeys und Zugangstoken.",
-    "language": {
-      "title": "Sprache",
-      "intro": "Gilt für die Oberfläche, deine Exporte und die E-Mails, die du bekommst.",
-      "label": "Sprache",
-      "apply": "Übernehmen"
-    },
-    "passkeys": {
-      "added": "Passkey angelegt.",
-      "enrol": "Passkey anlegen",
-      "fallbackName": "Passkey",
-      "intro": "Anmelden ohne Passwort, mit Fingerabdruck, Gesicht oder Sicherheitsschlüssel. Der Schlüssel selbst verlässt dein Gerät nie.",
-      "lastUsed": "zuletzt {date}",
-      "nameLabel": "Name (optional)",
-      "namePlaceholder": "MacBook, iPhone, YubiKey …",
-      "needsHttps": "Passkeys brauchen HTTPS. Diese Installation läuft auf {origin}.",
-      "neverUsed": "noch nicht benutzt",
-      "none": "Noch kein Passkey. Bis dahin führt jede Anmeldung über einen Link per E-Mail.",
-      "notConfirmed": "Der Passkey konnte nicht bestätigt werden.",
-      "remove": "Entfernen",
-      "removeLabel": "{name} entfernen",
-      "requestRejected": "Die Anfrage wurde abgelehnt.",
-      "synced": "synchronisiert",
-      "title": "Passkeys",
-      "unavailable": "Diese Installation läuft auf <code>{origin}</code>. Browser erlauben Passkeys nur über HTTPS (oder auf <code>localhost</code>) — anlegen lässt sich hier keiner. Der Anmeldelink per E-Mail bleibt der Weg hinein.",
-      "waiting": "Warte auf das Gerät …"
-    },
-    "title": "Einstellungen",
-    "tokens": {
-      "title": "Zugangstoken",
-      "intro": "Für MCP-Clients wie Claude Desktop oder Claude Code. Ein Token handelt als du — es kann nie mehr, als du selbst darfst.",
-      "freshLabel": "Dein neues Token",
-      "freshHint": "Es wird nur einmal angezeigt — gespeichert ist nur sein Hash. Trag es im Client als <code>Authorization: Bearer …</code> gegen <code>/api/mcp</code> ein.",
-      "hide": "Verstanden, ausblenden",
-      "lastUsed": "zuletzt {date}",
-      "neverUsed": "nie benutzt",
-      "revoke": "Zurückziehen",
-      "revokeLabel": "Token {name} zurückziehen",
-      "nameLabel": "Wofür ist es?",
-      "namePlaceholder": "z. B. Claude Desktop",
-      "scopesLabel": "Was darf es?",
-      "noUserAdmin": "Nutzerverwaltung steht bewusst nicht zur Wahl: ein MCP-Client darf niemals jemanden einladen oder zum Admin machen.",
-      "creating": "Anlegen …",
-      "create": "Token anlegen"
-    }
-  },
-  "workshop": {
-    "access": "Zugriff",
-    "accessIntro": "Bearbeiter:innen sehen Änderungen sofort — sie sind im selben Dokument. Lesende sehen den Ablauf, ändern aber nichts.",
-    "accessOf": "Zugriff von {email}",
-    "you": "du",
-    "print": "Drucken",
-    "days": "Tage",
-    "untitledDay": "Tag",
-    "untitled": "Workshop",
-    "someone": "Jemand",
-    "materials": "Material: {items}",
-    "end": "Ende {time}"
   }
-};
-export default messages;
+  agenda: {
+    addBlock: 'Block hinzufügen'
+    addDayNote: 'Notiz zum Tag hinzufügen'
+    addTag: 'Tag hinzufügen'
+    blockCount: '{count, plural, one {# Block} other {# Blöcke}}'
+    breaks: '{duration} Pausen'
+    columns: {
+      time: 'Zeit'
+      titleAndDescription: 'Titel und Beschreibung'
+      info: 'Zusatzinfo'
+    }
+    connecting: 'Verbinde …'
+    content: '{duration} Inhalt'
+    dayNote: 'Notiz zum Tag'
+    dayNotePlaceholder: 'Raum, Anfahrt, wer was mitbringt …'
+    drag: {
+      atDayLevel: 'auf Tagesebene'
+      cancelled: 'Verschieben abgebrochen.'
+      dropped: '{title} abgelegt {where}, Position {position, number}.'
+      droppedWithTime: '{title} abgelegt {where}, Position {position, number}, neue Startzeit {time}.'
+      inSection: 'in Abschnitt {title}'
+      landed: '{title} landet {where}, Position {position, number}.'
+      landedWithTime: '{title} landet {where}, Position {position, number}, neue Startzeit {time}.'
+      picked: '{title} aufgenommen.'
+    }
+    dragHandle: '{title} verschieben'
+    end: 'Ende'
+    fewerFields: 'Weniger'
+    field: {
+      commaSeparated: 'Mit Komma trennen'
+      legacyHeading: 'Alte Felder ({count, number})'
+      legacyHint: 'Diese Angaben stammen aus einer früheren Fassung dieses Modultyps. Sie bleiben erhalten, lassen sich aber nicht mehr bearbeiten.'
+      privateNote: 'nur für dich'
+      richTextReadOnly: 'Enthält Formatierung. Bearbeiten kommt mit dem Text-Editor — bis dahin bleibt der Inhalt hier unangetastet.'
+      unset: '— keine Angabe —'
+    }
+    filterPlaceholder: 'Tippen zum Filtern …'
+    moreFields: 'Mehr Felder'
+    noTypeMatches: 'Kein Blocktyp passt dazu.'
+    offline: 'Keine Verbindung. Deine Änderungen werden übertragen, sobald sie wieder steht.'
+    overPlan: '{duration} über Plan'
+    overlap: 'Überschneidet den vorherigen Block um {duration}'
+    park: 'Parken'
+    parkHint: 'Aus dem Ablauf nehmen, ohne ihn zu löschen'
+    parkLabel: '{title} parken'
+    parkedHeading: 'Geparkt ({count, number})'
+    parkedHint: 'Gehört zum Tag, zählt nicht zur Zeit.'
+    presence: 'Weitere Personen an diesem Tag'
+    regionLabel: 'Agenda {title}'
+    removeTag: 'Tag {name} entfernen'
+    saving: 'Wird gespeichert …'
+    searchType: 'Blocktyp suchen'
+    tagPlaceholder: '+ Tag'
+    unpark: 'In den Ablauf'
+    unparkLabel: '{title} zurück in den Ablauf'
+  }
+  auth: {
+    login: {
+      title: 'Bei GoodWorkshop anmelden'
+      intro: 'Ohne Passwort. Entweder per Passkey oder über einen Link per E-Mail.'
+      email: 'E-Mail-Adresse'
+      send: 'Anmeldelink schicken'
+      passkeyButton: 'Mit Passkey anmelden'
+      passkeyUnavailable: 'Passkeys brauchen HTTPS und sind auf dieser Adresse nicht verfügbar. Der Anmeldelink per E-Mail funktioniert.'
+      passkeyFailed: 'Der Passkey konnte nicht bestätigt werden.'
+      unknownError: 'Unbekannter Fehler'
+      sentTitle: 'Schau in dein Postfach.'
+      sentBody: 'Falls es zu dieser Adresse ein Konto gibt, ist ein Anmeldelink unterwegs. Er gilt {minutes, plural, one {eine Minute} other {# Minuten}}.'
+      linkExpired: 'Dieser Link ist abgelaufen oder wurde schon benutzt. Fordere einen neuen an.'
+      linkIncomplete: 'Der Link war unvollständig. Fordere einen neuen an.'
+    }
+    setup: {
+      title: 'GoodWorkshop einrichten'
+      intro: 'Diese Installation hat noch niemanden, der sie verwalten kann. Trag dich als erste Administratorin ein — alles Weitere, auch der Mailversand, geht danach in der Oberfläche.'
+      email: 'Deine E-Mail-Adresse'
+      emailHint: 'Damit meldest du dich künftig an. Weitere Personen lädst du danach in der Oberfläche ein.'
+      key: 'Einrichtungsschlüssel'
+      keyHint: 'Steht im Log des Servers:'
+      submit: 'Installation einrichten'
+      submitting: 'Einen Moment …'
+      claimed: 'Die Installation gehört jetzt {email}.'
+      linkHere: 'Es ist noch kein Mailversand eingerichtet, deshalb steht der Anmeldelink hier. Er gilt einmal und läuft ab.'
+      linkSent: 'Der Anmeldelink ist unterwegs. Schau in dein Postfach.'
+    }
+  }
+  common: {
+    save: 'Speichern'
+    cancel: 'Abbrechen'
+    delete: 'Löschen'
+    create: 'Anlegen'
+    loading: 'Lädt …'
+    loadMore: 'Mehr laden'
+    saving: 'Speichert …'
+    back: 'Zurück'
+  }
+  enums: {
+    memberRole: {
+      member: 'Mitglied'
+      admin: 'Admin'
+    }
+    memberStatus: {
+      invited: 'Eingeladen'
+      active: 'Aktiv'
+      disabled: 'Abgeschaltet'
+    }
+    tokenScope: {
+      'workshops:read': 'Workshops lesen'
+      'workshops:write': 'Workshops schreiben'
+      'module_types:read': 'Modultypen lesen'
+      'module_types:write': 'Modultypen schreiben'
+      'tenant:read': 'Tenant lesen'
+    }
+    workshopAccess: {
+      owner: 'Eigentümer:in'
+      editor: 'Bearbeiten'
+      viewer: 'Lesen'
+      none: 'Kein Zugriff'
+    }
+    workshopStatus: {
+      draft: 'Entwurf'
+      ready: 'Bereit'
+      delivered: 'Durchgeführt'
+      archived: 'Archiviert'
+    }
+  }
+  errors: {
+    conflict: 'Jemand anderes hat diesen Workshop inzwischen geändert.'
+    domain: {
+      brand: {
+        notHex: 'Bitte eine Farbe als Hex-Wert angeben, z. B. #7c3aed.'
+        grey: 'Grau hat keinen Farbton, aus dem sich eine Akzentfarbe bauen lässt. Nimm einen bunten Ton.'
+        contrastOnBrand: 'Dieser Ton erreicht {theme, select, light {im hellen} dark {im dunklen} other {}} Modus nur {ratio}:1 für Text auf der Akzentfläche. Nötig sind 4,5:1.'
+        contrastSubtle: 'Dieser Ton erreicht {theme, select, light {im hellen} dark {im dunklen} other {}} Modus nur {ratio}:1 für gedämpften Text auf gedämpfter Fläche. Nötig sind 4,5:1.'
+        checkNameAndColour: 'Bitte Name und Farbe prüfen.'
+      }
+      collab: {
+        unavailable: 'Der Kollaborationsdienst ist nicht erreichbar. Ohne ihn kann nicht geschrieben werden, weil sonst zwei Schreibwege auf denselben Tag zeigen.'
+      }
+      logo: {
+        unsupportedType: 'Erlaubt sind SVG, PNG und WebP.'
+        empty: 'Die Datei ist leer.'
+        tooLarge: 'Das Logo darf höchstens {max, number} KB groß sein (diese Datei: {actual, number} KB).'
+        notSvg: 'Das sieht nicht nach einer SVG-Datei aus.'
+        unsafeActive: 'Das SVG enthält {what}. Exportiere es ohne Skripte und ohne Interaktivität — die meisten Programme nennen das „einfaches SVG“.'
+        unsafeExternal: 'Das SVG verweist über {what} nach außen. Exportiere es mit eingebetteten Schriften und Bildern, ohne externe Verweise.'
+        unsafeDoctype: 'Das SVG enthält {what}. Exportiere es ohne DTD und ohne Entities.'
+        typeMismatch: 'Die Datei passt nicht zum angegebenen Format.'
+      }
+      mail: {
+        noSmtpUrl: 'Transport SMTP, aber keine SMTP-URL konfiguriert — weder in der Umgebung noch in den Einstellungen.'
+        transportNone: 'Transport „kein Versand“: es kann keine Mail verschickt werden. Nimm `node scripts/cli.mjs login-link --email …` oder wähle einen Transport in den Einstellungen.'
+        graphMissing: 'Transport Microsoft Graph, aber {field} fehlt.'
+      }
+      member: {
+        adminOnly: 'Nur Tenant-Admins dürfen Mitglieder verwalten.'
+        invalidEmail: 'Das ist keine gültige E-Mail-Adresse.'
+        gone: 'Dieses Mitglied gibt es nicht.'
+        cannotDisableSelf: 'Du kannst dich nicht selbst abschalten.'
+        lastAdmin: 'Das ist der letzte aktive Admin. Mach zuerst jemand anderen zum Admin — sonst kommt niemand mehr an die Verwaltung.'
+        checkEmailAndRole: 'Bitte E-Mail-Adresse und Rolle prüfen.'
+      }
+      setup: {
+        wrongKey: 'Der Einrichtungsschlüssel stimmt nicht.'
+        invalidEmail: 'Das ist keine gültige E-Mail-Adresse.'
+        alreadyClaimed: 'Diese Installation hat bereits eine Administratorin.'
+        identityFailed: 'Die Identität konnte nicht angelegt werden.'
+      }
+      sharing: {
+        memberGone: 'Dieses Mitglied gibt es nicht.'
+        memberDisabled: 'Dieses Mitglied ist abgeschaltet.'
+        ownerHasAccess: 'Der Eigentümer hat bereits vollen Zugriff.'
+      }
+      tags: {
+        tooMany: 'Höchstens {max, number} Tags pro Workshop.'
+        tooLong: 'Ein Tag darf höchstens {max, number} Zeichen haben.'
+        createFailed: 'Der Tag „{name}“ konnte nicht angelegt werden.'
+      }
+      token: {
+        nameRequired: 'Gib dem Token einen Namen — sonst weißt du später nicht, wofür es war.'
+        nameTooLong: 'Der Name darf höchstens {max, number} Zeichen haben.'
+        unknownScopes: 'Unbekannte Bereiche: {scopes}.'
+        noScopes: 'Ein Token ohne Bereiche kann nichts. Wähl mindestens einen.'
+        gone: 'Dieses Token gibt es nicht mehr.'
+      }
+      workshop: {
+        notFound: 'Nicht gefunden.'
+        forbidden: 'Dafür fehlt die Berechtigung: {capability}'
+        versionConflict: 'Der Workshop wurde inzwischen geändert (erwartet {expected}, ist {actual}).'
+        unknownModuleType: 'Diesen Modultyp gibt es nicht.'
+        unknownModuleTypeOptions: 'Unbekannter Modultyp „{key}“. Verfügbar: {available}'
+        descInvalid: 'Ungültige Angaben: {issues}'
+      }
+    }
+    failed: 'Das hat nicht geklappt. Versuch es noch einmal.'
+    field: {
+      desc: {
+        notObject: 'desc muss ein Objekt sein.'
+      }
+      field: {
+        enum: 'muss einer dieser Werte sein: {allowed}'
+        required: 'ist erforderlich'
+        unexpected: 'ist in diesem Modultyp nicht vorgesehen'
+        type: 'muss vom Typ {type} sein'
+        invalid: 'ist ungültig ({keyword})'
+      }
+      schema: {
+        broken: 'Das Schema dieses Modultyps ist ungültig.'
+        notObject: 'Das Schema muss ein Objekt sein.'
+        tooLarge: 'Das Schema ist zu groß (max. {max, number} Bytes).'
+        tooDeep: 'Zu tief verschachtelt (max. {max, number} Ebenen).'
+        uncompilable: 'Das Schema lässt sich nicht übersetzen: {reason}'
+        patternForbidden: 'pattern ist nicht erlaubt: ein selbst geschriebener regulärer Ausdruck kann den Server blockieren. Nutze stattdessen format oder enum.'
+        keywordForbidden: 'Das Schlüsselwort „{key}“ ist nicht erlaubt.'
+      }
+    }
+    forbidden: 'Dafür fehlt die Berechtigung.'
+    invalidField: 'Ungültige Eingabe: {field}'
+    invalid_input: 'Ungültige Eingabe.'
+    mail: {
+      invalidAddress: 'Bitte eine gültige Adresse angeben.'
+      checkSettings: 'Diese Eingaben passen nicht.'
+    }
+    not_found: 'Nicht gefunden.'
+    passkey: {
+      unknown: 'Dieser Passkey ist unbekannt.'
+      notYours: 'Dieser Passkey gehört nicht zu deinem Konto.'
+    }
+    setupFailed: 'Die Einrichtung ist fehlgeschlagen. Details stehen im Log.'
+    unauthenticated: 'Bitte melde dich an.'
+  }
+  export: {
+    columns: {
+      time: 'Zeit'
+      duration: 'Dauer'
+      block: 'Block'
+      info: 'Info'
+    }
+    blockCount: '{count, plural, one {# Block} other {# Blöcke}}'
+    overlap: '⚠ Überschneidung'
+    details: 'Details'
+    split: '{content} Inhalt, {breaks} Pausen'
+    yes: 'ja'
+    no: 'nein'
+  }
+  library: {
+    title: 'Workshops'
+    folders: 'Ordner'
+    allWorkshops: 'Alle Workshops'
+    tags: 'Tags'
+    navLabel: 'Ordner und Tags'
+    trash: 'Papierkorb'
+    search: 'Suchen'
+    searchLabel: 'Workshops durchsuchen'
+    newWorkshop: 'Neuer Workshop'
+    workshopTitle: 'Titel des Workshops'
+    workshopTitleExample: 'z. B. Strategie-Retreat'
+    creating: 'Anlegen …'
+    newFolder: 'Ordner'
+    folderName: 'Name des Ordners'
+    subfolderName: 'Name des Unterordners'
+    name: 'Name'
+    removeFolder: 'Ordner entfernen — der Inhalt rückt eine Ebene hoch'
+    emptyFiltered: 'Nichts gefunden.'
+    emptyFilteredHint: 'Andere Suche, anderer Ordner oder anderes Tag.'
+    empty: 'Noch kein Workshop hier.'
+    emptyHint: 'Leg einen an — der erste Tag ist gleich mit dabei.'
+    dayCount: '{count, plural, one {# Tag} other {# Tage}}'
+    moveToTrash: 'In den Papierkorb'
+    moveToTrashLabel: '{title} in den Papierkorb'
+    bin: {
+      title: 'Papierkorb'
+      back: 'Zurück zur Bibliothek'
+      empty: 'Der Papierkorb ist leer.'
+      emptyHint: 'Was hier landet, bleibt liegen, bis es jemand endgültig entfernt.'
+      discardedOn: 'weggeworfen am {date}'
+      restore: 'Wiederherstellen'
+      purge: 'Endgültig löschen'
+      purgeWarning: 'Das entfernt <b>{title}</b> mit allen Tagen und Blöcken. Es gibt keinen Weg zurück.'
+      purgeConfirmLabel: 'Zum Bestätigen den Titel eingeben:'
+      purgeConfirm: 'Unwiderruflich löschen'
+    }
+  }
+  mail: {
+    magicLink: {
+      subject: 'Dein Anmeldelink für GoodWorkshop'
+      body: 'Hallo,\n\nhier ist dein Anmeldelink:\n{link}\n\nEr gilt {minutes, plural, one {eine Minute} other {# Minuten}} und lässt sich nur einmal verwenden.\n\nWenn du das nicht angefordert hast, kannst du diese Nachricht ignorieren —\nohne den Link passiert nichts.'
+    }
+    test: {
+      subject: 'GoodWorkshop: Testnachricht'
+      body: 'Diese Nachricht bestätigt, dass der Mailversand funktioniert.\n\nAnmeldelinks und Einladungen gehen ab jetzt denselben Weg.'
+    }
+  }
+  meta: {
+    description: 'Open-Source-Workshopplanung. Selbst gehostet, MCP-fähig.'
+    printTitle: 'Druckansicht'
+  }
+  nav: {
+    branding: 'Branding'
+    members: 'Mitglieder'
+    mail: 'Mailversand'
+    passkeys: 'Passkeys'
+    tokens: 'Token'
+    signOut: 'Abmelden'
+    account: 'Konto'
+  }
+  settings: {
+    intro: 'Dein Konto: Sprache, Passkeys und Zugangstoken.'
+    language: {
+      title: 'Sprache'
+      intro: 'Gilt für die Oberfläche, deine Exporte und die E-Mails, die du bekommst.'
+      label: 'Sprache'
+      apply: 'Übernehmen'
+    }
+    passkeys: {
+      added: 'Passkey angelegt.'
+      enrol: 'Passkey anlegen'
+      fallbackName: 'Passkey'
+      intro: 'Anmelden ohne Passwort, mit Fingerabdruck, Gesicht oder Sicherheitsschlüssel. Der Schlüssel selbst verlässt dein Gerät nie.'
+      lastUsed: 'zuletzt {date}'
+      nameLabel: 'Name (optional)'
+      namePlaceholder: 'MacBook, iPhone, YubiKey …'
+      needsHttps: 'Passkeys brauchen HTTPS. Diese Installation läuft auf {origin}.'
+      neverUsed: 'noch nicht benutzt'
+      none: 'Noch kein Passkey. Bis dahin führt jede Anmeldung über einen Link per E-Mail.'
+      notConfirmed: 'Der Passkey konnte nicht bestätigt werden.'
+      remove: 'Entfernen'
+      removeLabel: '{name} entfernen'
+      requestRejected: 'Die Anfrage wurde abgelehnt.'
+      synced: 'synchronisiert'
+      title: 'Passkeys'
+      unavailable: 'Diese Installation läuft auf <code>{origin}</code>. Browser erlauben Passkeys nur über HTTPS (oder auf <code>localhost</code>) — anlegen lässt sich hier keiner. Der Anmeldelink per E-Mail bleibt der Weg hinein.'
+      waiting: 'Warte auf das Gerät …'
+    }
+    title: 'Einstellungen'
+    tokens: {
+      title: 'Zugangstoken'
+      intro: 'Für MCP-Clients wie Claude Desktop oder Claude Code. Ein Token handelt als du — es kann nie mehr, als du selbst darfst.'
+      freshLabel: 'Dein neues Token'
+      freshHint: 'Es wird nur einmal angezeigt — gespeichert ist nur sein Hash. Trag es im Client als <code>Authorization: Bearer …</code> gegen <code>/api/mcp</code> ein.'
+      hide: 'Verstanden, ausblenden'
+      lastUsed: 'zuletzt {date}'
+      neverUsed: 'nie benutzt'
+      revoke: 'Zurückziehen'
+      revokeLabel: 'Token {name} zurückziehen'
+      nameLabel: 'Wofür ist es?'
+      namePlaceholder: 'z. B. Claude Desktop'
+      scopesLabel: 'Was darf es?'
+      noUserAdmin: 'Nutzerverwaltung steht bewusst nicht zur Wahl: ein MCP-Client darf niemals jemanden einladen oder zum Admin machen.'
+      creating: 'Anlegen …'
+      create: 'Token anlegen'
+    }
+  }
+  workshop: {
+    access: 'Zugriff'
+    accessIntro: 'Bearbeiter:innen sehen Änderungen sofort — sie sind im selben Dokument. Lesende sehen den Ablauf, ändern aber nichts.'
+    accessOf: 'Zugriff von {email}'
+    backToLibrary: '← Bibliothek'
+    days: 'Tage'
+    end: 'Ende {time}'
+    materials: 'Material: {items}'
+    print: 'Drucken'
+    someone: 'Jemand'
+    untitled: 'Workshop'
+    untitledDay: 'Tag'
+    you: 'du'
+  }
+}
+export default messages

@@ -95,11 +95,12 @@
     "end": "Ende",
     "fewerFields": "Weniger",
     "field": {
-      "privateNote": "nur für dich",
       "commaSeparated": "Mit Komma trennen",
-      "richTextReadOnly": "Enthält Formatierung. Bearbeiten kommt mit dem Text-Editor — bis dahin bleibt der Inhalt hier unangetastet.",
       "legacyHeading": "Alte Felder ({count, number})",
-      "legacyHint": "Diese Angaben stammen aus einer früheren Fassung dieses Modultyps. Sie bleiben erhalten, lassen sich aber nicht mehr bearbeiten."
+      "legacyHint": "Diese Angaben stammen aus einer früheren Fassung dieses Modultyps. Sie bleiben erhalten, lassen sich aber nicht mehr bearbeiten.",
+      "privateNote": "nur für dich",
+      "richTextReadOnly": "Enthält Formatierung. Bearbeiten kommt mit dem Text-Editor — bis dahin bleibt der Inhalt hier unangetastet.",
+      "unset": "— keine Angabe —"
     },
     "filterPlaceholder": "Tippen zum Filtern …",
     "moreFields": "Mehr Felder",
@@ -421,13 +422,14 @@
     "access": "Zugriff",
     "accessIntro": "Bearbeiter:innen sehen Änderungen sofort — sie sind im selben Dokument. Lesende sehen den Ablauf, ändern aber nichts.",
     "accessOf": "Zugriff von {email}",
-    "you": "du",
-    "print": "Drucken",
+    "backToLibrary": "← Bibliothek",
     "days": "Tage",
-    "untitledDay": "Tag",
-    "untitled": "Workshop",
-    "someone": "Jemand",
+    "end": "Ende {time}",
     "materials": "Material: {items}",
-    "end": "Ende {time}"
+    "print": "Drucken",
+    "someone": "Jemand",
+    "untitled": "Workshop",
+    "untitledDay": "Tag",
+    "you": "du"
   }
 }

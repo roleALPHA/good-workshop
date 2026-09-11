@@ -95,11 +95,12 @@
     "end": "End",
     "fewerFields": "Fewer",
     "field": {
-      "privateNote": "only for you",
       "commaSeparated": "Separate with commas",
-      "richTextReadOnly": "Contains formatting. Editing comes with the text editor — until then the content here stays untouched.",
       "legacyHeading": "Old fields ({count, number})",
-      "legacyHint": "These values come from an earlier version of this block type. They are kept, but can no longer be edited."
+      "legacyHint": "These values come from an earlier version of this block type. They are kept, but can no longer be edited.",
+      "privateNote": "only for you",
+      "richTextReadOnly": "Contains formatting. Editing comes with the text editor — until then the content here stays untouched.",
+      "unset": "— not set —"
     },
     "filterPlaceholder": "Type to filter …",
     "moreFields": "More fields",
@@ -421,13 +422,14 @@
     "access": "Access",
     "accessIntro": "Editors see changes immediately — they are in the same document. Readers see the schedule but change nothing.",
     "accessOf": "Access of {email}",
-    "you": "you",
-    "print": "Print",
+    "backToLibrary": "← Library",
     "days": "Days",
-    "untitledDay": "Day",
-    "untitled": "Workshop",
-    "someone": "Somebody",
+    "end": "End {time}",
     "materials": "Materials: {items}",
-    "end": "End {time}"
+    "print": "Print",
+    "someone": "Somebody",
+    "untitled": "Workshop",
+    "untitledDay": "Day",
+    "you": "you"
   }
 }

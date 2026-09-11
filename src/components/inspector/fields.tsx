@@ -68,6 +68,7 @@ function Widget({
   onChange,
   invalid,
 }: FieldProps & { id: string; invalid: boolean }) {
+  const t = useTranslations('agenda')
   const klass = cn(inputClass, invalid && 'border-[var(--danger-fg)]')
 
   switch (field.widget) {
@@ -121,7 +122,7 @@ function Widget({
           value={typeof value === 'string' ? value : ''}
           onChange={(e) => onChange(e.target.value || undefined)}
         >
-          <option value="">— keine Angabe —</option>
+          <option value="">{t('field.unset')}</option>
           {field.options?.map((option) => (
             <option key={option.value} value={option.value}>
               {option.label}
