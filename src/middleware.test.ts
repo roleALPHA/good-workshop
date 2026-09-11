@@ -46,12 +46,37 @@ describe('security headers', () => {
   })
 
   it('carries a nonce instead of blanket-allowing inline script', () => {
-    // 'unsafe-inline' would make the whole policy decorative, and this app has
-    // real inline content: next-themes, and the tenant brand <style> block.
     const csp = headersFor().get('content-security-policy') ?? ''
-    expect(csp).toMatch(/'nonce-[A-Za-z0-9+/_-]{16,}'/)
-    expect(csp).not.toMatch(/'unsafe-inline'/)
+    const scriptSrc = csp.split('; ').find((d) => d.startsWith('script-src')) ?? ''
+
+    expect(scriptSrc).toMatch(/'nonce-[A-Za-z0-9+/_-]{16,}'/)
+    expect(scriptSrc).not.toMatch(/'unsafe-inline'/)
+    expect(scriptSrc).not.toMatch(/'unsafe-eval'/)
+  })
+
+  it('allows inline style, and only inline style', () => {
+    // Asserted rather than left implicit, because it is the one concession in
+    // this policy. Next inlines styles of its own while streaming and the
+    // tenant brand ramp is an inline <style>; a nonce cannot be threaded
+    // through Next's style emission reliably. The residual risk is CSS
+    // injection, not script execution.
+    //
+    // The test exists so that the concession stays exactly this wide: if
+    // 'unsafe-inline' ever appears in script-src, the test above fails.
+    const csp = headersFor().get('content-security-policy') ?? ''
+    const withUnsafeInline = csp
+      .split('; ')
+      .filter((d) => d.includes("'unsafe-inline'"))
+      .map((d) => d.split(' ')[0])
+
+    expect(withUnsafeInline).toEqual(['style-src'])
     expect(csp).not.toMatch(/'unsafe-eval'/)
+  })
+
+  it('shuts the doors that need no exception at all', () => {
+    const csp = headersFor().get('content-security-policy') ?? ''
+    expect(csp).toMatch(/object-src 'none'/)
+    expect(csp).toMatch(/default-src 'self'/)
   })
 
   it('gives every response its own nonce', () => {

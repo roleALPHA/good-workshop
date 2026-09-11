@@ -1,4 +1,5 @@
 import type { Metadata, Viewport } from 'next'
+import { headers } from 'next/headers'
 import { ThemeProvider } from '@/components/theme-provider'
 import '@/styles/globals.css'
 
@@ -18,7 +19,12 @@ export const viewport: Viewport = {
   maximumScale: 5,
 }
 
-export default function RootLayout({ children }: { children: React.ReactNode }) {
+export default async function RootLayout({ children }: { children: React.ReactNode }) {
+  // next-themes writes an inline <script> to set the class before first paint.
+  // Under the CSP from src/middleware.ts that script needs the request's nonce,
+  // or it is blocked and every visitor gets a flash of the wrong theme.
+  const nonce = (await headers()).get('x-nonce') ?? undefined
+
   return (
     <html lang="de" suppressHydrationWarning>
       <body>
@@ -27,6 +33,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
           defaultTheme="system"
           enableSystem
           disableTransitionOnChange
+          nonce={nonce}
         >
           {children}
         </ThemeProvider>

@@ -6,7 +6,14 @@
 {$GW_HOSTNAME} {
 	encode zstd gzip
 
-	# Die Anwendung setzt ihre eigenen Header; der Proxy ergänzt nur HSTS.
+	# Die Anwendung setzt ihre eigenen Sicherheitsheader (src/middleware.ts):
+	# CSP mit Nonce, frame-ancestors, nosniff, Referrer- und Permissions-Policy,
+	# HSTS. Lange stand hier, sie täte das -- sie tat es nicht, und dieser
+	# Kommentar war der Grund, dass niemand nachsah.
+	#
+	# HSTS bleibt zusätzlich hier: dieser Block ist die Stelle, an der TLS
+	# tatsächlich terminiert, und er gilt auch für Antworten, die gar nicht erst
+	# bei der Anwendung ankommen.
 	header {
 		Strict-Transport-Security "max-age=31536000; includeSubDomains"
 	}
