@@ -13,11 +13,17 @@ import { expect, test } from '@playwright/test'
  * wiring that typechecks perfectly while going nowhere.
  */
 
-test('sends a visitor without a session to the login page', async ({ page }) => {
+test('sends a visitor without a session somewhere they can act', async ({ page }) => {
   await page.goto('/')
-  await expect(page).toHaveURL(/\/login$/)
+
+  // Two destinations are correct, and which one depends on the state of the
+  // installation: an unclaimed one offers /setup, everything else /login.
+  // Pinning this to /login made the test a statement about the fixture data
+  // rather than about the redirect.
+  await expect(page).toHaveURL(/\/(login|setup)$/)
+
   // Not merely the URL: a redirect chain that ends on an error page would
-  // satisfy that and still leave nobody able to sign in.
+  // satisfy that and still leave nobody able to get in.
   await expect(page.getByRole('heading', { level: 1 })).toBeVisible()
 })
 

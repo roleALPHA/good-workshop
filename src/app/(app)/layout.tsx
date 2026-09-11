@@ -1,6 +1,6 @@
 import { redirect } from 'next/navigation'
 import Link from 'next/link'
-import { KeyRound, LogOut, Palette, Users } from 'lucide-react'
+import { KeyRound, LogOut, Mail, Palette, Users } from 'lucide-react'
 import { AppFooter } from '@/components/layout/app-footer'
 import { BrandMark, BrandStyle } from '@/components/layout/tenant-brand'
 import { readSession } from '@/server/auth/session'
@@ -42,6 +42,15 @@ export default async function AppLayout({ children }: { children: React.ReactNod
             >
               <Users aria-hidden className="size-4" />
               Mitglieder
+            </Link>
+          )}
+          {session.tenantRole === 'admin' && (
+            <Link
+              href="/admin/mail"
+              className="inline-flex items-center gap-1.5 rounded px-2 py-1 text-[14px] text-[var(--fg-muted)] hover:bg-[var(--surface-raised)]"
+            >
+              <Mail aria-hidden className="size-4" />
+              Mailversand
             </Link>
           )}
           <span className="flex-1" />
