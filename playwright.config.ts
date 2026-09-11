@@ -18,7 +18,11 @@ export default defineConfig({
   fullyParallel: true,
   forbidOnly: !!process.env.CI,
   retries: process.env.CI ? 1 : 0,
-  workers: process.env.CI ? 2 : undefined,
+  // Capped rather than "one per core". Every authenticated test now seeds its
+  // own workshop through the collaboration room, and a dozen rooms opening at
+  // once is what turned a green suite into a differently-red one on every run.
+  // Fewer workers is also FASTER here -- less contention, less retrying.
+  workers: process.env.CI ? 2 : 4,
   reporter: process.env.CI ? [['github'], ['html', { open: 'never' }]] : [['list']],
 
   use: {
@@ -58,9 +62,16 @@ export default defineConfig({
           // It gets its own project rather than a viewport tweak inside one
           // test, and it needs a signed-in session now that the agenda it reads
           // is a real one.
+          //
+          // agenda.spec.ts deliberately does NOT run here. Its dragging and
+          // in-row editing skip themselves below 1024px because the editor does
+          // not mount there, and what remains -- horizontal overflow, the
+          // footer -- has its own assertions in reading-view.spec.ts. Running
+          // it anyway meant seeding a workshop through a layout that has no
+          // editor, which is what timed out.
           {
             name: 'authenticated-mobile',
-            testMatch: /(reading-view|agenda)\.spec\.ts/,
+            testMatch: /reading-view\.spec\.ts/,
             use: { ...devices['Pixel 5'], storageState: STORAGE_STATE },
             dependencies: ['setup'],
           },
@@ -93,11 +104,11 @@ export default defineConfig({
         // proxy in a real deployment and this process is inside it.
         GW_COLLAB_INTERNAL_URL: `ws://127.0.0.1:${COLLAB_PORT}/collab`,
       },
-      // The demo page, not /api/health. Health is now honest about needing a
-      // database -- it returns 503 without one -- and the demo suite runs with
-      // no database at all. "Is the server listening" and "can this container
-      // serve the app" are different questions, and the harness is asking the
-      // first one.
+      // The root, not /api/health. Health is honest about needing a database --
+      // it returns 503 without one -- while "is the server listening" and "can
+      // this container serve the app" are different questions, and the harness
+      // is asking the first one. A redirect answers it just as well, which is
+      // what `/` is now that the public demo page is gone.
       url: `${baseURL}/`,
       reuseExistingServer: !process.env.CI,
       timeout: 180_000,

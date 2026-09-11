@@ -22,35 +22,38 @@ export default async function AppLayout({ children }: { children: React.ReactNod
     <div className="flex min-h-dvh flex-col">
       <BrandStyle />
       <header className="border-b border-[var(--border)] bg-[var(--surface)]">
-        <div className="mx-auto flex w-full max-w-5xl items-center gap-4 px-4 py-2.5">
+        <div className="mx-auto flex w-full max-w-5xl items-center gap-1 px-4 py-2.5 sm:gap-4">
           <Link href="/library" className="flex items-center">
             <BrandMark />
           </Link>
           {session.tenantRole === 'admin' && (
             <Link
               href="/admin/branding"
+              aria-label="Branding"
               className="inline-flex items-center gap-1.5 rounded px-2 py-1 text-[14px] text-[var(--fg-muted)] hover:bg-[var(--surface-raised)]"
             >
               <Palette aria-hidden className="size-4" />
-              Branding
+              <span className="hidden sm:inline">Branding</span>
             </Link>
           )}
           {session.tenantRole === 'admin' && (
             <Link
               href="/admin/members"
+              aria-label="Mitglieder"
               className="inline-flex items-center gap-1.5 rounded px-2 py-1 text-[14px] text-[var(--fg-muted)] hover:bg-[var(--surface-raised)]"
             >
               <Users aria-hidden className="size-4" />
-              Mitglieder
+              <span className="hidden sm:inline">Mitglieder</span>
             </Link>
           )}
           {session.tenantRole === 'admin' && (
             <Link
               href="/admin/mail"
+              aria-label="Mailversand"
               className="inline-flex items-center gap-1.5 rounded px-2 py-1 text-[14px] text-[var(--fg-muted)] hover:bg-[var(--surface-raised)]"
             >
               <Mail aria-hidden className="size-4" />
-              Mailversand
+              <span className="hidden sm:inline">Mailversand</span>
             </Link>
           )}
           <span className="flex-1" />
@@ -67,10 +70,11 @@ export default async function AppLayout({ children }: { children: React.ReactNod
           <form action="/api/auth/logout" method="post">
             <button
               type="submit"
+              aria-label="Abmelden"
               className="inline-flex items-center gap-1.5 rounded px-2 py-1 text-[14px] text-[var(--fg-muted)] hover:bg-[var(--surface-raised)]"
             >
               <LogOut aria-hidden className="size-4" />
-              Abmelden
+              <span className="hidden sm:inline">Abmelden</span>
             </button>
           </form>
         </div>
