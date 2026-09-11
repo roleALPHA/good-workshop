@@ -9,8 +9,7 @@ import { expect, test, type Page } from '@playwright/test'
  * rather than through the repository, because that gap was entirely in the UI.
  */
 
-const sidebar = (page: Page) =>
-  page.getByRole('navigation', { name: 'Ordner und Tags' })
+const sidebar = (page: Page) => page.getByRole('navigation', { name: 'Ordner und Tags' })
 
 test('creates a folder inside another, then moves it back out', async ({ page }) => {
   const outer = `Außen ${Date.now()}`
