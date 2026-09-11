@@ -5,6 +5,7 @@ import { registrationOptions, verifyRegistration } from '@/server/auth/passkey'
 import { readSession } from '@/server/auth/session'
 import { rateLimiter } from '@/server/auth/ratelimit'
 import { clientAddress } from '@/server/auth/client-address'
+import { getTranslations } from 'next-intl/server'
 
 export const runtime = 'nodejs'
 export const dynamic = 'force-dynamic'
@@ -35,7 +36,12 @@ export async function GET(request: NextRequest) {
     return NextResponse.json(
       {
         error: 'passkeys_unavailable',
-        reason: `Passkeys brauchen HTTPS. Diese Installation läuft auf ${authConfig.appUrl.origin}.`,
+        // Rendered here rather than in the browser: this reason is thrown as
+        // an Error message by the client and shown verbatim, so it has to
+        // arrive in the reader's language.
+        reason: await getTranslations('settings.passkeys').then((t) =>
+          t('needsHttps', { origin: authConfig.appUrl.origin }),
+        ),
       },
       { status: 409 },
     )

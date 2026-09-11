@@ -67,41 +67,20 @@
     }
   },
   "agenda": {
+    "addBlock": "Añadir un bloque",
+    "addDayNote": "Añadir una nota sobre la jornada",
+    "addTag": "Añadir una etiqueta",
+    "blockCount": "{count, plural, one {# bloque} many {# bloques} other {# bloques}}",
+    "breaks": "{duration} de pausas",
     "columns": {
       "time": "Hora",
       "titleAndDescription": "Título y descripción",
       "info": "Información adicional"
     },
-    "regionLabel": "Agenda {title}",
-    "end": "Fin",
-    "overPlan": "{duration} de más",
+    "connecting": "Conectando …",
     "content": "{duration} de contenido",
-    "breaks": "{duration} de pausas",
-    "blockCount": "{count, plural, one {# bloque} many {# bloques} other {# bloques}}",
-    "addBlock": "Añadir un bloque",
-    "searchType": "Buscar tipo de bloque",
-    "filterPlaceholder": "Escribe para filtrar …",
-    "noTypeMatches": "Ningún tipo de bloque coincide.",
-    "moreFields": "Más campos",
-    "fewerFields": "Menos",
-    "park": "Apartar",
-    "parkLabel": "Apartar {title}",
-    "parkHint": "Sacarlo del desarrollo sin eliminarlo",
-    "parkedHeading": "Apartados ({count, number})",
-    "parkedHint": "Pertenece a la jornada, no cuenta para el tiempo.",
-    "unpark": "Volver al desarrollo",
-    "unparkLabel": "Devolver {title} al desarrollo",
-    "overlap": "Se solapa con el bloque anterior en {duration}",
-    "addDayNote": "Añadir una nota sobre la jornada",
     "dayNote": "Nota sobre la jornada",
     "dayNotePlaceholder": "Sala, cómo llegar, quién trae qué …",
-    "addTag": "Añadir una etiqueta",
-    "removeTag": "Eliminar la etiqueta {name}",
-    "tagPlaceholder": "+ etiqueta",
-    "presence": "Otras personas en esta jornada",
-    "connecting": "Conectando …",
-    "saving": "Guardando …",
-    "offline": "Sin conexión. Tus cambios se enviarán en cuanto vuelva.",
     "drag": {
       "atDayLevel": "al nivel de la jornada",
       "cancelled": "Movimiento cancelado.",
@@ -112,13 +91,35 @@
       "landedWithTime": "{title} queda {where}, posición {position, number}, nueva hora de inicio {time}.",
       "picked": "{title} agarrado."
     },
+    "dragHandle": "Mover {title}",
+    "end": "Fin",
+    "fewerFields": "Menos",
     "field": {
       "privateNote": "solo para ti",
       "commaSeparated": "Separar con comas",
       "richTextReadOnly": "Contiene formato. La edición llegará con el editor de texto — hasta entonces el contenido se queda intacto.",
       "legacyHeading": "Campos antiguos ({count, number})",
       "legacyHint": "Estos valores vienen de una versión anterior de este tipo de bloque. Se conservan, pero ya no se pueden editar."
-    }
+    },
+    "filterPlaceholder": "Escribe para filtrar …",
+    "moreFields": "Más campos",
+    "noTypeMatches": "Ningún tipo de bloque coincide.",
+    "offline": "Sin conexión. Tus cambios se enviarán en cuanto vuelva.",
+    "overPlan": "{duration} de más",
+    "overlap": "Se solapa con el bloque anterior en {duration}",
+    "park": "Apartar",
+    "parkHint": "Sacarlo del desarrollo sin eliminarlo",
+    "parkLabel": "Apartar {title}",
+    "parkedHeading": "Apartados ({count, number})",
+    "parkedHint": "Pertenece a la jornada, no cuenta para el tiempo.",
+    "presence": "Otras personas en esta jornada",
+    "regionLabel": "Agenda {title}",
+    "removeTag": "Eliminar la etiqueta {name}",
+    "saving": "Guardando …",
+    "searchType": "Buscar tipo de bloque",
+    "tagPlaceholder": "+ etiqueta",
+    "unpark": "Volver al desarrollo",
+    "unparkLabel": "Devolver {title} al desarrollo"
   },
   "auth": {
     "login": {
@@ -198,6 +199,9 @@
         "contrastOnBrand": "En modo {theme, select, light {claro} dark {oscuro} other {}} este tono solo alcanza {ratio}:1 para el texto sobre la superficie de acento. Hacen falta 4,5:1.",
         "contrastSubtle": "En modo {theme, select, light {claro} dark {oscuro} other {}} este tono solo alcanza {ratio}:1 para el texto atenuado sobre superficie atenuada. Hacen falta 4,5:1.",
         "checkNameAndColour": "Revisa el nombre y el color."
+      },
+      "collab": {
+        "unavailable": "El servicio de colaboración no responde. Sin él no se puede escribir, porque habría dos caminos de escritura hacia la misma jornada."
       },
       "logo": {
         "unsupportedType": "Se permiten SVG, PNG y WebP.",
@@ -338,6 +342,16 @@
       "purgeConfirm": "Eliminar irreversiblemente"
     }
   },
+  "mail": {
+    "magicLink": {
+      "subject": "Tu enlace de acceso para GoodWorkshop",
+      "body": "Hola:\n\naquí tienes tu enlace de acceso:\n{link}\n\nEs válido durante {minutes, plural, one {un minuto} many {# minutos} other {# minutos}} y solo sirve una vez.\n\nSi no lo has pedido, puedes ignorar este mensaje —\nsin el enlace no pasa nada."
+    },
+    "test": {
+      "subject": "GoodWorkshop: mensaje de prueba",
+      "body": "Este mensaje confirma que el envío de correo funciona.\n\nLos enlaces de acceso y las invitaciones irán a partir de ahora por el mismo camino."
+    }
+  },
   "meta": {
     "description": "Planificación de talleres de código abierto. Autoalojada, lista para MCP.",
     "printTitle": "Vista de impresión"
@@ -360,23 +374,24 @@
       "apply": "Aplicar"
     },
     "passkeys": {
-      "title": "Passkeys",
-      "intro": "Inicia sesión sin contraseña, con huella, cara o llave de seguridad. La llave en sí nunca sale de tu dispositivo.",
-      "unavailable": "Esta instalación funciona en <code>{origin}</code>. Los navegadores solo permiten passkeys por HTTPS (o en <code>localhost</code>) — aquí no se puede crear ninguno. El enlace de acceso por correo sigue siendo la entrada.",
-      "fallbackName": "Passkey",
-      "synced": "sincronizado",
-      "lastUsed": "última vez el {date}",
-      "neverUsed": "aún sin usar",
-      "remove": "Eliminar",
-      "removeLabel": "Eliminar {name}",
-      "none": "Todavía no hay ningún passkey. Hasta entonces, cada acceso pasa por un enlace por correo.",
       "added": "Passkey creado.",
+      "enrol": "Crear un passkey",
+      "fallbackName": "Passkey",
+      "intro": "Inicia sesión sin contraseña, con huella, cara o llave de seguridad. La llave en sí nunca sale de tu dispositivo.",
+      "lastUsed": "última vez el {date}",
       "nameLabel": "Nombre (opcional)",
       "namePlaceholder": "MacBook, iPhone, YubiKey …",
-      "waiting": "Esperando al dispositivo …",
-      "enrol": "Crear un passkey",
+      "needsHttps": "Los passkeys necesitan HTTPS. Esta instalación funciona en {origin}.",
+      "neverUsed": "aún sin usar",
+      "none": "Todavía no hay ningún passkey. Hasta entonces, cada acceso pasa por un enlace por correo.",
+      "notConfirmed": "No se ha podido confirmar el passkey.",
+      "remove": "Eliminar",
+      "removeLabel": "Eliminar {name}",
       "requestRejected": "La solicitud ha sido rechazada.",
-      "notConfirmed": "No se ha podido confirmar el passkey."
+      "synced": "sincronizado",
+      "title": "Passkeys",
+      "unavailable": "Esta instalación funciona en <code>{origin}</code>. Los navegadores solo permiten passkeys por HTTPS (o en <code>localhost</code>) — aquí no se puede crear ninguno. El enlace de acceso por correo sigue siendo la entrada.",
+      "waiting": "Esperando al dispositivo …"
     },
     "title": "Ajustes",
     "tokens": {

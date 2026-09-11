@@ -45,7 +45,10 @@ export async function claim(formData: FormData): Promise<SetupResult> {
     }
 
     try {
-      await sendMail(magicLinkMail(issued.email, issued.link), authConfig.defaultTenantId)
+      await sendMail(
+        magicLinkMail(issued.email, issued.link, issued.locale),
+        authConfig.defaultTenantId,
+      )
       return { ok: true, email }
     } catch (error) {
       console.error('setup: magic link delivery failed', { error })

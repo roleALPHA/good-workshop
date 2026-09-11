@@ -67,41 +67,20 @@
     }
   },
   "agenda": {
+    "addBlock": "Add a block",
+    "addDayNote": "Add a note about the day",
+    "addTag": "Add a tag",
+    "blockCount": "{count, plural, one {# block} other {# blocks}}",
+    "breaks": "{duration} breaks",
     "columns": {
       "time": "Time",
       "titleAndDescription": "Title and description",
       "info": "Additional info"
     },
-    "regionLabel": "Agenda {title}",
-    "end": "End",
-    "overPlan": "{duration} over plan",
+    "connecting": "Connecting …",
     "content": "{duration} content",
-    "breaks": "{duration} breaks",
-    "blockCount": "{count, plural, one {# block} other {# blocks}}",
-    "addBlock": "Add a block",
-    "searchType": "Search block types",
-    "filterPlaceholder": "Type to filter …",
-    "noTypeMatches": "No block type matches that.",
-    "moreFields": "More fields",
-    "fewerFields": "Fewer",
-    "park": "Park",
-    "parkLabel": "Park {title}",
-    "parkHint": "Take it out of the schedule without deleting it",
-    "parkedHeading": "Parked ({count, number})",
-    "parkedHint": "Belongs to the day, does not count towards the time.",
-    "unpark": "Back into the schedule",
-    "unparkLabel": "Put {title} back into the schedule",
-    "overlap": "Overlaps the previous block by {duration}",
-    "addDayNote": "Add a note about the day",
     "dayNote": "Note about the day",
     "dayNotePlaceholder": "Room, directions, who brings what …",
-    "addTag": "Add a tag",
-    "removeTag": "Remove tag {name}",
-    "tagPlaceholder": "+ tag",
-    "presence": "Other people on this day",
-    "connecting": "Connecting …",
-    "saving": "Saving …",
-    "offline": "No connection. Your changes will be sent as soon as it is back.",
     "drag": {
       "atDayLevel": "at day level",
       "cancelled": "Move cancelled.",
@@ -112,13 +91,35 @@
       "landedWithTime": "{title} lands {where}, position {position, number}, new start time {time}.",
       "picked": "{title} picked up."
     },
+    "dragHandle": "Move {title}",
+    "end": "End",
+    "fewerFields": "Fewer",
     "field": {
       "privateNote": "only for you",
       "commaSeparated": "Separate with commas",
       "richTextReadOnly": "Contains formatting. Editing comes with the text editor — until then the content here stays untouched.",
       "legacyHeading": "Old fields ({count, number})",
       "legacyHint": "These values come from an earlier version of this block type. They are kept, but can no longer be edited."
-    }
+    },
+    "filterPlaceholder": "Type to filter …",
+    "moreFields": "More fields",
+    "noTypeMatches": "No block type matches that.",
+    "offline": "No connection. Your changes will be sent as soon as it is back.",
+    "overPlan": "{duration} over plan",
+    "overlap": "Overlaps the previous block by {duration}",
+    "park": "Park",
+    "parkHint": "Take it out of the schedule without deleting it",
+    "parkLabel": "Park {title}",
+    "parkedHeading": "Parked ({count, number})",
+    "parkedHint": "Belongs to the day, does not count towards the time.",
+    "presence": "Other people on this day",
+    "regionLabel": "Agenda {title}",
+    "removeTag": "Remove tag {name}",
+    "saving": "Saving …",
+    "searchType": "Search block types",
+    "tagPlaceholder": "+ tag",
+    "unpark": "Back into the schedule",
+    "unparkLabel": "Put {title} back into the schedule"
   },
   "auth": {
     "login": {
@@ -198,6 +199,9 @@
         "contrastOnBrand": "In {theme, select, light {light} dark {dark} other {}} mode this shade only reaches {ratio}:1 for text on the accent surface. 4.5:1 is required.",
         "contrastSubtle": "In {theme, select, light {light} dark {dark} other {}} mode this shade only reaches {ratio}:1 for muted text on a muted surface. 4.5:1 is required.",
         "checkNameAndColour": "Please check the name and the colour."
+      },
+      "collab": {
+        "unavailable": "The collaboration service is unreachable. Nothing can be written without it, because that would mean two write paths onto the same day."
       },
       "logo": {
         "unsupportedType": "SVG, PNG and WebP are allowed.",
@@ -338,6 +342,16 @@
       "purgeConfirm": "Delete irreversibly"
     }
   },
+  "mail": {
+    "magicLink": {
+      "subject": "Your sign-in link for GoodWorkshop",
+      "body": "Hello,\n\nhere is your sign-in link:\n{link}\n\nIt is valid for {minutes, plural, one {one minute} other {# minutes}} and works once only.\n\nIf you did not ask for this, you can ignore this message —\nnothing happens without the link."
+    },
+    "test": {
+      "subject": "GoodWorkshop: test message",
+      "body": "This message confirms that mail delivery works.\n\nSign-in links and invitations now go the same way."
+    }
+  },
   "meta": {
     "description": "Open-source workshop planning. Self-hosted, MCP-ready.",
     "printTitle": "Print view"
@@ -360,23 +374,24 @@
       "apply": "Apply"
     },
     "passkeys": {
-      "title": "Passkeys",
-      "intro": "Sign in without a password, using a fingerprint, your face or a security key. The key itself never leaves your device.",
-      "unavailable": "This installation runs on <code>{origin}</code>. Browsers only allow passkeys over HTTPS (or on <code>localhost</code>) — none can be created here. The sign-in link by e-mail remains the way in.",
-      "fallbackName": "Passkey",
-      "synced": "synced",
-      "lastUsed": "last used {date}",
-      "neverUsed": "not used yet",
-      "remove": "Remove",
-      "removeLabel": "Remove {name}",
-      "none": "No passkey yet. Until there is, every sign-in goes through a link by e-mail.",
       "added": "Passkey created.",
+      "enrol": "Create a passkey",
+      "fallbackName": "Passkey",
+      "intro": "Sign in without a password, using a fingerprint, your face or a security key. The key itself never leaves your device.",
+      "lastUsed": "last used {date}",
       "nameLabel": "Name (optional)",
       "namePlaceholder": "MacBook, iPhone, YubiKey …",
-      "waiting": "Waiting for the device …",
-      "enrol": "Create a passkey",
+      "needsHttps": "Passkeys need HTTPS. This installation runs on {origin}.",
+      "neverUsed": "not used yet",
+      "none": "No passkey yet. Until there is, every sign-in goes through a link by e-mail.",
+      "notConfirmed": "The passkey could not be confirmed.",
+      "remove": "Remove",
+      "removeLabel": "Remove {name}",
       "requestRejected": "The request was refused.",
-      "notConfirmed": "The passkey could not be confirmed."
+      "synced": "synced",
+      "title": "Passkeys",
+      "unavailable": "This installation runs on <code>{origin}</code>. Browsers only allow passkeys over HTTPS (or on <code>localhost</code>) — none can be created here. The sign-in link by e-mail remains the way in.",
+      "waiting": "Waiting for the device …"
     },
     "title": "Settings",
     "tokens": {

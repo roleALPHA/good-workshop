@@ -2,6 +2,8 @@ import { readFileSync } from 'node:fs'
 import { withTenantOnly } from '@/server/db'
 import { readStoredMail, resolveMailConfig, type MailConfig } from '@/server/settings/mail-settings'
 import { authConfig } from './config'
+import type { Locale } from '@/i18n/config'
+import { translator } from '@/i18n/translator'
 
 /**
  * Mail delivery, with `console` as a first-class transport rather than a
@@ -56,8 +58,8 @@ export async function sendMail(mail: Mail, tenantId: string): Promise<void> {
         [
           '',
           '─'.repeat(72),
-          `An:      ${mail.to}`,
-          `Betreff: ${mail.subject}`,
+          `To:      ${mail.to}`,
+          `Subject: ${mail.subject}`,
           '',
           mail.text,
           '─'.repeat(72),
@@ -231,20 +233,24 @@ export function deliversToRecipient(config: MailConfig): boolean {
   return config.transport === 'smtp' || config.transport === 'graph'
 }
 
-export function magicLinkMail(to: string, link: string): Mail {
+/**
+ * The recipient's language, not the sender's and not the request's.
+ *
+ * A German admin inviting a Spanish colleague sends a Spanish mail. That means
+ * the locale is a parameter: `getTranslations()` would resolve against whoever
+ * happened to trigger the send, and there are sends with no request at all.
+ *
+ * The signature line is NOT translated and not interpolated from tenant data --
+ * docs/konventionen-ui.md says so about the footer, and a mail is the same
+ * surface reaching the same person.
+ */
+export function magicLinkMail(to: string, link: string, locale: Locale): Mail {
+  const t = translator(locale, 'mail.magicLink')
   return {
     to,
-    subject: 'Dein Anmeldelink für GoodWorkshop',
+    subject: t('subject'),
     text: [
-      'Hallo,',
-      '',
-      'hier ist dein Anmeldelink:',
-      link,
-      '',
-      `Er gilt ${authConfig.magicLinkTtlMinutes} Minuten und lässt sich nur einmal verwenden.`,
-      '',
-      'Wenn du das nicht angefordert hast, kannst du diese Nachricht ignorieren —',
-      'ohne den Link passiert nichts.',
+      t('body', { link, minutes: authConfig.magicLinkTtlMinutes }),
       '',
       'GoodWorkshop · powered by roleALPHA',
     ].join('\n'),

@@ -1,5 +1,5 @@
 import type { Locale } from '@/i18n/config'
-import { translator } from '@/i18n/translator'
+import { moduleTypeText } from '@/i18n/module-type-catalog'
 
 /**
  * A built-in block type, shown in the reader's language.
@@ -61,9 +61,8 @@ function isTranslatable(row: LocalisableModuleType): boolean {
 export function localiseModuleType<T extends LocalisableModuleType>(row: T, locale: Locale): T {
   if (!isTranslatable(row)) return row
 
-  const t = translator(locale, 'moduleTypes')
   const key = row.systemKey!
-  const read = (path: string): string | undefined => (t.has(path) ? t(path) : undefined)
+  const read = (path: string) => moduleTypeText(locale, path)
 
   return {
     ...row,

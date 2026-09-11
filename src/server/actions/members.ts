@@ -13,6 +13,7 @@ import { inviteDisclosure } from '@/domain/tenant/invite'
 import { issueMagicLink } from '@/server/auth/magic-link'
 import { deliversToRecipient, mailConfigFor, sendMail, magicLinkMail } from '@/server/auth/mail'
 import { currentActor, fail, toResult, type ActionResult } from './context'
+import { getLocale } from 'next-intl/server'
 
 /**
  * Tenant administration.
@@ -70,7 +71,11 @@ export async function inviteMemberAction(raw: {
   if (!parsed.success) return fail('invalid_input', 'member.checkEmailAndRole')
 
   try {
-    const invited = await inviteMember(actor, parsed.data.email, parsed.data.role)
+    // The inviting admin's language: a brand-new identity has no preference of
+    // its own yet, and starting them in a language somebody nearby actually
+    // speaks beats starting everybody in German.
+    const locale = await getLocale()
+    const invited = await inviteMember(actor, parsed.data.email, parsed.data.role, locale)
     const issued = await issueMagicLink(invited.email, actor.tenantId)
 
     let mailed = false
@@ -80,7 +85,7 @@ export async function inviteMemberAction(raw: {
     const deliverable = deliversToRecipient(await mailConfigFor(actor.tenantId))
     if (issued && deliverable) {
       try {
-        await sendMail(magicLinkMail(issued.email, issued.link), actor.tenantId)
+        await sendMail(magicLinkMail(issued.email, issued.link, issued.locale), actor.tenantId)
         mailed = true
       } catch {
         // Reported as "not sent" rather than as a failed invitation: the

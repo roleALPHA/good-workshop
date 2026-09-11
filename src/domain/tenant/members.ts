@@ -4,6 +4,7 @@ import type { Actor, Tx } from '@/server/db'
 import { withAuth, withTenant } from '@/server/db'
 import { identity, member } from '@/server/db/schema'
 import { DomainError } from '@/domain/errors'
+import type { Locale } from '@/i18n/config'
 
 /**
  * Who belongs to this tenant.
@@ -114,6 +115,20 @@ export async function inviteMember(
   actor: Actor,
   emailAddress: string,
   role: TenantRole,
+  /**
+   * The language a brand-new identity starts in -- the inviting admin's.
+   *
+   * Seeded at creation rather than applied as a fallback when the mail goes
+   * out, and the difference matters: `identity.locale` is NOT NULL DEFAULT
+   * 'de', so a fresh row reads back as "chose German" and is indistinguishable
+   * from a real preference. A per-send fallback would therefore work for the
+   * invitation and silently revert for the next sign-in link six months later.
+   *
+   * An identity that already exists keeps whatever it chose. Being invited to a
+   * second workspace is not a reason to have your language reset by whoever
+   * invited you.
+   */
+  locale: Locale,
 ): Promise<InviteResult> {
   assertTenantAdmin(actor)
 
@@ -132,7 +147,7 @@ export async function inviteMember(
 
     const created = await tx
       .insert(identity)
-      .values({ id: randomUUID(), email })
+      .values({ id: randomUUID(), email, locale })
       .returning({ id: identity.id })
     return created[0]!.id
   })

@@ -67,41 +67,20 @@
     }
   },
   "agenda": {
+    "addBlock": "Ajouter un bloc",
+    "addDayNote": "Ajouter une note sur la journée",
+    "addTag": "Ajouter un tag",
+    "blockCount": "{count, plural, one {# bloc} many {# blocs} other {# blocs}}",
+    "breaks": "{duration} de pauses",
     "columns": {
       "time": "Heure",
       "titleAndDescription": "Titre et description",
       "info": "Infos complémentaires"
     },
-    "regionLabel": "Programme {title}",
-    "end": "Fin",
-    "overPlan": "{duration} de dépassement",
+    "connecting": "Connexion …",
     "content": "{duration} de contenu",
-    "breaks": "{duration} de pauses",
-    "blockCount": "{count, plural, one {# bloc} many {# blocs} other {# blocs}}",
-    "addBlock": "Ajouter un bloc",
-    "searchType": "Rechercher un type de bloc",
-    "filterPlaceholder": "Tape pour filtrer …",
-    "noTypeMatches": "Aucun type de bloc ne correspond.",
-    "moreFields": "Plus de champs",
-    "fewerFields": "Moins",
-    "park": "Mettre de côté",
-    "parkLabel": "Mettre {title} de côté",
-    "parkHint": "Le retirer du déroulé sans le supprimer",
-    "parkedHeading": "De côté ({count, number})",
-    "parkedHint": "Fait partie de la journée, ne compte pas dans le temps.",
-    "unpark": "Remettre dans le déroulé",
-    "unparkLabel": "Remettre {title} dans le déroulé",
-    "overlap": "Chevauche le bloc précédent de {duration}",
-    "addDayNote": "Ajouter une note sur la journée",
     "dayNote": "Note sur la journée",
     "dayNotePlaceholder": "Salle, accès, qui apporte quoi …",
-    "addTag": "Ajouter un tag",
-    "removeTag": "Supprimer le tag {name}",
-    "tagPlaceholder": "+ tag",
-    "presence": "Autres personnes sur cette journée",
-    "connecting": "Connexion …",
-    "saving": "Enregistrement …",
-    "offline": "Pas de connexion. Tes modifications seront transmises dès qu'elle revient.",
     "drag": {
       "atDayLevel": "au niveau de la journée",
       "cancelled": "Déplacement annulé.",
@@ -112,13 +91,35 @@
       "landedWithTime": "{title} se pose {where}, position {position, number}, nouvelle heure de début {time}.",
       "picked": "{title} saisi."
     },
+    "dragHandle": "Déplacer {title}",
+    "end": "Fin",
+    "fewerFields": "Moins",
     "field": {
       "privateNote": "pour toi seulement",
       "commaSeparated": "Séparer par des virgules",
       "richTextReadOnly": "Contient de la mise en forme. L'édition arrivera avec l'éditeur de texte — d'ici là, le contenu reste intact.",
       "legacyHeading": "Anciens champs ({count, number})",
       "legacyHint": "Ces valeurs viennent d'une version antérieure de ce type de bloc. Elles sont conservées, mais ne peuvent plus être modifiées."
-    }
+    },
+    "filterPlaceholder": "Tape pour filtrer …",
+    "moreFields": "Plus de champs",
+    "noTypeMatches": "Aucun type de bloc ne correspond.",
+    "offline": "Pas de connexion. Tes modifications seront transmises dès qu'elle revient.",
+    "overPlan": "{duration} de dépassement",
+    "overlap": "Chevauche le bloc précédent de {duration}",
+    "park": "Mettre de côté",
+    "parkHint": "Le retirer du déroulé sans le supprimer",
+    "parkLabel": "Mettre {title} de côté",
+    "parkedHeading": "De côté ({count, number})",
+    "parkedHint": "Fait partie de la journée, ne compte pas dans le temps.",
+    "presence": "Autres personnes sur cette journée",
+    "regionLabel": "Programme {title}",
+    "removeTag": "Supprimer le tag {name}",
+    "saving": "Enregistrement …",
+    "searchType": "Rechercher un type de bloc",
+    "tagPlaceholder": "+ tag",
+    "unpark": "Remettre dans le déroulé",
+    "unparkLabel": "Remettre {title} dans le déroulé"
   },
   "auth": {
     "login": {
@@ -198,6 +199,9 @@
         "contrastOnBrand": "En mode {theme, select, light {clair} dark {sombre} other {}}, cette teinte n'atteint que {ratio}:1 pour le texte sur la surface d'accent. Il en faut 4,5:1.",
         "contrastSubtle": "En mode {theme, select, light {clair} dark {sombre} other {}}, cette teinte n'atteint que {ratio}:1 pour le texte atténué sur surface atténuée. Il en faut 4,5:1.",
         "checkNameAndColour": "Vérifie le nom et la couleur."
+      },
+      "collab": {
+        "unavailable": "Le service de collaboration est injoignable. Rien ne peut être écrit sans lui, car cela ferait deux chemins d'écriture vers la même journée."
       },
       "logo": {
         "unsupportedType": "Formats autorisés : SVG, PNG et WebP.",
@@ -338,6 +342,16 @@
       "purgeConfirm": "Supprimer irréversiblement"
     }
   },
+  "mail": {
+    "magicLink": {
+      "subject": "Ton lien de connexion pour GoodWorkshop",
+      "body": "Bonjour,\n\nvoici ton lien de connexion :\n{link}\n\nIl est valable {minutes, plural, one {une minute} many {# minutes} other {# minutes}} et ne sert qu'une fois.\n\nSi tu n'as rien demandé, tu peux ignorer ce message —\nsans le lien, il ne se passe rien."
+    },
+    "test": {
+      "subject": "GoodWorkshop : message de test",
+      "body": "Ce message confirme que l'envoi d'e-mails fonctionne.\n\nLes liens de connexion et les invitations passeront désormais par là."
+    }
+  },
   "meta": {
     "description": "Planification d'ateliers open source. Auto-hébergée, compatible MCP.",
     "printTitle": "Aperçu avant impression"
@@ -360,23 +374,24 @@
       "apply": "Appliquer"
     },
     "passkeys": {
-      "title": "Passkeys",
-      "intro": "Se connecter sans mot de passe, avec une empreinte, le visage ou une clé de sécurité. La clé elle-même ne quitte jamais ton appareil.",
-      "unavailable": "Cette installation tourne sur <code>{origin}</code>. Les navigateurs n'autorisent les passkeys qu'en HTTPS (ou sur <code>localhost</code>) — impossible d'en créer un ici. Le lien de connexion par e-mail reste la porte d'entrée.",
-      "fallbackName": "Passkey",
-      "synced": "synchronisé",
-      "lastUsed": "dernière fois le {date}",
-      "neverUsed": "pas encore utilisé",
-      "remove": "Supprimer",
-      "removeLabel": "Supprimer {name}",
-      "none": "Pas encore de passkey. En attendant, chaque connexion passe par un lien envoyé par e-mail.",
       "added": "Passkey créé.",
+      "enrol": "Créer un passkey",
+      "fallbackName": "Passkey",
+      "intro": "Se connecter sans mot de passe, avec une empreinte, le visage ou une clé de sécurité. La clé elle-même ne quitte jamais ton appareil.",
+      "lastUsed": "dernière fois le {date}",
       "nameLabel": "Nom (facultatif)",
       "namePlaceholder": "MacBook, iPhone, YubiKey …",
-      "waiting": "En attente de l'appareil …",
-      "enrol": "Créer un passkey",
+      "needsHttps": "Les passkeys demandent HTTPS. Cette installation tourne sur {origin}.",
+      "neverUsed": "pas encore utilisé",
+      "none": "Pas encore de passkey. En attendant, chaque connexion passe par un lien envoyé par e-mail.",
+      "notConfirmed": "Le passkey n'a pas pu être confirmé.",
+      "remove": "Supprimer",
+      "removeLabel": "Supprimer {name}",
       "requestRejected": "La demande a été refusée.",
-      "notConfirmed": "Le passkey n'a pas pu être confirmé."
+      "synced": "synchronisé",
+      "title": "Passkeys",
+      "unavailable": "Cette installation tourne sur <code>{origin}</code>. Les navigateurs n'autorisent les passkeys qu'en HTTPS (ou sur <code>localhost</code>) — impossible d'en créer un ici. Le lien de connexion par e-mail reste la porte d'entrée.",
+      "waiting": "En attente de l'appareil …"
     },
     "title": "Paramètres",
     "tokens": {

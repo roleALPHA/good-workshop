@@ -35,15 +35,36 @@ export type Translate = ((key: string, params?: Record<string, string | number>)
   has(key: string): boolean
 }
 
+/**
+ * Cached per (locale, namespace), and that is not a micro-optimisation.
+ *
+ * `createTranslator` builds its formatter caches over the whole catalog.
+ * localiseModuleType is called once per block type, so loadDay was constructing
+ * fifteen of them for every day it loaded -- on the app page, in the export, and
+ * in the collaboration room's seed, which is the one place where taking longer
+ * shows up as a peer not seeing an edit yet.
+ *
+ * Safe to cache because it is pure: the catalogs are static imports and the
+ * fallback is a constant. Four locales times a handful of namespaces is a
+ * bounded map, not a leak.
+ */
+const CACHE = new Map<string, Translate>()
+
 export function translator(locale: Locale, namespace?: string): Translate {
-  const t = createTranslator({
+  const key = `${locale}:${namespace ?? ''}`
+  const cached = CACHE.get(key)
+  if (cached) return cached
+
+  const created = createTranslator({
     locale,
     messages: CATALOGS[locale],
     namespace,
     // The fallback is the key, not an empty string: something rendered with a
     // missing message should be obviously wrong in a bug report rather than
     // quietly absent from a sentence.
-    getMessageFallback: ({ key }) => key,
-  })
-  return t as unknown as Translate
+    getMessageFallback: ({ key: missing }) => missing,
+  }) as unknown as Translate
+
+  CACHE.set(key, created)
+  return created
 }

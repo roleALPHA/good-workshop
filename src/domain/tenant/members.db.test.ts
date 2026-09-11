@@ -76,7 +76,7 @@ afterAll(async () => {
 
 /** Remembers what to clean up, so a failing test does not poison the next run. */
 async function invite(email: string, role: 'member' | 'admin' = 'member') {
-  const result = await inviteMember(admin(), email, role)
+  const result = await inviteMember(admin(), email, role, 'de')
   const row = await ops.query('select identity_id from member where id = $1', [result.memberId])
   created.push(row.rows[0].identity_id)
   return result
@@ -97,7 +97,7 @@ describe('inviteMember', () => {
   it('is idempotent for somebody who is already here', async () => {
     const email = address()
     const first = await invite(email)
-    const again = await inviteMember(admin(), email, 'admin')
+    const again = await inviteMember(admin(), email, 'admin', 'de')
 
     expect(again.alreadyMember).toBe(true)
     expect(again.memberId).toBe(first.memberId)
@@ -108,11 +108,15 @@ describe('inviteMember', () => {
   })
 
   it('refuses an address that is not one', async () => {
-    await expect(inviteMember(admin(), 'kein-at-zeichen', 'member')).rejects.toThrow(MemberError)
+    await expect(inviteMember(admin(), 'kein-at-zeichen', 'member', 'de')).rejects.toThrow(
+      MemberError,
+    )
   })
 
   it('refuses somebody who is not a tenant admin', async () => {
-    await expect(inviteMember(plain(), address(), 'member')).rejects.toThrow('member.adminOnly')
+    await expect(inviteMember(plain(), address(), 'member', 'de')).rejects.toThrow(
+      'member.adminOnly',
+    )
   })
 })
 

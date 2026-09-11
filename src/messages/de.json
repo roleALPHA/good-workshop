@@ -67,41 +67,20 @@
     }
   },
   "agenda": {
+    "addBlock": "Block hinzufügen",
+    "addDayNote": "Notiz zum Tag hinzufügen",
+    "addTag": "Tag hinzufügen",
+    "blockCount": "{count, plural, one {# Block} other {# Blöcke}}",
+    "breaks": "{duration} Pausen",
     "columns": {
       "time": "Zeit",
       "titleAndDescription": "Titel und Beschreibung",
       "info": "Zusatzinfo"
     },
-    "regionLabel": "Agenda {title}",
-    "end": "Ende",
-    "overPlan": "{duration} über Plan",
+    "connecting": "Verbinde …",
     "content": "{duration} Inhalt",
-    "breaks": "{duration} Pausen",
-    "blockCount": "{count, plural, one {# Block} other {# Blöcke}}",
-    "addBlock": "Block hinzufügen",
-    "searchType": "Blocktyp suchen",
-    "filterPlaceholder": "Tippen zum Filtern …",
-    "noTypeMatches": "Kein Blocktyp passt dazu.",
-    "moreFields": "Mehr Felder",
-    "fewerFields": "Weniger",
-    "park": "Parken",
-    "parkLabel": "{title} parken",
-    "parkHint": "Aus dem Ablauf nehmen, ohne ihn zu löschen",
-    "parkedHeading": "Geparkt ({count, number})",
-    "parkedHint": "Gehört zum Tag, zählt nicht zur Zeit.",
-    "unpark": "In den Ablauf",
-    "unparkLabel": "{title} zurück in den Ablauf",
-    "overlap": "Überschneidet den vorherigen Block um {duration}",
-    "addDayNote": "Notiz zum Tag hinzufügen",
     "dayNote": "Notiz zum Tag",
     "dayNotePlaceholder": "Raum, Anfahrt, wer was mitbringt …",
-    "addTag": "Tag hinzufügen",
-    "removeTag": "Tag {name} entfernen",
-    "tagPlaceholder": "+ Tag",
-    "presence": "Weitere Personen an diesem Tag",
-    "connecting": "Verbinde …",
-    "saving": "Wird gespeichert …",
-    "offline": "Keine Verbindung. Deine Änderungen werden übertragen, sobald sie wieder steht.",
     "drag": {
       "atDayLevel": "auf Tagesebene",
       "cancelled": "Verschieben abgebrochen.",
@@ -112,13 +91,35 @@
       "landedWithTime": "{title} landet {where}, Position {position, number}, neue Startzeit {time}.",
       "picked": "{title} aufgenommen."
     },
+    "dragHandle": "{title} verschieben",
+    "end": "Ende",
+    "fewerFields": "Weniger",
     "field": {
       "privateNote": "nur für dich",
       "commaSeparated": "Mit Komma trennen",
       "richTextReadOnly": "Enthält Formatierung. Bearbeiten kommt mit dem Text-Editor — bis dahin bleibt der Inhalt hier unangetastet.",
       "legacyHeading": "Alte Felder ({count, number})",
       "legacyHint": "Diese Angaben stammen aus einer früheren Fassung dieses Modultyps. Sie bleiben erhalten, lassen sich aber nicht mehr bearbeiten."
-    }
+    },
+    "filterPlaceholder": "Tippen zum Filtern …",
+    "moreFields": "Mehr Felder",
+    "noTypeMatches": "Kein Blocktyp passt dazu.",
+    "offline": "Keine Verbindung. Deine Änderungen werden übertragen, sobald sie wieder steht.",
+    "overPlan": "{duration} über Plan",
+    "overlap": "Überschneidet den vorherigen Block um {duration}",
+    "park": "Parken",
+    "parkHint": "Aus dem Ablauf nehmen, ohne ihn zu löschen",
+    "parkLabel": "{title} parken",
+    "parkedHeading": "Geparkt ({count, number})",
+    "parkedHint": "Gehört zum Tag, zählt nicht zur Zeit.",
+    "presence": "Weitere Personen an diesem Tag",
+    "regionLabel": "Agenda {title}",
+    "removeTag": "Tag {name} entfernen",
+    "saving": "Wird gespeichert …",
+    "searchType": "Blocktyp suchen",
+    "tagPlaceholder": "+ Tag",
+    "unpark": "In den Ablauf",
+    "unparkLabel": "{title} zurück in den Ablauf"
   },
   "auth": {
     "login": {
@@ -198,6 +199,9 @@
         "contrastOnBrand": "Dieser Ton erreicht {theme, select, light {im hellen} dark {im dunklen} other {}} Modus nur {ratio}:1 für Text auf der Akzentfläche. Nötig sind 4,5:1.",
         "contrastSubtle": "Dieser Ton erreicht {theme, select, light {im hellen} dark {im dunklen} other {}} Modus nur {ratio}:1 für gedämpften Text auf gedämpfter Fläche. Nötig sind 4,5:1.",
         "checkNameAndColour": "Bitte Name und Farbe prüfen."
+      },
+      "collab": {
+        "unavailable": "Der Kollaborationsdienst ist nicht erreichbar. Ohne ihn kann nicht geschrieben werden, weil sonst zwei Schreibwege auf denselben Tag zeigen."
       },
       "logo": {
         "unsupportedType": "Erlaubt sind SVG, PNG und WebP.",
@@ -338,6 +342,16 @@
       "purgeConfirm": "Unwiderruflich löschen"
     }
   },
+  "mail": {
+    "magicLink": {
+      "subject": "Dein Anmeldelink für GoodWorkshop",
+      "body": "Hallo,\n\nhier ist dein Anmeldelink:\n{link}\n\nEr gilt {minutes, plural, one {eine Minute} other {# Minuten}} und lässt sich nur einmal verwenden.\n\nWenn du das nicht angefordert hast, kannst du diese Nachricht ignorieren —\nohne den Link passiert nichts."
+    },
+    "test": {
+      "subject": "GoodWorkshop: Testnachricht",
+      "body": "Diese Nachricht bestätigt, dass der Mailversand funktioniert.\n\nAnmeldelinks und Einladungen gehen ab jetzt denselben Weg."
+    }
+  },
   "meta": {
     "description": "Open-Source-Workshopplanung. Selbst gehostet, MCP-fähig.",
     "printTitle": "Druckansicht"
@@ -360,23 +374,24 @@
       "apply": "Übernehmen"
     },
     "passkeys": {
-      "title": "Passkeys",
-      "intro": "Anmelden ohne Passwort, mit Fingerabdruck, Gesicht oder Sicherheitsschlüssel. Der Schlüssel selbst verlässt dein Gerät nie.",
-      "unavailable": "Diese Installation läuft auf <code>{origin}</code>. Browser erlauben Passkeys nur über HTTPS (oder auf <code>localhost</code>) — anlegen lässt sich hier keiner. Der Anmeldelink per E-Mail bleibt der Weg hinein.",
-      "fallbackName": "Passkey",
-      "synced": "synchronisiert",
-      "lastUsed": "zuletzt {date}",
-      "neverUsed": "noch nicht benutzt",
-      "remove": "Entfernen",
-      "removeLabel": "{name} entfernen",
-      "none": "Noch kein Passkey. Bis dahin führt jede Anmeldung über einen Link per E-Mail.",
       "added": "Passkey angelegt.",
+      "enrol": "Passkey anlegen",
+      "fallbackName": "Passkey",
+      "intro": "Anmelden ohne Passwort, mit Fingerabdruck, Gesicht oder Sicherheitsschlüssel. Der Schlüssel selbst verlässt dein Gerät nie.",
+      "lastUsed": "zuletzt {date}",
       "nameLabel": "Name (optional)",
       "namePlaceholder": "MacBook, iPhone, YubiKey …",
-      "waiting": "Warte auf das Gerät …",
-      "enrol": "Passkey anlegen",
+      "needsHttps": "Passkeys brauchen HTTPS. Diese Installation läuft auf {origin}.",
+      "neverUsed": "noch nicht benutzt",
+      "none": "Noch kein Passkey. Bis dahin führt jede Anmeldung über einen Link per E-Mail.",
+      "notConfirmed": "Der Passkey konnte nicht bestätigt werden.",
+      "remove": "Entfernen",
+      "removeLabel": "{name} entfernen",
       "requestRejected": "Die Anfrage wurde abgelehnt.",
-      "notConfirmed": "Der Passkey konnte nicht bestätigt werden."
+      "synced": "synchronisiert",
+      "title": "Passkeys",
+      "unavailable": "Diese Installation läuft auf <code>{origin}</code>. Browser erlauben Passkeys nur über HTTPS (oder auf <code>localhost</code>) — anlegen lässt sich hier keiner. Der Anmeldelink per E-Mail bleibt der Weg hinein.",
+      "waiting": "Warte auf das Gerät …"
     },
     "title": "Einstellungen",
     "tokens": {

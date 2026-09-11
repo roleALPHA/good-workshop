@@ -62,6 +62,8 @@ export const DOMAIN_ERROR_KEYS = [
   'sharing.memberGone',
   'sharing.memberDisabled',
   'sharing.ownerHasAccess',
+  // Live collaboration
+  'collab.unavailable',
   // First-run setup
   'setup.wrongKey',
   'setup.invalidEmail',

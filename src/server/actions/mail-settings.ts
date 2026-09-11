@@ -13,6 +13,8 @@ import {
 import { mailConfigFor } from '@/server/auth/mail'
 import { DomainError } from '@/domain/errors'
 import { currentActor, fail, failRelayed, toResult, type ActionResult } from './context'
+import { getLocale } from 'next-intl/server'
+import { translator } from '@/i18n/translator'
 
 /**
  * Mail configuration in the browser, for installations whose operator has no
@@ -99,17 +101,14 @@ export async function sendTestMail(formData: FormData): Promise<ActionResult<str
     assertTenantAdmin(actor)
 
     const { sendMail } = await import('@/server/auth/mail')
+    // The admin who pressed the button is the recipient, so their language is
+    // the right one -- unlike an invitation, where the reader is somebody else.
+    const t = translator(await getLocale(), 'mail.test')
     await sendMail(
       {
         to,
-        subject: 'GoodWorkshop: Testnachricht',
-        text: [
-          'Diese Nachricht bestätigt, dass der Mailversand funktioniert.',
-          '',
-          'Anmeldelinks und Einladungen gehen ab jetzt denselben Weg.',
-          '',
-          'GoodWorkshop · powered by roleALPHA',
-        ].join('\n'),
+        subject: t('subject'),
+        text: [t('body'), '', 'GoodWorkshop · powered by roleALPHA'].join('\n'),
       },
       actor.tenantId,
     )
