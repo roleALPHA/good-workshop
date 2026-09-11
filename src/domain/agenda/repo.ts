@@ -103,6 +103,7 @@ export async function loadDay(
       date: day.date,
       startMinute: timeToMinutes(day.startTime),
       targetEndMinute: day.targetEndTime ? timeToMinutes(day.targetEndTime) : null,
+      desc: (day.jsonDesc as Record<string, unknown>) ?? {},
       clusters: clusters.map((c): ClusterDto => ({
         id: c.id,
         title: c.title,

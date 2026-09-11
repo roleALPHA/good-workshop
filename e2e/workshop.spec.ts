@@ -145,6 +145,20 @@ test('persists a type-specific field edited inside the row', async ({ page }) =>
   })
 })
 
+test('keeps a note about the day itself, and survives a reload with it', async ({ page }) => {
+  // The information that belongs to nobody's block: room, keys, who brings the
+  // flipchart. workshop_day.json_desc had been in the schema from the start and
+  // was written by nothing at all.
+  await page.getByRole('button', { name: 'Notiz zum Tag hinzufügen' }).click()
+  await page.getByLabel('Notiz zum Tag').fill('Raum 2.14, Schlüssel beim Empfang')
+  // Written on blur, so the shared document is not asked for every keystroke.
+  await page.getByLabel('Notiz zum Tag').blur()
+
+  await reloadUntil(page, async () => {
+    await expect(page.getByLabel('Notiz zum Tag')).toHaveValue('Raum 2.14, Schlüssel beim Empfang')
+  })
+})
+
 test('exports the day as Markdown', async ({ page }) => {
   await addBlock(page, 'Gruppenarbeit')
 

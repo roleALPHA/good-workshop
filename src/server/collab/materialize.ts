@@ -56,7 +56,12 @@ export async function materializeDay(
   const day = readDayFields(doc)
   await tx
     .update(workshopDay)
-    .set({ startTime: toTime(day.startMinute), title: day.title, updatedAt: sql`now()` })
+    .set({
+      startTime: toTime(day.startMinute),
+      title: day.title,
+      jsonDesc: day.desc,
+      updatedAt: sql`now()`,
+    })
     .where(eq(workshopDay.id, dayId))
 
   const bumped = await tx

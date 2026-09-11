@@ -48,6 +48,8 @@ export type AgendaDocument = {
   /** The current day, derived. Never mutated in place. */
   doc: DayDoc
   patchModule: (moduleId: string, patch: ModulePatch) => void
+  /** Fields that belong to the day itself rather than to a block. */
+  patchDay: (patch: { desc?: Record<string, unknown> }) => void
   /** Applies a finished drag. */
   move: (blockId: string, projection: Projection) => void
   addModule: (block: NewBlock) => void

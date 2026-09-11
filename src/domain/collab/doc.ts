@@ -73,6 +73,7 @@ export function seedFromDayDoc(doc: Y.Doc, source: DayDoc): void {
     day.set('date', source.date)
     day.set('startMinute', source.startMinute)
     day.set('targetEndMinute', source.targetEndMinute)
+    day.set('desc', source.desc ?? {})
 
     const blocks = blocksOf(doc)
 
@@ -214,6 +215,7 @@ export function toDayDoc(doc: Y.Doc, moduleTypes: DayDoc['moduleTypes']): DayDoc
     date: (day.get('date') as string | null) ?? null,
     startMinute: Number(day.get('startMinute') ?? 540),
     targetEndMinute: (day.get('targetEndMinute') as number | null) ?? null,
+    desc: (day.get('desc') as Record<string, unknown>) ?? {},
     clusters,
     modules,
     moduleTypes,
@@ -289,11 +291,16 @@ function clampDuration(raw: unknown): number {
   return Math.min(Math.max(minutes, 0), MAX_DURATION_MINUTES)
 }
 
-export function readDayFields(doc: Y.Doc): { startMinute: number; title: string } {
+export function readDayFields(doc: Y.Doc): {
+  startMinute: number
+  title: string
+  desc: Record<string, unknown>
+} {
   const day = dayOf(doc)
   return {
     startMinute: Number(day.get('startMinute') ?? 540),
     title: String(day.get('title') ?? ''),
+    desc: (day.get('desc') as Record<string, unknown>) ?? {},
   }
 }
 

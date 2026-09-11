@@ -62,6 +62,15 @@ export type DayDoc = {
   date: string | null
   startMinute: number
   targetEndMinute: number | null
+  /**
+   * Notes about the day itself: room, travel, who brings what.
+   *
+   * Shaped like a block's description so the two can converge later -- today it
+   * carries `text` and nothing else, which is the field a rich-text document
+   * also keeps alongside its structure. Somewhere to put what belongs to the
+   * day rather than to any one block.
+   */
+  desc: Record<string, unknown>
   clusters: ClusterDto[]
   modules: ModuleDto[]
   moduleTypes: Record<string, ModuleTypeDto>

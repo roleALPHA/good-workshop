@@ -14,6 +14,7 @@ import type {
 import type { Projection } from '@/features/agenda/projection'
 import { CollabProvider, type ConnectionState, type PeerPresence } from './provider'
 import { addModule, applyProjection, patchModule, removeModule } from './y-ops'
+import { setDayFields } from '@/domain/collab/ops'
 
 /**
  * The editor, backed by a shared document.
@@ -126,6 +127,10 @@ export function useCollabDocument(initial: DayDoc, target: CollabTarget): Agenda
       setFocus: (blockId: string | null) => providerRef.current?.setFocus(blockId),
       patchModule: (moduleId: string, patch: ModulePatch) =>
         withDoc((d) => patchModule(d, moduleId, patch)),
+      // Straight onto the day map: everybody with the day open sees the note
+      // arrive, and the materialiser carries it to workshop_day.json_desc.
+      patchDay: (patch: { desc?: Record<string, unknown> }) =>
+        withDoc((d) => setDayFields(d, patch)),
       move: (blockId: string, projection: Projection) =>
         withDoc((d) => applyProjection(d, blockId, projection)),
       addModule: (block: NewBlock) => withDoc((d) => addModule(d, uuidv7(), block)),

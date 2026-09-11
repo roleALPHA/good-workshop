@@ -4,6 +4,7 @@ import pg from 'pg'
 import { uuidv7 } from 'uuidv7'
 import { afterAll, beforeAll, beforeEach, describe, expect, it } from 'vitest'
 import { blocksOf, seedFromDayDoc } from '@/domain/collab/doc'
+import { setDayFields } from '@/domain/collab/ops'
 import { assertWorkshopAccess } from '@/domain/agenda/access'
 import { loadDay } from '@/domain/agenda/repo'
 import { flattenDay } from '@/features/agenda/flatten'
@@ -87,6 +88,7 @@ async function seedLog() {
     date: null,
     startMinute: 540,
     targetEndMinute: null,
+    desc: {},
     clusters: [
       {
         id: clusterId,
@@ -135,6 +137,42 @@ const relationalShape = () =>
   })
 
 const materialize = () => withTenant(actor(), (tx) => materializeDay(tx, workshopId, dayId))
+
+describe('the note on the day', () => {
+  it('travels from the shared document into workshop_day.json_desc', async () => {
+    const doc = await seedLog()
+
+    // Written the way the editor writes it: onto the day map of the shared
+    // document, not into the table. The day has one writer.
+    setDayFields(doc, { desc: { text: 'Raum 2.14, Schlüssel beim Empfang.' } })
+    await withTenant(actor(), (tx) => appendUpdate(tx, dayId, Y.encodeStateAsUpdate(doc)))
+    await materialize()
+
+    const { rows } = await ops.query('select json_desc from workshop_day where id = $1', [dayId])
+    expect(rows[0]?.json_desc).toEqual({ text: 'Raum 2.14, Schlüssel beim Empfang.' })
+
+    // And it comes back out again, which is what the page renders from.
+    const loaded = await withTenant(actor(), async (tx) => {
+      const access = await assertWorkshopAccess(tx, actor(), workshopId, 'workshop.read')
+      return loadDay(tx, access, dayId)
+    })
+    expect(loaded.doc.desc).toEqual({ text: 'Raum 2.14, Schlüssel beim Empfang.' })
+  })
+
+  it('clears out again when the note is emptied', async () => {
+    const doc = await seedLog()
+    setDayFields(doc, { desc: { text: 'Erst da' } })
+    await withTenant(actor(), (tx) => appendUpdate(tx, dayId, Y.encodeStateAsUpdate(doc)))
+    await materialize()
+
+    setDayFields(doc, { desc: {} })
+    await withTenant(actor(), (tx) => appendUpdate(tx, dayId, Y.encodeStateAsUpdate(doc)))
+    await materialize()
+
+    const { rows } = await ops.query('select json_desc from workshop_day where id = $1', [dayId])
+    expect(rows[0]?.json_desc).toEqual({})
+  })
+})
 
 describe('materialising the CRDT', () => {
   it('writes the whole day into the relational tables', async () => {

@@ -15,6 +15,7 @@ function doc(clusters: [string, number][], modules: [string, number, string | nu
     date: null,
     startMinute: 540,
     targetEndMinute: null,
+    desc: {},
     clusters: clusters.map(([id, order]) => ({
       id,
       title: id,

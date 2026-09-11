@@ -15,6 +15,10 @@ import type { Projection } from './projection'
 export function useLocalDocument(initial: DayDoc): AgendaDocument {
   const [doc, setDoc] = useState(initial)
 
+  const patchDay = useCallback((patch: { desc?: Record<string, unknown> }) => {
+    setDoc((current) => ({ ...current, ...(patch.desc === undefined ? {} : { desc: patch.desc }) }))
+  }, [])
+
   const patchModule = useCallback((moduleId: string, patch: ModulePatch) => {
     // Undefined means "not part of this change", never "clear this field".
     // Spreading the patch as-is would wipe a description every time somebody
@@ -64,6 +68,7 @@ export function useLocalDocument(initial: DayDoc): AgendaDocument {
     () => ({
       doc,
       patchModule,
+      patchDay,
       move,
       addModule,
       removeModule,
@@ -72,7 +77,7 @@ export function useLocalDocument(initial: DayDoc): AgendaDocument {
       peers: NOBODY,
       setFocus: () => {},
     }),
-    [doc, patchModule, move, addModule, removeModule],
+    [doc, patchModule, patchDay, move, addModule, removeModule],
   )
 }
 

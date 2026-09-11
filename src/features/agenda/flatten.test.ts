@@ -40,6 +40,7 @@ const day = (clusters: ClusterDto[], modules: ModuleDto[]): DayDoc => ({
   date: null,
   startMinute: 540,
   targetEndMinute: null,
+  desc: {},
   clusters,
   modules,
   moduleTypes: MODULE_TYPES_BY_ID,

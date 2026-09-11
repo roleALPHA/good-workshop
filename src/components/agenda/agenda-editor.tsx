@@ -270,7 +270,11 @@ export function AgendaEditor({ document: agenda }: { document: AgendaDocument })
         onFocusCapture={reportFocus}
         onBlurCapture={clearFocus}
       >
-        <DayHeader doc={doc} schedule={schedule} />
+        <DayHeader
+          doc={doc}
+          schedule={schedule}
+          onDescChange={(desc) => agenda.patchDay({ desc })}
+        />
         <PresenceBar peers={agenda.peers} />
         <HeaderRow />
 
