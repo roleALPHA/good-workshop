@@ -107,7 +107,7 @@ Provisioning-Pfad mit Bypass-Rolle ist einer, der still in den falschen Mandante
 ## Upgrade
 
 ```bash
-docker compose exec -u postgres db pg_dump goodworkshop > vor-upgrade-$(date +%F).sql
+scripts/backup.sh vor-upgrade-$(date +%F).sql.gz
 # GW_VERSION in der .env auf den neuen Tag; Image bereitstellen
 docker compose --profile tls up -d
 ```

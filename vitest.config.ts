@@ -11,7 +11,10 @@ export default defineConfig({
     environment: 'jsdom',
     globals: true,
     setupFiles: ['./vitest.setup.ts'],
-    include: ['src/**/*.{test,spec}.{ts,tsx}'],
+    // The shell scripts an operator runs are covered here too: a backup that
+    // fails quietly is a bug like any other, and asserting it takes a shell and
+    // a fake `docker`, not a browser.
+    include: ['src/**/*.{test,spec}.{ts,tsx}', 'scripts/**/*.test.mjs'],
     // Database tests live in their own suite and their own CI job -- they need
     // a real Postgres with migrations applied. See vitest.db.config.ts.
     exclude: ['**/node_modules/**', 'src/**/*.db.test.ts'],

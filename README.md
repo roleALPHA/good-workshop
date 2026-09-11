@@ -190,7 +190,7 @@ späteren Starts passiert nichts mehr, auch wenn die Variable stehen bleibt.
 
 ```bash
 # 1. Sichern. Ein Upgrade ohne Sicherung ist eine Wette.
-docker compose exec -u postgres db pg_dump goodworkshop > vor-upgrade-$(date +%F).sql
+scripts/backup.sh vor-upgrade-$(date +%F).sql.gz
 
 # 2. Neues Image bereitstellen, GW_VERSION in der .env darauf setzen.
 #    Solange es kein Release gibt, heißt das: neu bauen statt ziehen.
@@ -228,11 +228,15 @@ Die Datenbank ist die vollständige Akte, Logos eingeschlossen — sie liegen al
 im Dateisystem. Ein `pg_dump` genügt also:
 
 ```bash
-docker compose exec -u postgres db pg_dump goodworkshop > goodworkshop-$(date +%F).sql
+scripts/backup.sh goodworkshop-$(date +%F).sql.gz
 ```
 
-Das `-u postgres` ist nötig: im Datenbank-Container meldet sich der Prozess über den lokalen
-Socket an, und dort entscheidet der Benutzername.
+Das Skript statt der Zeile von Hand, weil die Zeile von Hand auch dann eine Datei anlegt,
+wenn nichts gesichert wurde: `pg_dump` schreibt seine Fehlermeldung nach stderr und lässt
+stdout leer, die Umleitung hat die Zieldatei da längst angelegt. Am Ende liegt ein leeres
+Archiv mit dem richtigen Namen und dem heutigen Datum im Verzeichnis. Das Skript schreibt
+erst daneben, prüft, ob der Dump bis zu seiner Abschlusszeile durchgelaufen ist, und gibt ihm
+den endgültigen Namen nur dann — die Sicherung von gestern bleibt bis dahin unberührt.
 
 Die Datenbank-Passwörter liegen in eigenen Docker-Volumes (`secret_*`) und sind **nicht** im
 Dump enthalten. Für eine Wiederherstellung auf einem neuen Server braucht es sie auch nicht:
