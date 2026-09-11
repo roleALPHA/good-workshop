@@ -68,8 +68,10 @@ docker run -p 3000:3000 goodworkshop
 Das Image ist multi-stage gebaut, läuft als non-root `node`, lädt rund 70 MB herunter
 (entpackt etwa 316 MB) und hat einen `HEALTHCHECK` auf `/api/health`, der auch meldet,
 welcher Commit läuft. Kein Secret steckt in einem Layer — alles, was zur
-Laufzeit gebraucht wird (`DATABASE_URL`, `AUTH_SECRET`, `GW_APP_URL`, …), kommt als
-Environment-Variable beim Start.
+Laufzeit gebraucht wird (`DATABASE_URL`, `GW_APP_URL`, `SMTP_URL`, …), kommt als
+Environment-Variable beim Start. Ein `AUTH_SECRET` gibt es nicht: Sessions sind Zeilen
+in Postgres mit einem eigenen Zufallsgeheimnis je Session, keine signierten Token — es
+gibt also keinen Signaturschlüssel zu setzen.
 
 Releases entstehen aus einem Git-Tag `v*` und landen als Multi-Arch-Image
 (`linux/amd64` + `linux/arm64`, jeweils nativ gebaut) inklusive SBOM und Provenance auf

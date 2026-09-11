@@ -1,3 +1,4 @@
+import { readFileSync } from 'node:fs'
 import { authConfig } from './config'
 
 /**
@@ -29,8 +30,10 @@ export async function sendMail(mail: Mail): Promise<void> {
       return
 
     case 'smtp': {
-      const url = process.env.SMTP_URL
-      if (!url) throw new Error('GW_MAIL_TRANSPORT=smtp but SMTP_URL is not set.')
+      const url = smtpUrl()
+      if (!url) {
+        throw new Error('GW_MAIL_TRANSPORT=smtp but neither SMTP_URL nor SMTP_URL_FILE is set.')
+      }
       const { createTransport } = await import('nodemailer')
       await createTransport(url).sendMail({
         from: process.env.SMTP_FROM ?? 'goodworkshop@localhost',
@@ -46,6 +49,24 @@ export async function sendMail(mail: Mail): Promise<void> {
         'GW_MAIL_TRANSPORT=none: no mail can be sent. Use `node scripts/cli.mjs login-link --email ...`.',
       )
   }
+}
+
+/**
+ * The one real secret in the stack, read from a file when there is one.
+ *
+ * `SMTP_URL` carries user and password by convention. As an environment
+ * variable it is visible in `docker inspect`, in /proc/<pid>/environ to every
+ * process in the container, and in any core dump. `SMTP_URL_FILE` is the
+ * ordinary Docker/Compose secrets shape, and it keeps the value on a tmpfs
+ * mount instead.
+ *
+ * Read on demand rather than at import: a rotated secret then takes effect on
+ * the next mail rather than on the next restart.
+ */
+function smtpUrl(): string | undefined {
+  const file = process.env.SMTP_URL_FILE
+  if (file) return readFileSync(file, 'utf8').trim()
+  return process.env.SMTP_URL || undefined
 }
 
 /**

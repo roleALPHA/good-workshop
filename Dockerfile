@@ -6,10 +6,15 @@
 # Run:    docker run -p 3000:3000 goodworkshop
 #
 # No secret ever enters an ARG or a layer. Everything the app needs at runtime
-# (DATABASE_URL, AUTH_SECRET, GW_APP_URL, ...) arrives as an environment
-# variable when the container starts.
+# (DATABASE_URL, GW_APP_URL, SMTP_URL, ...) arrives as an environment variable
+# when the container starts.
+#
+# There is no AUTH_SECRET, despite what this comment used to say. Sessions are
+# rows in Postgres with a per-session random secret, not signed tokens, so
+# there is no signing key -- and naming one told operators they had taken a
+# precaution that does not exist.
 
-ARG NODE_VERSION=22-alpine
+ARG NODE_VERSION=22-alpine@sha256:c610fcdfb1d5b4740dd70c284ed3cb16bb857e0f7166196e36a5501df7a3aa32
 
 # --- deps -------------------------------------------------------------------
 FROM node:${NODE_VERSION} AS deps

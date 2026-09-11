@@ -17,10 +17,20 @@
 #    docker compose exec app node scripts/cli.mjs login-link --email du@example.com
 # ══════════════════════════════════════════════════════════════════════════════
 
-x-db-socket: &db-socket
-  # Kein Datenbank-Passwort, nirgends. Die Anwendung erreicht Postgres über
-  # einen geteilten Unix-Socket mit Peer-Authentifizierung: es gibt kein
-  # Geheimnis, das in eine .env, ein Log oder ein Backup geraten könnte.
+# Kein Datenbank-Passwort, nirgends. Die Rollen authentifizieren sich über einen
+# geteilten Unix-Socket per Peer-Authentifizierung (siehe POSTGRES_INITDB_ARGS
+# unten): es gibt kein Geheimnis, das in eine .env, ein Log oder ein Backup
+# geraten könnte.
+#
+# Zwei Anker statt einem. Der Web-Container bekommt ausschließlich gw_app --
+# die unprivilegierte Rolle, für die RLS, NOINHERIT und das revoke auf die
+# Identitätstabellen gebaut sind. Gäbe man ihm den Anker mit, stünde die
+# Superuser-Verbindung fertig in process.env des einen Containers, den ein
+# Angreifer zuerst erreicht, und der ganze Wall wäre eine Zeile wert.
+x-app-db: &app-db
+  DATABASE_URL: postgres://gw_app@/goodworkshop?host=/var/run/postgresql
+
+x-migrate-db: &migrate-db
   DATABASE_URL: postgres://gw_app@/goodworkshop?host=/var/run/postgresql
   MIGRATION_DATABASE_URL: postgres://gw_owner@/goodworkshop?host=/var/run/postgresql
   ADMIN_DATABASE_URL: postgres://postgres@/goodworkshop?host=/var/run/postgresql
@@ -32,8 +42,12 @@ services:
     environment:
       POSTGRES_DB: goodworkshop
       POSTGRES_USER: postgres
-      # Nur für lokale Socket-Verbindungen; der Port wird nirgends veröffentlicht.
-      POSTGRES_HOST_AUTH_METHOD: trust
+      # Peer über den Socket, nichts über TCP. Der Kommentar hier behauptete
+      # früher Peer-Authentifizierung, während initdb ohne --auth-local auf
+      # `trust` steht: jeder Prozess im App-Container und jeder Nachbarcontainer
+      # konnte sich als postgres verbinden. POSTGRES_HOST_AUTH_METHOD betrifft
+      # ausschließlich TCP und hat den Socket nie berührt.
+      POSTGRES_INITDB_ARGS: '--auth-local=peer --auth-host=reject'
     volumes:
       - pgdata:/var/lib/postgresql/data
       - pgsocket:/var/run/postgresql
@@ -47,14 +61,14 @@ services:
   # erfolgreich durch ist -- ein Rolling Deploy mit ausstehender Migration
   # liefert damit gar nichts erst aus.
   migrate:
-    image: ghcr.io/rolealpha/good-workshop:${GW_VERSION:-latest}
+    image: ghcr.io/rolealpha/good-workshop:${GW_VERSION:?GW_VERSION muss gesetzt sein -- ein beweglicher Tag ist kein Deployment}
     restart: 'no'
     command: >-
       sh -c "node scripts/db-bootstrap.mjs &&
              node scripts/migrate.mjs &&
              node scripts/provision.mjs"
     environment:
-      <<: *db-socket
+      <<: *migrate-db
       GW_APP_URL: ${GW_APP_URL:?GW_APP_URL muss gesetzt sein}
       GW_EDITION: ${GW_EDITION:-community}
       # Legt beim allerersten Lauf einen Admin an und druckt einen einmaligen
@@ -67,14 +81,24 @@ services:
         condition: service_healthy
 
   app:
-    image: ghcr.io/rolealpha/good-workshop:${GW_VERSION:-latest}
+    image: ghcr.io/rolealpha/good-workshop:${GW_VERSION:?GW_VERSION muss gesetzt sein -- ein beweglicher Tag ist kein Deployment}
     restart: unless-stopped
     environment:
-      <<: *db-socket
+      <<: *app-db
       GW_APP_URL: ${GW_APP_URL:?GW_APP_URL muss gesetzt sein}
       GW_RP_ID: ${GW_RP_ID:-}
-      GW_MAIL_TRANSPORT: ${GW_MAIL_TRANSPORT:-console}
+      # Ohne Default. `console` druckt vollständige, gültige Anmeldelinks nach
+      # stdout -- eine richtige Entscheidung für eine Installation ohne Relay,
+      # und eine, die man trifft, statt sie zu bekommen, weil man nichts gesagt
+      # hat. Wer `docker logs` lesen kann, konnte sich sonst für jede beliebige
+      # Adresse einen Link ausstellen lassen und abholen.
+      GW_MAIL_TRANSPORT: ${GW_MAIL_TRANSPORT:?GW_MAIL_TRANSPORT muss gesetzt sein -- smtp, console oder none}
+      # Entweder die URL direkt -- oder, besser, SMTP_URL_FILE auf ein Docker
+      # Secret. Eine Environment-Variable mit Passwort steht in `docker
+      # inspect`, in /proc/<pid>/environ und in jedem Core-Dump; ein Secret
+      # liegt auf einem tmpfs und nur im Dateisystem des Containers.
       SMTP_URL: ${SMTP_URL:-}
+      SMTP_URL_FILE: ${SMTP_URL_FILE:-}
       SMTP_FROM: ${SMTP_FROM:-}
       GW_EDITION: ${GW_EDITION:-community}
       GW_COLLAB_PORT: '3001'
@@ -98,6 +122,14 @@ services:
     profiles: [tls]
     image: caddy:2-alpine
     restart: unless-stopped
+    # `{$GW_HOSTNAME}` im Caddyfile ist Caddys eigene Substitution INNERHALB des
+    # gemounteten Files, keine Compose-Interpolation -- und Compose reicht .env
+    # nicht von sich aus in Container. Ohne diese Zeile hat der Site-Block keine
+    # Adresse, der Proxy kommt nicht hoch, und weil `app` nur an 127.0.0.1
+    # hängt, ist die Installation von außen unerreichbar. Der nächste Griff des
+    # Betreibers ist dann HTTP ohne TLS.
+    environment:
+      GW_HOSTNAME: ${GW_HOSTNAME:?GW_HOSTNAME muss gesetzt sein}
     ports:
       - '80:80'
       - '443:443'

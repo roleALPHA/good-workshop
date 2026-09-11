@@ -70,6 +70,15 @@ export function auditAuthConfig(): string[] {
         'Magic links are the only way in. Use the `tls` compose profile.',
     )
   }
+  if (authConfig.mailTransport === 'console') {
+    warnings.push(
+      'GW_MAIL_TRANSPORT=console: complete, working magic links are printed to stdout. ' +
+        'Anyone who can read the container log -- the docker group, a log aggregator, a ' +
+        'support attachment, a backup -- can request a link for any address and take that ' +
+        'account. Reasonable for an install with no relay; set GW_MAIL_TRANSPORT=smtp once ' +
+        'there is one.',
+    )
+  }
   if (authConfig.mailTransport === 'none') {
     warnings.push(
       'GW_MAIL_TRANSPORT=none: no magic links can be delivered. ' +

@@ -5,9 +5,10 @@
 -- against. This runs before any table exists and is the foundation the whole
 -- tenant boundary rests on.
 --
--- Roles are created WITHOUT a password here. Handing out credentials is an
--- operator concern, not a migration concern -- `scripts/db-bootstrap.mjs` sets
--- them from the environment.
+-- Roles are created WITHOUT a password, here and anywhere else: they
+-- authenticate over the Unix socket with peer authentication, so there is no
+-- credential to set, rotate, leak or find in a backup. Nothing in this
+-- repository ever assigns one.
 -- ═══════════════════════════════════════════════════════════════════════════
 
 create extension if not exists citext;
