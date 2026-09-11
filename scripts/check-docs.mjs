@@ -190,6 +190,31 @@ const readByCode = new Set(
   ].map((m) => m[1]),
 )
 
+/**
+ * Names the code knows as a plain string, not as `process.env.X`.
+ *
+ * resolveMailConfig deliberately takes the environment as a parameter so it can
+ * be unit-tested, which puts SMTP_FROM in a type literal rather than behind
+ * `process.env.` -- and this check declared a documented, working variable dead.
+ * The question it wants answered is "does the code know this name at all".
+ */
+for (const [, name] of execFileSync(
+  'git',
+  [
+    'grep',
+    '--untracked',
+    '-hoE',
+    "'(GW_|SMTP_)[A-Z0-9_]+'",
+    '--',
+    'src',
+    'scripts',
+    'next.config.ts',
+  ],
+  { encoding: 'utf8' },
+).matchAll(/'((?:GW_|SMTP_)[A-Z0-9_]+)'/g)) {
+  readByCode.add(name)
+}
+
 for (const name of fromEnvFile) {
   if (name in INTERNAL) continue
   if (!documented.has(name)) {

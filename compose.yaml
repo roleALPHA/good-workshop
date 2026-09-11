@@ -78,6 +78,7 @@ services:
       - secret_gw_owner:/run/db-secrets/gw_owner
       - secret_gw_app:/run/db-secrets/gw_app
       - secret_gw_ops:/run/db-secrets/gw_ops
+      - secret_app:/run/db-secrets/app
 
   db:
     image: postgres:17-alpine
@@ -181,6 +182,11 @@ services:
       # Standen in .env.example und in der README, erreichten den Container aber
       # nicht: eine dokumentierte Variable, die nirgends ankommt, ist eine
       # Anleitung, die ins Leere führt. `check-docs.mjs` prüft das jetzt.
+      # Entschlüsselt die in der Oberfläche hinterlegten Zugangsdaten. Ohne
+      # Wert wird die Datei aus dem Volume benutzt; wer den Schlüssel lieber
+      # selbst verwaltet, setzt GW_SECRET_KEY in der .env.
+      GW_SECRET_KEY: ${GW_SECRET_KEY:-}
+      GW_SECRET_KEY_FILE: ${GW_SECRET_KEY_FILE:-/run/db-secrets/app/secret-key}
       GW_COLLAB_URL: ${GW_COLLAB_URL:-}
       GW_COLLAB_INTERNAL_URL: ${GW_COLLAB_INTERNAL_URL:-}
       # Ohne diesen Wert antwortet /api/health nur mit "ok" bzw. "unhealthy"
@@ -194,8 +200,13 @@ services:
     # EINS. Der Web-Container kennt das Passwort von gw_app und von keiner
     # anderen Rolle -- das ist der "zwei Anker"-Punkt von oben, in Dateiform.
     # Läge hier das Superuser-Geheimnis mit, wäre der ganze Wall eine Zeile wert.
+    #
+    # Dazu der Anwendungsschlüssel: er entschlüsselt die Zugangsdaten, die eine
+    # Administratorin in der Oberfläche einträgt. Er gehört ins Backup -- anders
+    # als die Rollen-Passwörter, die jede Installation neu erzeugen kann.
     volumes:
       - secret_gw_app:/run/db-secrets/gw_app:ro
+      - secret_app:/run/db-secrets/app:ro
     # Nur an 127.0.0.1, nie an 0.0.0.0: ohne den Proxy davor ist nichts
     # erreichbar, auch bei falsch stehender Firewall nicht.
     #
@@ -251,5 +262,6 @@ volumes:
   secret_gw_owner:
   secret_gw_app:
   secret_gw_ops:
+  secret_app:
   caddy_data:
   caddy_config:

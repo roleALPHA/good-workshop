@@ -1,6 +1,13 @@
 #!/usr/bin/env node
 /**
- * Creates one password per database role, once, into a shared volume.
+ * Creates the secrets an installation needs, once, into volumes of their own.
+ *
+ * Named db-secrets because it began as the database half, and kept that name on
+ * purpose when the application key was added: compose.yaml on every running
+ * installation invokes this path by name, and a rename would take the next
+ * automatic image update down with it. The name is a little narrow; a stack
+ * that stops starting at three in the morning is worse.
+ *
  *
  * WHY THERE ARE PASSWORDS AT ALL. The earlier design authenticated over a
  * shared Unix socket with peer authentication and kept no secret anywhere,
@@ -47,15 +54,36 @@ const dir = process.env.GW_DB_SECRETS_DIR ?? '/run/db-secrets'
  */
 const ROLES = ['postgres', 'gw_owner', 'gw_app', 'gw_ops']
 
+/**
+ * The application key, in its own directory next to the role passwords.
+ *
+ * It encrypts the configured credentials in tenant.settings -- the SMTP URL, the
+ * Graph client secret -- so that a database dump alone cannot send mail as the
+ * organisation.
+ *
+ * IT BELONGS IN THE BACKUP. Unlike the role passwords, which any fresh install
+ * can regenerate, this one is the only thing that can read values already in
+ * the database. Restore a dump without it and those two fields come back empty:
+ * nothing else breaks, and the operator types them again -- but they should
+ * know that before it happens, which is why the README says so next to pg_dump.
+ */
+const APP_KEY = 'app'
+
 let created = 0
-for (const role of ROLES) {
-  const file = join(dir, role, 'password')
+for (const role of [...ROLES, APP_KEY]) {
+  const file = join(dir, role, role === APP_KEY ? 'secret-key' : 'password')
   mkdirSync(join(dir, role), { recursive: true })
 
   if (!existsSync(file) || readFileSync(file, 'utf8').trim().length < 32) {
     // base64url: no characters that need escaping inside a connection URL, and
     // none that a shell would interpret if somebody echoes the file.
-    writeFileSync(file, randomBytes(33).toString('base64url'), { mode: 0o644 })
+    //
+    // The application key is EXACTLY 32 bytes because AES-256 takes a 256-bit
+    // key and secretbox.ts refuses anything else rather than padding it. The
+    // role passwords have no such constraint; 33 bytes only avoids the `=`
+    // padding that 32 would produce.
+    const bytes = role === APP_KEY ? 32 : 33
+    writeFileSync(file, randomBytes(bytes).toString('base64url'), { mode: 0o644 })
     created += 1
   }
 
@@ -67,6 +95,6 @@ for (const role of ROLES) {
 
 console.log(
   created === 0
-    ? `Datenbank-Passwörter vorhanden (${ROLES.length} Rollen).`
-    : `${created} Datenbank-Passwort/-Passwörter erzeugt.`,
+    ? `Geheimnisse vorhanden (${ROLES.length} Rollen und der Anwendungsschlüssel).`
+    : `${created} Geheimnis/-se erzeugt.`,
 )

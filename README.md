@@ -238,6 +238,17 @@ Die Datenbank-Passwörter liegen in eigenen Docker-Volumes (`secret_*`) und sind
 Dump enthalten. Für eine Wiederherstellung auf einem neuen Server braucht es sie auch nicht:
 `secrets` erzeugt neue, und `migrate` setzt sie auf den Rollen.
 
+**Eine Ausnahme: der Anwendungsschlüssel.** Er entschlüsselt die Mail-Zugangsdaten, die in der
+Oberfläche hinterlegt wurden, und ist das Einzige, was Werte lesen kann, die schon in der
+Datenbank stehen. Er gehört deshalb zur Sicherung dazu:
+
+```bash
+docker compose exec -T app cat /run/db-secrets/app/secret-key > goodworkshop-key.txt
+```
+
+Geht er verloren, kommt der Dump mit **leeren** Mail-Zugangsdaten zurück. Sonst bleibt alles
+heil — Workshops, Mitglieder, Branding —, und die Zugangsdaten werden einmal neu eingetragen.
+
 ### Ohne HTTPS betreiben
 
 Möglich, mit drei Konsequenzen: **keine Passkeys**, das Session-Cookie trägt kein `Secure`
@@ -256,25 +267,26 @@ ssh -L 3000:127.0.0.1:3000 server
 
 ### Konfiguration
 
-| Variable                                                 | Pflicht     | Bedeutung                                                                                                                                              |
-| -------------------------------------------------------- | ----------- | ------------------------------------------------------------------------------------------------------------------------------------------------------ |
-| `GW_APP_URL`                                             | ja          | Adresse, unter der die App erreichbar ist. Leitet Anmeldelinks und die WebAuthn-Origin ab.                                                             |
-| `GW_HOSTNAME`                                            | für `tls`   | Name im Zertifikat. Wird an Caddy durchgereicht.                                                                                                       |
-| `GW_MAIL_TRANSPORT`                                      | ja          | `smtp`, `graph`, `console` oder `none`.                                                                                                                |
-| `GW_GRAPH_TENANT_ID`                                     | bei `graph` | Microsoft-365-Mandant, als Domäne oder Verzeichnis-ID.                                                                                                 |
-| `GW_GRAPH_CLIENT_ID`                                     | bei `graph` | Anwendungs-ID der App-Registrierung.                                                                                                                   |
-| `GW_GRAPH_CLIENT_SECRET` / `GW_GRAPH_CLIENT_SECRET_FILE` | bei `graph` | Das Geheimnis der Registrierung, direkt oder aus einer Datei.                                                                                          |
-| `GW_GRAPH_SENDER`                                        | bei `graph` | Postfach, aus dem gesendet wird.                                                                                                                       |
-| `GW_VERSION`                                             | ja          | Image-Tag. Bewusst ohne Standardwert — ein beweglicher Tag ist kein Deployment.                                                                        |
-| `SMTP_URL` / `SMTP_URL_FILE`                             | bei `smtp`  | Relay-URL, direkt oder aus einer Datei.                                                                                                                |
-| `SMTP_FROM`                                              | bei `smtp`  | Absenderadresse.                                                                                                                                       |
-| `GW_RP_ID`                                               | nein        | WebAuthn Relying Party ID. Leer = Host aus `GW_APP_URL`. Nachträgliche Änderung entwertet alle Passkeys.                                               |
-| `GW_BOOTSTRAP_ADMIN_EMAIL`                               | nein        | Legt beim allerersten Start einen Admin an und druckt dessen Link.                                                                                     |
-| `GW_OPS_TOKEN`                                           | nein        | Macht `/api/health` mit Header `x-ops-token` ausführlich (Version, Migrationsstand, Treiberfehler). Ohne ihn bleibt der öffentliche Endpunkt wortkarg. |
-| `GW_TRUSTED_PROXIES`                                     | nein        | Zahl der Proxys davor (Standard 1). Nur für Drosselung und Logs, nie für eine Berechtigung.                                                            |
-| `GW_SESSION_IDLE_DAYS`                                   | nein        | Nach wie vielen Tagen ohne Nutzung eine Session verfällt (Standard 14).                                                                                |
-| `GW_PORT`, `GW_COLLAB_PORT`                              | nein        | Ports auf `127.0.0.1`, falls die Standardwerte belegt sind.                                                                                            |
-| `GW_COLLAB_URL`, `GW_COLLAB_INTERNAL_URL`                | nein        | Nur nötig, wenn der Kollaborations-Dienst nicht unter `/collab` auf demselben Host liegt.                                                              |
+| Variable                                                 | Pflicht     | Bedeutung                                                                                                                                               |
+| -------------------------------------------------------- | ----------- | ------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `GW_APP_URL`                                             | ja          | Adresse, unter der die App erreichbar ist. Leitet Anmeldelinks und die WebAuthn-Origin ab.                                                              |
+| `GW_HOSTNAME`                                            | für `tls`   | Name im Zertifikat. Wird an Caddy durchgereicht.                                                                                                        |
+| `GW_MAIL_TRANSPORT`                                      | ja          | `smtp`, `graph`, `console` oder `none`.                                                                                                                 |
+| `GW_GRAPH_TENANT_ID`                                     | bei `graph` | Microsoft-365-Mandant, als Domäne oder Verzeichnis-ID.                                                                                                  |
+| `GW_GRAPH_CLIENT_ID`                                     | bei `graph` | Anwendungs-ID der App-Registrierung.                                                                                                                    |
+| `GW_GRAPH_CLIENT_SECRET` / `GW_GRAPH_CLIENT_SECRET_FILE` | bei `graph` | Das Geheimnis der Registrierung, direkt oder aus einer Datei.                                                                                           |
+| `GW_GRAPH_SENDER`                                        | bei `graph` | Postfach, aus dem gesendet wird.                                                                                                                        |
+| `GW_VERSION`                                             | ja          | Image-Tag. Bewusst ohne Standardwert — ein beweglicher Tag ist kein Deployment.                                                                         |
+| `SMTP_URL` / `SMTP_URL_FILE`                             | bei `smtp`  | Relay-URL, direkt oder aus einer Datei.                                                                                                                 |
+| `SMTP_FROM`                                              | bei `smtp`  | Absenderadresse.                                                                                                                                        |
+| `GW_RP_ID`                                               | nein        | WebAuthn Relying Party ID. Leer = Host aus `GW_APP_URL`. Nachträgliche Änderung entwertet alle Passkeys.                                                |
+| `GW_BOOTSTRAP_ADMIN_EMAIL`                               | nein        | Legt beim allerersten Start einen Admin an und druckt dessen Link.                                                                                      |
+| `GW_OPS_TOKEN`                                           | nein        | Macht `/api/health` mit Header `x-ops-token` ausführlich (Version, Migrationsstand, Treiberfehler). Ohne ihn bleibt der öffentliche Endpunkt wortkarg.  |
+| `GW_SECRET_KEY` / `GW_SECRET_KEY_FILE`                   | nein        | Verschlüsselt die in der Oberfläche hinterlegten Mail-Zugangsdaten. Leer lassen: der Stack erzeugt ihn selbst. **Gehört ins Backup** — siehe „Sichern“. |
+| `GW_TRUSTED_PROXIES`                                     | nein        | Zahl der Proxys davor (Standard 1). Nur für Drosselung und Logs, nie für eine Berechtigung.                                                             |
+| `GW_SESSION_IDLE_DAYS`                                   | nein        | Nach wie vielen Tagen ohne Nutzung eine Session verfällt (Standard 14).                                                                                 |
+| `GW_PORT`, `GW_COLLAB_PORT`                              | nein        | Ports auf `127.0.0.1`, falls die Standardwerte belegt sind.                                                                                             |
+| `GW_COLLAB_URL`, `GW_COLLAB_INTERNAL_URL`                | nein        | Nur nötig, wenn der Kollaborations-Dienst nicht unter `/collab` auf demselben Host liegt.                                                               |
 
 ## Stolperfallen
 

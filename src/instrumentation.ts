@@ -21,4 +21,14 @@ export async function register(): Promise<void> {
   for (const warning of auditAuthConfig()) {
     console.warn(`! ${warning}`)
   }
+
+  // The import must sit DIRECTLY under the NEXT_RUNTIME check, not inside a
+  // helper that is called from here: webpack substitutes the variable at build
+  // time and then drops the branch, but only when it can see the import in it.
+  // With the call one level down it followed the module graph into the database
+  // driver and failed the edge bundle on `fs`.
+  if (process.env.NEXT_RUNTIME === 'nodejs') {
+    const { announceSetup } = await import('./instrumentation-node')
+    await announceSetup()
+  }
 }
