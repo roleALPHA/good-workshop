@@ -5,10 +5,13 @@ import { uuidv7 } from 'uuidv7'
 import type { McpServer } from '@modelcontextprotocol/sdk/server/mcp.js'
 import {
   assertWorkshopAccess,
+  ForbiddenError,
+  NotFoundError,
   VersionConflictError,
   type WorkshopAccess,
 } from '@/domain/agenda/access'
 import { loadDay } from '@/domain/agenda/repo'
+import { publicToolError } from './errors'
 import {
   addClusterBlock,
   addModuleBlock,
@@ -579,5 +582,11 @@ function toolError(error: unknown) {
         'Lies ihn mit get_workshop neu und schicke die neue contentVersion mit.',
     )
   }
-  return fail(error instanceof Error ? error.message : 'Unbekannter Fehler.')
+  // NotFoundError and ForbiddenError are answers to the request and say so;
+  // everything else is an internal failure and gets an id instead of its
+  // innards. See publicToolError.
+  if (error instanceof NotFoundError || error instanceof ForbiddenError) {
+    return fail(error.message)
+  }
+  return fail(publicToolError(error).message)
 }

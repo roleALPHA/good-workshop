@@ -241,19 +241,39 @@ export type RawBlock = {
  * order, and reconstructing one from an ordinal would invent a value where a
  * real one already exists.
  */
+const POSITION_FORMAT = /^[0-9A-Za-z]{1,64}$/
+const MAX_DURATION_MINUTES = 1440
+
+/**
+ * The document says whatever a client put in a Y.Map; the tables have CHECK
+ * constraints. The materialiser sits between the two and only logs when it
+ * fails, so one malformed value used to stop every later write for that day --
+ * permanently, and invisibly from the screen that caused it. The editor keeps
+ * looking right because the editor reads the document; the export, the print
+ * view and every MCP read go to the tables and quietly serve the last state
+ * that got through.
+ *
+ * A block whose sort key cannot be repaired is dropped rather than guessed at:
+ * inventing a position would move somebody's agenda item to a place they did
+ * not put it. A duration is clamped, because a number out of range still says
+ * what the block is, only not how long.
+ */
 export function readBlocks(doc: Y.Doc): RawBlock[] {
   const out: RawBlock[] = []
 
   blocksOf(doc).forEach((block, id) => {
     const kind = block.get('kind') === 'cluster' ? 'cluster' : 'module'
+    const position = String(block.get('position') ?? '')
+    if (!POSITION_FORMAT.test(position)) return
+
     out.push({
       id,
       kind,
-      position: String(block.get('position') ?? ''),
+      position,
       parentId: (block.get('parentId') as string | null) ?? null,
       title: String(block.get('title') ?? ''),
       moduleTypeId: (block.get('moduleTypeId') as string | undefined) ?? null,
-      durationMinutes: Number(block.get('durationMinutes') ?? 0),
+      durationMinutes: clampDuration(block.get('durationMinutes')),
       pinnedStartMinute: (block.get('pinnedStartMinute') as number | null) ?? null,
       color: (block.get('color') as string | null) ?? null,
       desc: (block.get('desc') as Record<string, unknown>) ?? {},
@@ -261,6 +281,12 @@ export function readBlocks(doc: Y.Doc): RawBlock[] {
   })
 
   return out
+}
+
+function clampDuration(raw: unknown): number {
+  const minutes = Math.round(Number(raw))
+  if (!Number.isFinite(minutes)) return 0
+  return Math.min(Math.max(minutes, 0), MAX_DURATION_MINUTES)
 }
 
 export function readDayFields(doc: Y.Doc): { startMinute: number; title: string } {

@@ -70,7 +70,7 @@ export function renderDayMarkdown(
     )
   }
 
-  out.push(`# ${workshop.title}`)
+  out.push(`# ${text(workshop.title)}`)
 
   const summary = [
     day.title || null,
@@ -149,7 +149,7 @@ function renderOutline(
     if (row.kind === 'cluster') {
       lines.push(
         '',
-        `## ${row.cluster.title}`,
+        `## ${text(row.cluster.title)}`,
         `*${formatTime(entry.startMinute)} · ${formatDuration(entry.durationMinutes, { spaced: true })}*`,
       )
       continue
@@ -159,7 +159,7 @@ function renderOutline(
     const type = day.moduleTypes[row.module.moduleTypeId]
     lines.push(
       '',
-      `### ${formatTime(entry.startMinute)}${entry.pinned ? ' 🔒' : ''} · ${row.module.title}`,
+      `### ${formatTime(entry.startMinute)}${entry.pinned ? ' 🔒' : ''} · ${text(row.module.title)}`,
       `\`${formatDuration(entry.durationMinutes)}\`${type ? ` · ${type.name}` : ''}`,
     )
     lines.push(...describeModule(row.module.desc, opts))
@@ -184,7 +184,7 @@ function renderDetails(
     const entry = schedule.entries.get(row.id)
     lines.push(
       '',
-      `### ${entry ? formatTime(entry.startMinute) + ' · ' : ''}${row.module.title}`,
+      `### ${entry ? formatTime(entry.startMinute) + ' · ' : ''}${text(row.module.title)}`,
       ...body,
     )
   }
@@ -299,8 +299,28 @@ const VALUE_LABELS: Record<string, string> = {
 
 const value = (raw: string) => VALUE_LABELS[raw] ?? raw
 
-/** `|` and newlines would break the row; user content stays otherwise untouched. */
-const cell = (value: string) => value.replaceAll('|', '\\|').replaceAll('\n', ' ')
+/**
+ * User text on its way into the document.
+ *
+ * The export is a Markdown file, and Markdown renderers pass raw HTML through
+ * by default -- wikis, static site generators, chat tools. This file is not the
+ * end of the journey, so a title of `<img src=x onerror=...>` would be inert
+ * here and live wherever somebody pastes it.
+ *
+ * Only the angle brackets. Escaping the ampersand as well was the first
+ * attempt, and it was wrong: this fixture alone has "Ankommen & Rahmen" and
+ * "Begrüßung & Organisatorisches", and an export is read as plain text at
+ * least as often as it is rendered -- turning those into "&amp;" damages the
+ * common case to defend against nothing. An ampersand cannot open a tag, and
+ * an entity a user types stays an entity: HTML does not re-parse it into one.
+ *
+ * Markdown's own punctuation is left alone too. Emphasis is not an exploit,
+ * and escaping asterisks would mangle every title that contains one.
+ */
+const text = (value: string) => value.replaceAll('<', '&lt;').replaceAll('>', '&gt;')
+
+/** As above, plus the two characters that would break out of a table row. */
+const cell = (value: string) => text(value).replaceAll('|', '\\|').replaceAll('\n', ' ')
 
 const yaml = (value: string) => JSON.stringify(value)
 

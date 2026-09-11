@@ -207,8 +207,17 @@ async function identify(request: IncomingMessage): Promise<Actor | null> {
     tenantId: session.tenantId,
     memberId: session.memberId,
     tenantRole: session.tenantRole,
+    displayName: session.displayName || session.email,
     source: 'web',
   }
+}
+
+/**
+ * A name for an actor that has none. An MCP token belongs to a person, but the
+ * room is showing what is typing, and that is the tool.
+ */
+function fallbackName(actor: Actor): string {
+  return actor.source === 'mcp' ? 'KI-Assistent' : 'Mitglied'
 }
 
 async function attach(
@@ -295,14 +304,19 @@ async function attach(
 
   const open = room
   deliver = (data) => {
-    void handleMessage(open, connection, data).catch((error) => {
+    void handleMessage(open, connection, data, actor).catch((error) => {
       console.error('collab: bad message', { dayId, error })
     })
   }
   for (const data of queued.splice(0)) deliver(data)
 }
 
-async function handleMessage(room: Room, connection: Connection, data: Uint8Array): Promise<void> {
+async function handleMessage(
+  room: Room,
+  connection: Connection,
+  data: Uint8Array,
+  actor: Actor,
+): Promise<void> {
   const decoder = decoding.createDecoder(data)
   const type = decoding.readVarUint(decoder)
 
@@ -319,7 +333,10 @@ async function handleMessage(room: Room, connection: Connection, data: Uint8Arra
 
   if (type === MESSAGE_AWARENESS) {
     const update = decoding.readVarUint8Array(decoder)
-    room.applyAwareness(update, connection)
+    room.applyAwareness(update, connection, {
+      displayName: actor.displayName?.trim() || fallbackName(actor),
+      source: actor.source,
+    })
     return
   }
 

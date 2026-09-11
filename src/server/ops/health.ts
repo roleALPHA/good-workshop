@@ -14,6 +14,38 @@ import { withoutTenant } from '@/server/db'
 
 export type Check = { name: string; ok: boolean; detail?: string }
 
+export type HealthReport = {
+  status: 'ok' | 'unhealthy'
+  version?: string
+  checks: { name: string; ok: boolean; detail?: string }[]
+}
+
+/**
+ * What the endpoint is allowed to say to a stranger.
+ *
+ * /api/health sits behind the proxy's catch-all, so it answers the open
+ * internet. It used to return the exact commit it was running -- tag plus SHA,
+ * against a public repository, which is a version oracle for picking known
+ * issues -- the names of migrations it was missing, and, when the database was
+ * unreachable, whatever the driver put in the message: internal hostnames,
+ * ports, role names.
+ *
+ * None of that answers the only question a health check is asked, which is
+ * whether this container can serve. Which check failed still does, and stays:
+ * an operator reading a 503 needs to know it was the database and not the
+ * migrations, and that much is not worth hiding.
+ */
+export function publicReport(
+  checks: Check[],
+  version: string,
+  options: { detailed?: boolean } = {},
+): HealthReport {
+  const status = checks.every((c) => c.ok) ? 'ok' : 'unhealthy'
+  if (options.detailed) return { status, version, checks }
+
+  return { status, checks: checks.map(({ name, ok }) => ({ name, ok })) }
+}
+
 export async function runChecks(): Promise<Check[]> {
   const database = await checkDatabase()
   // Only worth asking once the connection is known to work; otherwise it

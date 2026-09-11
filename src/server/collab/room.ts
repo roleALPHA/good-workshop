@@ -8,12 +8,41 @@ import {
 import { assertWorkshopAccess } from '@/domain/agenda/access'
 import { loadDay } from '@/domain/agenda/repo'
 import { dayOf, seedFromDayDoc } from '@/domain/collab/doc'
+import { authoritativePresence, type PresenceActor } from '@/domain/collab/presence'
 import { eq } from 'drizzle-orm'
 import type { Actor } from '@/server/db'
 import { withTenant } from '@/server/db'
 import { workshop } from '@/server/db/schema'
 import { materializeDay } from './materialize'
 import { appendUpdate, loadDoc, maybeCompact } from './store'
+
+/**
+ * Decode, replace the identity, re-encode.
+ *
+ * A scratch Awareness over a throwaway document rather than the room's own:
+ * applying the client's update to the room first is exactly what has to be
+ * avoided, and reading the room's states would mix in every other peer.
+ */
+function authoritative(update: Uint8Array, actor: PresenceActor): Uint8Array {
+  const scratch = new Awareness(new Y.Doc())
+  try {
+    applyAwarenessUpdate(scratch, update, 'rewrite')
+
+    const clients = [...scratch.getStates().keys()]
+    for (const client of clients) {
+      const state = scratch.getStates().get(client)
+      if (!state) continue
+      state.user = authoritativePresence(
+        state.user as { name?: string; hue?: number; kind?: 'person' | 'model' } | undefined,
+        actor,
+      )
+    }
+
+    return encodeAwarenessUpdate(scratch, clients)
+  } finally {
+    scratch.destroy()
+  }
+}
 
 /**
  * One open workshop day, shared by everyone currently editing it.
@@ -155,8 +184,20 @@ export class Room {
     }
   }
 
-  applyAwareness(update: Uint8Array, origin: Connection): void {
-    applyAwarenessUpdate(this.awareness, update, origin)
+  /**
+   * Awareness from a client, with the identity replaced by the one the server
+   * established at the handshake.
+   *
+   * Rewritten BEFORE it is applied, not after. `applyAwarenessUpdate` fires its
+   * 'update' event synchronously, and that event is what broadcasts to the
+   * other peers -- so correcting the stored state afterwards would send the
+   * forged version first and fix it for nobody.
+   *
+   * The rewrite covers whatever client id the connection writes, including
+   * somebody else's: a connection can only ever publish its own identity.
+   */
+  applyAwareness(update: Uint8Array, origin: Connection, actor: PresenceActor): void {
+    applyAwarenessUpdate(this.awareness, authoritative(update, actor), origin)
   }
 
   broadcastAwareness(clients: number[]): void {

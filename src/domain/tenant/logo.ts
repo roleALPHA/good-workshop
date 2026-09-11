@@ -42,7 +42,17 @@ const FORBIDDEN: [RegExp, string][] = [
   [/javascript\s*:/i, 'javascript:-URLs'],
   // Local references (#gradient) are fine and common; anything reaching out is
   // a request to another server every time the page is opened.
-  [/(?:xlink:)?href\s*=\s*["'](?!#)[^"']*:/i, 'externe Verweise'],
+  //
+  // Unquoted attribute values count. The first version of this pattern
+  // required a quote before the scheme, so `<use href=data:image/svg+xml,...>`
+  // walked straight past it -- and unquoted attributes are perfectly ordinary
+  // HTML-ish markup that browsers accept without complaint.
+  [/(?:xlink:)?href\s*=\s*(?:["'](?!#)[^"']*:|(?!["'#])[^\s>]*:)/i, 'externe Verweise'],
+  // Entities are a way to write anything at all somewhere else in the document
+  // and have the parser assemble it here, which defeats every pattern above.
+  // A logo has no legitimate use for a DTD.
+  [/<!DOCTYPE/i, 'eine DTD'],
+  [/<!ENTITY/i, 'XML-Entities'],
 ]
 
 export type Logo = { data: string; mime: LogoType }
@@ -67,8 +77,15 @@ export function readLogo(bytes: Uint8Array, mime: string): Logo {
 
   if (mime === 'image/svg+xml') {
     const text = new TextDecoder().decode(bytes)
-    if (!/<\s*svg[\s>]/i.test(text))
+    // Checked at the front of the file, not anywhere in it. Raster formats are
+    // verified by signature; SVG used to be matched with a regex against
+    // content the client also labelled, so a file could open with anything at
+    // all -- a GIF header, say -- and still pass because an <svg> appeared
+    // further down. The declared type is the client's claim, and the file is
+    // served back under it.
+    if (!/^\s*(?:<\?xml[^>]*>\s*)?<\s*svg[\s>]/i.test(text)) {
       throw new LogoError('Das sieht nicht nach einer SVG-Datei aus.')
+    }
 
     for (const [pattern, what] of FORBIDDEN) {
       if (pattern.test(text)) {
