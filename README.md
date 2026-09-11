@@ -253,6 +253,35 @@ docker compose exec -T app cat /run/db-secrets/app/secret-key > goodworkshop-key
 Geht er verloren, kommt der Dump mit **leeren** Mail-Zugangsdaten zurück. Sonst bleibt alles
 heil — Workshops, Mitglieder, Branding —, und die Zugangsdaten werden einmal neu eingetragen.
 
+**Nächtlich sichern.** Drei Dinge gehören ins Archiv, und nur die drei: der Dump, der
+Anwendungsschlüssel und die `.env`. Die Datenbank-Passwörter nicht — die erzeugt der Stack
+bei jedem Start neu.
+
+```bash
+cd /pfad/zum/stack
+./scripts/backup.sh "$ZIEL/goodworkshop.sql.gz"
+cp "$(docker volume inspect goodworkshop_secret_app --format '{{.Mountpoint}}')/secret-key" "$ZIEL/"
+cp .env "$ZIEL/"
+```
+
+Der Schlüssel kommt hier vom Volume statt über `docker compose exec`: eine Sicherung, die nur
+gelingt, solange die Anwendung läuft, fehlt genau in der Nacht, in der etwas kaputt war. Der
+Volume-Name trägt den Projektnamen vorweg — das ist der Verzeichnisname des Stacks, sofern
+nicht `COMPOSE_PROJECT_NAME` etwas anderes sagt; `docker volume ls` zeigt ihn.
+
+Wer einen bestehenden Sicherungslauf um GoodWorkshop erweitert: mit `set -e` bricht der ganze
+Lauf ab, wenn der Dump scheitert — auch für die anderen Dienste darin. Das ist die richtige
+Wahl. Ein Lauf, der einen Dienst still überspringt und trotzdem „fertig" meldet, ist der Weg
+zu einem Archiv, dem man vertraut, ohne dass es trägt.
+
+**Prüfen, was im Archiv steht, nicht ob es existiert.** Ein gescheiterter Dump ergibt ein
+gültiges gzip-Archiv von 20 Byte — vorhanden, lesbar, leer. Nachsehen, ob die Abschlusszeile
+von `pg_dump` da ist, kostet eine Zeile und beantwortet die Frage wirklich:
+
+```bash
+gzip -dc goodworkshop.sql.gz | tail -c 400 | grep -c 'dump complete'
+```
+
 ### Ohne HTTPS betreiben
 
 Möglich, mit drei Konsequenzen: **keine Passkeys**, das Session-Cookie trägt kein `Secure`
