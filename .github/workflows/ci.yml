@@ -244,9 +244,14 @@ jobs:
             exit 1
           }
 
-      # Der Web-Container darf ausschließlich das Geheimnis von gw_app kennen.
-      # Läge das Superuser-Passwort mit darin, wäre die Rollentrennung, auf der
-      # RLS und NOINHERIT aufbauen, eine Zeile wert.
+      # Der Web-Container darf von den DATENBANKROLLEN ausschließlich gw_app
+      # kennen. Läge das Superuser-Passwort mit darin, wäre die Rollentrennung,
+      # auf der RLS und NOINHERIT aufbauen, eine Zeile wert.
+      #
+      # `app` gehört dazu und ist keine Rolle: das ist der Schlüssel, mit dem
+      # die Anwendung die in der Oberfläche hinterlegten Zugangsdaten
+      # entschlüsselt. Deshalb wird hier auf die genaue Liste geprüft und nicht
+      # auf "nur eines" -- ein weiterer Eintrag soll auffallen.
       - name: Der App-Container kennt nur seine eigene Rolle
         run: |
           # `xargs` ohne Argumente: trimmt und fügt mit einfachen Leerzeichen
@@ -254,8 +259,8 @@ jobs:
           # nachgestellten Leerzeichen scheitert.
           secrets=$(docker compose exec -T app ls /run/db-secrets | tr -d '\r' | sort | xargs)
           echo "app sieht: $secrets"
-          [ "$secrets" = "gw_app" ] || {
-            echo "::error::Der App-Container sieht mehr als gw_app: $secrets"
+          [ "$secrets" = "app gw_app" ] || {
+            echo "::error::Der App-Container sieht etwas anderes als 'app gw_app': $secrets"
             exit 1
           }
           if docker compose exec -T app node -e "
