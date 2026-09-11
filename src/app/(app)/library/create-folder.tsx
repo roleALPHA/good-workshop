@@ -1,7 +1,7 @@
 'use client'
 
 import { useRouter } from 'next/navigation'
-import { useState, useTransition } from 'react'
+import { useRef, useState, useTransition } from 'react'
 import { FolderPlus } from 'lucide-react'
 import { createFolderAction } from '@/server/actions/workshop'
 
@@ -13,17 +13,36 @@ export function CreateFolder({ parentId }: { parentId: string | null }) {
   const [error, setError] = useState<string | null>(null)
   const [pending, startTransition] = useTransition()
 
+  /**
+   * Guards against the second commit.
+   *
+   * The field commits on Enter and on blur, which is right for a field you can
+   * leave either way -- but Enter closes it, so the blur that follows used to
+   * fire an identical create while the first was still in flight. The second
+   * one hits the unique index on (parent, name) and fails, which filled the
+   * server log with insert errors for folders that had in fact been created.
+   *
+   * A ref rather than the transition's `pending`, which only turns true on the
+   * next render -- by then both calls are already out.
+   */
+  const sending = useRef(false)
+
   function create() {
-    if (name.trim() === '') return
+    if (sending.current || name.trim() === '') return
+    sending.current = true
     startTransition(async () => {
-      const result = await createFolderAction({ name: name.trim(), parentId })
-      if (!result.ok) {
-        setError(result.message)
-        return
+      try {
+        const result = await createFolderAction({ name: name.trim(), parentId })
+        if (!result.ok) {
+          setError(result.message)
+          return
+        }
+        setName('')
+        setOpen(false)
+        router.refresh()
+      } finally {
+        sending.current = false
       }
-      setName('')
-      setOpen(false)
-      router.refresh()
     })
   }
 

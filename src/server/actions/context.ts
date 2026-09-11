@@ -13,6 +13,7 @@ import {
 } from '@/domain/agenda/access'
 import { TokenError } from '@/domain/tenant/tokens'
 import { TagError } from '@/domain/workshop/tags'
+import { FolderMoveError } from '@/domain/workshop/repo'
 
 /**
  * The one way a server action reaches the database.
@@ -93,7 +94,11 @@ function toResult<T>(error: unknown): ActionResult<T> {
   }
   // Both carry a sentence written for the person reading it. Flattening them
   // into "that did not work" would throw away the only useful part.
-  if (error instanceof TagError || error instanceof TokenError) {
+  if (
+    error instanceof TagError ||
+    error instanceof TokenError ||
+    error instanceof FolderMoveError
+  ) {
     return fail('invalid_input', error.message)
   }
   if (error instanceof VersionConflictError) {

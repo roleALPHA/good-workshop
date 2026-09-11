@@ -39,6 +39,15 @@ export type FolderNode = {
   name: string
   parentId: string | null
   depth: number
+  /**
+   * The materialised path, root first.
+   *
+   * Carried out to the UI because the move menu has to leave a folder's own
+   * subtree out of its options -- and asking "is this one below that one" is
+   * exactly what the path answers. The domain refuses such a move as well; the
+   * menu simply does not offer it.
+   */
+  ancestorIds: string[]
 }
 
 export async function listFolders(tx: Tx): Promise<FolderNode[]> {
@@ -65,7 +74,13 @@ export async function listFolders(tx: Tx): Promise<FolderNode[]> {
   const out: FolderNode[] = []
   const walk = (parentId: string | null, depth: number) => {
     for (const row of byParent.get(parentId) ?? []) {
-      out.push({ id: row.id, name: row.name, parentId: row.parentId, depth })
+      out.push({
+        id: row.id,
+        name: row.name,
+        parentId: row.parentId,
+        depth,
+        ancestorIds: row.ancestors,
+      })
       walk(row.id, depth + 1)
     }
   }
@@ -380,6 +395,77 @@ export async function listTrashedWorkshops(tx: Tx, actor: Actor) {
       ),
     )
     .orderBy(desc(workshop.deletedAt))
+}
+
+export class FolderMoveError extends Error {}
+
+/**
+ * Moves a folder, and the whole subtree under it, to a new parent.
+ *
+ * The materialised path is why this is more than an UPDATE of one column: every
+ * descendant carries the full ancestor chain, so moving a folder rewrites the
+ * prefix of that chain in every row below it. Left undone, the tree view would
+ * still draw the old shape -- and `deleteFolder` would lift children to a
+ * grandparent that is no longer above them.
+ *
+ * Refuses to move a folder into itself or into its own descendant. That is not
+ * a theoretical case: it is what a drag onto the wrong row does, and the result
+ * would be a cycle -- a subtree detached from the root, invisible in the
+ * sidebar and unreachable except by id.
+ */
+export async function moveFolder(tx: Tx, id: string, parentId: string | null): Promise<void> {
+  const rows = await tx
+    .select({ id: folder.id, parentId: folder.parentId, ancestors: folder.ancestorIds })
+    .from(folder)
+    .where(eq(folder.id, id))
+    .limit(1)
+
+  const moving = rows[0]
+  if (!moving) throw new FolderMoveError('Dieser Ordner existiert nicht.')
+  if (moving.parentId === parentId) return
+
+  let ancestors: string[] = []
+  if (parentId !== null) {
+    if (parentId === id) throw new FolderMoveError('Ein Ordner kann nicht in sich selbst liegen.')
+
+    const targets = await tx
+      .select({ ancestors: folder.ancestorIds })
+      .from(folder)
+      .where(eq(folder.id, parentId))
+      .limit(1)
+
+    const target = targets[0]
+    if (!target) throw new FolderMoveError('Der Zielordner existiert nicht.')
+    if (target.ancestors.includes(id)) {
+      throw new FolderMoveError('Ein Ordner kann nicht in einen seiner eigenen Unterordner.')
+    }
+
+    ancestors = [...target.ancestors, parentId]
+  }
+
+  // The descendants, read and rewritten one by one rather than with an array
+  // expression built into the statement. A folder tree is hundreds of rows at
+  // most -- the same reason listFolders sorts in memory -- and the alternative
+  // meant interpolating ids into SQL text, which is a habit worth not having in
+  // this codebase even where the values come from the database.
+  const descendants = await tx
+    .select({ id: folder.id, ancestors: folder.ancestorIds })
+    .from(folder)
+    .where(sql`${id}::uuid = any(${folder.ancestorIds})`)
+
+  const newPath = [...ancestors, id]
+
+  for (const row of descendants) {
+    // Everything from the moved folder downwards is kept; what was above it is
+    // replaced by the new location.
+    const below = row.ancestors.slice(row.ancestors.indexOf(id) + 1)
+    await tx
+      .update(folder)
+      .set({ ancestorIds: [...newPath, ...below] })
+      .where(eq(folder.id, row.id))
+  }
+
+  await tx.update(folder).set({ parentId, ancestorIds: ancestors }).where(eq(folder.id, id))
 }
 
 /**

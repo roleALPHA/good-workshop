@@ -145,6 +145,43 @@ test('persists a type-specific field edited inside the row', async ({ page }) =>
   })
 })
 
+test('gives the expanded fields the width of the row, not of one column', async ({ page }) => {
+  await addBlock(page, 'Gruppenarbeit')
+  const row = page.getByRole('article', { name: 'Gruppenarbeit' })
+
+  await row.getByRole('button', { name: 'Mehr Felder' }).click()
+  const details = page.locator('[id^="details-"]').first()
+  await expect(details).toBeVisible()
+
+  const rowBox = (await row.boundingBox())!
+  const detailsBox = (await details.boundingBox())!
+
+  // The panel used to sit inside the title column, so a full-width text field
+  // stopped halfway across a desktop window while the column beside it stayed
+  // empty. Measured against the row rather than against a fixed number, which
+  // would only restate the viewport.
+  expect(detailsBox.width).toBeGreaterThan(rowBox.width * 0.8)
+})
+
+test('deletes a block from the row it is in', async ({ page }) => {
+  await addBlock(page, 'Gruppenarbeit')
+  const title = 'Gruppenarbeit'
+  const agenda = page.getByRole('region', { name: /^Agenda/ })
+  await expect(agenda.getByRole('article', { name: title })).toBeVisible()
+
+  // Parking was the only way to get a block out of the plan; there was no way
+  // at all to get rid of one that should never have been there.
+  await page.getByRole('button', { name: `${title} löschen` }).click()
+
+  await expect(agenda.getByRole('article', { name: title })).toHaveCount(0)
+  // Not parked either -- gone.
+  await expect(page.getByRole('region', { name: /Geparkt/ })).toHaveCount(0)
+
+  await reloadUntil(page, async () => {
+    await expect(page.getByRole('article', { name: title })).toHaveCount(0)
+  })
+})
+
 test('parks a block out of the schedule and brings it back', async ({ page }) => {
   await addBlock(page, 'Gruppenarbeit')
   const title = 'Gruppenarbeit'

@@ -38,7 +38,15 @@ export default async function LibraryPage({
 
   return (
     <div className="grid gap-6 md:grid-cols-[200px_1fr]">
-      <nav aria-label="Ordner und Tags" className="hidden md:block">
+      {/*
+        Shown on a phone as well, above the list rather than beside it.
+        It used to be `hidden md:block`, which left the phone with no folders at
+        all: no way to see the structure, no way to move between branches, and
+        every folder's workshops in one undifferentiated list. A facilitator
+        looks things up on a phone -- that is the screen the reading view exists
+        for -- and the library is where they start.
+      */}
+      <nav aria-label="Ordner und Tags" className="min-w-0">
         <h2 className="mb-2 text-[12px] font-semibold tracking-wide text-[var(--fg-subtle)] uppercase">
           Ordner
         </h2>
@@ -55,7 +63,13 @@ export default async function LibraryPage({
               name={node.name}
               depth={node.depth}
               active={folder === node.id}
-              canDelete={isAdmin}
+              canManage={isAdmin}
+              // Its own subtree is left out: moving a folder into itself or
+              // below itself would detach the branch from the root. The domain
+              // refuses it too -- this just keeps it off the menu.
+              targets={folders.filter(
+                (other) => other.id !== node.id && !other.ancestorIds.includes(node.id),
+              )}
             />
           ))}
         </ul>

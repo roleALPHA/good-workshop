@@ -330,6 +330,7 @@ export function AgendaEditor({ document: agenda }: { document: AgendaDocument })
                             patchModule(row.id, { durationMinutes }),
                           onDescChange: (desc) => patchModule(row.id, { desc }),
                           onPark: () => patchModule(row.id, { parked: true }),
+                          onRemove: () => agenda.removeModule(row.id),
                           details: (
                             <ModuleDetails
                               module={row.module}
