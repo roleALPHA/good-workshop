@@ -49,6 +49,12 @@ export const authConfig = {
     return value
   },
   sessionTtlDays: Number(process.env.GW_SESSION_TTL_DAYS ?? 30),
+  /**
+   * How long a session may go unused before it stops working, independent of
+   * the absolute lifetime above. Thirty days of absolute lifetime with no idle
+   * window means a stolen or forgotten cookie stays valid for a month.
+   */
+  sessionIdleDays: Number(process.env.GW_SESSION_IDLE_DAYS ?? 14),
   magicLinkTtlMinutes: Number(process.env.GW_MAGIC_LINK_TTL_MINUTES ?? 15),
   /** Community Edition runs on one tenant with a fixed id. */
   defaultTenantId: '00000000-0000-0000-0000-000000000001',

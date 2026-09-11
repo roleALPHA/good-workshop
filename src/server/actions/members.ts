@@ -10,6 +10,7 @@ import {
   setMemberStatus,
   type MemberRow,
 } from '@/domain/tenant/members'
+import { inviteDisclosure } from '@/domain/tenant/invite'
 import { issueMagicLink } from '@/server/auth/magic-link'
 import { deliversToRecipient, sendMail, magicLinkMail } from '@/server/auth/mail'
 import { currentActor, type ActionResult } from './context'
@@ -47,11 +48,13 @@ export type InviteOutcome = {
  * Invites somebody and gets them a way in.
  *
  * The link is handed back to the admin ONLY when it did not reach the
- * recipient. An install with no SMTP is a documented, supported setup, and
- * leaving those admins with an invitation nobody can act on would make the
- * whole screen a decoration. Where mail is really delivered, the link stays
- * between the server and the recipient -- an admin who can read it can take
- * the account.
+ * recipient AND the address is not already an active member's. An install with
+ * no SMTP is a documented, supported setup, and leaving those admins with an
+ * invitation nobody can act on would make the whole screen a decoration.
+ *
+ * The second half is the one that was missing: for somebody who already has an
+ * account, the link is not an invitation but their login, and handing it over
+ * is a handover of the account. See `inviteDisclosure` for the table.
  */
 export async function inviteMemberAction(raw: {
   email: string
@@ -88,7 +91,9 @@ export async function inviteMemberAction(raw: {
         email: invited.email,
         alreadyMember: invited.alreadyMember,
         mailed,
-        link: mailed ? null : (issued?.link ?? null),
+        link: inviteDisclosure({ alreadyMember: invited.alreadyMember, mailed })
+          ? (issued?.link ?? null)
+          : null,
       },
     }
   } catch (error) {

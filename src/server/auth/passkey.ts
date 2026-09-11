@@ -76,7 +76,12 @@ export async function registrationOptions(identityId: string, email: string) {
     userName: email,
     // Discoverable credentials, so signing in needs no username first: the
     // browser offers the passkey and we learn who it is from the response.
-    authenticatorSelection: { residentKey: 'required', userVerification: 'preferred' },
+    // 'required', not 'preferred'. There is no password in this system, so the
+    // passkey is the whole of the authentication -- 'preferred' lets an
+    // authenticator sign without a PIN or a fingerprint, which turns brief
+    // physical access to an unlocked device into a login. 'preferred' is the
+    // right default where a passkey sits on top of a password; not here.
+    authenticatorSelection: { residentKey: 'required', userVerification: 'required' },
     attestationType: 'none',
     // Stops a second passkey being registered for the same authenticator.
     excludeCredentials: existing.map((c) => ({ id: c.id, transports: c.transports as never })),
@@ -103,7 +108,10 @@ export async function verifyRegistration(
     expectedChallenge: clientData.challenge,
     expectedOrigin: authConfig.origin,
     expectedRPID: authConfig.rpId,
-    requireUserVerification: false,
+    // Enforced at registration too, not just at login: a credential enrolled
+    // without user verification cannot supply it later either, so accepting it
+    // here would quietly create an account that can never meet the rule.
+    requireUserVerification: true,
   })
 
   if (!verification.verified || !verification.registrationInfo) return false
@@ -128,10 +136,21 @@ export async function verifyRegistration(
 export async function authenticationOptions() {
   const options = await generateAuthenticationOptions({
     rpID: authConfig.rpId,
-    userVerification: 'preferred',
+    userVerification: 'required',
   })
   await storeChallenge(options.challenge, 'authentication', null)
   return options
+}
+
+/**
+ * Whether a presented signature counter says the credential has been cloned.
+ *
+ * Both at zero is the documented "this authenticator does not count" case and
+ * is not a regression. Anything else that fails to advance is.
+ */
+export function isCounterRegression(counters: { stored: number; presented: number }): boolean {
+  if (counters.stored === 0 && counters.presented === 0) return false
+  return counters.presented <= counters.stored
 }
 
 export type PasskeyLogin = { identityId: string; email: string }
@@ -176,13 +195,32 @@ export async function verifyAuthentication(
         counter: Number(found.signCount),
         transports: found.transports as never,
       },
-      requireUserVerification: false,
+      requireUserVerification: true,
     })
 
     if (!verification.verified) return null
 
-    // The counter is the only cloning signal WebAuthn gives us. Many modern
-    // authenticators keep it at zero, so this is recorded rather than enforced.
+    // The counter is the only cloning signal WebAuthn gives us, and it was
+    // being written without ever being compared -- the bookkeeping without the
+    // point. A counter that did not advance means two authenticators are
+    // answering for one credential.
+    //
+    // The zero case is not that: plenty of authenticators, passkeys in a
+    // synced keychain above all, never implement a counter and report zero
+    // forever. Refusing those would lock out most of the people this feature
+    // exists for.
+    if (
+      isCounterRegression({
+        stored: Number(found.signCount),
+        presented: verification.authenticationInfo.newCounter,
+      })
+    ) {
+      console.warn('passkey: sign counter did not advance -- possible cloned authenticator', {
+        credentialId: found.credentialId,
+      })
+      return null
+    }
+
     await tx
       .update(webauthnCredential)
       .set({ signCount: verification.authenticationInfo.newCounter, lastUsedAt: sql`now()` })

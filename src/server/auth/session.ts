@@ -125,6 +125,14 @@ export async function verifySessionCookie(raw: string): Promise<SessionUser | nu
           eq(authSession.id, sessionId),
           isNull(authSession.revokedAt),
           gt(authSession.expiresAt, new Date()),
+          // The idle window, alongside the absolute lifetime. `last_seen_at`
+          // was written on every request and read by nothing, so a cookie
+          // copied off a shared machine kept working for the full thirty days
+          // after the person had walked away from it.
+          gt(
+            authSession.lastSeenAt,
+            new Date(Date.now() - authConfig.sessionIdleDays * 86_400_000),
+          ),
         ),
       )
       .limit(1)

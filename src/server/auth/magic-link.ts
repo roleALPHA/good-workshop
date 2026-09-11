@@ -1,6 +1,6 @@
 import { randomUUID } from 'node:crypto'
 import { and, eq, gt, isNull, sql } from 'drizzle-orm'
-import { withAuth, withTenant } from '@/server/db'
+import { withAuth, withTenantOnly } from '@/server/db'
 import { emailToken, identity, member } from '@/server/db/schema'
 import { authConfig } from './config'
 import { generateSecret, hashSecret } from './tokens'
@@ -100,6 +100,12 @@ export async function consumeMagicLink(secret: string): Promise<ConsumedToken | 
 
     const token = updated[0]
     if (!token?.identityId || !token.tenantId) return null
+    // `purpose` was selected and never looked at. Only 'login' is written
+    // today, so nothing was wrong -- but the check constraint already allows
+    // 'invite' and 'email_change', and the day an address-change flow lands,
+    // its token would have been a login for the account it was meant to
+    // re-verify. Checked here so that day is uneventful.
+    if (token.purpose !== 'login') return null
 
     await tx
       .update(identity)
@@ -110,14 +116,41 @@ export async function consumeMagicLink(secret: string): Promise<ConsumedToken | 
   })
 }
 
-/** Activates an invited member on first successful login. */
-export async function activateMembership(identityId: string, tenantId: string): Promise<void> {
-  await withTenant(
-    { tenantId, memberId: identityId, tenantRole: 'member', source: 'system' },
-    (tx) =>
-      tx
-        .update(member)
-        .set({ status: 'active' })
-        .where(and(eq(member.identityId, identityId), eq(member.status, 'invited'))),
-  )
+/**
+ * Activates an invited member on first successful login, and returns the id it
+ * acted as.
+ *
+ * The id matters. This used to pass `memberId: identityId` into withTenant,
+ * putting an identity UUID into `app.member_id`. No policy reads
+ * app.current_member() yet, so nothing misbehaved -- but the accessor exists,
+ * and the first policy written against it would have compared the wrong column
+ * with nothing to show for it. Returning the id makes the distinction
+ * something a test can hold on to rather than a convention.
+ */
+export async function activateMembership(
+  identityId: string,
+  tenantId: string,
+): Promise<string | null> {
+  // withTenantOnly, which exists for exactly this shape: the tenant is known,
+  // the member is the row we are about to read. The policies here compare
+  // tenant_id only, so an unset member is safe.
+  return withTenantOnly(tenantId, async (tx) => {
+    const rows = await tx
+      .update(member)
+      .set({ status: 'active' })
+      .where(and(eq(member.identityId, identityId), eq(member.status, 'invited')))
+      .returning({ id: member.id })
+
+    if (rows[0]) return rows[0].id
+
+    // Already active: still answer with the member id, because the caller asked
+    // who this identity is in this tenant, not whether a row changed.
+    const existing = await tx
+      .select({ id: member.id })
+      .from(member)
+      .where(eq(member.identityId, identityId))
+      .limit(1)
+
+    return existing[0]?.id ?? null
+  })
 }

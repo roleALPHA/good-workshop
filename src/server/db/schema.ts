@@ -196,8 +196,19 @@ export const tenant = pgTable(
   (t) => [
     check('tenant_status', sql`${t.status} in ('active','suspended')`),
     check('tenant_brand_hex', sql`${t.brandHex} is null or ${t.brandHex} ~ '^#[0-9a-fA-F]{6}$'`),
+    // The one table where the tenant is the row rather than a column on it, and
+    // the one that was left out of the wall. gw_app had full DML on every
+    // tenant's name, slug, settings and branding -- invisible in the Community
+    // Edition, where there is one row, and a cross-tenant leak on day one of
+    // the Cloud Edition. `id`, not `tenant_id`, for the same reason.
+    pgPolicy('tenant_self_isolation', {
+      for: 'all',
+      to: 'gw_app',
+      using: sql`id = (select app.current_tenant())`,
+      withCheck: sql`id = (select app.current_tenant())`,
+    }),
   ],
-)
+).enableRLS()
 
 /** The tenant-scoped principal. Every domain FK points here, never at identity. */
 export const member = pgTable(
