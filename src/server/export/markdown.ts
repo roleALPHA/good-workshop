@@ -4,6 +4,7 @@ import { formatDuration, formatTime } from '@/features/agenda/duration'
 import { flattenDay, toScheduleItems } from '@/features/agenda/flatten'
 import { richTextToMarkdown } from '@/lib/richtext/markdown'
 import { isRichTextValue } from '@/lib/richtext/schema'
+import { DEFAULT_LOCALE, type Locale } from '@/i18n/config'
 
 /**
  * The Markdown exporter.
@@ -20,6 +21,14 @@ import { isRichTextValue } from '@/lib/richtext/schema'
  */
 
 export type ExportOptions = {
+  /**
+   * The language the file is written in.
+   *
+   * A parameter rather than something read from the request: an export is
+   * often handed to somebody other than the person producing it, and the MCP
+   * tool that returns Markdown has no viewer at all.
+   */
+  locale?: Locale
   flavor?: 'agenda' | 'outline'
   includeDescriptions?: boolean
   includeFacilitatorNotes?: boolean
@@ -35,6 +44,7 @@ export type WorkshopMeta = {
 }
 
 const DEFAULTS: Required<ExportOptions> = {
+  locale: DEFAULT_LOCALE,
   flavor: 'agenda',
   includeDescriptions: true,
   // Off by default: notes are explicitly the facilitator's own, and the common
@@ -75,14 +85,14 @@ export function renderDayMarkdown(
   const summary = [
     day.title || null,
     day.date,
-    `${formatTime(schedule.dayStartMinute)}–${formatTime(schedule.dayEndMinute)}`,
+    `${formatTime(schedule.dayStartMinute, opts.locale)}–${formatTime(schedule.dayEndMinute, opts.locale)}`,
     contentSplit(day),
   ].filter(Boolean)
   out.push(`> ${summary.join(' · ')}`)
 
   out.push(
     opts.flavor === 'agenda'
-      ? renderTable(day, rows, schedule)
+      ? renderTable(day, rows, schedule, opts)
       : renderOutline(day, rows, schedule, opts),
   )
 
@@ -105,6 +115,7 @@ function renderTable(
   day: DayDoc,
   rows: ReturnType<typeof flattenDay>,
   schedule: ReturnType<typeof computeSchedule>,
+  opts: Required<ExportOptions>,
 ): string {
   const lines = ['| Zeit | Dauer | Block | Info |', '| --- | --- | --- | --- |']
 
@@ -114,7 +125,7 @@ function renderTable(
 
     if (row.kind === 'cluster') {
       lines.push(
-        `| ${formatTime(entry.startMinute)} | ${formatDuration(entry.durationMinutes)} | **${cell(row.cluster.title)}** | ${row.childCount} Blöcke |`,
+        `| ${formatTime(entry.startMinute, opts.locale)} | ${formatDuration(entry.durationMinutes)} | **${cell(row.cluster.title)}** | ${row.childCount} Blöcke |`,
       )
       continue
     }
@@ -127,7 +138,7 @@ function renderTable(
       .join(' · ')
 
     lines.push(
-      `| ${formatTime(entry.startMinute)}${entry.pinned ? ' 🔒' : ''} | ${formatDuration(entry.durationMinutes)} | ${title} | ${cell(info)} |`,
+      `| ${formatTime(entry.startMinute, opts.locale)}${entry.pinned ? ' 🔒' : ''} | ${formatDuration(entry.durationMinutes)} | ${title} | ${cell(info)} |`,
     )
   }
 
@@ -150,7 +161,7 @@ function renderOutline(
       lines.push(
         '',
         `## ${text(row.cluster.title)}`,
-        `*${formatTime(entry.startMinute)} · ${formatDuration(entry.durationMinutes, { spaced: true })}*`,
+        `*${formatTime(entry.startMinute, opts.locale)} · ${formatDuration(entry.durationMinutes, { spaced: true })}*`,
       )
       continue
     }
@@ -159,7 +170,7 @@ function renderOutline(
     const type = day.moduleTypes[row.module.moduleTypeId]
     lines.push(
       '',
-      `### ${formatTime(entry.startMinute)}${entry.pinned ? ' 🔒' : ''} · ${text(row.module.title)}`,
+      `### ${formatTime(entry.startMinute, opts.locale)}${entry.pinned ? ' 🔒' : ''} · ${text(row.module.title)}`,
       `\`${formatDuration(entry.durationMinutes)}\`${type ? ` · ${type.name}` : ''}`,
     )
     lines.push(...describeModule(row.module.desc, opts))
@@ -184,7 +195,7 @@ function renderDetails(
     const entry = schedule.entries.get(row.id)
     lines.push(
       '',
-      `### ${entry ? formatTime(entry.startMinute) + ' · ' : ''}${text(row.module.title)}`,
+      `### ${entry ? formatTime(entry.startMinute, opts.locale) + ' · ' : ''}${text(row.module.title)}`,
       ...body,
     )
   }

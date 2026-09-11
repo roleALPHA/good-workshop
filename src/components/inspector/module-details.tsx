@@ -5,6 +5,7 @@ import { useTranslations } from 'next-intl'
 import type { ModuleDto, ModuleTypeDto } from '@/domain/agenda/types'
 import { isVisible, parseSchema } from '@/domain/moduleType/profile'
 import { validateModuleDesc, type FieldError } from '@/domain/moduleType/validate'
+import type { Translate } from '@/i18n/translator'
 import { Field } from './fields'
 
 /**
@@ -84,7 +85,11 @@ export function ModuleDetails({ module: mod, type, onChange }: ModuleDetailsProp
     }
 
     if (!result.ok) {
-      setErrors(firstErrorPerField(result.errors, t))
+      // Cast to the loose shape: the key is chosen at runtime from
+      // FieldErrorKey, and next-intl's typed signature wants the union of every
+      // message's arguments at once. src/i18n/catalogs.test.ts is what checks
+      // these keys exist -- in all four languages, which the type cannot.
+      setErrors(firstErrorPerField(result.errors, t as unknown as Translate))
       return
     }
 
@@ -172,10 +177,7 @@ function LegacyFields({ entries }: { entries: [string, unknown][] }) {
  * goes to a server action and to an MCP client, which need different languages
  * -- so rendering happens here, where the person's own language is known.
  */
-function firstErrorPerField(
-  errors: FieldError[],
-  t: (key: string, params?: Record<string, string | number>) => string,
-): Record<string, string> {
+function firstErrorPerField(errors: FieldError[], t: Translate): Record<string, string> {
   const map: Record<string, string> = {}
   for (const error of errors) map[error.path] ??= t(error.messageKey, error.params)
   return map

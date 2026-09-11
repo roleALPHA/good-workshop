@@ -7,8 +7,8 @@ declare const messages: {
       title: 'Branding'
       intro: 'Logo und Akzentfarbe dieser Installation. Die Fußzeile bleibt, wie sie ist.'
       logo: 'Logo'
-      logoHint: 'SVG, PNG oder WebP, höchstens {max} KB. Erscheint in der Kopfzeile und auf der Anmeldeseite.'
-      logoTooLarge: 'Höchstens {max} KB.'
+      logoHint: 'SVG, PNG oder WebP, höchstens {max, number} KB. Erscheint in der Kopfzeile und auf der Anmeldeseite.'
+      logoTooLarge: 'Höchstens {max, number} KB.'
       currentLogo: 'Aktuelles Logo'
       logoFile: 'Logo-Datei'
       replaceLogo: 'Logo ersetzen'
@@ -90,7 +90,7 @@ declare const messages: {
     park: 'Parken'
     parkLabel: '{title} parken'
     parkHint: 'Aus dem Ablauf nehmen, ohne ihn zu löschen'
-    parkedHeading: 'Geparkt ({count})'
+    parkedHeading: 'Geparkt ({count, number})'
     parkedHint: 'Gehört zum Tag, zählt nicht zur Zeit.'
     unpark: 'In den Ablauf'
     unparkLabel: '{title} zurück in den Ablauf'
@@ -108,18 +108,18 @@ declare const messages: {
     drag: {
       atDayLevel: 'auf Tagesebene'
       cancelled: 'Verschieben abgebrochen.'
-      dropped: '{title} abgelegt {where}, Position {position}.'
-      droppedWithTime: '{title} abgelegt {where}, Position {position}, neue Startzeit {time}.'
+      dropped: '{title} abgelegt {where}, Position {position, number}.'
+      droppedWithTime: '{title} abgelegt {where}, Position {position, number}, neue Startzeit {time}.'
       inSection: 'in Abschnitt {title}'
-      landed: '{title} landet {where}, Position {position}.'
-      landedWithTime: '{title} landet {where}, Position {position}, neue Startzeit {time}.'
+      landed: '{title} landet {where}, Position {position, number}.'
+      landedWithTime: '{title} landet {where}, Position {position, number}, neue Startzeit {time}.'
       picked: '{title} aufgenommen.'
     }
     field: {
       privateNote: 'nur für dich'
       commaSeparated: 'Mit Komma trennen'
       richTextReadOnly: 'Enthält Formatierung. Bearbeiten kommt mit dem Text-Editor — bis dahin bleibt der Inhalt hier unangetastet.'
-      legacyHeading: 'Alte Felder ({count})'
+      legacyHeading: 'Alte Felder ({count, number})'
       legacyHint: 'Diese Angaben stammen aus einer früheren Fassung dieses Modultyps. Sie bleiben erhalten, lassen sich aber nicht mehr bearbeiten.'
     }
   }
@@ -205,7 +205,7 @@ declare const messages: {
       logo: {
         unsupportedType: 'Erlaubt sind SVG, PNG und WebP.'
         empty: 'Die Datei ist leer.'
-        tooLarge: 'Das Logo darf höchstens {max} KB groß sein (diese Datei: {actual} KB).'
+        tooLarge: 'Das Logo darf höchstens {max, number} KB groß sein (diese Datei: {actual, number} KB).'
         notSvg: 'Das sieht nicht nach einer SVG-Datei aus.'
         unsafeActive: 'Das SVG enthält {what}. Exportiere es ohne Skripte und ohne Interaktivität — die meisten Programme nennen das „einfaches SVG“.'
         unsafeExternal: 'Das SVG verweist über {what} nach außen. Exportiere es mit eingebetteten Schriften und Bildern, ohne externe Verweise.'
@@ -232,13 +232,13 @@ declare const messages: {
         ownerHasAccess: 'Der Eigentümer hat bereits vollen Zugriff.'
       }
       tags: {
-        tooMany: 'Höchstens {max} Tags pro Workshop.'
-        tooLong: 'Ein Tag darf höchstens {max} Zeichen haben.'
+        tooMany: 'Höchstens {max, number} Tags pro Workshop.'
+        tooLong: 'Ein Tag darf höchstens {max, number} Zeichen haben.'
         createFailed: 'Der Tag „{name}“ konnte nicht angelegt werden.'
       }
       token: {
         nameRequired: 'Gib dem Token einen Namen — sonst weißt du später nicht, wofür es war.'
-        nameTooLong: 'Der Name darf höchstens {max} Zeichen haben.'
+        nameTooLong: 'Der Name darf höchstens {max, number} Zeichen haben.'
         unknownScopes: 'Unbekannte Bereiche: {scopes}.'
         noScopes: 'Ein Token ohne Bereiche kann nichts. Wähl mindestens einen.'
         gone: 'Dieses Token gibt es nicht mehr.'
@@ -267,8 +267,8 @@ declare const messages: {
       schema: {
         broken: 'Das Schema dieses Modultyps ist ungültig.'
         notObject: 'Das Schema muss ein Objekt sein.'
-        tooLarge: 'Das Schema ist zu groß (max. {max} Bytes).'
-        tooDeep: 'Zu tief verschachtelt (max. {max} Ebenen).'
+        tooLarge: 'Das Schema ist zu groß (max. {max, number} Bytes).'
+        tooDeep: 'Zu tief verschachtelt (max. {max, number} Ebenen).'
         uncompilable: 'Das Schema lässt sich nicht übersetzen: {reason}'
         patternForbidden: 'pattern ist nicht erlaubt: ein selbst geschriebener regulärer Ausdruck kann den Server blockieren. Nutze stattdessen format oder enum.'
         keywordForbidden: 'Das Schlüsselwort „{key}“ ist nicht erlaubt.'

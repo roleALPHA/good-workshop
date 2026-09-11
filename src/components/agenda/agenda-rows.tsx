@@ -11,7 +11,7 @@ import { RichText } from '@/lib/richtext/render'
 import { PeerMarks } from './presence'
 import { TitleInput } from './inline-inputs'
 import { OverlapWarning, TimeCell } from './time-cell'
-import { useTranslations } from 'next-intl'
+import { useLocale, useTranslations } from 'next-intl'
 
 /**
  * The agenda, rendered from a flat row list.
@@ -300,12 +300,15 @@ export function EndOfDay({
   schedule: Schedule
   targetEndMinute: number | null
 }) {
+  const locale = useLocale()
   const t = useTranslations('agenda')
   const over = targetEndMinute !== null ? schedule.dayEndMinute - targetEndMinute : 0
 
   return (
     <p className="tabular flex flex-wrap items-baseline gap-2 px-4 py-3 text-[15px] text-[var(--fg-muted)] md:px-2">
-      <span className="font-medium text-[var(--fg)]">{formatTime(schedule.dayEndMinute)}</span>
+      <span className="font-medium text-[var(--fg)]">
+        {formatTime(schedule.dayEndMinute, locale)}
+      </span>
       <span>{t('end')}</span>
       {over > 0 && (
         <span className="rounded bg-[var(--warn-bg)] px-1.5 py-0.5 text-[13px] text-[var(--warn-fg)]">

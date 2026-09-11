@@ -4,8 +4,8 @@
       "title": "Identité visuelle",
       "intro": "Le logo et la couleur d'accent de cette installation. Le pied de page reste tel quel.",
       "logo": "Logo",
-      "logoHint": "SVG, PNG ou WebP, {max} Ko au maximum. Apparaît dans l'en-tête et sur la page de connexion.",
-      "logoTooLarge": "{max} Ko au maximum.",
+      "logoHint": "SVG, PNG ou WebP, {max, number} Ko au maximum. Apparaît dans l'en-tête et sur la page de connexion.",
+      "logoTooLarge": "{max, number} Ko au maximum.",
       "currentLogo": "Logo actuel",
       "logoFile": "Fichier du logo",
       "replaceLogo": "Remplacer le logo",
@@ -87,7 +87,7 @@
     "park": "Mettre de côté",
     "parkLabel": "Mettre {title} de côté",
     "parkHint": "Le retirer du déroulé sans le supprimer",
-    "parkedHeading": "De côté ({count})",
+    "parkedHeading": "De côté ({count, number})",
     "parkedHint": "Fait partie de la journée, ne compte pas dans le temps.",
     "unpark": "Remettre dans le déroulé",
     "unparkLabel": "Remettre {title} dans le déroulé",
@@ -105,18 +105,18 @@
     "drag": {
       "atDayLevel": "au niveau de la journée",
       "cancelled": "Déplacement annulé.",
-      "dropped": "{title} déposé {where}, position {position}.",
-      "droppedWithTime": "{title} déposé {where}, position {position}, nouvelle heure de début {time}.",
+      "dropped": "{title} déposé {where}, position {position, number}.",
+      "droppedWithTime": "{title} déposé {where}, position {position, number}, nouvelle heure de début {time}.",
       "inSection": "dans la section {title}",
-      "landed": "{title} se pose {where}, position {position}.",
-      "landedWithTime": "{title} se pose {where}, position {position}, nouvelle heure de début {time}.",
+      "landed": "{title} se pose {where}, position {position, number}.",
+      "landedWithTime": "{title} se pose {where}, position {position, number}, nouvelle heure de début {time}.",
       "picked": "{title} saisi."
     },
     "field": {
       "privateNote": "pour toi seulement",
       "commaSeparated": "Séparer par des virgules",
       "richTextReadOnly": "Contient de la mise en forme. L'édition arrivera avec l'éditeur de texte — d'ici là, le contenu reste intact.",
-      "legacyHeading": "Anciens champs ({count})",
+      "legacyHeading": "Anciens champs ({count, number})",
       "legacyHint": "Ces valeurs viennent d'une version antérieure de ce type de bloc. Elles sont conservées, mais ne peuvent plus être modifiées."
     }
   },
@@ -202,7 +202,7 @@
       "logo": {
         "unsupportedType": "Formats autorisés : SVG, PNG et WebP.",
         "empty": "Le fichier est vide.",
-        "tooLarge": "Le logo ne peut pas dépasser {max} Ko (ce fichier : {actual} Ko).",
+        "tooLarge": "Le logo ne peut pas dépasser {max, number} Ko (ce fichier : {actual, number} Ko).",
         "notSvg": "Cela ne ressemble pas à un fichier SVG.",
         "unsafeActive": "Le SVG contient {what}. Exporte-le sans scripts ni interactivité — la plupart des programmes appellent cela « SVG simple ».",
         "unsafeExternal": "Le SVG pointe vers l'extérieur via {what}. Exporte-le avec les polices et les images intégrées, sans références externes.",
@@ -229,13 +229,13 @@
         "ownerHasAccess": "Le propriétaire a déjà un accès complet."
       },
       "tags": {
-        "tooMany": "{max} tags au maximum par atelier.",
-        "tooLong": "Un tag ne peut pas dépasser {max} caractères.",
+        "tooMany": "{max, number} tags au maximum par atelier.",
+        "tooLong": "Un tag ne peut pas dépasser {max, number} caractères.",
         "createFailed": "Le tag « {name} » n'a pas pu être créé."
       },
       "token": {
         "nameRequired": "Donne un nom au jeton — sinon tu ne sauras plus à quoi il servait.",
-        "nameTooLong": "Le nom ne peut pas dépasser {max} caractères.",
+        "nameTooLong": "Le nom ne peut pas dépasser {max, number} caractères.",
         "unknownScopes": "Portées inconnues : {scopes}.",
         "noScopes": "Un jeton sans portée ne peut rien faire. Choisis-en au moins une.",
         "gone": "Ce jeton n'existe plus."
@@ -264,8 +264,8 @@
       "schema": {
         "broken": "Le schéma de ce type de bloc est invalide.",
         "notObject": "Le schéma doit être un objet.",
-        "tooLarge": "Le schéma est trop volumineux (max. {max} octets).",
-        "tooDeep": "Imbrication trop profonde (max. {max} niveaux).",
+        "tooLarge": "Le schéma est trop volumineux (max. {max, number} octets).",
+        "tooDeep": "Imbrication trop profonde (max. {max, number} niveaux).",
         "uncompilable": "Le schéma ne peut pas être compilé : {reason}",
         "patternForbidden": "pattern n'est pas autorisé : une expression régulière écrite à la main peut bloquer le serveur. Utilise plutôt format ou enum.",
         "keywordForbidden": "Le mot-clé « {key} » n'est pas autorisé."

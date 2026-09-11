@@ -10,6 +10,15 @@ import {
 } from '@/domain/agenda/access'
 import { loadDay } from '@/domain/agenda/repo'
 import { publicToolError } from './errors'
+
+/**
+ * MCP answers in English, always.
+ *
+ * The audience is a model, and the text is prompt material it decides its next
+ * call from. See the note in ./errors.ts; `get_workshop` takes an explicit
+ * locale for the Markdown a human will actually read.
+ */
+const MCP_LOCALE = 'en' as const
 import {
   addClusterBlock,
   addModuleBlock,
@@ -184,7 +193,7 @@ export function registerTools(server: McpServer, ctx: Ctx): void {
 
         const lines = rows.map((row, index) => {
           const entry = schedule.entries.get(row.id)
-          const time = entry ? formatTime(entry.startMinute) : '--:--'
+          const time = entry ? formatTime(entry.startMinute, MCP_LOCALE) : '--:--'
           if (row.kind === 'cluster') return `${index}. [${time}] ## ${row.cluster.title}`
           if (row.kind !== 'module') return `${index}. [${time}] (Puffer)`
           const type = doc.moduleTypes[row.module.moduleTypeId]
@@ -518,7 +527,7 @@ export function registerTools(server: McpServer, ctx: Ctx): void {
         )
 
         await record('day.update', workshopId, { dayId, startMinute })
-        return ok(`Tagesbeginn: ${formatTime(startMinute)}`, {
+        return ok(`Day starts at ${formatTime(startMinute, MCP_LOCALE)}`, {
           contentVersion: contentVersion.toString(),
         })
       } catch (error) {

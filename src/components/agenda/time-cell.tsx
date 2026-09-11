@@ -3,7 +3,7 @@ import type { ScheduleEntry } from '@/domain/schedule/types'
 import { formatDuration, formatTime } from '@/features/agenda/duration'
 import { cn } from '@/lib/cn'
 import { DurationInput } from './inline-inputs'
-import { useTranslations } from 'next-intl'
+import { useLocale, useTranslations } from 'next-intl'
 
 /**
  * Start time above, duration below in bold -- the layout of the reference
@@ -23,6 +23,7 @@ export function TimeCell({
   /** Present only in the editor; the duration then becomes editable in place. */
   editing?: { onDurationChange: (minutes: number) => void }
 }) {
+  const locale = useLocale()
   return (
     <div
       className={cn(
@@ -44,7 +45,7 @@ export function TimeCell({
             <span className="sr-only">Startzeit fixiert:</span>
           </>
         )}
-        {formatTime(entry.startMinute)}
+        {formatTime(entry.startMinute, locale)}
       </span>
       {showDuration &&
         (editing ? (

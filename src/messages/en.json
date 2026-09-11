@@ -4,8 +4,8 @@
       "title": "Branding",
       "intro": "The logo and accent colour of this installation. The footer stays as it is.",
       "logo": "Logo",
-      "logoHint": "SVG, PNG or WebP, at most {max} KB. Appears in the header and on the sign-in page.",
-      "logoTooLarge": "At most {max} KB.",
+      "logoHint": "SVG, PNG or WebP, at most {max, number} KB. Appears in the header and on the sign-in page.",
+      "logoTooLarge": "At most {max, number} KB.",
       "currentLogo": "Current logo",
       "logoFile": "Logo file",
       "replaceLogo": "Replace the logo",
@@ -87,7 +87,7 @@
     "park": "Park",
     "parkLabel": "Park {title}",
     "parkHint": "Take it out of the schedule without deleting it",
-    "parkedHeading": "Parked ({count})",
+    "parkedHeading": "Parked ({count, number})",
     "parkedHint": "Belongs to the day, does not count towards the time.",
     "unpark": "Back into the schedule",
     "unparkLabel": "Put {title} back into the schedule",
@@ -105,18 +105,18 @@
     "drag": {
       "atDayLevel": "at day level",
       "cancelled": "Move cancelled.",
-      "dropped": "{title} dropped {where}, position {position}.",
-      "droppedWithTime": "{title} dropped {where}, position {position}, new start time {time}.",
+      "dropped": "{title} dropped {where}, position {position, number}.",
+      "droppedWithTime": "{title} dropped {where}, position {position, number}, new start time {time}.",
       "inSection": "in section {title}",
-      "landed": "{title} lands {where}, position {position}.",
-      "landedWithTime": "{title} lands {where}, position {position}, new start time {time}.",
+      "landed": "{title} lands {where}, position {position, number}.",
+      "landedWithTime": "{title} lands {where}, position {position, number}, new start time {time}.",
       "picked": "{title} picked up."
     },
     "field": {
       "privateNote": "only for you",
       "commaSeparated": "Separate with commas",
       "richTextReadOnly": "Contains formatting. Editing comes with the text editor — until then the content here stays untouched.",
-      "legacyHeading": "Old fields ({count})",
+      "legacyHeading": "Old fields ({count, number})",
       "legacyHint": "These values come from an earlier version of this block type. They are kept, but can no longer be edited."
     }
   },
@@ -202,7 +202,7 @@
       "logo": {
         "unsupportedType": "SVG, PNG and WebP are allowed.",
         "empty": "The file is empty.",
-        "tooLarge": "The logo may be at most {max} KB (this file: {actual} KB).",
+        "tooLarge": "The logo may be at most {max, number} KB (this file: {actual, number} KB).",
         "notSvg": "That does not look like an SVG file.",
         "unsafeActive": "The SVG contains {what}. Export it without scripts and without interactivity — most programs call that “plain SVG”.",
         "unsafeExternal": "The SVG points outwards via {what}. Export it with fonts and images embedded, without external references.",
@@ -229,13 +229,13 @@
         "ownerHasAccess": "The owner already has full access."
       },
       "tags": {
-        "tooMany": "At most {max} tags per workshop.",
-        "tooLong": "A tag may be at most {max} characters long.",
+        "tooMany": "At most {max, number} tags per workshop.",
+        "tooLong": "A tag may be at most {max, number} characters long.",
         "createFailed": "The tag “{name}” could not be created."
       },
       "token": {
         "nameRequired": "Give the token a name — otherwise you will not know later what it was for.",
-        "nameTooLong": "The name may be at most {max} characters long.",
+        "nameTooLong": "The name may be at most {max, number} characters long.",
         "unknownScopes": "Unknown scopes: {scopes}.",
         "noScopes": "A token with no scopes can do nothing. Pick at least one.",
         "gone": "This token no longer exists."
@@ -264,8 +264,8 @@
       "schema": {
         "broken": "The schema of this block type is invalid.",
         "notObject": "The schema must be an object.",
-        "tooLarge": "The schema is too large (max. {max} bytes).",
-        "tooDeep": "Nested too deeply (max. {max} levels).",
+        "tooLarge": "The schema is too large (max. {max, number} bytes).",
+        "tooDeep": "Nested too deeply (max. {max, number} levels).",
         "uncompilable": "The schema cannot be compiled: {reason}",
         "patternForbidden": "pattern is not allowed: a hand-written regular expression can block the server. Use format or enum instead.",
         "keywordForbidden": "The keyword “{key}” is not allowed."

@@ -11,7 +11,7 @@ import { isRichTextValue } from '@/lib/richtext/schema'
 import { readSession } from '@/server/auth/session'
 import { withTenant } from '@/server/db'
 import { workshop as workshopTable } from '@/server/db/schema'
-import { getTranslations } from 'next-intl/server'
+import { getLocale, getTranslations } from 'next-intl/server'
 
 export const runtime = 'nodejs'
 export const dynamic = 'force-dynamic'
@@ -39,7 +39,7 @@ export default async function PrintPage({
   const { workshopId, dayId } = await params
   const { notes } = await searchParams
   const showNotes = notes === '1'
-  const t = await getTranslations('workshop')
+  const [t, locale] = await Promise.all([getTranslations('workshop'), getLocale()])
 
   const actor = {
     tenantId: session.tenantId,
@@ -75,7 +75,7 @@ export default async function PrintPage({
         <p className="tabular mt-1 text-neutral-600">
           {[data.doc.title, data.doc.date].filter(Boolean).join(' · ')}
           {' · '}
-          {formatTime(schedule.dayStartMinute)}–{formatTime(schedule.dayEndMinute)}
+          {formatTime(schedule.dayStartMinute, locale)}–{formatTime(schedule.dayEndMinute, locale)}
         </p>
       </header>
 
@@ -93,7 +93,7 @@ export default async function PrintPage({
               >
                 {row.cluster.title}
                 <span className="tabular ml-2 text-sm font-normal text-neutral-600">
-                  {formatTime(entry.startMinute)} ·{' '}
+                  {formatTime(entry.startMinute, locale)} ·{' '}
                   {formatDuration(entry.durationMinutes, { spaced: true })}
                 </span>
               </h2>
@@ -119,7 +119,7 @@ export default async function PrintPage({
               <div className="tabular w-20 shrink-0">
                 <div className="font-medium">
                   {entry.pinned ? '🔒 ' : ''}
-                  {formatTime(entry.startMinute)}
+                  {formatTime(entry.startMinute, locale)}
                 </div>
                 <div className="text-sm text-neutral-600">
                   {formatDuration(entry.durationMinutes)}
@@ -153,7 +153,7 @@ export default async function PrintPage({
       </div>
 
       <p className="tabular mt-6 border-t border-neutral-300 pt-3 text-neutral-600">
-        {t('end', { time: formatTime(schedule.dayEndMinute) })}
+        {t('end', { time: formatTime(schedule.dayEndMinute, locale) })}
       </p>
       <p className="mt-6 text-center text-xs text-neutral-500">
         GoodWorkshop · powered by roleALPHA

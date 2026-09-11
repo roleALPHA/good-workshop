@@ -14,6 +14,7 @@ import {
 } from '@/domain/agenda/access'
 import { DomainError } from '@/domain/errors'
 import { ModuleDescError } from '@/domain/moduleType/validate'
+import type { Translate } from '@/i18n/translator'
 
 /**
  * The one way a server action reaches the database.
@@ -109,7 +110,11 @@ export async function toResult<T>(error: unknown): Promise<ActionResult<T>> {
   // Before the general case: the field errors have keys of their own, and this
   // is the layer that knows which language to render them in.
   if (error instanceof ModuleDescError) {
-    const t = await getTranslations('errors')
+    // The loose signature, because the key is chosen at runtime from
+    // FieldErrorKey and next-intl's typed one wants the union of every
+    // message's arguments at once. What checks these keys exist -- in all four
+    // languages, which no type can -- is src/i18n/catalogs.test.ts.
+    const t = (await getTranslations('errors')) as unknown as Translate
     const issues = error.issues
       .map((issue) => `${issue.path} ${t(`field.${issue.messageKey}`, issue.params)}`.trim())
       .join('; ')
@@ -144,13 +149,13 @@ export async function fail<T>(
   messageKey: string,
   params: Record<string, string | number> = {},
 ): Promise<ActionResult<T>> {
-  const t = await getTranslations('errors')
+  const t = (await getTranslations('errors')) as unknown as Translate
   return {
     ok: false,
     error,
     messageKey: `errors.${messageKey}`,
     ...(Object.keys(params).length > 0 ? { params } : {}),
-    message: t(messageKey as Parameters<typeof t>[0], params),
+    message: t(messageKey, params),
   }
 }
 

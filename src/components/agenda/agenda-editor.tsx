@@ -43,7 +43,8 @@ import { DayHeader } from './day-header'
 import { ParkingArea } from './parking'
 import { PresenceBar } from './presence'
 import { DragHandle } from './drag-handle'
-import { useTranslations } from 'next-intl'
+import { useLocale, useTranslations } from 'next-intl'
+import type { Locale } from '@/i18n/config'
 
 const INDENT_PX = 28
 
@@ -90,6 +91,7 @@ const SILENT_ANNOUNCEMENTS: Announcements = {
  */
 export function AgendaEditor({ document: agenda }: { document: AgendaDocument }) {
   const t = useTranslations('agenda')
+  const locale = useLocale()
   const doc = agenda.doc
   const [activeId, setActiveId] = useState<string | null>(null)
   const [offsetX, setOffsetX] = useState(0)
@@ -148,7 +150,7 @@ export function AgendaEditor({ document: agenda }: { document: AgendaDocument })
   const [expandedId, setExpandedId] = useState<string | null>(null)
 
   const liveMessage = activeId
-    ? describeProjection(doc, rows, activeId, projection, t)
+    ? describeProjection(doc, rows, activeId, projection, t, locale)
     : dropMessage
 
   const sensors = useSensors(
@@ -184,7 +186,7 @@ export function AgendaEditor({ document: agenda }: { document: AgendaDocument })
       // Its own message rather than a word swapped out of the previous one.
       // `.replace('landet', 'abgelegt')` worked only in German, and only until
       // somebody rephrased the sentence it was reaching into.
-      setDropMessage(describeProjection(doc, rows, activeId, projection, t, 'dropped'))
+      setDropMessage(describeProjection(doc, rows, activeId, projection, t, locale, 'dropped'))
       agenda.move(activeId, projection)
     }
     reset()
@@ -518,6 +520,7 @@ function describeProjection(
   activeId: string,
   projection: Projection | null,
   t: ReturnType<typeof useTranslations<'agenda'>>,
+  locale: Locale,
   tense: 'landing' | 'dropped' = 'landing',
 ): string {
   const titleOf = (id: string) => {
@@ -544,11 +547,21 @@ function describeProjection(
 
   if (tense === 'dropped') {
     return entry
-      ? t('drag.droppedWithTime', { title, where, position, time: formatTime(entry.startMinute) })
+      ? t('drag.droppedWithTime', {
+          title,
+          where,
+          position,
+          time: formatTime(entry.startMinute, locale),
+        })
       : t('drag.dropped', { title, where, position })
   }
 
   return entry
-    ? t('drag.landedWithTime', { title, where, position, time: formatTime(entry.startMinute) })
+    ? t('drag.landedWithTime', {
+        title,
+        where,
+        position,
+        time: formatTime(entry.startMinute, locale),
+      })
     : t('drag.landed', { title, where, position })
 }

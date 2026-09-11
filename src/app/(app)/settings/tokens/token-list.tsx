@@ -3,13 +3,13 @@
 import { useRouter } from 'next/navigation'
 import { useState, useTransition } from 'react'
 import { Plus } from 'lucide-react'
-import type { TokenRow } from '@/domain/tenant/tokens'
+import type { Scope, TokenRow } from '@/domain/tenant/tokens'
 import { createTokenAction, revokeTokenAction } from '@/server/actions/tokens'
 import { useFormatter, useTranslations } from 'next-intl'
 
-const DEFAULT_SCOPES = ['workshops:read', 'module_types:read']
+const DEFAULT_SCOPES: Scope[] = ['workshops:read', 'module_types:read']
 
-export function TokenList({ initial, scopes }: { initial: TokenRow[]; scopes: string[] }) {
+export function TokenList({ initial, scopes }: { initial: TokenRow[]; scopes: Scope[] }) {
   const t = useTranslations('settings.tokens')
   const tc = useTranslations('common')
   const tScope = useTranslations('enums.tokenScope')
@@ -18,7 +18,7 @@ export function TokenList({ initial, scopes }: { initial: TokenRow[]; scopes: st
   const [tokens, setTokens] = useState(initial)
   const [creating, setCreating] = useState(false)
   const [name, setName] = useState('')
-  const [chosen, setChosen] = useState<string[]>(DEFAULT_SCOPES)
+  const [chosen, setChosen] = useState<Scope[]>(DEFAULT_SCOPES)
   const [fresh, setFresh] = useState<string | null>(null)
   const [error, setError] = useState<string | null>(null)
   const [pending, startTransition] = useTransition()

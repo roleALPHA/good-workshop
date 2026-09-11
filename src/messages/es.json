@@ -4,8 +4,8 @@
       "title": "Identidad visual",
       "intro": "El logotipo y el color de acento de esta instalación. El pie de página se queda como está.",
       "logo": "Logotipo",
-      "logoHint": "SVG, PNG o WebP, como máximo {max} KB. Aparece en la cabecera y en la página de acceso.",
-      "logoTooLarge": "Como máximo {max} KB.",
+      "logoHint": "SVG, PNG o WebP, como máximo {max, number} KB. Aparece en la cabecera y en la página de acceso.",
+      "logoTooLarge": "Como máximo {max, number} KB.",
       "currentLogo": "Logotipo actual",
       "logoFile": "Archivo del logotipo",
       "replaceLogo": "Sustituir el logotipo",
@@ -87,7 +87,7 @@
     "park": "Apartar",
     "parkLabel": "Apartar {title}",
     "parkHint": "Sacarlo del desarrollo sin eliminarlo",
-    "parkedHeading": "Apartados ({count})",
+    "parkedHeading": "Apartados ({count, number})",
     "parkedHint": "Pertenece a la jornada, no cuenta para el tiempo.",
     "unpark": "Volver al desarrollo",
     "unparkLabel": "Devolver {title} al desarrollo",
@@ -105,18 +105,18 @@
     "drag": {
       "atDayLevel": "al nivel de la jornada",
       "cancelled": "Movimiento cancelado.",
-      "dropped": "{title} soltado {where}, posición {position}.",
-      "droppedWithTime": "{title} soltado {where}, posición {position}, nueva hora de inicio {time}.",
+      "dropped": "{title} soltado {where}, posición {position, number}.",
+      "droppedWithTime": "{title} soltado {where}, posición {position, number}, nueva hora de inicio {time}.",
       "inSection": "en la sección {title}",
-      "landed": "{title} queda {where}, posición {position}.",
-      "landedWithTime": "{title} queda {where}, posición {position}, nueva hora de inicio {time}.",
+      "landed": "{title} queda {where}, posición {position, number}.",
+      "landedWithTime": "{title} queda {where}, posición {position, number}, nueva hora de inicio {time}.",
       "picked": "{title} agarrado."
     },
     "field": {
       "privateNote": "solo para ti",
       "commaSeparated": "Separar con comas",
       "richTextReadOnly": "Contiene formato. La edición llegará con el editor de texto — hasta entonces el contenido se queda intacto.",
-      "legacyHeading": "Campos antiguos ({count})",
+      "legacyHeading": "Campos antiguos ({count, number})",
       "legacyHint": "Estos valores vienen de una versión anterior de este tipo de bloque. Se conservan, pero ya no se pueden editar."
     }
   },
@@ -202,7 +202,7 @@
       "logo": {
         "unsupportedType": "Se permiten SVG, PNG y WebP.",
         "empty": "El archivo está vacío.",
-        "tooLarge": "El logotipo puede ocupar como máximo {max} KB (este archivo: {actual} KB).",
+        "tooLarge": "El logotipo puede ocupar como máximo {max, number} KB (este archivo: {actual, number} KB).",
         "notSvg": "Esto no parece un archivo SVG.",
         "unsafeActive": "El SVG contiene {what}. Expórtalo sin scripts ni interactividad — la mayoría de los programas lo llaman «SVG simple».",
         "unsafeExternal": "El SVG apunta hacia fuera mediante {what}. Expórtalo con las fuentes y las imágenes incrustadas, sin referencias externas.",
@@ -229,13 +229,13 @@
         "ownerHasAccess": "La propietaria ya tiene acceso completo."
       },
       "tags": {
-        "tooMany": "Como máximo {max} etiquetas por taller.",
-        "tooLong": "Una etiqueta puede tener como máximo {max} caracteres.",
+        "tooMany": "Como máximo {max, number} etiquetas por taller.",
+        "tooLong": "Una etiqueta puede tener como máximo {max, number} caracteres.",
         "createFailed": "No se ha podido crear la etiqueta «{name}»."
       },
       "token": {
         "nameRequired": "Dale un nombre al token — si no, más adelante no sabrás para qué era.",
-        "nameTooLong": "El nombre puede tener como máximo {max} caracteres.",
+        "nameTooLong": "El nombre puede tener como máximo {max, number} caracteres.",
         "unknownScopes": "Ámbitos desconocidos: {scopes}.",
         "noScopes": "Un token sin ámbitos no puede hacer nada. Elige al menos uno.",
         "gone": "Este token ya no existe."
@@ -264,8 +264,8 @@
       "schema": {
         "broken": "El esquema de este tipo de bloque no es válido.",
         "notObject": "El esquema debe ser un objeto.",
-        "tooLarge": "El esquema es demasiado grande (máx. {max} bytes).",
-        "tooDeep": "Anidamiento demasiado profundo (máx. {max} niveles).",
+        "tooLarge": "El esquema es demasiado grande (máx. {max, number} bytes).",
+        "tooDeep": "Anidamiento demasiado profundo (máx. {max, number} niveles).",
         "uncompilable": "El esquema no se puede compilar: {reason}",
         "patternForbidden": "pattern no está permitido: una expresión regular escrita a mano puede bloquear el servidor. Usa format o enum en su lugar.",
         "keywordForbidden": "La palabra clave «{key}» no está permitida."

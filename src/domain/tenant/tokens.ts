@@ -38,7 +38,9 @@ export type TokenRow = {
   name: string
   /** The public half, so a person can tell which token a log line is about. */
   tokenId: string
-  scopes: string[]
+  /** Constrained to SCOPES, not merely stored as text: the label for each is
+   *  looked up by value, and an unknown one would render as its own key. */
+  scopes: Scope[]
   lastUsedAt: Date | null
   createdAt: Date
 }
@@ -49,6 +51,8 @@ const MAX_TOKEN_NAME_LENGTH = 80
 export class TokenError extends DomainError {}
 
 export async function listTokens(tx: Tx, actor: Actor): Promise<TokenRow[]> {
+  // The cast is what createToken already guarantees: it rejects any scope that
+  // is not in SCOPES before the row is written.
   return tx
     .select({
       id: personalAccessToken.id,
@@ -67,7 +71,7 @@ export async function listTokens(tx: Tx, actor: Actor): Promise<TokenRow[]> {
         isNull(personalAccessToken.revokedAt),
       ),
     )
-    .orderBy(asc(personalAccessToken.createdAt))
+    .orderBy(asc(personalAccessToken.createdAt)) as Promise<TokenRow[]>
 }
 
 /** The secret is returned once and never stored -- only its hash is. */
@@ -110,7 +114,8 @@ export async function createToken(
       createdAt: personalAccessToken.createdAt,
     })
 
-  return { token: generated.token, row: rows[0]! }
+  // Safe by the check above: every scope was matched against SCOPES.
+  return { token: generated.token, row: rows[0]! as TokenRow }
 }
 
 /**
