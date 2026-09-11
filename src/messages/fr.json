@@ -286,6 +286,20 @@
     "setupFailed": "L'installation a échoué. Les détails sont dans le journal.",
     "unauthenticated": "Connecte-toi, s'il te plaît."
   },
+  "export": {
+    "columns": {
+      "time": "Heure",
+      "duration": "Durée",
+      "block": "Bloc",
+      "info": "Info"
+    },
+    "blockCount": "{count, plural, one {# bloc} many {# blocs} other {# blocs}}",
+    "overlap": "⚠ Chevauchement",
+    "details": "Détails",
+    "split": "{content} de contenu, {breaks} de pauses",
+    "yes": "oui",
+    "no": "non"
+  },
   "library": {
     "title": "Ateliers",
     "folders": "Dossiers",

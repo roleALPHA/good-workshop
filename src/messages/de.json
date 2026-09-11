@@ -286,6 +286,20 @@
     "setupFailed": "Die Einrichtung ist fehlgeschlagen. Details stehen im Log.",
     "unauthenticated": "Bitte melde dich an."
   },
+  "export": {
+    "columns": {
+      "time": "Zeit",
+      "duration": "Dauer",
+      "block": "Block",
+      "info": "Info"
+    },
+    "blockCount": "{count, plural, one {# Block} other {# Blöcke}}",
+    "overlap": "⚠ Überschneidung",
+    "details": "Details",
+    "split": "{content} Inhalt, {breaks} Pausen",
+    "yes": "ja",
+    "no": "nein"
+  },
   "library": {
     "title": "Workshops",
     "folders": "Ordner",

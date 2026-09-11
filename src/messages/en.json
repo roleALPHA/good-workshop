@@ -286,6 +286,20 @@
     "setupFailed": "Setup failed. The details are in the log.",
     "unauthenticated": "Please sign in."
   },
+  "export": {
+    "columns": {
+      "time": "Time",
+      "duration": "Duration",
+      "block": "Block",
+      "info": "Info"
+    },
+    "blockCount": "{count, plural, one {# block} other {# blocks}}",
+    "overlap": "⚠ Overlap",
+    "details": "Details",
+    "split": "{content} content, {breaks} breaks",
+    "yes": "yes",
+    "no": "no"
+  },
   "library": {
     "title": "Workshops",
     "folders": "Folders",

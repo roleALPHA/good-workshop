@@ -286,6 +286,20 @@
     "setupFailed": "La instalación ha fallado. Los detalles están en el registro.",
     "unauthenticated": "Inicia sesión, por favor."
   },
+  "export": {
+    "columns": {
+      "time": "Hora",
+      "duration": "Duración",
+      "block": "Bloque",
+      "info": "Info"
+    },
+    "blockCount": "{count, plural, one {# bloque} many {# bloques} other {# bloques}}",
+    "overlap": "⚠ Solapamiento",
+    "details": "Detalles",
+    "split": "{content} de contenido, {breaks} de pausas",
+    "yes": "sí",
+    "no": "no"
+  },
   "library": {
     "title": "Talleres",
     "folders": "Carpetas",

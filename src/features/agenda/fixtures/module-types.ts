@@ -1,5 +1,7 @@
 import type { ModuleTypeDto } from '@/domain/agenda/types'
 import { BUILTIN_BY_KEY } from '@/domain/moduleType/builtins'
+import { localiseModuleType } from '@/domain/moduleType/localise'
+import { DEFAULT_LOCALE } from '@/i18n/config'
 
 /**
  * The built-in module types, as they will be seeded per tenant.
@@ -146,11 +148,33 @@ export const BUILTIN_MODULE_TYPES: ModuleTypeDto[] = [
   },
 ]
 
-/** Schemas come from the same JSON the server seeds, so the fixture cannot drift. */
-const withSchema = (type: ModuleTypeDto): ModuleTypeDto => ({
-  ...type,
-  jsonSchema: BUILTIN_BY_KEY[type.key]?.jsonSchema,
-})
+/**
+ * Schemas come from the same JSON the server seeds, through the same function
+ * loadDay uses -- so the fixture cannot drift from what the application builds.
+ *
+ * German, because these fixtures back the component tests and the export
+ * snapshots, and German is the source text. Going through localiseModuleType
+ * rather than reading builtins.json straight is what puts `x-gw.enumLabels` on
+ * the schema, which is where the enum labels now come from.
+ */
+const withSchema = (type: ModuleTypeDto): ModuleTypeDto => {
+  const builtin = BUILTIN_BY_KEY[type.key]
+  if (!builtin) return type
+
+  const localised = localiseModuleType(
+    {
+      name: type.name,
+      description: builtin.description ?? '',
+      jsonSchema: builtin.jsonSchema,
+      isSystem: true,
+      systemKey: type.key,
+      customizedAt: null,
+    },
+    DEFAULT_LOCALE,
+  )
+
+  return { ...type, jsonSchema: localised.jsonSchema }
+}
 
 export const MODULE_TYPES_BY_ID: Record<string, ModuleTypeDto> = Object.fromEntries(
   BUILTIN_MODULE_TYPES.map((t) => [t.id, withSchema(t)]),
