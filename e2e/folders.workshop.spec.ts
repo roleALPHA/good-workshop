@@ -78,6 +78,31 @@ test('does not offer a folder its own subtree as a destination', async ({ page }
   expect(options.some((text) => text.includes(parent))).toBe(false)
 })
 
+test('keeps the folder tree out of the way on a phone until it is asked for', async ({ page }) => {
+  // Shown in full, a tree of any size pushes the workshops off the screen: on a
+  // phone the list is what you came for, and the folders are how you narrow it
+  // down once you need to.
+  await page.setViewportSize({ width: 390, height: 844 })
+
+  const name = `Klapp ${Date.now()}`
+  await page.goto('/library')
+  await page.getByRole('button', { name: /Ordner (ein|aus)blenden/ }).click()
+  await sidebar(page).getByRole('button', { name: 'Ordner', exact: true }).click()
+  await page.getByLabel('Name des Ordners').fill(name)
+  await page.keyboard.press('Enter')
+  await expect(sidebar(page).getByRole('link', { name })).toBeVisible()
+
+  // Folded away again, and the list is back at the top.
+  await page.getByRole('button', { name: /Ordner (ein|aus)blenden/ }).click()
+  await expect(sidebar(page).getByRole('link', { name })).toBeHidden()
+
+  // The point of folding it away: what you came for is on screen without
+  // scrolling. Asserted on the search box, which sits directly above the list
+  // and is there whether or not the library has anything in it yet.
+  await expect(page.getByPlaceholder('Suchen')).toBeInViewport()
+  await expect(page.getByRole('heading', { name: 'Workshops' })).toBeInViewport()
+})
+
 test('shows the folder tree on a phone too', async ({ page }) => {
   // The sidebar was `hidden md:block`, so on a phone the library had no folders
   // at all: no way to see the structure, no way to switch between branches,
@@ -86,6 +111,7 @@ test('shows the folder tree on a phone too', async ({ page }) => {
 
   const name = `Handy ${Date.now()}`
   await page.goto('/library')
+  await page.getByRole('button', { name: /Ordner (ein|aus)blenden/ }).click()
   await sidebar(page).getByRole('button', { name: 'Ordner', exact: true }).click()
   await page.getByLabel('Name des Ordners').fill(name)
   await page.keyboard.press('Enter')

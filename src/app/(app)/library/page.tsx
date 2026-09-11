@@ -4,6 +4,7 @@ import { loadLibrary } from '@/server/actions/workshop'
 import { CreateWorkshop } from './create-workshop'
 import { CreateFolder } from './create-folder'
 import { FolderRow } from './folder-row'
+import { FolderPanel } from './folder-panel'
 import { SearchBox } from './search-box'
 import { WorkshopList } from './workshop-list'
 
@@ -47,65 +48,67 @@ export default async function LibraryPage({
         for -- and the library is where they start.
       */}
       <nav aria-label="Ordner und Tags" className="min-w-0">
-        <h2 className="mb-2 text-[12px] font-semibold tracking-wide text-[var(--fg-subtle)] uppercase">
-          Ordner
-        </h2>
-        <ul className="space-y-0.5">
-          <li>
-            <Link href="/library" className={navClass(!folder && !tag)}>
-              Alle Workshops
-            </Link>
-          </li>
-          {folders.map((node) => (
-            <FolderRow
-              key={node.id}
-              id={node.id}
-              name={node.name}
-              depth={node.depth}
-              active={folder === node.id}
-              canManage={isAdmin}
-              // Its own subtree is left out: moving a folder into itself or
-              // below itself would detach the branch from the root. The domain
-              // refuses it too -- this just keeps it off the menu.
-              targets={folders.filter(
-                (other) => other.id !== node.id && !other.ancestorIds.includes(node.id),
-              )}
-            />
-          ))}
-        </ul>
-        <div className="mt-2">
-          <CreateFolder parentId={folder ?? null} />
-        </div>
+        <FolderPanel current={folders.find((node) => node.id === folder)?.name ?? null}>
+          <h2 className="mb-2 text-[12px] font-semibold tracking-wide text-[var(--fg-subtle)] uppercase">
+            Ordner
+          </h2>
+          <ul className="space-y-0.5">
+            <li>
+              <Link href="/library" className={navClass(!folder && !tag)}>
+                Alle Workshops
+              </Link>
+            </li>
+            {folders.map((node) => (
+              <FolderRow
+                key={node.id}
+                id={node.id}
+                name={node.name}
+                depth={node.depth}
+                active={folder === node.id}
+                canManage={isAdmin}
+                // Its own subtree is left out: moving a folder into itself or
+                // below itself would detach the branch from the root. The domain
+                // refuses it too -- this just keeps it off the menu.
+                targets={folders.filter(
+                  (other) => other.id !== node.id && !other.ancestorIds.includes(node.id),
+                )}
+              />
+            ))}
+          </ul>
+          <div className="mt-2">
+            <CreateFolder parentId={folder ?? null} />
+          </div>
 
-        <Link
-          href="/library/trash"
-          className="mt-3 inline-block px-2 text-[14px] text-[var(--fg-muted)] hover:underline"
-        >
-          Papierkorb
-        </Link>
+          <Link
+            href="/library/trash"
+            className="mt-3 inline-block px-2 text-[14px] text-[var(--fg-muted)] hover:underline"
+          >
+            Papierkorb
+          </Link>
 
-        {tags.length > 0 && (
-          <>
-            <h2 className="mt-6 mb-2 text-[12px] font-semibold tracking-wide text-[var(--fg-subtle)] uppercase">
-              Tags
-            </h2>
-            <ul className="space-y-0.5">
-              {tags.map((entry) => (
-                <li key={entry.id}>
-                  <Link
-                    href={`/library?tag=${entry.id}`}
-                    className={`${navClass(tag === entry.id)} flex items-baseline gap-2`}
-                  >
-                    <span className="min-w-0 flex-1 truncate">{entry.name}</span>
-                    <span className="tabular shrink-0 text-[13px] text-[var(--fg-subtle)]">
-                      {entry.count}
-                    </span>
-                  </Link>
-                </li>
-              ))}
-            </ul>
-          </>
-        )}
+          {tags.length > 0 && (
+            <>
+              <h2 className="mt-6 mb-2 text-[12px] font-semibold tracking-wide text-[var(--fg-subtle)] uppercase">
+                Tags
+              </h2>
+              <ul className="space-y-0.5">
+                {tags.map((entry) => (
+                  <li key={entry.id}>
+                    <Link
+                      href={`/library?tag=${entry.id}`}
+                      className={`${navClass(tag === entry.id)} flex items-baseline gap-2`}
+                    >
+                      <span className="min-w-0 flex-1 truncate">{entry.name}</span>
+                      <span className="tabular shrink-0 text-[13px] text-[var(--fg-subtle)]">
+                        {entry.count}
+                      </span>
+                    </Link>
+                  </li>
+                ))}
+              </ul>
+            </>
+          )}
+        </FolderPanel>
       </nav>
 
       <section>
