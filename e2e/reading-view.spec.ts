@@ -1,5 +1,6 @@
 import { expect, test } from '@playwright/test'
 import { seedReferenceDay } from './fixtures/seed-day'
+import { STORAGE_STATE } from './paths'
 
 /**
  * The phone reading view is not a degraded desktop table -- it is the screen a
@@ -17,8 +18,22 @@ import { seedReferenceDay } from './fixtures/seed-day'
 test.describe('reading view on a phone', () => {
   test.skip(({ isMobile }) => !isMobile, 'Phone layout only')
 
-  test.beforeEach(async ({ page, request }) => {
-    await seedReferenceDay(page, request)
+  // Seeded once for the whole file: nothing here writes, so one agenda serves
+  // every assertion -- and the MCP endpoint is not asked for a workshop eight
+  // times in a row.
+  let dayUrl: string
+
+  test.beforeAll(async ({ browser, playwright, baseURL }) => {
+    const context = await browser.newContext({ storageState: STORAGE_STATE })
+    const page = await context.newPage()
+    const request = await playwright.request.newContext({ baseURL, storageState: STORAGE_STATE })
+    dayUrl = await seedReferenceDay(page, request)
+    await request.dispose()
+    await context.close()
+  })
+
+  test.beforeEach(async ({ page }) => {
+    await page.goto(dayUrl)
   })
 
   test('never scrolls horizontally', async ({ page }) => {

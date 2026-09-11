@@ -153,7 +153,7 @@ async function callOnce(
  * Creates a workshop, fills its first day with the reference agenda and leaves
  * the browser on that day.
  */
-export async function seedReferenceDay(page: Page, request: APIRequestContext): Promise<void> {
+export async function seedReferenceDay(page: Page, request: APIRequestContext): Promise<string> {
   const doc = createDemoDay()
   const title = `Referenz ${Date.now()}-${Math.random().toString(36).slice(2, 7)}`
 
@@ -175,9 +175,15 @@ export async function seedReferenceDay(page: Page, request: APIRequestContext): 
   // depends on it. apply_agenda writes blocks, not the day itself.
   await call(request, 'set_day_start', { workshopId, dayId, startMinute: doc.startMinute })
 
-  await page.goto(`/w/${workshopId}/d/${dayId}`)
+  const url = `/w/${workshopId}/d/${dayId}`
+  await page.goto(url)
   // The first block of the fixture, as the signal that the write arrived: a
   // page that raced the materialiser would otherwise fail further down in a
   // way that reads like a layout bug.
   await expect(page.getByRole('article', { name: doc.modules[0]!.title })).toBeVisible()
+
+  // Handed back so a read-only suite can seed once and navigate many times.
+  // Seeding per test costs an MCP call per test, and the tool endpoint is rate
+  // limited -- rightly so, and the tests should not be the reason it trips.
+  return url
 }

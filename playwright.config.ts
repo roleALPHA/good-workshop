@@ -3,7 +3,11 @@ import { STORAGE_STATE } from './e2e/paths'
 
 const PORT = Number(process.env.E2E_PORT ?? 3210)
 const COLLAB_PORT = Number(process.env.GW_COLLAB_PORT ?? 3211)
-const baseURL = `http://127.0.0.1:${PORT}`
+// localhost, not 127.0.0.1. Browsers treat localhost as the one insecure
+// origin where WebAuthn still works, and they refuse an IP address as a
+// Relying Party ID outright -- so the passkey tests cannot run against the
+// loopback address, however equivalent the two look.
+const baseURL = `http://localhost:${PORT}`
 
 /**
  * E2E is the narrow top of the pyramid: only flows that cannot be proven a
@@ -98,11 +102,15 @@ export default defineConfig({
         // developer's .env.local can send the browser to a port that is not
         // listening -- which reads as "the login is broken".
         GW_APP_URL: baseURL,
-        GW_COLLAB_URL: `ws://127.0.0.1:${COLLAB_PORT}/collab`,
+        // localhost, like baseURL: the session cookie is set for the host the
+        // page was loaded from, and a socket to 127.0.0.1 is a different host
+        // as far as the browser is concerned -- it would carry no cookie, and
+        // the document would sit at "offline" with nothing in the log.
+        GW_COLLAB_URL: `ws://localhost:${COLLAB_PORT}/collab`,
         // The address the app itself uses when an MCP write joins a room.
         // Separate from the one above because the browser goes through a
         // proxy in a real deployment and this process is inside it.
-        GW_COLLAB_INTERNAL_URL: `ws://127.0.0.1:${COLLAB_PORT}/collab`,
+        GW_COLLAB_INTERNAL_URL: `ws://localhost:${COLLAB_PORT}/collab`,
       },
       // The root, not /api/health. Health is honest about needing a database --
       // it returns 503 without one -- while "is the server listening" and "can

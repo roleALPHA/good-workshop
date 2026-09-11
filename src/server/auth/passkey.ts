@@ -6,7 +6,7 @@ import {
   verifyRegistrationResponse,
 } from '@simplewebauthn/server'
 import type { AuthenticationResponseJSON, RegistrationResponseJSON } from '@simplewebauthn/server'
-import { and, eq, gt, sql } from 'drizzle-orm'
+import { and, asc, eq, gt, sql } from 'drizzle-orm'
 import { withAuth } from '@/server/db'
 import { identity, webauthnChallenge, webauthnCredential } from '@/server/db/schema'
 import { authConfig } from './config'
@@ -131,6 +131,46 @@ export async function verifyRegistration(
     }),
   )
   return true
+}
+
+/**
+ * The passkeys on one account, for the screen that manages them.
+ *
+ * No public key and no counter: the page needs to tell one device from another,
+ * and everything beyond that is material an XSS would love to have.
+ */
+export async function listPasskeys(identityId: string) {
+  return withAuth((tx) =>
+    tx
+      .select({
+        id: webauthnCredential.id,
+        nickname: webauthnCredential.nickname,
+        deviceType: webauthnCredential.deviceType,
+        backedUp: webauthnCredential.backedUp,
+        createdAt: webauthnCredential.createdAt,
+        lastUsedAt: webauthnCredential.lastUsedAt,
+      })
+      .from(webauthnCredential)
+      .where(eq(webauthnCredential.identityId, identityId))
+      .orderBy(asc(webauthnCredential.createdAt)),
+  )
+}
+
+/**
+ * Removes one passkey, and only from the account it belongs to.
+ *
+ * The identity is part of the WHERE rather than checked beforehand: a stolen or
+ * guessed credential id must not be able to strip somebody else's device, and
+ * one statement cannot drift from its own check the way two can.
+ */
+export async function deletePasskey(identityId: string, id: string): Promise<boolean> {
+  const deleted = await withAuth((tx) =>
+    tx
+      .delete(webauthnCredential)
+      .where(and(eq(webauthnCredential.id, id), eq(webauthnCredential.identityId, identityId)))
+      .returning({ id: webauthnCredential.id }),
+  )
+  return deleted.length > 0
 }
 
 export async function authenticationOptions() {
