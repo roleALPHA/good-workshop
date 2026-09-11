@@ -153,7 +153,7 @@ services:
       # und eine, die man trifft, statt sie zu bekommen, weil man nichts gesagt
       # hat. Wer `docker logs` lesen kann, konnte sich sonst für jede beliebige
       # Adresse einen Link ausstellen lassen und abholen.
-      GW_MAIL_TRANSPORT: ${GW_MAIL_TRANSPORT:?GW_MAIL_TRANSPORT muss gesetzt sein -- smtp, console oder none}
+      GW_MAIL_TRANSPORT: ${GW_MAIL_TRANSPORT:?GW_MAIL_TRANSPORT muss gesetzt sein -- smtp, graph, console oder none}
       # Entweder die URL direkt -- oder, besser, SMTP_URL_FILE auf ein Docker
       # Secret. Eine Environment-Variable mit Passwort steht in `docker
       # inspect`, in /proc/<pid>/environ und in jedem Core-Dump; ein Secret
@@ -161,6 +161,15 @@ services:
       SMTP_URL: ${SMTP_URL:-}
       SMTP_URL_FILE: ${SMTP_URL_FILE:-}
       SMTP_FROM: ${SMTP_FROM:-}
+      # Microsoft Graph statt SMTP. Viele Microsoft-365-Mandanten haben SMTP
+      # AUTH abgeschaltet -- dort ist das nicht die bequemere, sondern die
+      # einzige Möglichkeit. Das Geheimnis besser als GW_GRAPH_CLIENT_SECRET_FILE
+      # aus einer Datei, aus demselben Grund wie bei SMTP_URL_FILE.
+      GW_GRAPH_TENANT_ID: ${GW_GRAPH_TENANT_ID:-}
+      GW_GRAPH_CLIENT_ID: ${GW_GRAPH_CLIENT_ID:-}
+      GW_GRAPH_CLIENT_SECRET: ${GW_GRAPH_CLIENT_SECRET:-}
+      GW_GRAPH_CLIENT_SECRET_FILE: ${GW_GRAPH_CLIENT_SECRET_FILE:-}
+      GW_GRAPH_SENDER: ${GW_GRAPH_SENDER:-}
       GW_EDITION: ${GW_EDITION:-community}
       # Der Tag, der laut .env laufen soll -- derselbe Wert, der oben das Image
       # auswählt. Ohne diese Zeile meldet /api/health den ARG-Wert aus dem

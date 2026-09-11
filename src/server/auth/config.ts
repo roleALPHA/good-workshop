@@ -11,7 +11,7 @@
  *    registered passkeys invalidates every one of them, silently.
  */
 
-export type MailTransport = 'smtp' | 'console' | 'none'
+export type MailTransport = 'smtp' | 'graph' | 'console' | 'none'
 
 function appUrl(): URL {
   const raw = process.env.GW_APP_URL ?? 'http://localhost:3000'
@@ -43,8 +43,8 @@ export const authConfig = {
   },
   get mailTransport(): MailTransport {
     const value = process.env.GW_MAIL_TRANSPORT ?? 'console'
-    if (value !== 'smtp' && value !== 'console' && value !== 'none') {
-      throw new Error(`GW_MAIL_TRANSPORT must be smtp | console | none, got: ${value}`)
+    if (value !== 'smtp' && value !== 'graph' && value !== 'console' && value !== 'none') {
+      throw new Error(`GW_MAIL_TRANSPORT must be smtp | graph | console | none, got: ${value}`)
     }
     return value
   },
@@ -84,6 +84,31 @@ export function auditAuthConfig(): string[] {
         'account. Reasonable for an install with no relay; set GW_MAIL_TRANSPORT=smtp once ' +
         'there is one.',
     )
+  }
+  if (authConfig.mailTransport === 'graph') {
+    // Beim Start gemeldet, nicht erst beim ersten Anmeldeversuch: sonst merkt
+    // es zuerst die Person, die sich nicht anmelden kann, und niemand schaut
+    // dabei ins Log.
+    const missing = (
+      [
+        ['GW_GRAPH_TENANT_ID', process.env.GW_GRAPH_TENANT_ID],
+        ['GW_GRAPH_CLIENT_ID', process.env.GW_GRAPH_CLIENT_ID],
+        ['GW_GRAPH_SENDER', process.env.GW_GRAPH_SENDER],
+        [
+          'GW_GRAPH_CLIENT_SECRET',
+          process.env.GW_GRAPH_CLIENT_SECRET || process.env.GW_GRAPH_CLIENT_SECRET_FILE,
+        ],
+      ] as const
+    )
+      .filter(([, value]) => !value)
+      .map(([name]) => name)
+
+    if (missing.length > 0) {
+      warnings.push(
+        `GW_MAIL_TRANSPORT=graph, but ${missing.join(', ')} ${missing.length === 1 ? 'is' : 'are'} ` +
+          'not set. No mail can be sent until this is complete.',
+      )
+    }
   }
   if (authConfig.mailTransport === 'none') {
     warnings.push(

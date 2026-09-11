@@ -2,9 +2,8 @@
 
 Open-Source-Workshopplanung. Selbst gehostet, MCP-fähig.
 
-Eine freie Alternative zu SessionLab: Agenden aus Modulen, Clustern und Workshoptagen bauen,
-per Drag & Drop umsortieren, als Markdown exportieren — und die Daten bleiben auf der eigenen
-Maschine.
+Agenden aus Modulen, Clustern und Workshoptagen bauen, per Drag & Drop umsortieren, als
+Markdown exportieren — und die Daten bleiben auf der eigenen Maschine.
 
 > **Status: in Entwicklung.** Meilenstein 1 (Editor-Kern) ist im Bau. Noch kein Release.
 
@@ -120,7 +119,7 @@ Vier Werte sind Pflicht; ohne sie startet der Stack nicht und sagt, welcher fehl
 ```bash
 GW_APP_URL=https://workshop.example.com   # die Adresse, unter der die App erreichbar ist
 GW_HOSTNAME=workshop.example.com          # der Name im Zertifikat (Profil `tls`)
-GW_MAIL_TRANSPORT=smtp                    # smtp | console | none
+GW_MAIL_TRANSPORT=smtp                    # smtp | graph | console | none
 GW_VERSION=local                          # oder der Release-Tag
 ```
 
@@ -128,6 +127,23 @@ Bei `GW_MAIL_TRANSPORT=smtp` zusätzlich `SMTP_URL` und `SMTP_FROM`. Enthält di
 ein Passwort, gehört sie besser in eine Datei: `SMTP_URL_FILE=/run/secrets/smtp_url`. Eine
 Environment-Variable steht in `docker inspect`, in `/proc/<pid>/environ` und in jedem
 Core-Dump.
+
+**Microsoft 365 ohne SMTP:** Viele Mandanten haben SMTP AUTH abgeschaltet — dort ist
+`GW_MAIL_TRANSPORT=graph` nicht der bequemere, sondern der einzige Weg. Gebraucht wird eine
+App-Registrierung in Entra ID mit der **Anwendungsberechtigung** `Mail.Send` (nicht der
+delegierten) samt Administratorzustimmung, dazu das Postfach, aus dem gesendet wird:
+
+```bash
+GW_MAIL_TRANSPORT=graph
+GW_GRAPH_TENANT_ID=contoso.onmicrosoft.com   # oder die Verzeichnis-ID
+GW_GRAPH_CLIENT_ID=00000000-0000-0000-0000-000000000000
+GW_GRAPH_CLIENT_SECRET_FILE=/run/secrets/graph_secret
+GW_GRAPH_SENDER=workshop@contoso.com
+```
+
+Fehlt einer dieser Werte, sagt die Anwendung das beim Start — nicht erst, wenn sich jemand
+nicht anmelden kann. Mit `Mail.Send` allein kann Graph nichts außer senden: die Berechtigung
+erlaubt kein Lesen von Postfächern.
 
 **Den Hostnamen jetzt festlegen** — eine spätere Änderung macht jeden registrierten Passkey
 ungültig. Siehe [Stolperfallen](#stolperfallen).
@@ -240,21 +256,25 @@ ssh -L 3000:127.0.0.1:3000 server
 
 ### Konfiguration
 
-| Variable                                  | Pflicht    | Bedeutung                                                                                                                                              |
-| ----------------------------------------- | ---------- | ------------------------------------------------------------------------------------------------------------------------------------------------------ |
-| `GW_APP_URL`                              | ja         | Adresse, unter der die App erreichbar ist. Leitet Anmeldelinks und die WebAuthn-Origin ab.                                                             |
-| `GW_HOSTNAME`                             | für `tls`  | Name im Zertifikat. Wird an Caddy durchgereicht.                                                                                                       |
-| `GW_MAIL_TRANSPORT`                       | ja         | `smtp`, `console` oder `none`.                                                                                                                         |
-| `GW_VERSION`                              | ja         | Image-Tag. Bewusst ohne Standardwert — ein beweglicher Tag ist kein Deployment.                                                                        |
-| `SMTP_URL` / `SMTP_URL_FILE`              | bei `smtp` | Relay-URL, direkt oder aus einer Datei.                                                                                                                |
-| `SMTP_FROM`                               | bei `smtp` | Absenderadresse.                                                                                                                                       |
-| `GW_RP_ID`                                | nein       | WebAuthn Relying Party ID. Leer = Host aus `GW_APP_URL`. Nachträgliche Änderung entwertet alle Passkeys.                                               |
-| `GW_BOOTSTRAP_ADMIN_EMAIL`                | nein       | Legt beim allerersten Start einen Admin an und druckt dessen Link.                                                                                     |
-| `GW_OPS_TOKEN`                            | nein       | Macht `/api/health` mit Header `x-ops-token` ausführlich (Version, Migrationsstand, Treiberfehler). Ohne ihn bleibt der öffentliche Endpunkt wortkarg. |
-| `GW_TRUSTED_PROXIES`                      | nein       | Zahl der Proxys davor (Standard 1). Nur für Drosselung und Logs, nie für eine Berechtigung.                                                            |
-| `GW_SESSION_IDLE_DAYS`                    | nein       | Nach wie vielen Tagen ohne Nutzung eine Session verfällt (Standard 14).                                                                                |
-| `GW_PORT`, `GW_COLLAB_PORT`               | nein       | Ports auf `127.0.0.1`, falls die Standardwerte belegt sind.                                                                                            |
-| `GW_COLLAB_URL`, `GW_COLLAB_INTERNAL_URL` | nein       | Nur nötig, wenn der Kollaborations-Dienst nicht unter `/collab` auf demselben Host liegt.                                                              |
+| Variable                                                 | Pflicht     | Bedeutung                                                                                                                                              |
+| -------------------------------------------------------- | ----------- | ------------------------------------------------------------------------------------------------------------------------------------------------------ |
+| `GW_APP_URL`                                             | ja          | Adresse, unter der die App erreichbar ist. Leitet Anmeldelinks und die WebAuthn-Origin ab.                                                             |
+| `GW_HOSTNAME`                                            | für `tls`   | Name im Zertifikat. Wird an Caddy durchgereicht.                                                                                                       |
+| `GW_MAIL_TRANSPORT`                                      | ja          | `smtp`, `graph`, `console` oder `none`.                                                                                                                |
+| `GW_GRAPH_TENANT_ID`                                     | bei `graph` | Microsoft-365-Mandant, als Domäne oder Verzeichnis-ID.                                                                                                 |
+| `GW_GRAPH_CLIENT_ID`                                     | bei `graph` | Anwendungs-ID der App-Registrierung.                                                                                                                   |
+| `GW_GRAPH_CLIENT_SECRET` / `GW_GRAPH_CLIENT_SECRET_FILE` | bei `graph` | Das Geheimnis der Registrierung, direkt oder aus einer Datei.                                                                                          |
+| `GW_GRAPH_SENDER`                                        | bei `graph` | Postfach, aus dem gesendet wird.                                                                                                                       |
+| `GW_VERSION`                                             | ja          | Image-Tag. Bewusst ohne Standardwert — ein beweglicher Tag ist kein Deployment.                                                                        |
+| `SMTP_URL` / `SMTP_URL_FILE`                             | bei `smtp`  | Relay-URL, direkt oder aus einer Datei.                                                                                                                |
+| `SMTP_FROM`                                              | bei `smtp`  | Absenderadresse.                                                                                                                                       |
+| `GW_RP_ID`                                               | nein        | WebAuthn Relying Party ID. Leer = Host aus `GW_APP_URL`. Nachträgliche Änderung entwertet alle Passkeys.                                               |
+| `GW_BOOTSTRAP_ADMIN_EMAIL`                               | nein        | Legt beim allerersten Start einen Admin an und druckt dessen Link.                                                                                     |
+| `GW_OPS_TOKEN`                                           | nein        | Macht `/api/health` mit Header `x-ops-token` ausführlich (Version, Migrationsstand, Treiberfehler). Ohne ihn bleibt der öffentliche Endpunkt wortkarg. |
+| `GW_TRUSTED_PROXIES`                                     | nein        | Zahl der Proxys davor (Standard 1). Nur für Drosselung und Logs, nie für eine Berechtigung.                                                            |
+| `GW_SESSION_IDLE_DAYS`                                   | nein        | Nach wie vielen Tagen ohne Nutzung eine Session verfällt (Standard 14).                                                                                |
+| `GW_PORT`, `GW_COLLAB_PORT`                              | nein        | Ports auf `127.0.0.1`, falls die Standardwerte belegt sind.                                                                                            |
+| `GW_COLLAB_URL`, `GW_COLLAB_INTERNAL_URL`                | nein        | Nur nötig, wenn der Kollaborations-Dienst nicht unter `/collab` auf demselben Host liegt.                                                              |
 
 ## Stolperfallen
 
@@ -274,17 +294,18 @@ Anwendung sagt das beim Start noch einmal.
 
 ### Wenn es nicht läuft
 
-| Symptom                                              | Ursache                                                                                                                                                            |
-| ---------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
-| `GW_APP_URL muss gesetzt sein` beim `up`             | Pflichtwert fehlt in der `.env`. Die Meldung nennt ihn.                                                                                                            |
-| Caddy startet nicht, „GW_HOSTNAME muss gesetzt sein" | `tls`-Profil ohne Hostnamen.                                                                                                                                       |
-| Zertifikat wird nicht ausgestellt                    | Hostname löst nicht auf diesen Server auf, oder 80/443 sind belegt.                                                                                                |
-| `/api/health` meldet 503 mit `database`              | Datenbank nicht erreichbar oder noch im Hochlauf.                                                                                                                  |
-| `/api/health` meldet 503 mit `migrations`            | `migrate` ist nicht durchgelaufen: `docker compose logs migrate`.                                                                                                  |
-| `migrate` bricht mit „MIGRATION GESTOPPT" ab         | Die Vorprüfung hat Zeilen gefunden, die einer Migration im Weg stehen. Die Datenbank ist unverändert; die Meldung nennt die Zeilen und die Entscheidung.           |
-| Kein Anmeldelink im Postfach                         | `GW_MAIL_TRANSPORT` prüfen. Bei `console` steht er in `docker compose logs app`.                                                                                   |
-| Anmeldung klappt, Passkey-Angebot fehlt              | Kein HTTPS — erwartetes Verhalten, siehe oben.                                                                                                                     |
-| Editor zeigt dauerhaft „offline"                     | Der Kollaborations-Dienst ist nicht erreichbar oder `GW_APP_URL` passt nicht zur Adresse im Browser: der Socket weist fremde Herkunft ab und schreibt das ins Log. |
+| Symptom                                              | Ursache                                                                                                                                                                        |
+| ---------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
+| `GW_APP_URL muss gesetzt sein` beim `up`             | Pflichtwert fehlt in der `.env`. Die Meldung nennt ihn.                                                                                                                        |
+| Caddy startet nicht, „GW_HOSTNAME muss gesetzt sein" | `tls`-Profil ohne Hostnamen.                                                                                                                                                   |
+| Zertifikat wird nicht ausgestellt                    | Hostname löst nicht auf diesen Server auf, oder 80/443 sind belegt.                                                                                                            |
+| `/api/health` meldet 503 mit `database`              | Datenbank nicht erreichbar oder noch im Hochlauf.                                                                                                                              |
+| `/api/health` meldet 503 mit `migrations`            | `migrate` ist nicht durchgelaufen: `docker compose logs migrate`.                                                                                                              |
+| `migrate` bricht mit „MIGRATION GESTOPPT" ab         | Die Vorprüfung hat Zeilen gefunden, die einer Migration im Weg stehen. Die Datenbank ist unverändert; die Meldung nennt die Zeilen und die Entscheidung.                       |
+| Kein Anmeldelink im Postfach                         | `GW_MAIL_TRANSPORT` prüfen. Bei `console` steht er in `docker compose logs app`.                                                                                               |
+| Graph meldet `403` oder `invalid_client`             | Die App-Registrierung hat nicht die **Anwendungsberechtigung** `Mail.Send` mit Administratorzustimmung, oder das Geheimnis ist abgelaufen. Die Meldung steht im Log von `app`. |
+| Anmeldung klappt, Passkey-Angebot fehlt              | Kein HTTPS — erwartetes Verhalten, siehe oben.                                                                                                                                 |
+| Editor zeigt dauerhaft „offline"                     | Der Kollaborations-Dienst ist nicht erreichbar oder `GW_APP_URL` passt nicht zur Adresse im Browser: der Socket weist fremde Herkunft ab und schreibt das ins Log.             |
 
 ## Lizenz
 
