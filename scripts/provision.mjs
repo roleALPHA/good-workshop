@@ -10,6 +10,7 @@ import { createHash, randomBytes, randomUUID } from 'node:crypto'
 import { dirname, join } from 'node:path'
 import { fileURLToPath } from 'node:url'
 import pg from 'pg'
+import { dbOptions } from './db-connect.mjs'
 
 const root = join(dirname(fileURLToPath(import.meta.url)), '..')
 // Runs as gw_app, not as the migration role. Seeding module types is an
@@ -56,7 +57,14 @@ async function activeTenants() {
     )
   }
 
-  const operator = new pg.Client({ connectionString: operatorUrl })
+  const operator = new pg.Client(
+    dbOptions(
+      operatorUrl,
+      process.env.OPS_DATABASE_URL
+        ? process.env.OPS_DATABASE_PASSWORD_FILE
+        : process.env.ADMIN_DATABASE_PASSWORD_FILE,
+    ),
+  )
   await operator.connect()
   try {
     const { rows } = await operator.query(`select id from tenant where status = 'active'`)
@@ -66,7 +74,14 @@ async function activeTenants() {
   }
 }
 
-const client = new pg.Client({ connectionString: url })
+const client = new pg.Client(
+  dbOptions(
+    url,
+    process.env.DATABASE_URL
+      ? process.env.DATABASE_PASSWORD_FILE
+      : process.env.MIGRATION_DATABASE_PASSWORD_FILE,
+  ),
+)
 await client.connect()
 
 try {
@@ -226,7 +241,7 @@ async function bootstrapAdmin(client) {
   const base = process.env.GW_APP_URL ?? 'http://localhost:3000'
   console.log('')
   console.log('  Admin angelegt: ' + email)
-  console.log('  Einmaliger Anmeldelink (24 Stunden gültig):')
+  console.log('  Einmaliger Anmeldelink (eine Stunde gültig):')
   console.log('')
   console.log('    ' + new URL('/verify?token=' + secret, base))
   console.log('')

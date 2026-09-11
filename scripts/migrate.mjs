@@ -13,6 +13,7 @@ import pg from 'pg'
 import { drizzle } from 'drizzle-orm/node-postgres'
 import { migrate } from 'drizzle-orm/node-postgres/migrator'
 import { sql } from 'drizzle-orm'
+import { dbOptions } from './db-connect.mjs'
 
 const root = join(dirname(fileURLToPath(import.meta.url)), '..')
 const url = process.env.MIGRATION_DATABASE_URL ?? process.env.DATABASE_URL
@@ -28,7 +29,14 @@ if (!process.env.MIGRATION_DATABASE_URL) {
   )
 }
 
-const client = new pg.Client({ connectionString: url })
+const client = new pg.Client(
+  dbOptions(
+    url,
+    process.env.MIGRATION_DATABASE_URL
+      ? process.env.MIGRATION_DATABASE_PASSWORD_FILE
+      : process.env.DATABASE_PASSWORD_FILE,
+  ),
+)
 await client.connect()
 const db = drizzle(client)
 
@@ -74,7 +82,7 @@ async function applyPatResolver() {
     return
   }
 
-  const admin = new pg.Client({ connectionString: adminUrl })
+  const admin = new pg.Client(dbOptions(adminUrl, process.env.ADMIN_DATABASE_PASSWORD_FILE))
   await admin.connect()
   try {
     await admin.query(source)

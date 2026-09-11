@@ -1,3 +1,4 @@
+import { readFileSync } from 'node:fs'
 import { drizzle } from 'drizzle-orm/node-postgres'
 import pg from 'pg'
 import * as schema from './schema'
@@ -32,7 +33,7 @@ function getPool(): pg.Pool {
   }
 
   const pool = new pg.Pool({
-    connectionString,
+    connectionString: withPasswordFile(connectionString, process.env.DATABASE_PASSWORD_FILE),
     max: Number(process.env.GW_DB_POOL_MAX ?? 10),
     idleTimeoutMillis: 30_000,
     connectionTimeoutMillis: 5_000,
@@ -42,6 +43,35 @@ function getPool(): pg.Pool {
   // until the server runs out of connections.
   globalThis.__gwPool = pool
   return pool
+}
+
+/**
+ * Reads the database password from a file and puts it into the connection URL.
+ *
+ * `docker inspect` prints a container's environment and so does anything that
+ * reads /proc/<pid>/environ -- the same argument compose.yaml makes for
+ * SMTP_URL_FILE over SMTP_URL. The file is read once, when the pool is built,
+ * so a rotated secret takes effect on the next restart.
+ *
+ * Into the URL rather than pg's `password` option because node-postgres cannot
+ * take both: it re-parses connectionString over the config it was given, and
+ * the URL's absent password wins. The twin of this lives in
+ * scripts/db-connect.mjs, for the operational scripts -- tsconfig sets
+ * allowJs: false and the scripts run unbuilt, so there are two copies. Change
+ * one, change the other.
+ *
+ * No file configured means the URL is used as-is: local development and CI run
+ * against a Postgres that trusts the local connection.
+ */
+function withPasswordFile(connectionString: string, file: string | undefined): string {
+  if (!file) return connectionString
+
+  const secret = readFileSync(file, 'utf8').trim()
+  if (!secret) throw new Error(`${file} is empty -- the database password file has no content.`)
+
+  const url = new URL(connectionString)
+  url.password = secret
+  return url.toString()
 }
 
 export function getDb() {

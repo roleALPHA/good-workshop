@@ -17,45 +17,94 @@
 #    docker compose exec app node scripts/cli.mjs login-link --email du@example.com
 # ══════════════════════════════════════════════════════════════════════════════
 
-# Kein Datenbank-Passwort, nirgends. Die Rollen authentifizieren sich über einen
-# geteilten Unix-Socket per Peer-Authentifizierung (siehe POSTGRES_INITDB_ARGS
-# unten): es gibt kein Geheimnis, das in eine .env, ein Log oder ein Backup
-# geraten könnte.
+# JEDE ROLLE HAT IHR EIGENES PASSWORT, UND KEINES STEHT IN DIESER DATEI.
+#
+# Der `secrets`-Dienst erzeugt beim ersten Start je ein zufälliges Passwort pro
+# Rolle in ein Volume; db, migrate und app lesen sie von dort. Damit steht kein
+# Geheimnis in der .env, in `docker inspect`, in einem Dump oder in einem
+# Logauszug -- aber die Rollentrennung ist zum ersten Mal tatsächlich
+# durchgesetzt.
+#
+# Vorher stand hier Peer-Authentifizierung über einen geteilten Socket, mit der
+# schöneren Zusage "kein Passwort, nirgends". Sie konnte nicht funktionieren:
+# Peer vergleicht den OS-Benutzer des verbindenden PROZESSES mit dem
+# Rollennamen, und der App-Container läuft als `node` (uid 1000), während der
+# Datenbank-Container uid 70 als `postgres` kennt und bei 1000 niemanden. Keine
+# Verbindung über die Containergrenze konnte je gelingen -- und weil der
+# Entrypoint des Postgres-Images ohne Passwort oder `trust` gar nicht erst
+# initialisiert, startete der Stack auf einer frischen Installation nicht.
+#
+# `trust` wäre der falsche Ausweg gewesen: es lässt jeden Prozess in jedem
+# Container des Netzes als jede Rolle herein, Superuser eingeschlossen. RLS,
+# NOINHERIT und das revoke auf die Identitätstabellen ruhen alle darauf, dass
+# die Anwendung ausschließlich gw_app ist.
 #
 # Zwei Anker statt einem. Der Web-Container bekommt ausschließlich gw_app --
 # die unprivilegierte Rolle, für die RLS, NOINHERIT und das revoke auf die
 # Identitätstabellen gebaut sind. Gäbe man ihm den Anker mit, stünde die
-# Superuser-Verbindung fertig in process.env des einen Containers, den ein
-# Angreifer zuerst erreicht, und der ganze Wall wäre eine Zeile wert.
+# Superuser-Verbindung fertig im einen Container, den ein Angreifer zuerst
+# erreicht, und der ganze Wall wäre eine Zeile wert.
+#
+# `db` veröffentlicht keinen Port. Erreichbar ist die Datenbank nur aus diesem
+# Compose-Netz -- und dort nur mit dem Passwort der jeweiligen Rolle.
 x-app-db: &app-db
-  DATABASE_URL: postgres://gw_app@/goodworkshop?host=/var/run/postgresql
+  DATABASE_URL: postgres://gw_app@db:5432/goodworkshop
+  DATABASE_PASSWORD_FILE: /run/db-secrets/gw_app/password
 
 x-migrate-db: &migrate-db
-  DATABASE_URL: postgres://gw_app@/goodworkshop?host=/var/run/postgresql
-  MIGRATION_DATABASE_URL: postgres://gw_owner@/goodworkshop?host=/var/run/postgresql
-  ADMIN_DATABASE_URL: postgres://postgres@/goodworkshop?host=/var/run/postgresql
+  DATABASE_URL: postgres://gw_app@db:5432/goodworkshop
+  DATABASE_PASSWORD_FILE: /run/db-secrets/gw_app/password
+  MIGRATION_DATABASE_URL: postgres://gw_owner@db:5432/goodworkshop
+  MIGRATION_DATABASE_PASSWORD_FILE: /run/db-secrets/gw_owner/password
+  ADMIN_DATABASE_URL: postgres://postgres@db:5432/goodworkshop
+  ADMIN_DATABASE_PASSWORD_FILE: /run/db-secrets/postgres/password
 
 services:
+  # Läuft einmal und beendet sich. Erzeugt fehlende Rollen-Passwörter in das
+  # Volume, aus dem db, migrate und app sie lesen -- und rührt vorhandene nicht
+  # an, damit ein Neustart keine laufende Installation aussperrt.
+  secrets:
+    image: ghcr.io/rolealpha/good-workshop:${GW_VERSION:?GW_VERSION muss gesetzt sein -- ein beweglicher Tag ist kein Deployment}
+    restart: 'no'
+    # Als root, und nur dieser eine Dienst: ein frisches Docker-Volume gehört
+    # root, und sonst könnte niemand die erste Datei hineinschreiben. Er tut
+    # genau eine Sache und endet; app und migrate laufen unverändert als `node`.
+    user: '0:0'
+    command: ['node', 'scripts/db-secrets.mjs']
+    # Der einzige Ort, an dem alle vier zusammenliegen -- in einem Container,
+    # der Sekunden lebt und nichts aus dem Netz annimmt.
+    volumes:
+      - secret_postgres:/run/db-secrets/postgres
+      - secret_gw_owner:/run/db-secrets/gw_owner
+      - secret_gw_app:/run/db-secrets/gw_app
+      - secret_gw_ops:/run/db-secrets/gw_ops
+
   db:
     image: postgres:17-alpine
     restart: unless-stopped
     environment:
       POSTGRES_DB: goodworkshop
       POSTGRES_USER: postgres
-      # Peer über den Socket, nichts über TCP. Der Kommentar hier behauptete
-      # früher Peer-Authentifizierung, während initdb ohne --auth-local auf
-      # `trust` steht: jeder Prozess im App-Container und jeder Nachbarcontainer
-      # konnte sich als postgres verbinden. POSTGRES_HOST_AUTH_METHOD betrifft
-      # ausschließlich TCP und hat den Socket nie berührt.
-      POSTGRES_INITDB_ARGS: '--auth-local=peer --auth-host=reject'
+      # Aus der Datei, nicht aus der Umgebung: POSTGRES_PASSWORD stünde in
+      # `docker inspect`. Der Entrypoint verlangt eines von beiden, sonst
+      # initialisiert er die Datenbank gar nicht erst.
+      POSTGRES_PASSWORD_FILE: /run/db-secrets/postgres/password
+      # `peer` für den lokalen Socket IM Container -- das ist der Weg, den
+      # `docker compose exec -u postgres db pg_dump` geht. Über TCP gilt der
+      # Standard scram-sha-256, und ohne veröffentlichten Port ist das Netz
+      # dieses Stacks die einzige Herkunft, aus der jemand es versuchen kann.
+      POSTGRES_INITDB_ARGS: '--auth-local=peer'
     volumes:
       - pgdata:/var/lib/postgresql/data
-      - pgsocket:/var/run/postgresql
+      - secret_postgres:/run/db-secrets/postgres:ro
     healthcheck:
       test: ['CMD-SHELL', 'pg_isready -U postgres -d goodworkshop']
       interval: 5s
       timeout: 5s
       retries: 20
+    depends_on:
+      secrets:
+        condition: service_completed_successfully
 
   # Läuft einmal und beendet sich. `app` startet erst, wenn das hier
   # erfolgreich durch ist -- ein Rolling Deploy mit ausstehender Migration
@@ -63,8 +112,15 @@ services:
   migrate:
     image: ghcr.io/rolealpha/good-workshop:${GW_VERSION:?GW_VERSION muss gesetzt sein -- ein beweglicher Tag ist kein Deployment}
     restart: 'no'
+    # Vier Schritte, und die Reihenfolge ist die Aussage: preflight liest nur und
+    # bricht ab, BEVOR migrate die erste Zeile anfasst. Eine Migration, die an
+    # den vorhandenen Daten scheitert, tut das sonst mittendrin -- mit einem
+    # nackten Postgres-Fehler, einem `app`, das wegen
+    # service_completed_successfully gar nicht erst startet, und ohne ein Wort
+    # dazu, welche Zeilen gemeint sind.
     command: >-
       sh -c "node scripts/db-bootstrap.mjs &&
+             node scripts/preflight.mjs &&
              node scripts/migrate.mjs &&
              node scripts/provision.mjs"
     environment:
@@ -74,8 +130,13 @@ services:
       # Legt beim allerersten Lauf einen Admin an und druckt einen einmaligen
       # Anmeldelink auf stdout -- unabhängig von der Mail-Konfiguration.
       GW_BOOTSTRAP_ADMIN_EMAIL: ${GW_BOOTSTRAP_ADMIN_EMAIL:-}
+    # Drei, weil dieser Dienst drei Rollen braucht: Superuser für die Rollen
+    # selbst, gw_owner für das Schema, gw_app für das Provisioning durch
+    # dieselbe Tür wie die Anwendung. gw_ops bekommt er nicht.
     volumes:
-      - pgsocket:/var/run/postgresql
+      - secret_postgres:/run/db-secrets/postgres:ro
+      - secret_gw_owner:/run/db-secrets/gw_owner:ro
+      - secret_gw_app:/run/db-secrets/gw_app:ro
     depends_on:
       db:
         condition: service_healthy
@@ -101,7 +162,18 @@ services:
       SMTP_URL_FILE: ${SMTP_URL_FILE:-}
       SMTP_FROM: ${SMTP_FROM:-}
       GW_EDITION: ${GW_EDITION:-community}
+      # Der Tag, der laut .env laufen soll -- derselbe Wert, der oben das Image
+      # auswählt. Ohne diese Zeile meldet /api/health den ARG-Wert aus dem
+      # Dockerfile (`dev` bei einem selbst gebauten Image), und die eine Frage,
+      # für die der Endpunkt existiert -- welcher Stand läuft hier -- wird
+      # falsch beantwortet.
+      GW_VERSION: ${GW_VERSION}
       GW_COLLAB_PORT: '3001'
+      # Standen in .env.example und in der README, erreichten den Container aber
+      # nicht: eine dokumentierte Variable, die nirgends ankommt, ist eine
+      # Anleitung, die ins Leere führt. `check-docs.mjs` prüft das jetzt.
+      GW_COLLAB_URL: ${GW_COLLAB_URL:-}
+      GW_COLLAB_INTERNAL_URL: ${GW_COLLAB_INTERNAL_URL:-}
       # Ohne diesen Wert antwortet /api/health nur mit "ok" bzw. "unhealthy"
       # und welche Prüfung gescheitert ist -- der Endpunkt steht im Internet.
       # Wer ihn setzt, bekommt mit `x-ops-token` zusätzlich Version,
@@ -110,8 +182,11 @@ services:
       # Wie viele Proxys vor der Anwendung stehen. Nur für Drosselung und Logs.
       GW_TRUSTED_PROXIES: ${GW_TRUSTED_PROXIES:-1}
       GW_SESSION_IDLE_DAYS: ${GW_SESSION_IDLE_DAYS:-14}
+    # EINS. Der Web-Container kennt das Passwort von gw_app und von keiner
+    # anderen Rolle -- das ist der "zwei Anker"-Punkt von oben, in Dateiform.
+    # Läge hier das Superuser-Geheimnis mit, wäre der ganze Wall eine Zeile wert.
     volumes:
-      - pgsocket:/var/run/postgresql
+      - secret_gw_app:/run/db-secrets/gw_app:ro
     # Nur an 127.0.0.1, nie an 0.0.0.0: ohne den Proxy davor ist nichts
     # erreichbar, auch bei falsch stehender Firewall nicht.
     #
@@ -162,6 +237,10 @@ services:
 
 volumes:
   pgdata:
-  pgsocket:
+  # Ein Volume je Rolle, damit ein Dienst nur das bekommt, was er braucht.
+  secret_postgres:
+  secret_gw_owner:
+  secret_gw_app:
+  secret_gw_ops:
   caddy_data:
   caddy_config:

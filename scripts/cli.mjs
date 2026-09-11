@@ -14,6 +14,7 @@
  */
 import { createHash, randomBytes, randomUUID } from 'node:crypto'
 import pg from 'pg'
+import { dbOptions } from './db-connect.mjs'
 
 const DEFAULT_TENANT_ID = '00000000-0000-0000-0000-000000000001'
 const MAGIC_LINK_TTL_MINUTES = Number(process.env.GW_MAGIC_LINK_TTL_MINUTES ?? 15)
@@ -47,7 +48,7 @@ const [command, subcommand] = positional
 const url = process.env.DATABASE_URL
 if (!url) fail('DATABASE_URL is not set.')
 
-const client = new pg.Client({ connectionString: url })
+const client = new pg.Client(dbOptions(url, process.env.DATABASE_PASSWORD_FILE))
 await client.connect()
 
 try {
