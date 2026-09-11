@@ -169,6 +169,90 @@ describe('an MCP write', () => {
     human.close()
   })
 
+  it('refuses a day that belongs to a different workshop', async () => {
+    // The MCP half of the same hole as the socket: preflight authorises
+    // workshopId, inRoom opens (workshopId, dayId), and nothing establishes
+    // that the day is part of that workshop.
+    //
+    // With `apply_agenda` in replace mode this is one call: a token scoped to
+    // a workshop the caller legitimately owns, pointed at somebody else's day,
+    // clears it. A read-only token is not required and a viewer relationship
+    // is not required -- only the id.
+    const strangerIdentity = randomUUID()
+    const strangerMember = randomUUID()
+    const strangerWorkshop = uuidv7()
+    const strangerDay = uuidv7()
+
+    await ops.query('insert into identity (id, email) values ($1, $2)', [
+      strangerIdentity,
+      `mcp-stranger-${strangerIdentity}@example.test`,
+    ])
+    await ops.query(
+      `insert into member (id, tenant_id, identity_id, role, status) values ($1, $2, $3, 'member', 'active')`,
+      [strangerMember, TENANT, strangerIdentity],
+    )
+    await ops.query(
+      `insert into workshop (id, tenant_id, title, owner_id, position) values ($1, $2, 'Fremd', $3, 'c0')`,
+      [strangerWorkshop, TENANT, strangerMember],
+    )
+    await ops.query(
+      `insert into workshop_day (id, tenant_id, workshop_id, position) values ($1, $2, $3, 'a0')`,
+      [strangerDay, TENANT, strangerWorkshop],
+    )
+    await ops.query(
+      `insert into module (id, tenant_id, workshop_id, day_id, module_type_id, title, duration_minutes, position)
+       values ($1, $2, $3, $4, $5, 'Fremder Inhalt', 30, 'a0')`,
+      [uuidv7(), TENANT, strangerWorkshop, strangerDay, moduleTypeId],
+    )
+
+    // Seed the stranger's day as its own owner. Without this the test passes
+    // for the wrong reason: an UNSEEDED day still runs through Room.load()'s
+    // access check, which does bind day to workshop, so the attack is refused
+    // by the one path that was never the problem. The hole is the early return
+    // taken by every day that has been opened once.
+    const strangerToken = generatePersonalAccessToken()
+    await ops.query(
+      `insert into personal_access_token (id, tenant_id, member_id, name, token_id, token_hash, scopes)
+       values ($1, $2, $3, 'Fremd', $4, $5, '{workshops:read,workshops:write}')`,
+      [randomUUID(), TENANT, strangerMember, strangerToken.tokenId, strangerToken.tokenHash],
+    )
+    await editInRoom(
+      {
+        workshopId: strangerWorkshop,
+        dayId: strangerDay,
+        authorization: `Bearer ${strangerToken.token}`,
+        url,
+      },
+      (doc) =>
+        addModuleBlock(doc, uuidv7(), {
+          moduleTypeId,
+          title: 'Vom Eigentümer',
+          durationMinutes: 10,
+        }),
+    )
+
+    await expect(
+      editInRoom({ workshopId, dayId: strangerDay, authorization: `Bearer ${token}`, url }, (doc) =>
+        addModuleBlock(doc, uuidv7(), {
+          moduleTypeId,
+          title: 'Untergeschoben',
+          durationMinutes: 10,
+        }),
+      ),
+    ).rejects.toThrow()
+
+    const { rows } = await ops.query(
+      'select title from module where day_id = $1 order by position',
+      [strangerDay],
+    )
+    expect(rows.map((r: { title: string }) => r.title)).not.toContain('Untergeschoben')
+    expect(rows.map((r: { title: string }) => r.title)).toContain('Fremder Inhalt')
+
+    await ops.query('delete from personal_access_token where member_id = $1', [strangerMember])
+    await ops.query('delete from workshop where owner_id = $1', [strangerMember])
+    await ops.query('delete from identity where id = $1', [strangerIdentity])
+  })
+
   it('refuses a token that cannot write', async () => {
     const readOnly = generatePersonalAccessToken()
     await ops.query(

@@ -40,6 +40,19 @@ describe('renderDayMarkdown', () => {
     expect(renderDayMarkdown(meta, doc)).toContain('A \\| B')
   })
 
+  it('neutralises HTML that a downstream renderer would execute', () => {
+    // The delivery path is clean -- text/markdown, attachment, a slug-only
+    // filename. The risk is what happens next: exports get pasted into wikis,
+    // static site generators and chat tools, and a good many of those render
+    // raw HTML inside Markdown by default.
+    const doc = createDemoDay()
+    doc.modules[0]!.title = '<img src=x onerror=alert(1)>'
+    const output = renderDayMarkdown(meta, doc)
+
+    expect(output).not.toContain('<img src=x onerror=alert(1)>')
+    expect(output).toContain('&lt;img')
+  })
+
   it('reports the content-versus-breaks split facilitators actually check', () => {
     expect(renderDayMarkdown(meta, createDemoDay())).toMatch(/\d+h \d+m Inhalt, .* Pausen/)
   })

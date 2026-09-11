@@ -29,6 +29,14 @@ let dayId: string
 let cookie: string
 let moduleTypeId: string
 
+// A second member with a workshop of their own, so the cross-workshop attack
+// below has a real victim rather than a hypothetical one.
+let victimIdentityId: string
+let victimMemberId: string
+let victimWorkshopId: string
+let victimDayId: string
+let victimCookie: string
+
 beforeAll(async () => {
   await ops.connect()
 
@@ -72,6 +80,45 @@ beforeAll(async () => {
   )
   cookie = `gw_session=${sessionId}.${secret}`
 
+  // The victim: same tenant, own workshop, own day. Nothing connects them to
+  // the member above.
+  victimIdentityId = randomUUID()
+  victimMemberId = randomUUID()
+  victimWorkshopId = uuidv7()
+  victimDayId = uuidv7()
+
+  await ops.query('insert into identity (id, email, status) values ($1, $2, $3)', [
+    victimIdentityId,
+    `victim-${victimIdentityId}@example.test`,
+    'active',
+  ])
+  await ops.query(
+    `insert into member (id, tenant_id, identity_id, role, status) values ($1, $2, $3, 'member', 'active')`,
+    [victimMemberId, TENANT, victimIdentityId],
+  )
+  await ops.query(
+    `insert into workshop (id, tenant_id, title, owner_id, position) values ($1, $2, 'Fremd', $3, 'a1')`,
+    [victimWorkshopId, TENANT, victimMemberId],
+  )
+  await ops.query(
+    `insert into workshop_day (id, tenant_id, workshop_id, position) values ($1, $2, $3, 'a0')`,
+    [victimDayId, TENANT, victimWorkshopId],
+  )
+
+  const victimSessionId = randomUUID()
+  const victimSecret = randomBytes(32).toString('base64url')
+  await ops.query(
+    `insert into auth_session (id, identity_id, active_tenant_id, secret_hash, method, expires_at)
+     values ($1, $2, $3, $4, 'magic_link', now() + interval '1 hour')`,
+    [
+      victimSessionId,
+      victimIdentityId,
+      TENANT,
+      createHash('sha256').update(victimSecret).digest('hex'),
+    ],
+  )
+  victimCookie = `gw_session=${victimSessionId}.${victimSecret}`
+
   // Short timings: the production grace period is thirty seconds, which would
   // make these behaviours untestable in practice and therefore untested.
   server = startCollabServer({
@@ -80,23 +127,44 @@ beforeAll(async () => {
     timings: { persistDebounceMs: 50, materializeDebounceMs: 200, emptyGraceMs: 200 },
   })
   await new Promise((resolve) => setTimeout(resolve, 300))
+
+  // Seed the victim's day through the real socket, as its owner. This matters:
+  // `Room.load()` only reaches its access check for an UNSEEDED day. A day that
+  // has been opened once takes the early return -- which is the state every
+  // real workshop is in, and the state the attack below needs.
+  const victim = await connect(
+    { cookie: victimCookie },
+    { workshop: victimWorkshopId, day: victimDayId },
+  )
+  addBlock(victim.doc, uuidv7(), 'Vertraulich', 'a0')
+  await new Promise((resolve) => setTimeout(resolve, 400))
+  victim.close()
+  await new Promise((resolve) => setTimeout(resolve, 400))
 })
 
 afterAll(async () => {
   await server.close()
-  await ops.query('delete from workshop where owner_id = $1', [memberId])
-  await ops.query('delete from identity where id = $1', [identityId])
+  await ops.query('delete from workshop where owner_id = any($1::uuid[])', [
+    [memberId, victimMemberId],
+  ])
+  await ops.query('delete from identity where id = any($1::uuid[])', [
+    [identityId, victimIdentityId],
+  ])
   await ops.end()
 })
 
 const MESSAGE_SYNC = 0
 
 /** A minimal y-websocket client: enough protocol to sync, nothing more. */
-async function connect(headers: Record<string, string> = { cookie }) {
+async function connect(
+  headers: Record<string, string> = { cookie },
+  target: { workshop?: string; day?: string } = {},
+) {
   const doc = new Y.Doc()
-  const ws = new WebSocket(`ws://127.0.0.1:${PORT}/collab?workshop=${workshopId}&day=${dayId}`, {
-    headers,
-  })
+  const ws = new WebSocket(
+    `ws://127.0.0.1:${PORT}/collab?workshop=${target.workshop ?? workshopId}&day=${target.day ?? dayId}`,
+    { headers },
+  )
 
   await new Promise<void>((resolve, reject) => {
     ws.once('open', resolve)
@@ -177,6 +245,74 @@ describe('the collaboration socket', () => {
     await expect(connect({ cookie: `gw_session=${sessionId}.${secret}` })).rejects.toThrow(/401/)
 
     await ops.query('delete from identity where id = $1', [strangerIdentity])
+  })
+
+  it('refuses a socket that pairs its own workshop with a foreign day', async () => {
+    // The test above proves the workshop is checked. Nothing proved that the
+    // DAY belongs to it -- and it is the day that decides which document gets
+    // loaded and, on the way back, materialised.
+    //
+    // Owning any workshop is not a privilege: every member may create one. So
+    // this pairing is available to everyone in the tenant who has ever seen a
+    // foreign day id -- a viewer, a former collaborator, anyone with an export.
+    await expect(connect({ cookie }, { workshop: workshopId, day: victimDayId })).rejects.toThrow(
+      /401/,
+    )
+  })
+
+  it('does not hand a foreign day’s content to a socket that asks for it', async () => {
+    // Separate from the rejection above on purpose: if the guard is ever
+    // loosened to "log and continue", the connection would succeed and only
+    // this assertion would catch that the content still crossed.
+    const attacker = await connect({ cookie }, { workshop: workshopId, day: victimDayId }).catch(
+      () => null,
+    )
+    if (!attacker) return // refused, which is the point
+
+    await settle()
+    const titles = [...blocksOf(attacker.doc).values()].map((b) => b.get('title'))
+    attacker.close()
+
+    expect(titles).not.toContain('Vertraulich')
+  })
+
+  it('refuses an upgrade from a foreign origin', async () => {
+    // Today a cross-site handshake fails anyway, because the session cookie is
+    // SameSite=Lax and a WebSocket handshake is not a top-level navigation. So
+    // this is not currently exploitable -- it is a defence that exists as a
+    // side effect of a line in another file, with no test and no comment here
+    // saying so. Change `sameSite` and it becomes cross-site WebSocket
+    // hijacking, with nothing to catch it.
+    await expect(connect({ cookie, origin: 'https://evil.example' })).rejects.toThrow(/40[13]/)
+  })
+
+  it('accepts an upgrade from its own origin', async () => {
+    // The guard has to let the real application in, including the case where
+    // there is no Origin header at all -- non-browser clients do not send one,
+    // and the MCP path is exactly that.
+    const own = await connect({ cookie, origin: 'http://localhost:3000' })
+    own.close()
+  })
+
+  it('closes a socket that sends an oversized frame', async () => {
+    // `new WebSocketServer({ noServer: true })` leaves maxPayload at the ws
+    // default of 100 MiB, and every frame is applied and then buffered towards
+    // a bytea column. One authenticated editor can fill memory and disk.
+    const client = await connect()
+    const closed = new Promise<'closed'>((resolve) =>
+      client.ws.once('close', () => resolve('closed')),
+    )
+    // Raced rather than awaited: without a limit nothing ever closes, and a
+    // test that proves that by running into the suite timeout reports the
+    // wrong thing and costs twenty seconds doing it.
+    const timeout = new Promise<'still open'>((resolve) =>
+      setTimeout(() => resolve('still open'), 2000),
+    )
+
+    client.ws.send(Buffer.alloc(2 * 1024 * 1024, 1))
+
+    await expect(Promise.race([closed, timeout])).resolves.toBe('closed')
+    client.close()
   })
 
   it('carries one client’s change to the other', async () => {

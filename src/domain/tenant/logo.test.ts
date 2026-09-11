@@ -81,3 +81,50 @@ describe('readLogo', () => {
     expect(() => readLogo(huge, 'image/png')).toThrow(/256 KB/)
   })
 })
+
+/**
+ * The SVG rejections that the current patterns let through.
+ *
+ * The delivery path is the real defence and it is correct: the logo route
+ * serves `default-src 'none'; ... sandbox` plus nosniff, and a sandboxed
+ * document runs no script even when opened directly. So none of these is
+ * exploitable today.
+ *
+ * They are still bugs, because the rejection filter is sold as the second
+ * layer. A second layer with holes in it is worse than an acknowledged single
+ * layer: it is the reason nobody looks again.
+ */
+describe('readLogo: rejection gaps', () => {
+  const svg = (body: string) =>
+    new TextEncoder().encode(`<svg xmlns="http://www.w3.org/2000/svg">${body}</svg>`)
+
+  it.each([
+    {
+      name: 'external reference without quotes',
+      // The href pattern requires a quote character before the scheme.
+      body: '<image href=http://evil.example/x.png />',
+    },
+    {
+      name: 'data: reference in <use>, unquoted',
+      body: '<use href=data:image/svg+xml;base64,PHN2Zz48L3N2Zz4= />',
+    },
+    {
+      name: 'event handler assembled from an entity',
+      body: '<!DOCTYPE svg [<!ENTITY e "onload=alert(1)">]><rect &e; />',
+    },
+    {
+      name: 'an entity expansion bomb',
+      body: '<!DOCTYPE svg [<!ENTITY a "AAAAAAAAAA"><!ENTITY b "&a;&a;&a;&a;&a;&a;&a;&a;&a;&a;">]><text>&b;</text>',
+    },
+  ])('rejects $name', ({ body }) => {
+    expect(() => readLogo(svg(body), 'image/svg+xml')).toThrow(LogoError)
+  })
+
+  it('checks the bytes rather than trusting the declared type', () => {
+    // Raster formats are verified by signature; SVG is matched with a regex
+    // against content the client also labelled. The label is the client's
+    // claim, and the file is served back under it.
+    const notSvg = new TextEncoder().encode('GIF89a<svg xmlns="http://www.w3.org/2000/svg"></svg>')
+    expect(() => readLogo(notSvg, 'image/svg+xml')).toThrow(LogoError)
+  })
+})

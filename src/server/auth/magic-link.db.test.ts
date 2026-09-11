@@ -80,6 +80,29 @@ describe('magic links', () => {
     expect(await consumeMagicLink('vollstaendig-erfunden')).toBeNull()
   })
 
+  it('refuses a token that was not issued for logging in', async () => {
+    // `purpose` is selected in the RETURNING clause and then never looked at.
+    // Today that is harmless, because 'login' is the only value anything
+    // writes. The check constraint already allows 'invite' and 'email_change',
+    // and the day somebody adds an address-change flow, its token becomes a
+    // login token for the account it was meant to re-verify.
+    const issued = await issueMagicLink(email)
+    const token = tokenOf(issued!.link)
+    await ops.query(`update email_token set purpose = 'email_change' where consumed_at is null`)
+
+    expect(await consumeMagicLink(token)).toBeNull()
+  })
+
+  it('stops issuing links long before an inbox is buried', async () => {
+    // Anonymous, unauthenticated, one database row and one outbound mail per
+    // call. Through the operator's own relay, which is what makes it their
+    // reputation problem rather than only their disk.
+    const results = []
+    for (let i = 0; i < 12; i++) results.push(await issueMagicLink(email))
+
+    expect(results.filter(Boolean).length).toBeLessThan(12)
+  })
+
   it('stores only a hash, so a stolen dump yields no working links', async () => {
     const issued = await issueMagicLink(email)
     const token = tokenOf(issued!.link)

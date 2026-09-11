@@ -19,14 +19,22 @@ import type { Actor } from './actor'
  *     manual check made with the migration connection.
  */
 
-/** Tables that legitimately have no tenant_id. See the identity layer in schema.ts. */
+/**
+ * Tables that legitimately have no tenant_id. See the identity layer in
+ * schema.ts.
+ *
+ * `tenant` is deliberately NOT on this list. It has no tenant_id column, but it
+ * has something better: its own id IS the tenant. A row per tenant carrying the
+ * name, the slug, the settings and the branding is exactly the shape RLS exists
+ * for, and leaving it out of the metadata test was the one gap in an otherwise
+ * complete wall.
+ */
 const GLOBAL_TABLES = [
   'identity',
   'webauthn_credential',
   'webauthn_challenge',
   'email_token',
   'auth_session',
-  'tenant',
   '__drizzle_migrations',
 ]
 
@@ -155,6 +163,26 @@ describe('tenant isolation', () => {
     } finally {
       await anonymous.end()
     }
+  })
+
+  it('hides another tenant’s own row in the tenant table', async () => {
+    // The table the whole scheme is named after. Today the application role has
+    // full DML on it and no policy stands in the way -- which is invisible in
+    // the Community Edition, where there is only ever one row, and a
+    // cross-tenant leak of names, slugs, settings and branding on the very
+    // first day of the Cloud Edition.
+    const seen = await withTenant(actor(tenantA), (tx) => tx.execute(sql`select id from tenant`))
+
+    expect(seen.rows.map((r) => (r as { id: string }).id)).toEqual([tenantA.id])
+  })
+
+  it('refuses to rename another tenant', async () => {
+    await withTenant(actor(tenantA), (tx) =>
+      tx.execute(sql`update tenant set name = 'Übernommen' where id = ${tenantB.id}`),
+    ).catch(() => undefined)
+
+    const { rows } = await ops.query('select name from tenant where id = $1', [tenantB.id])
+    expect(rows[0].name).toBe('Test')
   })
 
   it('keeps the identity tables out of reach of the application role', async () => {

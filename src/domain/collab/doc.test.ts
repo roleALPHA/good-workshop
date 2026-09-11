@@ -2,7 +2,7 @@ import * as Y from 'yjs'
 import { describe, expect, it } from 'vitest'
 import { createDemoDay } from '@/features/agenda/fixtures/day-fixture'
 import { MODULE_TYPES_BY_ID } from '@/features/agenda/fixtures/module-types'
-import { blocksOf, seedFromDayDoc, toDayDoc } from './doc'
+import { blocksOf, readBlocks, seedFromDayDoc, toDayDoc } from './doc'
 import { flattenDay } from '@/features/agenda/flatten'
 
 /**
@@ -209,5 +209,58 @@ describe('offline and reconnect', () => {
     expect(shape(c)).toEqual(shape(a))
     expect(read(c).modules.find((m) => m.id === 'm-5')!.title).toBe('Erst A')
     expect(read(c).modules.find((m) => m.id === 'm-6')!.durationMinutes).toBe(25)
+  })
+})
+
+/**
+ * What comes out of the CRDT is not yet fit for the database.
+ *
+ * `module` carries real constraints -- `position ~ '^[0-9A-Za-z]{1,64}$'` and a
+ * duration between 0 and 1440 -- while the document carries whatever a client
+ * put in a Y.Map. The materialiser sits between the two and only logs when it
+ * fails, so a single malformed value stops every later write for that day.
+ *
+ * The editor keeps looking right, because the editor reads the document. The
+ * export, the print view and every MCP read go to the tables, and quietly serve
+ * the last state that made it through. That is the failure mode worth a table:
+ * silent, permanent, and invisible from the screen where it was caused.
+ */
+describe('readBlocks: values the database will actually accept', () => {
+  const docWith = (fields: Record<string, unknown>) => {
+    const doc = new Y.Doc()
+    const block = new Y.Map<unknown>()
+    block.set('kind', 'module')
+    block.set('position', 'a0')
+    block.set('parentId', null)
+    block.set('title', 'Block')
+    block.set('durationMinutes', 30)
+    for (const [k, v] of Object.entries(fields)) block.set(k, v)
+    blocksOf(doc).set('01a0-block', block)
+    return doc
+  }
+
+  it.each([
+    { name: 'a position with punctuation', fields: { position: 'a0; drop' } },
+    { name: 'an empty position', fields: { position: '' } },
+    { name: 'a position beyond 64 characters', fields: { position: 'a'.repeat(65) } },
+    { name: 'a duration that is not a number', fields: { durationMinutes: 'bald' } },
+    { name: 'a negative duration', fields: { durationMinutes: -5 } },
+    { name: 'a duration beyond a day', fields: { durationMinutes: 5000 } },
+    { name: 'a fractional duration', fields: { durationMinutes: 12.5 } },
+  ])('does not pass on $name', ({ fields }) => {
+    const blocks = readBlocks(docWith(fields))
+
+    for (const block of blocks) {
+      expect(block.position).toMatch(/^[0-9A-Za-z]{1,64}$/)
+      expect(Number.isInteger(block.durationMinutes)).toBe(true)
+      expect(block.durationMinutes).toBeGreaterThanOrEqual(0)
+      expect(block.durationMinutes).toBeLessThanOrEqual(1440)
+    }
+  })
+
+  it('leaves a well-formed block exactly as it was', () => {
+    // The guard must not become a quiet rewriter of legitimate data.
+    const [block] = readBlocks(docWith({ position: 'Zz09', durationMinutes: 45 }))
+    expect(block).toMatchObject({ position: 'Zz09', durationMinutes: 45 })
   })
 })

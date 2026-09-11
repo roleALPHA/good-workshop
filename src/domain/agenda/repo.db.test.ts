@@ -4,7 +4,7 @@ import { uuidv7 } from 'uuidv7'
 import { afterAll, beforeAll, beforeEach, describe, expect, it } from 'vitest'
 import { withTenant, type Actor } from '@/server/db'
 import { assertWorkshopAccess, VersionConflictError, ForbiddenError, NotFoundError } from './access'
-import { addModule, loadDay, moveModule, moveCluster } from './repo'
+import { addModule, deleteModule, loadDay, moveModule, moveCluster } from './repo'
 import { flattenDay } from '@/features/agenda/flatten'
 
 /**
@@ -26,6 +26,15 @@ let dayId: string
 let otherDayId: string
 let clusterId: string
 let breakTypeId: string
+
+// A workshop belonging to somebody else, with something in it worth stealing.
+// The owner above has no relationship to it of any kind.
+let strangerId: string
+let strangerIdentityId: string
+let foreignWorkshopId: string
+let foreignDayId: string
+let foreignClusterId: string
+let foreignModuleId: string
 
 const owner = (): Actor => ({
   tenantId: TENANT,
@@ -55,6 +64,17 @@ beforeAll(async () => {
     [TENANT],
   )
   breakTypeId = rows[0].id
+
+  strangerIdentityId = randomUUID()
+  strangerId = randomUUID()
+  await ops.query('insert into identity (id, email) values ($1, $2)', [
+    strangerIdentityId,
+    `stranger-${strangerIdentityId}@example.test`,
+  ])
+  await ops.query(
+    `insert into member (id, tenant_id, identity_id, role, status) values ($1, $2, $3, 'member', 'active')`,
+    [strangerId, TENANT, strangerIdentityId],
+  )
 })
 
 afterAll(async () => {
@@ -62,8 +82,10 @@ afterAll(async () => {
   // member who still owns workshops is refused. That is the constraint working
   // -- deleting somebody must not silently take their workshops with them --
   // and the teardown has to respect it like any other caller would.
-  await ops.query('delete from workshop where owner_id = $1', [ownerId])
-  await ops.query('delete from identity where id = $1', [identityId])
+  await ops.query('delete from workshop where owner_id = any($1::uuid[])', [[ownerId, strangerId]])
+  await ops.query('delete from identity where id = any($1::uuid[])', [
+    [identityId, strangerIdentityId],
+  ])
   await ops.end()
 })
 
@@ -90,6 +112,30 @@ beforeEach(async () => {
     `insert into cluster (id, tenant_id, workshop_id, day_id, title, position)
      values ($1, $2, $3, $4, 'Sektion', 'a1')`,
     [clusterId, TENANT, workshopId, dayId],
+  )
+
+  foreignWorkshopId = uuidv7()
+  foreignDayId = uuidv7()
+  foreignClusterId = uuidv7()
+  foreignModuleId = uuidv7()
+
+  await ops.query(
+    `insert into workshop (id, tenant_id, title, owner_id, position) values ($1, $2, 'Fremd', $3, 'b0')`,
+    [foreignWorkshopId, TENANT, strangerId],
+  )
+  await ops.query(
+    `insert into workshop_day (id, tenant_id, workshop_id, position) values ($1, $2, $3, 'a0')`,
+    [foreignDayId, TENANT, foreignWorkshopId],
+  )
+  await ops.query(
+    `insert into cluster (id, tenant_id, workshop_id, day_id, title, position)
+     values ($1, $2, $3, $4, 'Fremde Sektion', 'a0')`,
+    [foreignClusterId, TENANT, foreignWorkshopId, foreignDayId],
+  )
+  await ops.query(
+    `insert into module (id, tenant_id, workshop_id, day_id, module_type_id, title, duration_minutes, position, created_by, updated_by)
+     values ($1, $2, $3, $4, $5, 'Fremdes Modul', 30, 'a0', $6, $6)`,
+    [foreignModuleId, TENANT, foreignWorkshopId, foreignDayId, breakTypeId, strangerId],
   )
 })
 
@@ -189,6 +235,95 @@ describe('agenda repository', () => {
       await moveCluster(tx, access, clusterId, dayId, m.id)
     })
     expect(await shape()).toEqual([m.id, clusterId])
+  })
+})
+
+describe('the workshop boundary', () => {
+  /**
+   * Authorisation happens on the workshop; the write happens on an id. Nothing
+   * in between checks that the id belongs to the workshop that was authorised.
+   *
+   * The attacker here is an ordinary member who owns a workshop of their own --
+   * which every member may create -- and who knows an id from somebody else's.
+   * Ids are not secret: a viewer sees them in the page, an export carries them,
+   * MCP hands them out.
+   *
+   * RLS does not help. Both workshops live in the same tenant, which is the
+   * normal case and the whole point of a tenant.
+   */
+  const asAttacker = <T>(fn: (tx: never, access: never) => Promise<T>) =>
+    withTenant(owner(), async (tx) => {
+      const access = await assertWorkshopAccess(tx, owner(), workshopId, 'workshop.content.write')
+      return fn(tx as never, access as never)
+    })
+
+  const foreignModuleStillThere = async () => {
+    const { rows } = await ops.query('select title, day_id from module where id = $1', [
+      foreignModuleId,
+    ])
+    return rows[0]
+  }
+
+  it('refuses to delete a module that belongs to another workshop', async () => {
+    await expect(
+      asAttacker((tx, access) => deleteModule(tx, access, foreignModuleId)),
+    ).rejects.toThrow()
+
+    expect(await foreignModuleStillThere()).toMatchObject({ title: 'Fremdes Modul' })
+  })
+
+  it('refuses to move a module that belongs to another workshop', async () => {
+    // The theft variant: the foreign module is dragged onto a day of the
+    // attacker's own workshop, where loadDay -- which selects by day_id -- will
+    // happily show it to them.
+    await expect(
+      asAttacker((tx, access) =>
+        moveModule(tx, access, foreignModuleId, { dayId, clusterId: null }, null),
+      ),
+    ).rejects.toThrow()
+
+    expect(await foreignModuleStillThere()).toMatchObject({ day_id: foreignDayId })
+  })
+
+  it('refuses to move a cluster that belongs to another workshop', async () => {
+    await expect(
+      asAttacker((tx, access) => moveCluster(tx, access, foreignClusterId, dayId, null)),
+    ).rejects.toThrow()
+
+    const { rows } = await ops.query('select day_id from cluster where id = $1', [foreignClusterId])
+    expect(rows[0]).toMatchObject({ day_id: foreignDayId })
+  })
+
+  it('refuses to add a module to a day in another workshop', async () => {
+    await expect(
+      asAttacker((tx, access) =>
+        addModule(tx, access, {
+          dayId: foreignDayId,
+          clusterId: null,
+          moduleTypeId: breakTypeId,
+          title: 'Untergeschoben',
+        }),
+      ),
+    ).rejects.toThrow()
+
+    const { rows } = await ops.query('select count(*)::int as n from module where day_id = $1', [
+      foreignDayId,
+    ])
+    expect(rows[0].n).toBe(1)
+  })
+
+  it('lets the database reject a module whose day belongs to another workshop', async () => {
+    // The application check above is the first line; this is the second. The
+    // comment above moveModule claims the database already does this -- it does
+    // so for cluster/day, never for workshop/day. Until this passes, the
+    // repository is the only thing standing between a stray id and the data.
+    await expect(
+      ops.query(
+        `insert into module (id, tenant_id, workshop_id, day_id, module_type_id, title, duration_minutes, position, created_by, updated_by)
+         values ($1, $2, $3, $4, $5, 'Inkonsistent', 30, 'z0', $6, $6)`,
+        [uuidv7(), TENANT, workshopId, foreignDayId, breakTypeId, ownerId],
+      ),
+    ).rejects.toThrow()
   })
 })
 
