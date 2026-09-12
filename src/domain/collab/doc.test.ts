@@ -50,6 +50,22 @@ describe('seeding', () => {
     )
   })
 
+  /**
+   * A pinned section survived in the database and was then dropped the first
+   * time anybody opened the day: the seed copied the pin for modules and not
+   * for clusters, and the materialiser wrote that null straight back over the
+   * column. Losing a fixed start time by opening a page is not a display bug.
+   */
+  it('carries a pinned start time for a cluster, not only for a module', () => {
+    const doc = new Y.Doc()
+    const source = createDemoDay()
+    const pinned = { ...source.clusters[0]!, pinnedStartMinute: 600 }
+    seedFromDayDoc(doc, { ...source, clusters: [pinned, ...source.clusters.slice(1)] })
+
+    expect(read(doc).clusters[0]?.pinnedStartMinute).toBe(600)
+    expect(readBlocks(doc).find((b) => b.id === pinned.id)?.pinnedStartMinute).toBe(600)
+  })
+
   it('refuses to seed twice, so two clients arriving together cannot double the day', () => {
     const doc = new Y.Doc()
     const source = createDemoDay()
