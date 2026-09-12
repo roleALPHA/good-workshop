@@ -81,7 +81,7 @@ export function DayNote({
           const trimmed = text.trim()
           if (trimmed !== stored) onChange(trimmed ? { text: trimmed } : {})
         }}
-        className="mt-1 w-full rounded border border-[var(--border)] bg-[var(--surface)] px-3 py-2 text-[15px]"
+        className="mt-1 w-full rounded border border-[var(--border)] bg-[var(--surface)] px-3 py-2 text-[15px] pointer-coarse:text-[16px]"
       />
     </div>
   )

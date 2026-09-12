@@ -221,7 +221,7 @@ export function ModuleRow({
 
               {/*
                 Editor only. The field is the facilitator's own ("nur für
-                dich"), and AgendaTable is the surface a participant is handed
+                dich"), and the read-only table is what a participant is handed
                 -- a marker there would announce that private notes exist.
               */}
               {hasNotes && !editing.expanded && (

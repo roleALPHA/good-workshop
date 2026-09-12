@@ -71,7 +71,7 @@ export function ChipsInput({
         type="text"
         aria-label={addLabel}
         placeholder={placeholder}
-        className="w-24 min-w-0 flex-1 rounded-sm border border-transparent bg-transparent px-1 py-0.5 text-[13px] hover:border-[var(--border)] focus:border-[var(--brand-ring)] focus:bg-[var(--surface)] focus:outline-none"
+        className="w-24 min-w-0 flex-1 rounded-sm border border-transparent bg-transparent px-1 py-0.5 text-[13px] hover:border-[var(--border)] focus:border-[var(--brand-ring)] focus:bg-[var(--surface)] focus:outline-none pointer-coarse:text-[16px]"
         value={draft}
         onChange={(e) => setDraft(e.target.value)}
         onBlur={add}

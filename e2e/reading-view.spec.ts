@@ -3,24 +3,28 @@ import { seedReferenceDay } from './fixtures/seed-day'
 import { STORAGE_STATE } from './paths'
 
 /**
- * The phone reading view is not a degraded desktop table -- it is the screen a
- * facilitator actually uses on the day, standing in the room. These assertions
- * are the mechanical half of the checklist in docs/ui-conventions.md.
+ * The phone is not a degraded desktop table -- it is the screen a facilitator
+ * actually uses on the day, standing in the room. These assertions are the
+ * mechanical half of the checklist in docs/ui-conventions.md.
  *
  * Every one of them is about layout -- overflow, font size, cards instead of a
  * grid, a pinned section header -- so they stayed here when the derivations
  * moved into component tests. jsdom has no layout engine to ask.
  *
- * They run against a real, seeded workshop now. The public demo page that used
- * to serve them is gone: it looked like the product and saved nothing.
+ * The editor used to be withheld here. It is not any more: a facilitator in a
+ * room changes the social form, adds a material and nails a block to a clock
+ * time, and all three are a tap. What the old gate protected is protected where
+ * it belongs -- dragging takes a long press, so the page still scrolls under a
+ * finger, and every field is 16px so iOS does not zoom when one is focused.
  */
 
-test.describe('reading view on a phone', () => {
+test.describe('the day view on a phone', () => {
   test.skip(({ isMobile }) => !isMobile, 'Phone layout only')
 
-  // Seeded once for the whole file: nothing here writes, so one agenda serves
-  // every assertion -- and the MCP endpoint is not asked for a workshop eight
-  // times in a row.
+  // Seeded once for the whole file: every assertion below READS, so one agenda
+  // serves them all -- and the MCP endpoint is not asked for a workshop eight
+  // times in a row. The one test that writes seeds its own day, so it cannot
+  // change what the others are looking at.
   let dayUrl: string
 
   test.beforeAll(async ({ browser, playwright, baseURL }) => {
@@ -59,7 +63,8 @@ test.describe('reading view on a phone', () => {
   test('puts start time and duration on one line', async ({ page }) => {
     const row = page.getByRole('article', { name: 'Agenda & Spielregeln' })
     const start = await row.getByText('13:15').boundingBox()
-    const duration = await row.getByText('10m').first().boundingBox()
+    // The duration is an input here, not text: the row is editable.
+    const duration = await row.getByLabel('Dauer').boundingBox()
 
     expect(start).not.toBeNull()
     expect(duration).not.toBeNull()
@@ -86,11 +91,61 @@ test.describe('reading view on a phone', () => {
     }).toPass()
   })
 
-  test('does not boot the editor at all', async ({ page }) => {
-    // Not a feature withheld from phones: nested drag & drop plus rich text on
-    // a 375px screen is the wrong tool for the screen. No handles means no
-    // dnd-kit, no ProseMirror, nothing to hydrate.
-    await expect(page.getByRole('button', { name: /verschieben$/ })).toHaveCount(0)
+  test('can be edited, which is the whole reason a facilitator opens it here', async ({ page }) => {
+    const row = page.getByRole('article', { name: 'Check-in & Start' })
+
+    await expect(row.getByLabel('Titel')).toBeVisible()
+    await expect(row.getByLabel('Dauer')).toBeVisible()
+    await expect(row.getByRole('button', { name: /^Sozialform:/ })).toBeVisible()
+    await expect(row.getByLabel('Material hinzufügen')).toBeVisible()
+  })
+
+  test('keeps a change made here, rather than showing it and losing it', async ({
+    page,
+    request,
+  }) => {
+    // Its own day: this is the one test in the file that writes, and the others
+    // share a fixture that has to stay as it was seeded.
+    await page.goto(await seedReferenceDay(page, request))
+
+    const row = page.getByRole('article', { name: 'Check-in & Start' })
+
+    await row.getByRole('button', { name: /^Sozialform:/ }).tap()
+    await page.getByRole('option', { name: 'Paare' }).tap()
+    await expect(row.getByRole('button', { name: 'Sozialform: Paare' })).toBeVisible()
+
+    await page.reload()
+    await expect(
+      page.getByRole('article', { name: 'Check-in & Start' }).getByRole('button', {
+        name: 'Sozialform: Paare',
+      }),
+    ).toBeVisible()
+  })
+
+  test('never puts a field below 16px, or iOS zooms the page when it is focused', async ({
+    page,
+  }) => {
+    const sizes = await page.evaluate(() =>
+      [...document.querySelectorAll('article input, article textarea')].map((el) =>
+        parseFloat(getComputedStyle(el).fontSize),
+      ),
+    )
+    expect(sizes.length).toBeGreaterThan(0)
+    expect(Math.min(...sizes)).toBeGreaterThanOrEqual(16)
+  })
+
+  test('needs a long press to drag, so a swipe still scrolls the page', async ({ page }) => {
+    const handle = page.getByRole('button', { name: 'Check-in & Start verschieben' })
+    const box = (await handle.boundingBox())!
+
+    // A quick swipe across the handle: with a 200ms activation delay this is a
+    // scroll, not a drag. If dragging activated on contact, the page could not
+    // be scrolled by touching a row at all.
+    await page.touchscreen.tap(box.x + box.width / 2, box.y + box.height / 2)
+
+    // Our own live region, not dnd-kit's: both carry role="status", and the
+    // announcements this product makes are the ones assembled in the editor.
+    await expect(page.getByRole('region', { name: /^Agenda/ }).getByRole('status')).toHaveText('')
   })
 
   test('shows the attribution footer here too', async ({ page }) => {
@@ -98,7 +153,7 @@ test.describe('reading view on a phone', () => {
   })
 })
 
-test.describe('editor gating', () => {
+test.describe('the wide screen', () => {
   test.skip(({ isMobile }) => isMobile === true, 'Desktop layout only')
 
   test('shows the agenda table with its column headers on a wide screen', async ({

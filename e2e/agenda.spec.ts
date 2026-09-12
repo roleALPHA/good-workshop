@@ -54,7 +54,9 @@ test('follows the system colour scheme through the token system', async ({ page 
 })
 
 test.describe('drag & drop', () => {
-  test.skip(({ isMobile }) => isMobile === true, 'The editor only mounts from 1024px up')
+  // Editable on a phone too; what these assert -- a drag across a grid, a
+  // twelve-column field panel -- is about the wide layout.
+  test.skip(({ isMobile }) => isMobile === true, 'Wide layout only')
 
   // The live region doubles as the synchronisation point: asserting on it is
   // how we know dnd-kit has processed the previous input. Pressing keys back to
@@ -113,7 +115,9 @@ test.describe('drag & drop', () => {
 // above exercises the same projection and move code.
 
 test.describe('inline editing in the day view', () => {
-  test.skip(({ isMobile }) => isMobile === true, 'The editor only mounts from 1024px up')
+  // Editable on a phone too; what these assert -- a drag across a grid, a
+  // twelve-column field panel -- is about the wide layout.
+  test.skip(({ isMobile }) => isMobile === true, 'Wide layout only')
 
   test('changes a duration in the row and moves every following block', async ({ page }) => {
     const row = block(page, 'Spannungsfelder sammeln')

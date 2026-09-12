@@ -11,14 +11,31 @@ nice-to-have.
 
 ### Breakpoints
 
-| Range                 | Behaviour                              |
-| --------------------- | -------------------------------------- |
-| `< 640px` — phone     | reading view (read-only), card layout  |
-| `640–1023px` — tablet | reading view, two columns where useful |
-| `≥ 1024px` — desktop  | the full editor with drag and drop     |
+| Range                 | Behaviour                                             |
+| --------------------- | ----------------------------------------------------- |
+| `< 640px` — phone     | card layout, fully editable                           |
+| `640–1023px` — tablet | card layout, two columns where useful, fully editable |
+| `≥ 1024px` — desktop  | the `--gw-cols` table, fully editable                 |
 
-Below 1024 px the editor shows a friendly note plus a "view read-only" button. **No broken
-mini version of the editor.**
+The difference between them is **layout, not capability**. A phone is not handed a lesser
+version of the agenda.
+
+This used to say the opposite: the editor mounted only from 1024 px up, because nested drag
+and drop plus rich text on a 375 px screen is the wrong tool for the screen. That reasoning
+held while a row was a wall of text. It stopped holding once the row carried the three things
+a facilitator changes _while standing in the room_ — the social form, the material, the clock
+time a block is nailed to. All three are one tap. Showing somebody those three values and
+refusing every one of them is worse than a cramped control.
+
+What the gate protected is now protected where it belongs:
+
+- dragging needs a **long press** (200 ms), so a swipe still scrolls the page,
+- every field is **16 px on a coarse pointer**, so iOS does not zoom when one is focused,
+- the first paint is still the read-only table, so the agenda is legible before any JavaScript
+  has arrived — on the screen where it arrives last.
+
+**Still no broken mini version of the editor.** If something cannot be made to work under a
+thumb, it does not get a cramped variant; it waits for a bigger screen and says so.
 
 ### The agenda collapses into cards, not horizontal scroll
 
@@ -35,15 +52,24 @@ Clusters become `position: sticky` section headers with a running clock time.
 ### Hard minimums
 
 - Body text **never below 16 px** — below that iOS Safari zooms in when an input is focused.
+  Inputs themselves are what that rule is really about: a 13 px chip field is fine under a
+  mouse and must become 16 px under a finger (`pointer-coarse:`). Asserted in
+  `e2e/reading-view.spec.ts`.
 - Line length 45–75 characters.
-- Touch targets ≥ **44 × 44 px**, spacing between tap targets ≥ 8 px.
+- Touch targets ≥ **44 × 44 px**, spacing between tap targets ≥ 8 px. Where a control sits
+  inside a dense row, spend the 44 px on coarse pointers only — a 44 px box around one line of
+  13 px text is not a touch target under a mouse, it is what turns an 86 px row into a 144 px
+  one and pushes the day off the screen.
 - **Never scroll horizontally.** An `overflow-x` on `<body>` is a bug, not a compromise. Long
   content wraps or gets a scroll container of its own.
 - `dvh` rather than `vh` for anything full-height; `env(safe-area-inset-*)` for sticky footers.
 
-### No editor is booted on a phone
+### Rich text is still not edited on a phone
 
-Descriptions render as static HTML there. Never a TipTap `EditorView` instance below 1024 px.
+Descriptions render as static HTML there. Never a TipTap `EditorView` instance below 1024 px --
+this half of the old rule survives, because it is the half that was actually about the screen.
+A paragraph of formatted text is not a tap, and a toolbar under a thumb is the cramped variant
+the rule above forbids.
 
 ## Colours
 
