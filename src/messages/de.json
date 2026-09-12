@@ -243,7 +243,9 @@
         "intoItself": "Ein Ordner kann nicht in sich selbst liegen.",
         "targetGone": "Den Zielordner gibt es nicht.",
         "intoOwnDescendant": "Ein Ordner kann nicht in einen seiner eigenen Unterordner.",
-        "nameTaken": "In diesem Ordner gibt es schon einen Ordner mit diesem Namen."
+        "nameTaken": "In diesem Ordner gibt es schon einen Ordner mit diesem Namen.",
+        "grantTooWide": "Du kannst nur weitergeben, was du selbst hast.",
+        "creatorHasAccess": "Wer den Ordner angelegt hat, hat ohnehin Zugriff."
       },
       "logo": {
         "unsupportedType": "Erlaubt sind SVG, PNG und WebP.",

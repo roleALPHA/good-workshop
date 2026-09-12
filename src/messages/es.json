@@ -243,7 +243,9 @@
         "intoItself": "Una carpeta no puede estar dentro de sí misma.",
         "targetGone": "La carpeta de destino no existe.",
         "intoOwnDescendant": "Una carpeta no puede ir dentro de una de sus propias subcarpetas.",
-        "nameTaken": "Ya hay una carpeta con ese nombre ahí."
+        "nameTaken": "Ya hay una carpeta con ese nombre ahí.",
+        "grantTooWide": "Solo puedes ceder lo que tú misma tienes.",
+        "creatorHasAccess": "Quien creó la carpeta ya tiene acceso."
       },
       "logo": {
         "unsupportedType": "Se permiten SVG, PNG y WebP.",

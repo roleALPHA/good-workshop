@@ -243,7 +243,9 @@
         "intoItself": "Un dossier ne peut pas se trouver dans lui-même.",
         "targetGone": "Le dossier de destination n'existe pas.",
         "intoOwnDescendant": "Un dossier ne peut pas aller dans un de ses propres sous-dossiers.",
-        "nameTaken": "Il y a déjà un dossier de ce nom à cet endroit."
+        "nameTaken": "Il y a déjà un dossier de ce nom à cet endroit.",
+        "grantTooWide": "Tu ne peux transmettre que ce que tu as toi-même.",
+        "creatorHasAccess": "La personne qui a créé le dossier y a déjà accès."
       },
       "logo": {
         "unsupportedType": "Formats autorisés : SVG, PNG et WebP.",

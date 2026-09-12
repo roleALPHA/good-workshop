@@ -68,6 +68,13 @@ export const DOMAIN_ERROR_KEYS = [
   'sharing.memberGone',
   'sharing.memberDisabled',
   'sharing.ownerHasAccess',
+  // Collaboration on a folder, which reaches everything beneath it. Two keys
+  // only: "no such folder" is already `folder.gone` further down, and a second
+  // spelling of it would be a sentence that drifts. What is new here is the
+  // pair a workshop grant has no equivalent of -- handing on more than you
+  // hold, and granting to somebody who made the folder.
+  'folder.grantTooWide',
+  'folder.creatorHasAccess',
   // Guest access by share link. A separate address error from
   // member.invalidEmail, even though the expression checking it is the same one:
   // the two screens fail for different reasons and one day one of them will say

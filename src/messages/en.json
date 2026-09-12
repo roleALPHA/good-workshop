@@ -243,7 +243,9 @@
         "intoItself": "A folder cannot sit inside itself.",
         "targetGone": "There is no such target folder.",
         "intoOwnDescendant": "A folder cannot go into one of its own subfolders.",
-        "nameTaken": "There is already a folder of that name in there."
+        "nameTaken": "There is already a folder of that name in there.",
+        "grantTooWide": "You can only hand on what you hold yourself.",
+        "creatorHasAccess": "Whoever made the folder already has access."
       },
       "logo": {
         "unsupportedType": "SVG, PNG and WebP are allowed.",
