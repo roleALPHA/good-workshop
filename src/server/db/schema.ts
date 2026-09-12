@@ -292,6 +292,58 @@ export const folder = pgTable(
   ],
 ).enableRLS()
 
+/**
+ * Collaboration rights on a folder, inherited by everything beneath it.
+ *
+ * The same two roles as `workshop_collaborator`, and deliberately a second
+ * table rather than a nullable `folder_id` on that one: the primary key differs
+ * (a grant names a folder OR a workshop, never both), and a check constraint
+ * enforcing "exactly one of these two" is a rule the type system cannot see.
+ *
+ * Reach is the whole subtree, which is what `folder.ancestor_ids` is for --
+ * the grant is stored once, on the folder somebody actually shared, and
+ * resolution walks the path. Storing it on every descendant would mean a write
+ * amplification on every folder move, and a folder move is a rename.
+ *
+ * A grant here is powerful: it reaches workshops the granter does not own. That
+ * is why only the folder's creator and a tenant admin may write one -- see
+ * `assertFolderShare` in domain/workshop/folder-access.
+ */
+export const folderCollaborator = pgTable(
+  'folder_collaborator',
+  {
+    tenantId: tenantId(),
+    folderId: uuid('folder_id').notNull(),
+    memberId: uuid('member_id').notNull(),
+    role: text('role').notNull(),
+    addedBy: uuid('added_by'),
+    createdAt: timestamp('created_at', { withTimezone: true }).notNull().defaultNow(),
+  },
+  (t) => [
+    primaryKey({ columns: [t.folderId, t.memberId] }),
+    foreignKey({
+      columns: [t.tenantId, t.folderId],
+      foreignColumns: [folder.tenantId, folder.id],
+    }).onDelete('cascade'),
+    foreignKey({
+      columns: [t.tenantId, t.memberId],
+      foreignColumns: [member.tenantId, member.id],
+    }).onDelete('cascade'),
+    check('folder_collaborator_role', sql`${t.role} in ('editor','viewer')`),
+    // Both directions get an index: "what may this member reach" drives the
+    // library's visibility predicate, and "who may reach this folder" drives
+    // the sharing screen.
+    index('folder_collaborator_member_idx').on(t.tenantId, t.memberId),
+    index('folder_collaborator_folder_idx').on(t.tenantId, t.folderId),
+    pgPolicy('folder_collaborator_tenant_isolation', {
+      for: 'all',
+      to: 'gw_app',
+      using: TENANT_POLICY_USING,
+      withCheck: TENANT_POLICY_USING,
+    }),
+  ],
+).enableRLS()
+
 export const tag = pgTable(
   'tag',
   {

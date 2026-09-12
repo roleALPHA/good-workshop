@@ -11,6 +11,16 @@ import { expect, test, type Page } from '@playwright/test'
 
 const sidebar = (page: Page) => page.getByRole('navigation', { name: 'Ordner und Tags' })
 
+/**
+ * Folder links are matched EXACTLY throughout this file.
+ *
+ * A row carries a second link now -- "Zugriff auf Ordner X" -- and Playwright
+ * matches an accessible name by substring, so a loose match resolves to two
+ * elements and fails as a strict-mode violation. The sibling controls embed the
+ * name too ("Ordner X entfernen"), and never collided, because they are
+ * buttons rather than links.
+ */
+
 test('creates a folder inside another, then moves it back out', async ({ page }) => {
   const outer = `Außen ${Date.now()}`
   const inner = `Innen ${Date.now()}`
@@ -21,15 +31,15 @@ test('creates a folder inside another, then moves it back out', async ({ page })
   await sidebar(page).getByRole('button', { name: 'Ordner', exact: true }).click()
   await page.getByLabel('Name des Ordners').fill(outer)
   await page.keyboard.press('Enter')
-  await expect(sidebar(page).getByRole('link', { name: outer })).toBeVisible()
+  await expect(sidebar(page).getByRole('link', { name: outer, exact: true })).toBeVisible()
 
   // Inside it: the new folder is created wherever you currently are.
-  await sidebar(page).getByRole('link', { name: outer }).click()
+  await sidebar(page).getByRole('link', { name: outer, exact: true }).click()
   await sidebar(page).getByRole('button', { name: 'Ordner', exact: true }).click()
   await page.getByLabel('Name des Unterordners').fill(inner)
   await page.keyboard.press('Enter')
 
-  const child = sidebar(page).getByRole('link', { name: inner })
+  const child = sidebar(page).getByRole('link', { name: inner, exact: true })
   await expect(child).toBeVisible()
   // Indented, which is how the sidebar says "below".
   const indent = await child.evaluate((el) => (el.closest('li') as HTMLElement).style.paddingLeft)
@@ -42,7 +52,7 @@ test('creates a folder inside another, then moves it back out', async ({ page })
   await sidebar(page).getByLabel('Verschieben nach').selectOption('')
 
   await expect(async () => {
-    const moved = sidebar(page).getByRole('link', { name: inner })
+    const moved = sidebar(page).getByRole('link', { name: inner, exact: true })
     const padding = await moved.evaluate(
       (el) => (el.closest('li') as HTMLElement).style.paddingLeft,
     )
@@ -58,11 +68,11 @@ test('does not offer a folder its own subtree as a destination', async ({ page }
   await sidebar(page).getByRole('button', { name: 'Ordner', exact: true }).click()
   await page.getByLabel('Name des Ordners').fill(parent)
   await page.keyboard.press('Enter')
-  await sidebar(page).getByRole('link', { name: parent }).click()
+  await sidebar(page).getByRole('link', { name: parent, exact: true }).click()
   await sidebar(page).getByRole('button', { name: 'Ordner', exact: true }).click()
   await page.getByLabel('Name des Unterordners').fill(child)
   await page.keyboard.press('Enter')
-  await expect(sidebar(page).getByRole('link', { name: child })).toBeVisible()
+  await expect(sidebar(page).getByRole('link', { name: child, exact: true })).toBeVisible()
 
   await sidebar(page)
     .getByRole('button', { name: `Ordner ${parent} verschieben` })
@@ -90,11 +100,11 @@ test('keeps the folder tree out of the way on a phone until it is asked for', as
   await sidebar(page).getByRole('button', { name: 'Ordner', exact: true }).click()
   await page.getByLabel('Name des Ordners').fill(name)
   await page.keyboard.press('Enter')
-  await expect(sidebar(page).getByRole('link', { name })).toBeVisible()
+  await expect(sidebar(page).getByRole('link', { name, exact: true })).toBeVisible()
 
   // Folded away again, and the list is back at the top.
   await page.getByRole('button', { name: /Ordner (ein|aus)blenden/ }).click()
-  await expect(sidebar(page).getByRole('link', { name })).toBeHidden()
+  await expect(sidebar(page).getByRole('link', { name, exact: true })).toBeHidden()
 
   // The point of folding it away: what you came for is on screen without
   // scrolling. Asserted on the search box, which sits directly above the list
@@ -116,10 +126,10 @@ test('shows the folder tree on a phone too', async ({ page }) => {
   await page.getByLabel('Name des Ordners').fill(name)
   await page.keyboard.press('Enter')
 
-  await expect(sidebar(page).getByRole('link', { name })).toBeVisible()
+  await expect(sidebar(page).getByRole('link', { name, exact: true })).toBeVisible()
 
   // And it filters, which is what the tree is for.
-  await sidebar(page).getByRole('link', { name }).click()
+  await sidebar(page).getByRole('link', { name, exact: true }).click()
   await expect(page).toHaveURL(/folder=/)
 })
 
@@ -132,7 +142,7 @@ test.describe('filing things by dragging them', () => {
     await sidebar(page).getByRole('button', { name: 'Ordner', exact: true }).click()
     await page.getByLabel('Name des Ordners').fill(name)
     await page.keyboard.press('Enter')
-    await expect(sidebar(page).getByRole('link', { name })).toBeVisible()
+    await expect(sidebar(page).getByRole('link', { name, exact: true })).toBeVisible()
   }
 
   /** Through the button and the heading, not Enter: creating one navigates. */
@@ -228,7 +238,7 @@ test.describe('filing things by dragging them', () => {
     // Indented, which is how the sidebar says "below".
     await expect(async () => {
       const padding = await sidebar(page)
-        .getByRole('link', { name: child })
+        .getByRole('link', { name: child, exact: true })
         .evaluate((el) => (el.closest('li') as HTMLElement).style.paddingLeft)
       expect(padding).not.toBe('0px')
     }).toPass({ timeout: 10_000 })
@@ -257,7 +267,40 @@ test.describe('filing things by dragging them', () => {
     await page.getByLabel('Verschieben nach').selectOption({ label: folder })
 
     await page.getByRole('button', { name: /Ordner (ein|aus)blenden/ }).click()
-    await sidebar(page).getByRole('link', { name: folder }).click()
+    await sidebar(page).getByRole('link', { name: folder, exact: true }).click()
     await expect(page.getByRole('link', { name: new RegExp(workshop) })).toBeVisible()
   })
+})
+
+/**
+ * Folder-level collaboration, through the buttons.
+ *
+ * The rule itself -- subtree reach, nearest folder wins, nobody hands on more
+ * than they hold -- is asserted against a real database in
+ * src/domain/workshop/folder-collaborators.db.test.ts, where a second member
+ * costs a row rather than a second browser session. What only a browser can
+ * show is that the route, the action and the four catalogs are wired together
+ * at all.
+ */
+test('opens the access screen of a folder from the tree', async ({ page }) => {
+  const name = `Geteilt ${Date.now()}`
+
+  await page.goto('/library')
+  await sidebar(page).getByRole('button', { name: 'Ordner', exact: true }).click()
+  await page.getByLabel('Name des Ordners').fill(name)
+  await page.keyboard.press('Enter')
+  await expect(sidebar(page).getByRole('link', { name, exact: true })).toBeVisible()
+
+  await sidebar(page)
+    .getByRole('link', { name: `Zugriff auf Ordner ${name}` })
+    .click()
+
+  await expect(page.getByRole('heading', { name: `Zugriff auf ${name}` })).toBeVisible()
+  // The sentence that keeps somebody from sharing a subtree by accident: it
+  // reaches workshops other people own, and filing one here shares it.
+  await expect(page.getByText(/Gilt für alles in diesem Ordner/)).toBeVisible()
+
+  // The creator may hand on both roles; the select says so.
+  const anySelect = page.getByRole('combobox').first()
+  await expect(anySelect.getByRole('option', { name: 'Bearbeiten' })).toBeAttached()
 })

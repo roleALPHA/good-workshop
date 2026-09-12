@@ -243,7 +243,9 @@
         "intoItself": "A folder cannot sit inside itself.",
         "targetGone": "There is no such target folder.",
         "intoOwnDescendant": "A folder cannot go into one of its own subfolders.",
-        "nameTaken": "There is already a folder of that name in there."
+        "nameTaken": "There is already a folder of that name in there.",
+        "grantTooWide": "You can only hand on what you hold yourself.",
+        "creatorHasAccess": "Whoever made the folder already has access."
       },
       "logo": {
         "unsupportedType": "SVG, PNG and WebP are allowed.",
@@ -415,7 +417,15 @@
     "topLevel": "Top level",
     "trash": "Bin",
     "workshopTitle": "Workshop title",
-    "workshopTitleExample": "e.g. Strategy retreat"
+    "workshopTitleExample": "e.g. Strategy retreat",
+    "folderAccess": "Access to {name}",
+    "folderAccessIntro": "Applies to everything in this folder, including subfolders and workshops other people own. A workshop you move in here is shared by that move.",
+    "folderAccessReadOnly": "You can see who has access here, but not change it.",
+    "folderAccessOf": "{email}'s access to this folder",
+    "folderCreator": "Created it",
+    "folderShare": "Access",
+    "folderShareOf": "Access to folder {name}",
+    "you": "you"
   },
   "mail": {
     "magicLink": {

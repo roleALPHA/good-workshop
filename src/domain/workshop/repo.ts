@@ -9,6 +9,13 @@ import {
   workshopCollaborator,
   workshopDay,
 } from '@/server/db/schema'
+import {
+  folderPathSql,
+  folderReachSql,
+  folderRoleFromPath,
+  inheritedWorkshopRole,
+  type FolderPathRow,
+} from '@/domain/workshop/folder-access'
 import { keyAtEnd, placeAfter } from '@/domain/agenda/ordering'
 import { NotFoundError, type WorkshopAccess } from '@/domain/agenda/access'
 import { DomainError } from '@/domain/errors'
@@ -146,6 +153,10 @@ export async function listWorkshops(
       updatedAt: workshop.updatedAt,
       ownerId: workshop.ownerId,
       collaboratorRole: workshopCollaborator.role,
+      /** Root first. Same aggregate the single-workshop check uses. */
+      folderPath: folderPathSql(workshop.folderId, memberIdOf(actor)).mapWith(
+        (v) => v as FolderPathRow[],
+      ),
       dayCount: sql<number>`(
         select count(*)::int from ${workshopDay} d where d.workshop_id = ${workshop.id}
       )`,
@@ -202,7 +213,7 @@ export async function listWorkshops(
       updatedAt: row.updatedAt,
       dayCount: row.dayCount,
       tags: row.tags ?? [],
-      role: roleOf(row.ownerId, row.collaboratorRole, actor),
+      role: roleOf(row.ownerId, row.collaboratorRole, row.folderPath, actor),
     })),
     nextCursor: rows.length > limit && last ? makeCursor(last.updatedAt, last.id) : null,
   }
@@ -211,9 +222,11 @@ export async function listWorkshops(
 /**
  * Who may see a workshop, as a predicate.
  *
- * The same three rules `assertWorkshopAccess` applies to one workshop, said
- * once for a whole list. They have to agree: a row that shows up here and then
- * 404s when opened is a worse bug than either half alone.
+ * The same rules `assertWorkshopAccess` applies to one workshop, said once for
+ * a whole list. They have to agree: a row that shows up here and then 404s when
+ * opened is a worse bug than either half alone. Which is why the folder leg is
+ * the same `folderReachSql` the single check builds its path from, rather than
+ * a second spelling of "somewhere up the tree".
  */
 function visibleTo(actor: Actor) {
   if (actor.tenantRole === 'admin') return undefined
@@ -222,6 +235,7 @@ function visibleTo(actor: Actor) {
     eq(workshop.ownerId, memberId),
     sql`exists (select 1 from workshop_collaborator wc
                 where wc.workshop_id = ${workshop.id} and wc.member_id = ${memberId})`,
+    folderReachSql(workshop.folderId, memberId),
   )
 }
 
@@ -260,10 +274,16 @@ function parseCursor(cursor: string | undefined): { updatedAt: Date; id: string 
 function roleOf(
   ownerId: string,
   collaboratorRole: string | null,
+  folderPath: readonly FolderPathRow[],
   actor: Actor,
 ): WorkshopSummary['role'] {
   if (ownerId === actor.memberId) return 'owner'
   if (collaboratorRole === 'editor' || collaboratorRole === 'viewer') return collaboratorRole
+  // Same order as `effectiveRole`: what the folder confers sits in front of the
+  // admin fallback, so an admin who was granted viewer on a folder is shown as
+  // a viewer rather than as an admin.
+  const inherited = inheritedWorkshopRole(folderRoleFromPath(folderPath, actor))
+  if (inherited) return inherited
   return 'admin'
 }
 

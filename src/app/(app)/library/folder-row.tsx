@@ -2,7 +2,7 @@
 
 import Link from 'next/link'
 import { useState, useTransition } from 'react'
-import { FolderIcon, FolderInput, X } from 'lucide-react'
+import { FolderIcon, FolderInput, Users, X } from 'lucide-react'
 import { deleteFolderAction, moveFolderAction } from '@/server/actions/workshop'
 import { useTranslations } from 'next-intl'
 import { cn } from '@/lib/cn'
@@ -97,6 +97,18 @@ export function FolderRow({
             >
               <FolderIcon aria-hidden className="size-3.5 shrink-0" />
               <span className="truncate">{name}</span>
+            </Link>
+
+            {/* Not behind `canManage`: a folder viewer may look at who else has
+                access even though they can change little or nothing. The page
+                itself decides what the select offers -- see folder-sharing. */}
+            <Link
+              href={`/f/${id}/sharing`}
+              title={t('folderShare')}
+              aria-label={t('folderShareOf', { name })}
+              className={iconButtonClass}
+            >
+              <Users aria-hidden className="size-3.5" />
             </Link>
 
             {canManage && (

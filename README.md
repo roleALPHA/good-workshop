@@ -28,7 +28,10 @@ the tag and the search are in the URL — so a filtered library is a link you ca
 come back to. Tags appear as you type; a tag nothing points at any more disappears by itself.
 
 **Works for a team.** An admin invites people by e-mail address under **Members**. Access to
-a single workshop is granted by its owner under **Access**: edit or read, per member.
+a single workshop is granted by its owner under **Access**: edit or read, per member. A whole
+**folder** can be shared the same way, and that reaches everything beneath it — subfolders
+included, and workshops other people own. Whoever holds access may hand it on, but never more
+than they hold themselves.
 
 **Shares with people who have no account.** Under **Access** you can also invite an e-mail
 address directly — read, or read and write. The invitation is a link that only works with that

@@ -2,6 +2,12 @@ import { and, eq, isNull, sql } from 'drizzle-orm'
 import type { Actor, Tx } from '@/server/db'
 import { workshop, workshopCollaborator } from '@/server/db/schema'
 import { DomainError } from '@/domain/errors'
+import {
+  folderPathSql,
+  folderRoleFromPath,
+  inheritedWorkshopRole,
+  type FolderPathRow,
+} from '@/domain/workshop/folder-access'
 
 /**
  * Per-workshop authorisation, in the application layer.
@@ -158,6 +164,10 @@ export async function assertWorkshopAccess(
       ownerId: workshop.ownerId,
       contentVersion: workshop.contentVersion,
       collaboratorRole: workshopCollaborator.role,
+      /** Root first, the workshop's own folder last. See folder-access. */
+      folderPath: folderPathSql(workshop.folderId, actor.memberId ?? null).mapWith(
+        (v) => v as FolderPathRow[],
+      ),
     })
     .from(workshop)
     .leftJoin(
@@ -189,7 +199,13 @@ export async function assertWorkshopAccess(
   // "not in this tenant, or deleted".
   if (!row) throw new NotFoundError()
 
-  const role = effectiveRole(row.ownerId, row.collaboratorRole, actor, workshopId)
+  const role = effectiveRole({
+    ownerId: row.ownerId,
+    collaboratorRole: row.collaboratorRole,
+    inheritedRole: inheritedWorkshopRole(folderRoleFromPath(row.folderPath, actor)),
+    actor,
+    workshopId,
+  })
   if (!role) throw new NotFoundError()
 
   const allowed = CAPABILITIES[role]
@@ -211,12 +227,25 @@ export async function assertWorkshopAccess(
  * order of those lines is load-bearing -- which makes it worth a test table of
  * its own rather than only being reached through a database.
  */
-export function effectiveRole(
-  ownerId: string,
-  collaboratorRole: string | null,
-  actor: Actor,
-  workshopId: string,
-): WorkshopRole | null {
+export function effectiveRole({
+  ownerId,
+  collaboratorRole,
+  inheritedRole,
+  actor,
+  workshopId,
+}: {
+  ownerId: string
+  /** A row naming this workshop. The most specific thing there is. */
+  collaboratorRole: string | null
+  /**
+   * What the folder tree confers, already reduced to a workshop role by
+   * `inheritedWorkshopRole` -- the nearest folder that says anything, mapped to
+   * collaboration rather than ownership.
+   */
+  inheritedRole: string | null
+  actor: Actor
+  workshopId: string
+}): WorkshopRole | null {
   /**
    * First, and with a `return null` of its own rather than falling through.
    *
@@ -233,6 +262,17 @@ export function effectiveRole(
   }
   if (ownerId === actor.memberId) return 'owner'
   if (collaboratorRole === 'editor' || collaboratorRole === 'viewer') return collaboratorRole
+  /**
+   * After the workshop's own row and before the admin override, and both
+   * halves are the rule rather than an ordering accident.
+   *
+   * Before admin, so a folder grant is what an admin sees when one names them,
+   * the same way a workshop grant is. After the workshop row, because THAT is
+   * what "the most specific wins" means here: a subtree shared as editor can
+   * still hold one workshop pinned back to viewer, and the way to say so is a
+   * row on the workshop.
+   */
+  if (inheritedRole === 'editor' || inheritedRole === 'viewer') return inheritedRole
   // Defaults to on: self-hosted teams expect an admin to be able to help. Every
   // such access writes an audit event, and the transparency is what makes the
   // default acceptable rather than creepy.

@@ -99,6 +99,29 @@ Access to a single workshop is granted from inside the tenant, never by e-mail a
 address is an identity, and identities are global; inviting by address would silently grant
 access across a tenant boundary.
 
+**A folder can be shared too, and it reaches the whole subtree.** One sentence — "the Acme team
+works in Kunden/Acme" — instead of one grant per workshop. Three rules keep that from becoming a
+way to give away things that are not yours, and all three live in
+[`domain/workshop/folder-access.ts`](../src/domain/workshop/folder-access.ts) as pure functions
+with test tables:
+
+- **The nearest folder decides.** Walking up from the workshop, the first folder that says
+  anything about this member is the answer — so a subtree shared as editor can still hold one
+  folder that is read-only. A row on the workshop itself is nearer than any folder, which is how
+  a single workshop is pinned back.
+- **Nobody hands on more than they hold.** A folder editor may make editors and viewers; a
+  folder viewer may only make viewers. The same rule applies backwards, which is the half that
+  is easy to forget: without it a viewer could revoke an editor.
+- **A folder grant is never ownership.** `workshop.delete` and `workshop.transfer` stay with the
+  owner. Making a folder that other people file things in confers no right to throw their work
+  away.
+
+Two consequences worth stating rather than discovering. A workshop **moved into** a shared
+folder is shared by that move alone. And because delegation is open to everyone who holds
+something, a viewer can widen the audience of a colleague's workshop — bounded to their own
+level, but the circle grows without the owner acting. That is the price of folder-level sharing;
+the alternative was an admin in the loop for every addition.
+
 **A share link for somebody with no account is the exception, and it is not one.** A client, an
 external co-trainer or a commissioning manager gets one agenda by e-mail — and that does not
 cross the boundary the rule protects, for four reasons that are each load-bearing rather than
