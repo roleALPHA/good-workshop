@@ -26,6 +26,15 @@ test('makes a token that works, and can take it back', async ({ page, request })
   const token = (await panel.getByText(/^gwp_/).innerText()).trim()
   expect(token).toMatch(/^gwp_[A-Za-z0-9_-]+_[A-Za-z0-9_-]+$/)
 
+  // The instructions are the reason the screen exists at all: whoever gets a
+  // token has to be able to hand it to a client without leaving the page. A
+  // command with a placeholder in it would be no better than the sentence it
+  // replaced.
+  await page.getByText('Claude Code', { exact: true }).click()
+  await expect(page.getByText(/^claude mcp add /)).toContainText(
+    `--header "Authorization: Bearer ${token}"`,
+  )
+
   const call = (body: unknown) =>
     request.post('/api/mcp', {
       headers: {

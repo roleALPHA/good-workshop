@@ -1,15 +1,26 @@
 'use client'
 
 import { useRouter } from 'next/navigation'
-import { useState, useTransition } from 'react'
+import { useEffect, useRef, useState, useTransition } from 'react'
 import { Plus } from 'lucide-react'
 import type { Scope, TokenRow } from '@/domain/tenant/tokens'
 import { createTokenAction, revokeTokenAction } from '@/server/actions/tokens'
+import { CopyBlock } from '@/components/copy-block'
+import { ConnectGuide } from './connect-guide'
 import { useFormatter, useTranslations } from 'next-intl'
 
 const DEFAULT_SCOPES: Scope[] = ['workshops:read', 'module_types:read']
 
-export function TokenList({ initial, scopes }: { initial: TokenRow[]; scopes: Scope[] }) {
+export function TokenList({
+  initial,
+  scopes,
+  origin,
+}: {
+  initial: TokenRow[]
+  scopes: Scope[]
+  /** The host an MCP client has to talk to, so the instructions are real. */
+  origin: string
+}) {
   const t = useTranslations('settings.tokens')
   const tc = useTranslations('common')
   const tScope = useTranslations('enums.tokenScope')
@@ -22,6 +33,16 @@ export function TokenList({ initial, scopes }: { initial: TokenRow[]; scopes: Sc
   const [fresh, setFresh] = useState<string | null>(null)
   const [error, setError] = useState<string | null>(null)
   const [pending, startTransition] = useTransition()
+  const freshPanel = useRef<HTMLElement>(null)
+
+  // The button that makes a token sits under the list, and the token appears
+  // above it -- on a library of thirty tokens that is a screen and a half away,
+  // so the one thing that is shown once would be shown off screen. Moving focus
+  // rather than scrolling: it brings the panel into view AND tells somebody on a
+  // screen reader where the answer went.
+  useEffect(() => {
+    if (fresh) freshPanel.current?.focus()
+  }, [fresh])
 
   function create() {
     startTransition(async () => {
@@ -55,18 +76,16 @@ export function TokenList({ initial, scopes }: { initial: TokenRow[]; scopes: Sc
     <div>
       {fresh && (
         <section
+          ref={freshPanel}
+          tabIndex={-1}
           // Named, so the value can be found without also matching the
           // truncated public halves in the list below it.
           aria-label={t('freshLabel')}
-          className="mb-5 rounded border border-[var(--border-strong)] bg-[var(--surface-raised)] p-3"
+          className="mb-5 rounded border border-[var(--border-strong)] bg-[var(--surface-raised)] p-3 outline-offset-2"
         >
           <p className="text-[15px] font-medium">{t('freshLabel')}</p>
-          <p className="mt-0.5 text-[14px] text-[var(--fg-muted)]">
-            {t.rich('freshHint', { code: (chunks) => <code>{chunks}</code> })}
-          </p>
-          <code className="mt-2 block rounded border border-[var(--border)] bg-[var(--surface)] px-2 py-1.5 font-mono text-[13px] break-all">
-            {fresh}
-          </code>
+          <p className="mt-0.5 text-[14px] text-[var(--fg-muted)]">{t('freshHint')}</p>
+          <CopyBlock value={fresh} label={t('connect.copyToken')} />
           <button
             type="button"
             onClick={() => setFresh(null)}
@@ -76,6 +95,8 @@ export function TokenList({ initial, scopes }: { initial: TokenRow[]; scopes: Sc
           </button>
         </section>
       )}
+
+      {fresh && <ConnectGuide origin={origin} token={fresh} />}
 
       {tokens.length > 0 && (
         <ul className="mb-4 divide-y divide-[var(--border)] border-y border-[var(--border)]">
@@ -179,6 +200,8 @@ export function TokenList({ initial, scopes }: { initial: TokenRow[]; scopes: Sc
           {error}
         </p>
       )}
+
+      {!fresh && <ConnectGuide origin={origin} token={null} />}
     </div>
   )
 }
