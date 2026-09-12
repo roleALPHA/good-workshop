@@ -184,7 +184,7 @@ cp .env.example .env
 ### 2. Provide the image
 
 The releases are published to the GitHub Container Registry, and `compose.yaml` pulls the one
-`GW_VERSION` names when the stack first comes up. The current release is `v0.3.0`; there is
+`GW_VERSION` names when the stack first comes up. The current release is `v0.3.1`; there is
 nothing to build.
 
 To run a state that carries no tag of its own, build it and give it the name `compose.yaml`
@@ -205,7 +205,7 @@ missing:
 GW_APP_URL=https://workshop.example.com   # the address the app is reachable at
 GW_HOSTNAME=workshop.example.com          # the name in the certificate (profile `tls`)
 GW_MAIL_TRANSPORT=smtp                    # smtp | graph | console | none
-GW_VERSION=v0.3.0                         # the release to run, never a moving tag
+GW_VERSION=v0.3.1                         # the release to run, never a moving tag
 ```
 
 With `GW_MAIL_TRANSPORT=smtp` you also need `SMTP_URL` and `SMTP_FROM` — **or you leave them
