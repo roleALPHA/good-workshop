@@ -34,6 +34,9 @@ export function DragHandle({
       className={cn(
         'absolute top-2.5 z-20 grid size-8 place-items-center rounded text-[var(--fg-subtle)] opacity-0 transition-opacity duration-100',
         'group-focus-within:opacity-100 group-hover:opacity-100 focus-visible:opacity-100',
+        // Where there is no hover, the handle is simply there. Long-pressing an
+        // invisible button is not a gesture anybody discovers.
+        'pointer-coarse:opacity-100',
         'hover:bg-[var(--surface-raised)] hover:text-[var(--fg-muted)]',
         // touch-action: none only here -- the row itself must stay scrollable.
         'touch-none',
