@@ -217,6 +217,39 @@ function addBlock(doc: Y.Doc, id: string, title: string, position: string) {
   blocksOf(doc).set(id, block)
 }
 
+/**
+ * A share-link guest, as a cookie.
+ *
+ * Rows written directly, like the member session above: what is under test is
+ * the handshake's treatment of the credential, not the redemption flow, which
+ * has its own tests in src/server/auth/share-session.db.test.ts.
+ */
+async function guestCookie(role: 'viewer' | 'editor', workshop = workshopId): Promise<string> {
+  const linkId = randomUUID()
+  const sessionId = randomUUID()
+  const secret = randomBytes(32).toString('base64url')
+
+  await ops.query(
+    `insert into workshop_share_link (id, tenant_id, workshop_id, email, token_hash, role)
+     values ($1, $2, $3, $4, $5, $6)`,
+    [
+      linkId,
+      TENANT,
+      workshop,
+      `guest-${linkId}@example.test`,
+      createHash('sha256').update(`tok-${linkId}`).digest('hex'),
+      role,
+    ],
+  )
+  await ops.query(
+    `insert into share_session (id, tenant_id, share_link_id, secret_hash, expires_at)
+     values ($1, $2, $3, $4, now() + interval '1 hour')`,
+    [sessionId, TENANT, linkId, createHash('sha256').update(secret).digest('hex')],
+  )
+
+  return `gw_guest=${TENANT}.${sessionId}.${secret}`
+}
+
 describe('the collaboration socket', () => {
   it('refuses a connection without a session', async () => {
     await expect(connect({})).rejects.toThrow(/401/)
@@ -494,5 +527,61 @@ describe('the collaboration socket', () => {
     // Leave nothing holding the day: the room is still occupied by the joiner.
     for (const connection of [...room.connections]) room.remove(connection)
     await settle(800)
+  })
+
+  /**
+   * The guest half of the handshake. Nothing in ws.ts decides whether a guest may
+   * write -- `authenticate` demands workshop.content.write, and the capability
+   * table refuses it for a reader. These assert that the refusal actually happens
+   * there, because a read-only guest who got a socket would be writing into the
+   * one document the materialiser treats as the truth.
+   */
+  it('lets a guest invited to write into the room', async () => {
+    const client = await connect({ cookie: await guestCookie('editor') })
+    try {
+      expect(client.ws.readyState).toBe(WebSocket.OPEN)
+    } finally {
+      client.ws.close()
+    }
+  })
+
+  it('refuses a guest invited only to read', async () => {
+    await expect(connect({ cookie: await guestCookie('viewer') })).rejects.toThrow(/401/)
+  })
+
+  it('refuses a guest whose invitation was withdrawn', async () => {
+    const cookieValue = await guestCookie('editor')
+    const sessionId = cookieValue.split('.')[1]
+    await ops.query(
+      `update workshop_share_link set revoked_at = now()
+        where id = (select share_link_id from share_session where id = $1)`,
+      [sessionId],
+    )
+
+    await expect(connect({ cookie: cookieValue })).rejects.toThrow(/401/)
+  })
+
+  it('lets a guest in past a stale member cookie in the same browser', async () => {
+    // A session cookie outlives the session it names. Somebody who was a member
+    // last month, or whose session simply expired, still has `gw_session` in the
+    // browser they open an invitation in -- and it must not shadow the guest
+    // credential that IS valid.
+    const stale = `gw_session=${randomUUID()}.${randomBytes(32).toString('base64url')}`
+    const client = await connect({
+      cookie: `${stale}; ${await guestCookie('editor')}`,
+    })
+    try {
+      expect(client.ws.readyState).toBe(WebSocket.OPEN)
+    } finally {
+      client.ws.close()
+    }
+  })
+
+  it('refuses a guest of another workshop asking for this day', async () => {
+    // The grant names one workshop. Pointing the socket at a day of a different
+    // one has to fail on the grant, not on the day lookup.
+    await expect(
+      connect({ cookie: await guestCookie('editor', victimWorkshopId) }),
+    ).rejects.toThrow(/401/)
   })
 })

@@ -191,3 +191,49 @@ describe('the agenda as a whole', () => {
   // end-to-end. They are in the document either way and only CSS takes them off
   // screen, which jsdom neither applies nor can be asked about.
 })
+
+/**
+ * What somebody without write permission is shown.
+ *
+ * This used to be the absence of a `collab` target, and it did not work: the
+ * editor mounted anyway, wrote into a local document and discarded the changes
+ * on navigation. A reader was handed fields that accepted typing, a working
+ * drag handle and no indication that nothing was being saved.
+ *
+ * Survivable for a colleague, who could open the same agenda elsewhere. Not
+ * survivable for an invited guest, for whom this page IS the workshop -- which is
+ * why `readOnly` exists and why these assertions are about the controls that must
+ * be ABSENT.
+ */
+describe('the agenda for somebody who may not write', () => {
+  const renderReadOnly = () => render(<AgendaSurface doc={createDemoDay()} readOnly />)
+
+  it('shows the agenda', () => {
+    renderReadOnly()
+
+    // The content is all there, with its derived times: read-only is not a
+    // lesser view of the day.
+    expect(block('Check-in & Start')).toHaveTextContent('13:00')
+    expect(block('Agenda & Spielregeln')).toHaveTextContent('13:15')
+  })
+
+  it.each([
+    ['the pin control', 'Startzeit fixieren'],
+    ['the participation control', 'Sozialform: Plenum'],
+  ])('offers no %s', (_name, buttonName) => {
+    renderReadOnly()
+    expect(screen.queryByRole('button', { name: buttonName })).not.toBeInTheDocument()
+  })
+
+  it('offers no way to add material', () => {
+    renderReadOnly()
+    expect(screen.queryByLabelText('Material hinzufügen')).not.toBeInTheDocument()
+  })
+
+  it('offers no text input at all', () => {
+    renderReadOnly()
+    // The strongest form of the claim, and the one that survives a new control
+    // being added to the editor: there is nothing on this page to type into.
+    expect(screen.queryAllByRole('textbox')).toHaveLength(0)
+  })
+})

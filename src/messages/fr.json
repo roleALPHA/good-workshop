@@ -144,6 +144,17 @@
     "unparkLabel": "Remettre {title} dans le déroulé"
   },
   "auth": {
+    "guest": {
+      "title": "Invitation à {workshop}",
+      "intro": "Saisissez l'adresse e-mail à laquelle cette invitation a été envoyée. Le lien ne fonctionne qu'avec cette adresse.",
+      "email": "Adresse e-mail",
+      "open": "Ouvrir le déroulé",
+      "opening": "Ouverture …",
+      "rejected": "Cela ne correspond pas. Vérifiez l'adresse à laquelle l'invitation a été envoyée.",
+      "tooMany": "Trop de tentatives. Attendez une minute puis réessayez.",
+      "invalidTitle": "Cette invitation n'est plus valable",
+      "invalidBody": "Le lien a été retiré, a expiré, ou n'a jamais existé. La personne qui vous a invité peut envoyer une nouvelle invitation."
+    },
     "login": {
       "title": "Se connecter à GoodWorkshop",
       "intro": "Sans mot de passe. Par passkey ou par un lien envoyé par e-mail.",
@@ -264,7 +275,10 @@
       "sharing": {
         "memberGone": "Ce membre n'existe pas.",
         "memberDisabled": "Ce membre est désactivé.",
-        "ownerHasAccess": "Le propriétaire a déjà un accès complet."
+        "ownerHasAccess": "Le propriétaire a déjà un accès complet.",
+        "invalidEmail": "Cela ne ressemble pas à une adresse e-mail.",
+        "linkGone": "Cette invitation n'existe plus.",
+        "tooManyInvites": "Trop d'invitations en peu de temps. Attendez une minute."
       },
       "tags": {
         "tooMany": "{max, number} tags au maximum par atelier.",
@@ -406,6 +420,10 @@
       "subject": "Ton lien de connexion pour GoodWorkshop",
       "body": "Bonjour,\n\nvoici ton lien de connexion :\n{link}\n\nIl est valable {minutes, plural, one {une minute} many {# minutes} other {# minutes}} et ne sert qu'une fois.\n\nSi tu n'as rien demandé, tu peux ignorer ce message —\nsans le lien, il ne se passe rien."
     },
+    "shareInvite": {
+      "subject": "Invitation au déroulé : {workshop}",
+      "body": "Bonjour,\n\nvous êtes invité à consulter le déroulé de « {workshop} ».\n\n{link}\n\nLe lien demandera votre adresse e-mail. Saisissez {email} — seule cette adresse ouvre le déroulé.\n\nAucun compte n'est nécessaire."
+    },
     "test": {
       "subject": "GoodWorkshop : message de test",
       "body": "Ce message confirme que l'envoi d'e-mails fonctionne.\n\nLes liens de connexion et les invitations passeront désormais par là."
@@ -478,6 +496,34 @@
     "backToLibrary": "← Bibliothèque",
     "days": "Journées",
     "end": "Fin {time}",
+    "guest": {
+      "banner": "Vous consultez ce déroulé en tant qu’invité.",
+      "bannerEditor": "Vous consultez ce déroulé en tant qu’invité et pouvez le modifier.",
+      "leave": "Terminer l’accès",
+      "goneTitle": "Ce déroulé n’est plus disponible",
+      "goneBody": "L’accès a été terminé, retiré ou a expiré. La personne qui vous a invité peut envoyer une nouvelle invitation."
+    },
+    "guests": {
+      "title": "Invités sans compte",
+      "intro": "Une invitation part par e-mail et ne fonctionne qu'avec cette adresse. Les invités voient les journées de ce déroulé et rien d'autre — pas de bibliothèque, pas de dossiers.",
+      "email": "Adresse e-mail",
+      "role": "Droit",
+      "roleViewer": "Lecture seule",
+      "roleEditor": "Lecture et écriture",
+      "invite": "Inviter",
+      "inviting": "Invitation en cours …",
+      "none": "Personne n'est encore invité.",
+      "revoke": "Retirer l'accès",
+      "invitedOn": "Invité le {date}",
+      "neverOpened": "pas encore ouvert",
+      "openedOn": "ouvert le {date}",
+      "validUntil": "valable jusqu'au {date}",
+      "validUntilRevoked": "valable jusqu'au retrait",
+      "mailed": "Invitation envoyée à {email}.",
+      "notMailed": "Aucun envoi de courrier n'est configuré. Transmettez ce lien vous-même à {email} — il ne fonctionne qu'avec cette adresse :",
+      "until": "Le lien est valable jusqu'à la dernière journée du déroulé.",
+      "untilUndated": "Le déroulé n'a pas encore de date, le lien reste donc valable jusqu'à son retrait."
+    },
     "materials": "Matériel : {items}",
     "print": "Imprimer",
     "someone": "Quelqu'un",

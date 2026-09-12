@@ -1,6 +1,6 @@
 import { randomUUID } from 'node:crypto'
 import { and, asc, eq, isNull, sql } from 'drizzle-orm'
-import type { Actor, Tx } from '@/server/db'
+import { memberIdOf, type Actor, type Tx } from '@/server/db'
 import { generatePersonalAccessToken } from '@/server/auth/tokens'
 import { personalAccessToken } from '@/server/db/schema'
 import { DomainError } from '@/domain/errors'
@@ -65,7 +65,7 @@ export async function listTokens(tx: Tx, actor: Actor): Promise<TokenRow[]> {
     .from(personalAccessToken)
     .where(
       and(
-        eq(personalAccessToken.memberId, actor.memberId),
+        eq(personalAccessToken.memberId, memberIdOf(actor)),
         // A revoked token is gone as far as its owner is concerned; the row
         // stays so an audit trail still resolves the id it mentions.
         isNull(personalAccessToken.revokedAt),
@@ -99,7 +99,7 @@ export async function createToken(
     .insert(personalAccessToken)
     .values({
       id: randomUUID(),
-      memberId: actor.memberId,
+      memberId: memberIdOf(actor),
       name,
       tokenId: generated.tokenId,
       tokenHash: generated.tokenHash,
@@ -133,7 +133,7 @@ export async function revokeToken(tx: Tx, actor: Actor, id: string): Promise<voi
         eq(personalAccessToken.id, id),
         // Scoped to the owner, not just the tenant: a colleague's token is
         // not yours to revoke.
-        eq(personalAccessToken.memberId, actor.memberId),
+        eq(personalAccessToken.memberId, memberIdOf(actor)),
         isNull(personalAccessToken.revokedAt),
       ),
     )

@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest'
-import { authoritativePresence } from './presence'
+import { authoritativePresence, presenceHue } from './presence'
 
 /**
  * Who the room says you are.
@@ -60,5 +60,31 @@ describe('authoritativePresence', () => {
     expect(authoritativePresence({ name: 'x', hue: 137, kind: 'person' }, actor)).toMatchObject({
       hue: 137,
     })
+  })
+})
+
+describe('presenceHue', () => {
+  it('is stable for the same participant', () => {
+    // The whole reason it is derived rather than stored: a colleague keeps their
+    // colour across sessions and devices without anybody setting a preference.
+    expect(presenceHue('m-1')).toBe(presenceHue('m-1'))
+  })
+
+  it('lands on one of the eight steps around the wheel', () => {
+    // Not a free hash: adjacent hues are indistinguishable at avatar size, which
+    // is the only size this is ever seen at.
+    const ids = ['m-1', 'm-2', 'guest-link-1', '', '01a09554-ea6f-7ae4-8d4f-b84b92d98a6a']
+    for (const id of ids) {
+      const hue = presenceHue(id)
+      expect(hue % 45).toBe(0)
+      expect(hue).toBeGreaterThanOrEqual(0)
+      expect(hue).toBeLessThan(360)
+    }
+  })
+
+  it('separates participants whose ids differ', () => {
+    // Not a guarantee -- eight buckets collide by construction -- but two ids
+    // this close must not fold onto the same colour.
+    expect(presenceHue('m-1')).not.toBe(presenceHue('m-2'))
   })
 })

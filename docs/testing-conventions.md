@@ -113,6 +113,9 @@ fixing, not the selector.
    a table, sticky cluster headers
 8. Language: a signed-out visitor gets their browser's language, and the switcher survives a
    reload
+9. Guest access: a member invites an address, a browser with no session is refused the wrong
+   address and admitted with the right one, cannot reach the library, and loses access the
+   moment the invitation is withdrawn
 
 Flows whose feature does not exist yet are **not** anticipated as `test.fixme` stubs — they sit
 as a list in the header comment of `e2e/agenda.spec.ts` and arrive with their feature.

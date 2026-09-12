@@ -2,17 +2,24 @@ import Link from 'next/link'
 import { notFound } from 'next/navigation'
 import { loadSharing } from '@/server/actions/sharing'
 import { SharingList } from './sharing-list'
+import { GuestInvites } from './guest-invites'
 import { getTranslations } from 'next-intl/server'
 
 export const dynamic = 'force-dynamic'
 
 /**
- * Who may open this workshop.
+ * Who may open this workshop, in two parts.
  *
- * People are picked from the tenant, never by e-mail address: an address is an
- * identity and identities are global, so inviting by address here would quietly
- * hand somebody access across a tenant boundary. Getting into the tenant is a
- * separate, deliberate step under Mitglieder.
+ * COLLEAGUES are picked from the tenant, never by e-mail address: an address is
+ * an identity and identities are global, so inviting a colleague by address here
+ * would quietly hand somebody access across a tenant boundary. Getting into the
+ * tenant is a separate, deliberate step under Mitglieder.
+ *
+ * GUESTS are invited by address -- and that does not contradict the paragraph
+ * above, because a share link is not a membership. It creates no identity and no
+ * member row, it lives in this tenant under RLS, and it opens exactly one
+ * workshop. The address on it is not an identity; it is the second factor the
+ * invited person types in. See src/domain/workshop/share-links.ts.
  */
 export default async function SharingPage({ params }: { params: Promise<{ workshopId: string }> }) {
   const { workshopId } = await params
@@ -20,7 +27,7 @@ export default async function SharingPage({ params }: { params: Promise<{ worksh
   if (!result.ok) notFound()
 
   const t = await getTranslations('workshop')
-  const { title, ownerId, canShare, people } = result.data
+  const { title, ownerId, canShare, people, guests, dated } = result.data
 
   return (
     <div className="mx-auto max-w-2xl">
@@ -36,6 +43,10 @@ export default async function SharingPage({ params }: { params: Promise<{ worksh
       </header>
 
       <SharingList workshopId={workshopId} ownerId={ownerId} canShare={canShare} people={people} />
+
+      {/* Only for somebody who may invite: a viewer has no business with the
+          addresses of a workshop's external guests. */}
+      {canShare && <GuestInvites workshopId={workshopId} guests={guests} dated={dated} />}
     </div>
   )
 }

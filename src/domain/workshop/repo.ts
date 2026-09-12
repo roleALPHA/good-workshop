@@ -1,6 +1,6 @@
 import { uuidv7 } from 'uuidv7'
 import { and, asc, desc, eq, ilike, isNotNull, isNull, ne, or, sql } from 'drizzle-orm'
-import type { Actor, Tx } from '@/server/db'
+import { memberIdOf, type Actor, type Tx } from '@/server/db'
 import {
   folder,
   member,
@@ -161,7 +161,7 @@ export async function listWorkshops(
       workshopCollaborator,
       and(
         eq(workshopCollaborator.workshopId, workshop.id),
-        eq(workshopCollaborator.memberId, actor.memberId),
+        eq(workshopCollaborator.memberId, memberIdOf(actor)),
       ),
     )
     .where(
@@ -217,10 +217,11 @@ export async function listWorkshops(
  */
 function visibleTo(actor: Actor) {
   if (actor.tenantRole === 'admin') return undefined
+  const memberId = memberIdOf(actor)
   return or(
-    eq(workshop.ownerId, actor.memberId),
+    eq(workshop.ownerId, memberId),
     sql`exists (select 1 from workshop_collaborator wc
-                where wc.workshop_id = ${workshop.id} and wc.member_id = ${actor.memberId})`,
+                where wc.workshop_id = ${workshop.id} and wc.member_id = ${memberId})`,
   )
 }
 
@@ -301,7 +302,7 @@ export async function createWorkshop(
   const memberships = await tx
     .select({ id: member.id })
     .from(member)
-    .where(eq(member.id, actor.memberId))
+    .where(eq(member.id, memberIdOf(actor)))
     .limit(1)
   if (!memberships[0]) throw new Error('membership row missing for the current actor')
 
@@ -317,7 +318,7 @@ export async function createWorkshop(
     id: workshopId,
     title: input.title,
     folderId: input.folderId ?? null,
-    ownerId: actor.memberId,
+    ownerId: memberIdOf(actor),
     position: keyAtEnd(siblings),
     createdBy: actor.memberId,
     updatedBy: actor.memberId,
@@ -443,10 +444,10 @@ export async function listTrashedWorkshops(tx: Tx, actor: Actor) {
         actor.tenantRole === 'admin'
           ? undefined
           : or(
-              eq(workshop.ownerId, actor.memberId),
+              eq(workshop.ownerId, memberIdOf(actor)),
               sql`exists (select 1 from ${workshopCollaborator} wc
                            where wc.workshop_id = ${workshop.id}
-                             and wc.member_id = ${actor.memberId})`,
+                             and wc.member_id = ${memberIdOf(actor)})`,
             ),
       ),
     )

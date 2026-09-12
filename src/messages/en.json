@@ -144,6 +144,17 @@
     "unparkLabel": "Put {title} back into the schedule"
   },
   "auth": {
+    "guest": {
+      "title": "Invitation to {workshop}",
+      "intro": "Enter the e-mail address this invitation was sent to. The link works only with that address.",
+      "email": "E-mail address",
+      "open": "Open the agenda",
+      "opening": "Opening …",
+      "rejected": "That does not match. Check the address the invitation was sent to.",
+      "tooMany": "Too many attempts. Wait a minute and try again.",
+      "invalidTitle": "This invitation is no longer valid",
+      "invalidBody": "The link was withdrawn, has run out, or never existed. Whoever invited you can send a new invitation."
+    },
     "login": {
       "title": "Sign in to GoodWorkshop",
       "intro": "No password. Either with a passkey or through a link by e-mail.",
@@ -264,7 +275,10 @@
       "sharing": {
         "memberGone": "There is no such member.",
         "memberDisabled": "This member is disabled.",
-        "ownerHasAccess": "The owner already has full access."
+        "ownerHasAccess": "The owner already has full access.",
+        "invalidEmail": "That does not look like an e-mail address.",
+        "linkGone": "That invitation no longer exists.",
+        "tooManyInvites": "Too many invitations in a short time. Wait a minute."
       },
       "tags": {
         "tooMany": "At most {max, number} tags per workshop.",
@@ -406,6 +420,10 @@
       "subject": "Your sign-in link for GoodWorkshop",
       "body": "Hello,\n\nhere is your sign-in link:\n{link}\n\nIt is valid for {minutes, plural, one {one minute} other {# minutes}} and works once only.\n\nIf you did not ask for this, you can ignore this message —\nnothing happens without the link."
     },
+    "shareInvite": {
+      "subject": "Invitation to the agenda: {workshop}",
+      "body": "Hello,\n\nyou are invited to see the agenda of \"{workshop}\".\n\n{link}\n\nThe link will ask for your e-mail address. Enter {email} — only that address opens the agenda.\n\nYou do not need an account for this."
+    },
     "test": {
       "subject": "GoodWorkshop: test message",
       "body": "This message confirms that mail delivery works.\n\nSign-in links and invitations now go the same way."
@@ -478,6 +496,34 @@
     "backToLibrary": "← Library",
     "days": "Days",
     "end": "End {time}",
+    "guest": {
+      "banner": "You are looking at this agenda as a guest.",
+      "bannerEditor": "You are looking at this agenda as a guest and can edit it.",
+      "leave": "End access",
+      "goneTitle": "This agenda is no longer available",
+      "goneBody": "The access was ended, withdrawn, or has run out. Whoever invited you can send a new invitation."
+    },
+    "guests": {
+      "title": "Guests without an account",
+      "intro": "An invitation goes out by e-mail and works only with that address. Guests see the days of this agenda and nothing else — no library, no folders.",
+      "email": "E-mail address",
+      "role": "Permission",
+      "roleViewer": "Read only",
+      "roleEditor": "Read and write",
+      "invite": "Invite",
+      "inviting": "Inviting …",
+      "none": "Nobody invited yet.",
+      "revoke": "Withdraw access",
+      "invitedOn": "Invited on {date}",
+      "neverOpened": "not opened yet",
+      "openedOn": "opened on {date}",
+      "validUntil": "valid until {date}",
+      "validUntilRevoked": "valid until withdrawn",
+      "mailed": "Invitation sent to {email}.",
+      "notMailed": "No mail delivery is set up. Pass this link on to {email} yourself — it works only with that address:",
+      "until": "The link is valid until the last day of the agenda.",
+      "untilUndated": "The agenda has no date yet, so the link is valid until it is withdrawn."
+    },
     "materials": "Materials: {items}",
     "print": "Print",
     "someone": "Somebody",

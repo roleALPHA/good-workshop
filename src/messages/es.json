@@ -144,6 +144,17 @@
     "unparkLabel": "Devolver {title} al desarrollo"
   },
   "auth": {
+    "guest": {
+      "title": "Invitación a {workshop}",
+      "intro": "Escribe la dirección de correo a la que se envió esta invitación. El enlace solo funciona con esa dirección.",
+      "email": "Dirección de correo",
+      "open": "Abrir el desarrollo",
+      "opening": "Abriendo …",
+      "rejected": "Eso no coincide. Comprueba la dirección a la que se envió la invitación.",
+      "tooMany": "Demasiados intentos. Espera un minuto y vuelve a intentarlo.",
+      "invalidTitle": "Esta invitación ya no es válida",
+      "invalidBody": "El enlace se retiró, ha caducado, o nunca existió. Quien te invitó puede enviar una nueva invitación."
+    },
     "login": {
       "title": "Iniciar sesión en GoodWorkshop",
       "intro": "Sin contraseña. Con un passkey o con un enlace por correo.",
@@ -264,7 +275,10 @@
       "sharing": {
         "memberGone": "Ese miembro no existe.",
         "memberDisabled": "Ese miembro está desactivado.",
-        "ownerHasAccess": "La propietaria ya tiene acceso completo."
+        "ownerHasAccess": "La propietaria ya tiene acceso completo.",
+        "invalidEmail": "Eso no parece una dirección de correo.",
+        "linkGone": "Esa invitación ya no existe.",
+        "tooManyInvites": "Demasiadas invitaciones en poco tiempo. Espera un minuto."
       },
       "tags": {
         "tooMany": "Como máximo {max, number} etiquetas por taller.",
@@ -406,6 +420,10 @@
       "subject": "Tu enlace de acceso para GoodWorkshop",
       "body": "Hola:\n\naquí tienes tu enlace de acceso:\n{link}\n\nEs válido durante {minutes, plural, one {un minuto} many {# minutos} other {# minutos}} y solo sirve una vez.\n\nSi no lo has pedido, puedes ignorar este mensaje —\nsin el enlace no pasa nada."
     },
+    "shareInvite": {
+      "subject": "Invitación al desarrollo: {workshop}",
+      "body": "Hola:\n\nte invitamos a ver el desarrollo de «{workshop}».\n\n{link}\n\nEl enlace pedirá tu dirección de correo. Escribe {email} — solo esa dirección abre el desarrollo.\n\nNo necesitas ninguna cuenta."
+    },
     "test": {
       "subject": "GoodWorkshop: mensaje de prueba",
       "body": "Este mensaje confirma que el envío de correo funciona.\n\nLos enlaces de acceso y las invitaciones irán a partir de ahora por el mismo camino."
@@ -478,6 +496,34 @@
     "backToLibrary": "← Biblioteca",
     "days": "Jornadas",
     "end": "Fin {time}",
+    "guest": {
+      "banner": "Estás viendo este desarrollo como invitado.",
+      "bannerEditor": "Estás viendo este desarrollo como invitado y puedes editarlo.",
+      "leave": "Terminar el acceso",
+      "goneTitle": "Este desarrollo ya no está disponible",
+      "goneBody": "El acceso se terminó, se retiró o ha caducado. Quien te invitó puede enviar una nueva invitación."
+    },
+    "guests": {
+      "title": "Invitados sin cuenta",
+      "intro": "Una invitación se envía por correo y solo funciona con esa dirección. Los invitados ven las jornadas de este desarrollo y nada más — sin biblioteca, sin carpetas.",
+      "email": "Dirección de correo",
+      "role": "Permiso",
+      "roleViewer": "Solo lectura",
+      "roleEditor": "Lectura y escritura",
+      "invite": "Invitar",
+      "inviting": "Invitando …",
+      "none": "Todavía no hay nadie invitado.",
+      "revoke": "Retirar el acceso",
+      "invitedOn": "Invitado el {date}",
+      "neverOpened": "aún sin abrir",
+      "openedOn": "abierto el {date}",
+      "validUntil": "válido hasta el {date}",
+      "validUntilRevoked": "válido hasta que se retire",
+      "mailed": "Invitación enviada a {email}.",
+      "notMailed": "No hay envío de correo configurado. Pasa este enlace tú misma a {email} — solo funciona con esa dirección:",
+      "until": "El enlace es válido hasta la última jornada del desarrollo.",
+      "untilUndated": "El desarrollo todavía no tiene fecha, así que el enlace es válido hasta que se retire."
+    },
     "materials": "Material: {items}",
     "print": "Imprimir",
     "someone": "Alguien",

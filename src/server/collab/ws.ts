@@ -9,6 +9,7 @@ import { assertWorkshopAccess } from '@/domain/agenda/access'
 import { assertDayInWorkshop } from '@/domain/agenda/repo'
 import { authConfig } from '@/server/auth/config'
 import { SESSION_COOKIE_NAMES, verifySessionCookie } from '@/server/auth/session'
+import { GUEST_COOKIE_NAMES, guestActor, verifyGuestCookie } from '@/server/auth/share-session'
 import { withTenant, type Actor } from '@/server/db'
 import { hasScope, resolveBearer } from '@/server/mcp/auth'
 import { DEFAULT_TIMINGS, Room, type Connection, type RoomTimings } from './room'
@@ -206,19 +207,45 @@ async function identify(request: IncomingMessage): Promise<Actor | null> {
   }
 
   const cookies = parseCookies(request.headers.cookie ?? '')
+
   const raw = SESSION_COOKIE_NAMES.map((name) => cookies[name]).find(Boolean)
-  if (!raw) return null
-
-  const session = await verifySessionCookie(raw)
-  if (!session) return null
-
-  return {
-    tenantId: session.tenantId,
-    memberId: session.memberId,
-    tenantRole: session.tenantRole,
-    displayName: session.displayName || session.email,
-    source: 'web',
+  if (raw) {
+    const session = await verifySessionCookie(raw)
+    if (session) {
+      return {
+        tenantId: session.tenantId,
+        memberId: session.memberId,
+        tenantRole: session.tenantRole,
+        displayName: session.displayName || session.email,
+        source: 'web',
+      }
+    }
+    // Deliberately falls through rather than refusing. A session cookie outlives
+    // the session it names -- revoked, idle, expired, or left behind by somebody
+    // who is no longer a member -- and a stale one must not shadow a perfectly
+    // good guest cookie in the same browser. Refusing here would give that guest
+    // an editor that renders and never connects, which is the worst of the three
+    // possible outcomes.
   }
+
+  /**
+   * A share-link guest, third and last.
+   *
+   * After the member cookie rather than before it, so that a member who opens an
+   * invitation to check it stays themselves in the room -- they hold both
+   * cookies, and the stronger credential is the one they should act under.
+   *
+   * Nothing here decides whether the guest may WRITE. `authenticate` above
+   * already demands workshop.content.write before the upgrade, and for a guest
+   * invited to read that check fails on the capability table alone -- so a
+   * read-only guest is refused at the handshake without a line of special case
+   * anywhere in this file.
+   */
+  const guestRaw = GUEST_COOKIE_NAMES.map((name) => cookies[name]).find(Boolean)
+  if (!guestRaw) return null
+
+  const guest = await verifyGuestCookie(guestRaw)
+  return guest ? guestActor(guest) : null
 }
 
 /**
@@ -226,7 +253,13 @@ async function identify(request: IncomingMessage): Promise<Actor | null> {
  * room is showing what is typing, and that is the tool.
  */
 function fallbackName(actor: Actor): string {
-  return actor.source === 'mcp' ? 'KI-Assistent' : 'Mitglied'
+  if (actor.source === 'mcp') return 'KI-Assistent'
+  // A guest always has one -- guestActor puts the invited address in
+  // displayName -- so this is the belt to that braces rather than the normal
+  // path. It says "guest" because somebody in the room seeing an unnamed
+  // participant should know it is an external one.
+  if (actor.source === 'guest') return 'Gast'
+  return 'Mitglied'
 }
 
 async function attach(

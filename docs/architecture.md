@@ -68,7 +68,10 @@ nobody has ever opened starts from the real state.
 The collaboration service runs as **its own process in the same image** on port 3001 — Next
 cannot serve a WebSocket upgrade from a route handler. A second image would have been the more
 comfortable route and would have broken the promise of "one image plus Postgres". The proxy
-forwards `/collab` there; it authenticates with the same session cookie that opens the editor.
+forwards `/collab` there; it authenticates with the same session cookie that opens the editor --
+or, for an invited guest, with theirs. Nothing in the socket decides whether a guest may write:
+it demands `workshop.content.write` before the upgrade, so a guest invited only to read is
+refused at the handshake by the capability table alone.
 
 ## The library
 
@@ -95,6 +98,32 @@ account that results.
 Access to a single workshop is granted from inside the tenant, never by e-mail address: an
 address is an identity, and identities are global; inviting by address would silently grant
 access across a tenant boundary.
+
+**A share link for somebody with no account is the exception, and it is not one.** A client, an
+external co-trainer or a commissioning manager gets one agenda by e-mail — and that does not
+cross the boundary the rule protects, for four reasons that are each load-bearing rather than
+reassuring: it creates no `identity` and no `member`, so nothing global comes into existence;
+the row lives in a tenant-scoped table under RLS and can name nothing outside its own tenant; it
+grants exactly one workshop, never the library and never a second one; and the guest's session
+lives in `share_session`, which has no `identity_id` column at all — so a guest session cannot
+become a login. That last one is the shape of the schema rather than a rule somebody has to
+remember.
+
+The address on such a link is therefore not an identity. It is the **second factor**: the link
+alone shows a form, and only the address the invitation was sent to opens the agenda. A link
+that was forwarded, left in an inbox or found in a browser history is not a key. The token is
+deliberately **not** single-use, unlike a magic link — a guest comes back to it tomorrow from
+their phone — which is exactly why it needs a second factor at all.
+
+Guests get their own roles rather than `viewer` and `editor`, because `editor` carries renaming,
+tags, the bin and moving between folders. A guest invited to write edits agenda content and
+nothing else, and a reader gets `workshop.read` alone: no print view and no Markdown download,
+which would be a second and third surface to get wrong.
+
+How long it lasts is **derived, not stored**: access ends after the last dated day of the
+agenda. A date written into the row at invitation time would lock guests out of a workshop that
+was moved by a week, and the person who rescheduled it would have no reason to suspect the
+invitation. A workshop with no dates yet has no deadline, so only a withdrawal ends it.
 
 Whoever has no access gets 404 rather than 403: a workshop you may not see should not confirm
 that it exists.

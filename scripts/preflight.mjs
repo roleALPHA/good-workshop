@@ -66,6 +66,23 @@ const CHECKS = [
   from cluster k join workshop_day d on d.id = k.day_id
  where d.workshop_id is distinct from k.workshop_id;`,
   },
+  {
+    id: 'workshop_share_link enthält Zeilen, die kein email haben können',
+    migration: '0005_stormy_exiles',
+    relevant: (c) => missingColumn(c, 'workshop_share_link', 'email'),
+    find: `select id, workshop_id, role, created_at
+             from workshop_share_link
+            limit ${SAMPLE_LIMIT}`,
+    explain: [
+      'The migration adds `email NOT NULL` to workshop_share_link, and there is no value to',
+      'backfill it with: the address is what the link is bound to, and nobody can invent it.',
+      'The table shipped in 0000_init as "reserved but unbuilt" and no release has ever written',
+      'to it, so it should be empty. If it is not, something wrote rows outside the application.',
+      'The decision: those links grant nothing today and cannot be repaired into guest',
+      'invitations -- delete them and issue the invitations again under Access.',
+    ],
+    inspect: `select * from workshop_share_link;`,
+  },
 ]
 
 /**
@@ -184,6 +201,20 @@ async function hasTable(client, name) {
  * the migration file. Matching on it would mean matching on a string neither
  * side actually writes down.
  */
+/**
+ * True when the column is not there yet -- i.e. the migration that adds it has
+ * not run. Once it exists, `NOT NULL` is the guarantee and the check goes quiet.
+ */
+async function missingColumn(client, table, column) {
+  const { rows } = await client.query(
+    `select 1
+       from information_schema.columns
+      where table_schema = 'public' and table_name = $1 and column_name = $2`,
+    [table, column],
+  )
+  return rows.length === 0
+}
+
 async function missingCompositeDayFk(client, table) {
   const { rows } = await client.query(
     `select 1

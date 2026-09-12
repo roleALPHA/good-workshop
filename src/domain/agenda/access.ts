@@ -21,7 +21,16 @@ import { DomainError } from '@/domain/errors'
  * detectable.
  */
 
-export type WorkshopRole = 'owner' | 'editor' | 'viewer' | 'admin'
+/**
+ * The two guest roles are separate roles rather than `editor`/`viewer` reused.
+ *
+ * `editor` carries `workshop.update` -- renaming, tags, the bin, moving between
+ * folders -- and a guest invited to one agenda has no business with any of it.
+ * Subtracting a capability from a role at the call site would put the rule in
+ * the caller; a role of its own puts it in the table below, where the answer to
+ * "what may a guest do" is one line.
+ */
+export type WorkshopRole = 'owner' | 'editor' | 'viewer' | 'admin' | 'guestEditor' | 'guestViewer'
 
 export type Capability =
   | 'workshop.read'
@@ -33,6 +42,13 @@ export type Capability =
   | 'workshop.delete'
 
 const CAPABILITIES: Record<WorkshopRole, readonly Capability[]> = {
+  // Reading, and nothing else. Not `workshop.export` either: the print view and
+  // the Markdown download are a second and third surface to get wrong, and
+  // somebody invited to look at an agenda did not ask for a file.
+  guestViewer: ['workshop.read'],
+  // Agenda content, and nothing else. No `workshop.update`, so the workshop
+  // cannot be renamed, tagged, moved or binned by a guest.
+  guestEditor: ['workshop.read', 'workshop.content.write'],
   viewer: ['workshop.read', 'workshop.export'],
   editor: ['workshop.read', 'workshop.export', 'workshop.content.write', 'workshop.update'],
   owner: [
@@ -148,7 +164,11 @@ export async function assertWorkshopAccess(
       workshopCollaborator,
       and(
         eq(workshopCollaborator.workshopId, workshop.id),
-        eq(workshopCollaborator.memberId, actor.memberId),
+        // A guest has no member id, and `member_id = NULL` is NULL rather than
+        // false -- harmless here, but it would be a join condition that reads
+        // as if it could match. Dropped instead, so the query says what it
+        // means: a guest is never a collaborator.
+        actor.memberId ? eq(workshopCollaborator.memberId, actor.memberId) : sql`false`,
       ),
     )
     // A workshop in the bin is invisible here by default, which is what makes
@@ -169,7 +189,7 @@ export async function assertWorkshopAccess(
   // "not in this tenant, or deleted".
   if (!row) throw new NotFoundError()
 
-  const role = effectiveRole(row.ownerId, row.collaboratorRole, actor)
+  const role = effectiveRole(row.ownerId, row.collaboratorRole, actor, workshopId)
   if (!role) throw new NotFoundError()
 
   const allowed = CAPABILITIES[role]
@@ -184,11 +204,33 @@ export async function assertWorkshopAccess(
   } as WorkshopAccess
 }
 
-function effectiveRole(
+/**
+ * Which role an actor has on one workshop.
+ *
+ * Exported because it is the whole authorisation rule in nine lines, and the
+ * order of those lines is load-bearing -- which makes it worth a test table of
+ * its own rather than only being reached through a database.
+ */
+export function effectiveRole(
   ownerId: string,
   collaboratorRole: string | null,
   actor: Actor,
+  workshopId: string,
 ): WorkshopRole | null {
+  /**
+   * First, and with a `return null` of its own rather than falling through.
+   *
+   * Both halves matter. A guest must not reach the admin override below -- a
+   * guest carries no tenant role worth trusting, and "invited to one agenda"
+   * must never widen into "may help out anywhere". And the grant names ONE
+   * workshop: asked about a different one, the answer is no access at all, not
+   * "keep looking". Falling through here is how a share link would quietly
+   * become a key to the whole tenant.
+   */
+  if (actor.share) {
+    if (actor.share.workshopId !== workshopId) return null
+    return actor.share.role === 'editor' ? 'guestEditor' : 'guestViewer'
+  }
   if (ownerId === actor.memberId) return 'owner'
   if (collaboratorRole === 'editor' || collaboratorRole === 'viewer') return collaboratorRole
   // Defaults to on: self-hosted teams expect an admin to be able to help. Every

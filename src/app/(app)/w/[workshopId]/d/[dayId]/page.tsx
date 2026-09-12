@@ -5,12 +5,13 @@ import { Download, Printer, Users } from 'lucide-react'
 import { AgendaSurface } from '@/components/agenda/agenda-surface'
 import { TagEditor } from '@/components/agenda/tag-editor'
 import { assertWorkshopAccess } from '@/domain/agenda/access'
+import { presenceHue } from '@/domain/collab/presence'
 import { loadDay } from '@/domain/agenda/repo'
 import { tagsOf } from '@/domain/workshop/tags'
 import { listDays } from '@/domain/workshop/repo'
 import { currentActor } from '@/server/actions/context'
 import { readSession } from '@/server/auth/session'
-import { withTenant } from '@/server/db'
+import { memberIdOf, withTenant } from '@/server/db'
 import { workshop as workshopTable } from '@/server/db/schema'
 import { redirect } from 'next/navigation'
 import { getLocale, getTranslations } from 'next-intl/server'
@@ -24,22 +25,6 @@ export const dynamic = 'force-dynamic'
  * no loading state on first paint -- the agenda is there, then it becomes
  * interactive.
  */
-/**
- * A hue, not one of the category colours.
- *
- * Category colours carry meaning -- "this is a break" -- and a person is not a
- * category. Presence gets its own axis in the same OKLCH space so the two never
- * read as the same language.
- *
- * Eight steps around the wheel rather than a free hash: adjacent hues are hard
- * to tell apart at avatar size, which is the only size this is ever seen at.
- */
-function presenceHue(memberId: string): number {
-  let hash = 0
-  for (const char of memberId) hash = (hash * 31 + char.charCodeAt(0)) >>> 0
-  return (hash % 8) * 45
-}
-
 export default async function DayPage({
   params,
 }: {
@@ -74,7 +59,7 @@ export default async function DayPage({
       canShare: access.can('workshop.share'),
       // Derived from the member id, so the same person keeps the same colour
       // across sessions and devices without storing a preference nobody set.
-      userHue: presenceHue(actor.memberId),
+      userHue: presenceHue(memberIdOf(actor)),
     }
   }).catch(() => null)
 
@@ -150,6 +135,7 @@ export default async function DayPage({
 
       <AgendaSurface
         doc={data.doc}
+        readOnly={!data.canEdit}
         collab={
           data.canEdit
             ? {

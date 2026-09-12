@@ -267,3 +267,32 @@ export function magicLinkMail(to: string, link: string, locale: Locale): Mail {
     ].join('\n'),
   }
 }
+
+/**
+ * The invitation to one agenda, for somebody with no account.
+ *
+ * It says the address out loud, because the link asks for it: the recipient has
+ * to know WHICH of their addresses opens it, and an invitation forwarded within a
+ * team otherwise turns into "it does not work" with nothing to go on.
+ *
+ * No expiry in minutes here, unlike a magic link. This one is valid for as long
+ * as the workshop is, which is a sentence about the agenda rather than a number,
+ * and inventing a deadline the code does not enforce is worse than saying nothing.
+ */
+export function shareInviteMail(
+  to: string,
+  link: string,
+  workshopTitle: string,
+  locale: Locale,
+): Mail {
+  const t = translator(locale, 'mail.shareInvite')
+  return {
+    to,
+    subject: t('subject', { workshop: workshopTitle }),
+    text: [
+      t('body', { workshop: workshopTitle, link, email: to }),
+      '',
+      'GoodWorkshop · powered by roleALPHA',
+    ].join('\n'),
+  }
+}

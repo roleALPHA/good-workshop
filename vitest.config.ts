@@ -52,6 +52,11 @@ export default defineConfig({
         'src/domain/agenda/repo.ts',
         'src/domain/workshop/repo.ts',
         'src/domain/workshop/collaborators.ts',
+        // The same, for guests. Its pure half -- when a link expires, what counts
+        // as an address -- was split into share-rules.ts precisely so that it
+        // stays counted here: a wrong answer from validUntil silently grants or
+        // denies access, which is exactly what this threshold is for.
+        'src/domain/workshop/share-links.ts',
         // Membership crosses the auth-role boundary -- member rows behind RLS,
         // e-mail addresses behind a role the application cannot join to. That
         // separation is the thing worth asserting, and it does not exist

@@ -30,6 +30,12 @@ come back to. Tags appear as you type; a tag nothing points at any more disappea
 **Works for a team.** An admin invites people by e-mail address under **Members**. Access to
 a single workshop is granted by its owner under **Access**: edit or read, per member.
 
+**Shares with people who have no account.** Under **Access** you can also invite an e-mail
+address directly — read, or read and write. The invitation is a link that only works with that
+address: whoever opens it types the address it was sent to, and then sees the days of that one
+agenda. No account, no library, no folders, and nothing else from the installation. The link is
+valid until the last day of the agenda, and can be withdrawn at any time.
+
 **Looks like you.** Under **Branding** you can set a logo and an accent colour; the server
 derives the light and dark steps itself. The footer stays `GoodWorkshop · powered by
 roleALPHA`.

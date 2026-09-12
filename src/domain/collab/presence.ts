@@ -19,7 +19,10 @@
  */
 export type PresenceClaim = { name: string; hue: number; kind: 'person' | 'model' }
 
-export type PresenceActor = { displayName: string; source: 'web' | 'mcp' | 'api' | 'system' }
+export type PresenceActor = {
+  displayName: string
+  source: 'web' | 'mcp' | 'api' | 'system' | 'guest'
+}
 
 export function authoritativePresence(
   claimed: Partial<PresenceClaim> | undefined,
@@ -31,7 +34,31 @@ export function authoritativePresence(
     // however politely it introduces itself, and a browser client cannot
     // volunteer to be labelled one either -- being mistaken for a machine is
     // its own kind of false testimony.
+    // A guest is a person: they are an external human in the room, not a second
+    // kind of machine. What marks them out belongs next to their name on the
+    // page, not in a field that answers "is this a model".
     kind: actor.source === 'mcp' ? 'model' : 'person',
     hue: typeof claimed?.hue === 'number' && Number.isFinite(claimed.hue) ? claimed.hue : 0,
   }
+}
+
+/**
+ * A hue for one participant. NOT one of the category colours.
+ *
+ * Category colours carry meaning -- "this is a break" -- and a person is not a
+ * category. Presence gets its own axis in the same OKLCH space so that the two
+ * never read as the same language.
+ *
+ * Eight steps around the wheel rather than a free hash: adjacent hues are hard
+ * to tell apart at avatar size, which is the only size this is ever seen at.
+ *
+ * The input is whatever identifies the participant durably -- a member id for a
+ * colleague, a share link id for a guest -- so the same person keeps the same
+ * colour across sessions and devices without anybody storing a preference they
+ * never set.
+ */
+export function presenceHue(id: string): number {
+  let hash = 0
+  for (const char of id) hash = (hash * 31 + char.charCodeAt(0)) >>> 0
+  return (hash % 8) * 45
 }

@@ -147,6 +147,17 @@ declare const messages: {
     "unparkLabel": "{title} zurück in den Ablauf"
   },
   "auth": {
+    "guest": {
+      "title": "Einladung zu {workshop}",
+      "intro": "Gib die E-Mail-Adresse ein, an die diese Einladung geschickt wurde. Der Link gilt nur für diese Adresse.",
+      "email": "E-Mail-Adresse",
+      "open": "Agenda öffnen",
+      "opening": "Wird geöffnet …",
+      "rejected": "Das passt nicht zusammen. Prüfe die Adresse, an die die Einladung geschickt wurde.",
+      "tooMany": "Zu viele Versuche. Warte eine Minute und versuche es dann noch einmal.",
+      "invalidTitle": "Diese Einladung gilt nicht mehr",
+      "invalidBody": "Der Link ist zurückgezogen worden, abgelaufen, oder es gab ihn nie. Wer dich eingeladen hat, kann eine neue Einladung schicken."
+    },
     "login": {
       "title": "Bei GoodWorkshop anmelden",
       "intro": "Ohne Passwort. Entweder per Passkey oder über einen Link per E-Mail.",
@@ -267,7 +278,10 @@ declare const messages: {
       "sharing": {
         "memberGone": "Dieses Mitglied gibt es nicht.",
         "memberDisabled": "Dieses Mitglied ist abgeschaltet.",
-        "ownerHasAccess": "Der Eigentümer hat bereits vollen Zugriff."
+        "ownerHasAccess": "Der Eigentümer hat bereits vollen Zugriff.",
+        "invalidEmail": "Das sieht nicht wie eine E-Mail-Adresse aus.",
+        "linkGone": "Diese Einladung gibt es nicht mehr.",
+        "tooManyInvites": "Zu viele Einladungen in kurzer Zeit. Warte eine Minute."
       },
       "tags": {
         "tooMany": "Höchstens {max, number} Tags pro Workshop.",
@@ -409,6 +423,10 @@ declare const messages: {
       "subject": "Dein Anmeldelink für GoodWorkshop",
       "body": "Hallo,\n\nhier ist dein Anmeldelink:\n{link}\n\nEr gilt {minutes, plural, one {eine Minute} other {# Minuten}} und lässt sich nur einmal verwenden.\n\nWenn du das nicht angefordert hast, kannst du diese Nachricht ignorieren —\nohne den Link passiert nichts."
     },
+    "shareInvite": {
+      "subject": "Einladung zur Agenda: {workshop}",
+      "body": "Hallo,\n\ndu bist eingeladen, die Agenda von „{workshop}\" anzusehen.\n\n{link}\n\nDer Link fragt nach deiner E-Mail-Adresse. Gib {email} ein — nur diese Adresse öffnet die Agenda.\n\nDu brauchst dafür kein Konto."
+    },
     "test": {
       "subject": "GoodWorkshop: Testnachricht",
       "body": "Diese Nachricht bestätigt, dass der Mailversand funktioniert.\n\nAnmeldelinks und Einladungen gehen ab jetzt denselben Weg."
@@ -481,6 +499,34 @@ declare const messages: {
     "backToLibrary": "← Bibliothek",
     "days": "Tage",
     "end": "Ende {time}",
+    "guest": {
+      "banner": "Du siehst diese Agenda als Gast.",
+      "bannerEditor": "Du siehst diese Agenda als Gast und kannst sie bearbeiten.",
+      "leave": "Zugang beenden",
+      "goneTitle": "Diese Agenda ist nicht mehr verfügbar",
+      "goneBody": "Der Zugang wurde beendet, zurückgezogen oder ist abgelaufen. Wer dich eingeladen hat, kann eine neue Einladung schicken."
+    },
+    "guests": {
+      "title": "Gäste ohne Konto",
+      "intro": "Eine Einladung geht per E-Mail und gilt nur für diese Adresse. Gäste sehen die Tage dieser Agenda, sonst nichts — keine Bibliothek, keine Ordner.",
+      "email": "E-Mail-Adresse",
+      "role": "Recht",
+      "roleViewer": "Nur lesen",
+      "roleEditor": "Lesen und schreiben",
+      "invite": "Einladen",
+      "inviting": "Wird eingeladen …",
+      "none": "Noch niemand eingeladen.",
+      "revoke": "Zugang entziehen",
+      "invitedOn": "Eingeladen am {date}",
+      "neverOpened": "noch nicht geöffnet",
+      "openedOn": "geöffnet am {date}",
+      "validUntil": "gültig bis {date}",
+      "validUntilRevoked": "gültig bis zum Widerruf",
+      "mailed": "Einladung an {email} verschickt.",
+      "notMailed": "Es ist kein Mailversand eingerichtet. Gib diesen Link selbst an {email} weiter — er funktioniert nur mit dieser Adresse:",
+      "until": "Der Link gilt bis zum letzten Tag der Agenda.",
+      "untilUndated": "Die Agenda hat noch kein Datum, deshalb gilt der Link bis zum Widerruf."
+    },
     "materials": "Material: {items}",
     "print": "Drucken",
     "someone": "Jemand",

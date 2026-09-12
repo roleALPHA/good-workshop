@@ -3,6 +3,7 @@ import { getDb, type Database } from './client'
 
 export * as schema from './schema'
 export type { Actor, TenantContext } from './actor'
+export { memberIdOf } from './actor'
 
 import type { Actor } from './actor'
 
@@ -30,7 +31,10 @@ type Tx = Parameters<Parameters<Database['transaction']>[0]>[0]
 export async function withTenant<T>(actor: Actor, fn: (tx: Tx) => Promise<T>): Promise<T> {
   return getDb().transaction(async (tx) => {
     await tx.execute(sql`select set_config('app.tenant_id', ${actor.tenantId}, true)`)
-    await tx.execute(sql`select set_config('app.member_id', ${actor.memberId}, true)`)
+    // '' rather than the value for a guest, who has no member: app.current_member()
+    // maps the empty string to NULL (drizzle/sql/000_bootstrap.sql), which is the
+    // honest answer and the one a policy written against it would want.
+    await tx.execute(sql`select set_config('app.member_id', ${actor.memberId ?? ''}, true)`)
     await tx.execute(
       sql`select set_config('app.is_tenant_admin', ${actor.tenantRole === 'admin' ? 'on' : 'off'}, true)`,
     )

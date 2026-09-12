@@ -796,28 +796,107 @@ export const personalAccessToken = pgTable(
   ],
 ).enableRLS()
 
-/** Reserved but unbuilt: creating the table now avoids a painful retrofit. */
+/**
+ * Access to ONE workshop for somebody who has no account.
+ *
+ * The counterpart to `workshop_collaborator`, and the reason the two cannot be
+ * one table: a collaborator is a `member`, and a member is an `identity`, which
+ * is global. Inviting by e-mail address into THAT would hand somebody access
+ * across a tenant boundary -- which is why the collaborator screen does not
+ * offer it and says so.
+ *
+ * A row here grants none of that. It creates no identity and no membership, it
+ * lives inside one tenant under RLS, and it names exactly one workshop. The
+ * address is not an identity here; it is the second factor, typed in at
+ * /s/<token> by whoever received the link, so a forwarded link is not a key.
+ */
 export const workshopShareLink = pgTable(
   'workshop_share_link',
   {
     id: uuid('id').notNull(),
-    tenantId: tenantId(),
+    tenantId: tenantId().references(() => tenant.id, { onDelete: 'cascade' }),
     workshopId: uuid('workshop_id').notNull(),
+    /** The address the link is bound to, and the only thing it proves. */
+    email: citext('email').notNull(),
     tokenHash: text('token_hash').notNull().unique(),
     role: text('role').notNull().default('viewer'),
+    /**
+     * A manual override only. NULL is the normal case and does NOT mean
+     * "forever": validity is derived from the last dated day of the agenda (see
+     * shareLinkExpiry in src/domain/workshop/share-links.ts), because a
+     * rescheduled workshop must not silently lock its guests out -- and because
+     * storing a derived value is what invariant 4 above forbids.
+     */
     expiresAt: timestamp('expires_at', { withTimezone: true }),
     revokedAt: timestamp('revoked_at', { withTimezone: true }),
+    /** Whether the invitation was ever opened. The inviting member wants to know. */
+    lastSeenAt: timestamp('last_seen_at', { withTimezone: true }),
     createdBy: uuid('created_by'),
     createdAt: timestamp('created_at', { withTimezone: true }).notNull().defaultNow(),
   },
   (t) => [
     primaryKey({ columns: [t.id] }),
+    // Invariant 2: this table was the one that had no composite-FK target of its
+    // own, so share_session could not point at it properly.
+    unique('share_link_tenant_id_uq').on(t.tenantId, t.id),
     foreignKey({
       columns: [t.tenantId, t.workshopId],
       foreignColumns: [workshop.tenantId, workshop.id],
     }).onDelete('cascade'),
-    check('share_link_role', sql`${t.role} in ('viewer')`),
+    // One invitation per address per workshop: inviting again changes the role
+    // and re-issues the token rather than leaving two links with two answers.
+    unique('share_link_workshop_email_uq').on(t.tenantId, t.workshopId, t.email),
+    check('share_link_role', sql`${t.role} in ('viewer','editor')`),
+    index('share_link_workshop_idx').on(t.tenantId, t.workshopId),
     pgPolicy('share_link_tenant_isolation', {
+      for: 'all',
+      to: 'gw_app',
+      using: TENANT_POLICY_USING,
+      withCheck: TENANT_POLICY_USING,
+    }),
+  ],
+).enableRLS()
+
+/**
+ * A guest's session, deliberately not in `auth_session`.
+ *
+ * `auth_session.identity_id` is NOT NULL and the table lives behind `gw_auth`;
+ * `verifySessionCookie` ends by resolving a membership and returns null without
+ * one. A guest has neither, and giving them both to make the existing table fit
+ * would create exactly the global identity this feature exists to avoid.
+ *
+ * Here instead: tenant-scoped, under RLS, pointing at a share link and nothing
+ * else. A row in this table CANNOT name an identity, so a guest session can
+ * never become a login -- that is a property of the schema rather than a rule
+ * somebody has to remember.
+ */
+export const shareSession = pgTable(
+  'share_session',
+  {
+    id: uuid('id').notNull(),
+    tenantId: tenantId().references(() => tenant.id, { onDelete: 'cascade' }),
+    shareLinkId: uuid('share_link_id').notNull(),
+    secretHash: text('secret_hash').notNull(),
+    userAgent: text('user_agent'),
+    ip: inet('ip'),
+    createdAt: timestamp('created_at', { withTimezone: true }).notNull().defaultNow(),
+    lastSeenAt: timestamp('last_seen_at', { withTimezone: true }).notNull().defaultNow(),
+    expiresAt: timestamp('expires_at', { withTimezone: true }).notNull(),
+    revokedAt: timestamp('revoked_at', { withTimezone: true }),
+  },
+  (t) => [
+    primaryKey({ columns: [t.id] }),
+    unique('share_session_tenant_id_uq').on(t.tenantId, t.id),
+    // Revoking the link deletes every session opened with it. The alternative
+    // -- checking the link on read only -- works too, and this makes it true
+    // even if somebody later forgets to.
+    foreignKey({
+      columns: [t.tenantId, t.shareLinkId],
+      foreignColumns: [workshopShareLink.tenantId, workshopShareLink.id],
+    }).onDelete('cascade'),
+    index('share_session_link_idx').on(t.tenantId, t.shareLinkId),
+    index('share_session_expiry_idx').on(t.expiresAt),
+    pgPolicy('share_session_tenant_isolation', {
       for: 'all',
       to: 'gw_app',
       using: TENANT_POLICY_USING,

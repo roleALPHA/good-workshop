@@ -11,6 +11,11 @@ import { DomainError } from '@/domain/errors'
  * and identities are global, so inviting by address here would silently create
  * cross-tenant access. Somebody has to be in the tenant before they can be on a
  * workshop, which is also the order the two screens are laid out in.
+ *
+ * Guests with no account are the sibling case and live in share-links.ts. They
+ * ARE named by address, which is not a contradiction: nothing there creates an
+ * identity or a membership, so there is no global principal to leak across a
+ * tenant boundary -- only a row in this tenant granting one workshop.
  */
 
 export type CollaboratorRole = 'editor' | 'viewer'

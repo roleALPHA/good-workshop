@@ -35,24 +35,44 @@ import { DayHeader } from './day-header'
 export function AgendaSurface({
   doc,
   collab,
+  readOnly = false,
 }: {
   doc: DayDoc
-  /** Absent for viewers: edits then stay in the browser and go nowhere. */
   collab?: CollabTarget
+  /**
+   * Renders the reading view and stops there.
+   *
+   * Without this, "read-only" was the absence of `collab` -- and the editor
+   * mounted anyway, wrote into a local document and threw the changes away on
+   * navigation. Somebody was shown fields they could type in, a drag handle that
+   * worked, and no hint that none of it was being saved.
+   *
+   * That was survivable for a colleague who could see the agenda in the library
+   * either way. It is not survivable for an invited guest, whose entire view of
+   * the workshop is this page. So the reading view -- which already exists for
+   * the first paint and for print -- becomes the whole answer when there is no
+   * write permission.
+   */
+  readOnly?: boolean
 }) {
   const hydrated = useHydrated()
 
-  const readOnly = useMemo(() => {
+  // Renamed from `readOnly`, which is now the prop above: the same word for a
+  // permission and for a bag of precomputed rows is one shadowing away from a
+  // bug that renders an editable page.
+  const reading = useMemo(() => {
     const rows = flattenDay(doc)
     const schedule = computeSchedule(doc.startMinute, toScheduleItems(rows))
     return { rows: withGapRows(rows, schedule), schedule }
   }, [doc])
 
-  if (!hydrated) {
+  // The same branch for both reasons: before hydration because no JavaScript has
+  // arrived yet, and for a reader because none is going to help them.
+  if (!hydrated || readOnly) {
     return (
       <>
-        <DayHeader doc={doc} schedule={readOnly.schedule} />
-        <AgendaTable doc={doc} rows={readOnly.rows} schedule={readOnly.schedule} />
+        <DayHeader doc={doc} schedule={reading.schedule} />
+        <AgendaTable doc={doc} rows={reading.rows} schedule={reading.schedule} />
         <ParkingArea doc={doc} />
       </>
     )
