@@ -30,6 +30,28 @@ Jobs run **in parallel**, not as a chain:
 
 The `db` job is the most important one in the whole setup.
 
+### `.github/workflows/codeql.yml` — on push, on pull request, and weekly
+
+CodeQL with `security-extended`, over `javascript-typescript` and over the workflows themselves.
+Free for public repositories, and the only scanner here that reads the **code** rather than the
+lockfile: the ESLint guardrails catch the shapes this project decided against, and CodeQL catches
+the ones nobody decided about — taint from a request parameter into a query, a redirect built
+from user input, a comparison that returns early on a secret.
+
+The weekly run is not redundant with the per-push one. A finding can arrive without the code
+changing, because the query packs are updated; yesterday's clean run is not evidence about
+today's rules.
+
+No build step. This is TypeScript and CodeQL reads it without one — adding `next build` would
+double the pipeline's slowest job to tell the scanner what it already knows.
+
+### `.github/workflows/dependency-review.yml` — on pull request
+
+Answers the one question the other jobs cannot: does **this** pull request add a dependency with
+a known vulnerability, or one whose licence this project cannot absorb — before the merge rather
+than after Dependabot notices it on `main`. Fails at `moderate`, because this is a small tree and
+a moderate finding here is a decision somebody should make.
+
 ### `.github/workflows/release.yml` — on git tag `v*`
 
 Push to `ghcr.io/<owner>/goodworkshop`, tags from `docker/metadata-action` (`1.2.3`, `1.2`,
@@ -49,10 +71,28 @@ because the digest-merge mechanics look awkward.
 
 ## Conventions
 
-- `concurrency: { group: ${{ github.workflow }}-${{ github.ref }}, cancel-in-progress: true }`
-  in every workflow — otherwise superseded commits keep running.
+- `concurrency` in every workflow — otherwise superseded commits keep running. `ci.yml` puts
+  `github.event_name` in the group as well: a scheduled run and a push to `main` share a ref, and
+  cancelling one because the other started would mean the nightly quietly never completes.
+- **`ci.yml` also runs nightly on `main`, and that is not redundant.** Nothing in this pipeline
+  is hermetic: the lockfile pins packages but not the registry, the Dockerfile pins a base image
+  by tag, Playwright downloads a browser, and the runner image is rebuilt weekly. A pipeline that
+  runs only on a push tells you the code was fine on the day it was written — the one day nobody
+  needs to be told about. The nightly is how `main` breaking gets noticed on a Tuesday instead of
+  in the first pull request after a fortnight of quiet.
+
+  Two things to know about it: GitHub **disables a scheduled workflow after 60 days** with no
+  activity in the repository, and it says so by e-mail — a silent nightly is a stopped nightly,
+  not a passing one. And `workflow_dispatch` is on the same file, so a run can be asked for after
+  something changed _outside_ the repository.
+
 - Every action pinned to a **full-length commit SHA**, not to `@v4`. Dependabot keeps them
-  current.
+  current — `.github/dependabot.yml` covers actions, npm and Docker, weekly.
+- **Repository security settings are part of the setup, not a preference.** Secret scanning with
+  push protection, Dependabot alerts and security updates, and private vulnerability reporting
+  are all on, and all free for a public repository. Push protection is the one with a daily
+  consequence: a push that carries something shaped like a credential is refused rather than
+  merged and revoked afterwards.
 - Declare `permissions:` minimally per job. `packages: write` **only** in the release job.
 - Caching: `actions/setup-node` with `cache: pnpm`; Playwright browsers through `actions/cache`
   keyed on the lockfile hash; Docker layers through `cache-from/to: type=gha`.

@@ -1,0 +1,53 @@
+name: CodeQL
+
+# Free for public repositories, and the only scanner here that reads the code
+# rather than the lockfile: the ESLint guardrails catch the shapes this project
+# decided against, and CodeQL catches the ones nobody decided about -- taint
+# from a request parameter into a query, a redirect built from user input, a
+# comparison that leaks a secret by returning early.
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+  schedule:
+    # Once a week, because a finding can arrive without the code changing: the
+    # query packs are updated, and yesterday's clean run is not evidence about
+    # today's rules.
+    - cron: '17 4 * * 1'
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  analyse:
+    name: Analyse ${{ matrix.language }}
+    runs-on: ubuntu-latest
+    permissions:
+      # Writing the findings back to the Security tab is the whole point.
+      security-events: write
+      contents: read
+      actions: read
+    strategy:
+      fail-fast: false
+      matrix:
+        language: [javascript-typescript, actions]
+
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+
+      - uses: github/codeql-action/init@977e6ceaea7361825998245d787fa3b4d6b9e5df # v2.27.0
+        with:
+          languages: ${{ matrix.language }}
+          # More than the default set. The extra queries are the ones that find
+          # what this codebase actually risks -- it builds SQL, it redirects to
+          # addresses a client supplied, and it compares secrets.
+          queries: security-extended
+
+      # No build step: this project is TypeScript, and CodeQL reads it without
+      # one. Adding `next build` here would double the pipeline's slowest job
+      # to tell CodeQL something it already knows.
+      - uses: github/codeql-action/analyze@977e6ceaea7361825998245d787fa3b4d6b9e5df # v2.27.0
+        with:
+          category: /language:${{ matrix.language }}
