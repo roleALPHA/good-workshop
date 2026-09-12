@@ -155,6 +155,33 @@ test.describe('the day view on a phone', () => {
   })
 
   /**
+   * The controls a facilitator changes while standing in the room were revealed
+   * by hover, with `group-focus-within` offered in the code as the counterpart
+   * "because a phone has no hover". That reasoning is circular: focus follows a
+   * tap, and nobody taps a control they cannot see.
+   *
+   * `toHaveCSS` and not `toBeVisible`: Playwright counts an `opacity: 0`
+   * element as visible, and an opacity-0 button is still hit-testable -- which
+   * is exactly why the test below, which taps the social form, stayed green
+   * throughout. Reachable was never the problem. Findable was.
+   */
+  test('shows the lock, the social form and the drag handle with no hover to reveal them', async ({
+    page,
+  }) => {
+    // An UNPINNED row with no social form set -- the state that was hidden.
+    // "Check-in & Start" is pinned in the reference day, and a set value was
+    // always legible, so asserting against that row would prove nothing.
+    const row = page.getByRole('article', { name: 'Agenda & Spielregeln' })
+
+    await expect(row.getByRole('button', { name: 'Startzeit fixieren' })).toHaveCSS('opacity', '1')
+    await expect(row.getByRole('button', { name: 'Sozialform: keine Angabe' })).toHaveCSS(
+      'opacity',
+      '1',
+    )
+    await expect(row.getByRole('button', { name: /verschieben$/ })).toHaveCSS('opacity', '1')
+  })
+
+  /**
    * Declared last on purpose: it is the only test in this file that WRITES, and
    * the rest share one seeded day. Going last means it can use that day instead
    * of seeding a second one -- which matters, because the MCP endpoint is rate

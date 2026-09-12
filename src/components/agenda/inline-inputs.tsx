@@ -166,11 +166,17 @@ export function PinControl({
           'inline-flex size-6 shrink-0 items-center justify-center rounded-sm border border-transparent',
           'hover:border-[var(--border)] focus-visible:border-[var(--brand-ring)] focus-visible:outline-none',
           // A pin is a state, so it stays visible. An unpinned block offers the
-          // lock only once the row is touched -- with a focus-within
-          // counterpart, because a phone has no hover.
+          // lock once the row is touched -- and unconditionally where there are
+          // fingers, because there is no hover to reveal it with.
+          //
+          // `group-focus-within` used to be offered as that counterpart, and it
+          // is no counterpart at all: focus follows a tap, and nobody taps a
+          // control they cannot see. An opacity-0 button stays hit-testable, so
+          // the lock was reachable on a phone the whole time -- just invisible,
+          // which is the same as absent.
           pinned
             ? 'text-[var(--fg)]'
-            : 'text-[var(--fg-subtle)] opacity-0 group-focus-within:opacity-100 group-hover:opacity-100 focus-visible:opacity-100',
+            : 'text-[var(--fg-subtle)] opacity-0 group-focus-within:opacity-100 group-hover:opacity-100 focus-visible:opacity-100 pointer-coarse:opacity-100',
         )}
       >
         {pinned ? (

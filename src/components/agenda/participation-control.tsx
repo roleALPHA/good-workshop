@@ -121,11 +121,12 @@ export function ParticipationControl({
           'inline-flex w-full items-center gap-1 rounded-sm border border-transparent px-1 py-0.5 text-left text-[13px] pointer-coarse:min-h-11',
           'hover:border-[var(--border)] focus-visible:border-[var(--brand-ring)] focus-visible:outline-none',
           // Set: always legible. Unset: out of the way until the row is
-          // touched, with a focus-within counterpart because there is no hover
-          // on a phone.
+          // touched under a mouse, and always there under a finger -- a hover
+          // that cannot happen reveals nothing. See the note in inline-inputs
+          // about why `group-focus-within` does not stand in for it.
           selected
             ? 'text-[var(--fg-muted)]'
-            : 'text-[var(--fg-subtle)] opacity-0 group-focus-within:opacity-100 group-hover:opacity-100 focus-visible:opacity-100',
+            : 'text-[var(--fg-subtle)] opacity-0 group-focus-within:opacity-100 group-hover:opacity-100 focus-visible:opacity-100 pointer-coarse:opacity-100',
         )}
       >
         <Icon aria-hidden className="size-3.5 shrink-0" />

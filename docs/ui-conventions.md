@@ -71,6 +71,19 @@ Clusters become `position: sticky` section headers with a running clock time.
   inside a dense row, spend the 44 px on coarse pointers only — a 44 px box around one line of
   13 px text is not a touch target under a mouse, it is what turns an 86 px row into a 144 px
   one and pushes the day off the screen.
+- **Nothing is revealed by hover alone.** A control that appears on `group-hover` is invisible
+  for the whole life of a touch session, so every one of them carries
+  `pointer-coarse:opacity-100` alongside — see `drag-handle.tsx`, `participation-control.tsx`,
+  `inline-inputs.tsx` and `library/folder-row.tsx`, which are all of them.
+
+  `group-focus-within` is **not** the counterpart it looks like, and it was written into three
+  of those files as though it were. Focus follows a tap, and nobody taps a control they cannot
+  see. The failure is nastier than a missing button: `opacity: 0` stays hit-testable, so the
+  control works perfectly for anybody who already knows where it is, and the E2E test that taps
+  it stays green — which is why this survived three releases on the two things a facilitator
+  changes most while standing in a room. Assert `toHaveCSS('opacity', '1')`, never
+  `toBeVisible()`: Playwright counts an opacity-0 element as visible.
+
 - **Never scroll horizontally.** An `overflow-x` on `<body>` is a bug, not a compromise. Long
   content wraps or gets a scroll container of its own.
 - `dvh` rather than `vh` for anything full-height; `env(safe-area-inset-*)` for sticky footers.
@@ -207,6 +220,7 @@ not an announcement, it is an accident.
 - [ ] actually read at 375 × 667
 - [ ] no horizontal scroll
 - [ ] touch targets ≥ 44 px
+- [ ] nothing revealed by hover alone
 - [ ] keyboard operation walked through
 - [ ] dark mode checked
 - [ ] `prefers-reduced-motion` checked
