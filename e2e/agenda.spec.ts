@@ -184,6 +184,14 @@ test.describe('inline editing in the day view', () => {
     await expect(row.getByLabel('Gruppengröße')).toBeVisible()
     // Inside the row, not in a panel beside it.
     await expect(page.getByRole('dialog')).toHaveCount(0)
+
+    // And NOT a second copy of what the row already edits. Two controls over
+    // one value means whichever one was not touched writes its stale copy over
+    // the other on blur.
+    await expect(row.getByLabel('Material')).toHaveCount(0)
+    await expect(row.getByLabel('Sozialform')).toHaveCount(0)
+    await expect(row.getByLabel('Material hinzufügen')).toBeVisible()
+    await expect(row.getByRole('button', { name: /^Sozialform:/ })).toBeVisible()
   })
 
   test('keeps the collapsed table calm — the row essentials, not the whole schema', async ({

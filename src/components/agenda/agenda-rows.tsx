@@ -118,7 +118,12 @@ export function ModuleRow({
   const description = isRichTextValue(mod.desc.description) ? mod.desc.description : null
 
   const groups = parseSchema(type?.jsonSchema)
+  // Both are offered only where the type actually declares them. A control for
+  // a field the schema does not know would write a value that
+  // `additionalProperties: false` rejects on the way to the database -- and the
+  // editor would go on showing it.
   const participation = findField(groups, 'participation')
+  const materialField = findField(groups, 'materials')
   const materials = stringList(mod.desc.materials)
   // Material has its own control in the editor, so it must not also arrive as
   // a read-only chip beside it.
@@ -270,7 +275,7 @@ export function ModuleRow({
 
       <div className={cn('space-y-1 pb-3 pl-4 md:px-3 md:pt-3 md:pl-3', nested && 'pl-7 md:pl-3')}>
         {info.length > 0 && <InfoChips items={info} />}
-        {editing && (
+        {editing && materialField && (
           <ChipsInput
             values={materials}
             onChange={(next) => writeDesc('materials', next.length > 0 ? next : undefined)}
