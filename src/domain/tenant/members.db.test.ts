@@ -76,7 +76,7 @@ afterAll(async () => {
 
 /** Remembers what to clean up, so a failing test does not poison the next run. */
 async function invite(email: string, role: 'member' | 'admin' = 'member') {
-  const result = await inviteMember(admin(), email, role)
+  const result = await inviteMember(admin(), email, role, 'de')
   const row = await ops.query('select identity_id from member where id = $1', [result.memberId])
   created.push(row.rows[0].identity_id)
   return result
@@ -97,7 +97,7 @@ describe('inviteMember', () => {
   it('is idempotent for somebody who is already here', async () => {
     const email = address()
     const first = await invite(email)
-    const again = await inviteMember(admin(), email, 'admin')
+    const again = await inviteMember(admin(), email, 'admin', 'de')
 
     expect(again.alreadyMember).toBe(true)
     expect(again.memberId).toBe(first.memberId)
@@ -108,11 +108,15 @@ describe('inviteMember', () => {
   })
 
   it('refuses an address that is not one', async () => {
-    await expect(inviteMember(admin(), 'kein-at-zeichen', 'member')).rejects.toThrow(MemberError)
+    await expect(inviteMember(admin(), 'kein-at-zeichen', 'member', 'de')).rejects.toThrow(
+      MemberError,
+    )
   })
 
   it('refuses somebody who is not a tenant admin', async () => {
-    await expect(inviteMember(plain(), address(), 'member')).rejects.toThrow(/Tenant-Admins/)
+    await expect(inviteMember(plain(), address(), 'member', 'de')).rejects.toThrow(
+      'member.adminOnly',
+    )
   })
 })
 
@@ -129,7 +133,7 @@ describe('listMembers', () => {
   })
 
   it('is refused to an ordinary member', async () => {
-    await expect(listMembers(plain())).rejects.toThrow(/Tenant-Admins/)
+    await expect(listMembers(plain())).rejects.toThrow('member.adminOnly')
   })
 })
 
@@ -152,14 +156,14 @@ describe('the last admin', () => {
   it('cannot be demoted', async () => {
     // Not a matter of taste: a tenant with no admins can only be repaired from
     // a shell on the server.
-    await expect(setMemberRole(admin(), adminMember, 'member')).rejects.toThrow(/letzte aktive/)
+    await expect(setMemberRole(admin(), adminMember, 'member')).rejects.toThrow('member.lastAdmin')
   })
 
   it('cannot be switched off', async () => {
     const other = await invite(address())
     await expect(setMemberStatus(admin(), other.memberId, 'disabled')).resolves.toBeUndefined()
     await expect(setMemberStatus(admin(), adminMember, 'disabled')).rejects.toThrow(
-      /nicht selbst abschalten/,
+      'member.cannotDisableSelf',
     )
   })
 

@@ -23,11 +23,11 @@ describe('readBrand', () => {
 
   it('refuses grey, which has no hue to build on', () => {
     expect(() => readBrand('#808080')).toThrow(BrandError)
-    expect(() => readBrand('#ffffff')).toThrow(/Grau/)
+    expect(() => readBrand('#ffffff')).toThrow('brand.grey')
   })
 
   it('refuses something that is not a colour at all', () => {
-    expect(() => readBrand('rebeccapurple')).toThrow(/Hex-Wert/)
+    expect(() => readBrand('rebeccapurple')).toThrow('brand.notHex')
   })
 
   it('offers a colour that would work when it refuses one that will not', () => {

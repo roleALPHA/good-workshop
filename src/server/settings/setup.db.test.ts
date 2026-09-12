@@ -77,7 +77,9 @@ describe('a fresh installation', () => {
   })
 
   it('refuses an address that is not one', async () => {
-    await expect(claimInstallation('kein-email', currentSetupToken())).rejects.toThrow(/Adresse/)
+    await expect(claimInstallation('kein-email', currentSetupToken())).rejects.toThrow(
+      'setup.invalidEmail',
+    )
   })
 
   it('makes the first caller an admin and then closes', async () => {
@@ -95,7 +97,7 @@ describe('a fresh installation', () => {
     // The whole point: no second claim, and the page is gone.
     expect(await needsSetup()).toBe(false)
     await expect(claimInstallation('setup-c@example.test', currentSetupToken())).rejects.toThrow(
-      /bereits/,
+      'setup.alreadyClaimed',
     )
   })
 

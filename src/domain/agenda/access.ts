@@ -1,6 +1,7 @@
 import { and, eq, isNull, sql } from 'drizzle-orm'
 import type { Actor, Tx } from '@/server/db'
 import { workshop, workshopCollaborator } from '@/server/db/schema'
+import { DomainError } from '@/domain/errors'
 
 /**
  * Per-workshop authorisation, in the application layer.
@@ -72,27 +73,47 @@ export type WorkshopAccess = {
   can(capability: Capability): boolean
 }
 
-export class NotFoundError extends Error {
-  constructor(what = 'Workshop') {
-    super(`${what} nicht gefunden.`)
-    this.name = 'NotFoundError'
+export class NotFoundError extends DomainError {
+  constructor() {
+    super('workshop.notFound')
   }
 }
 
-export class ForbiddenError extends Error {
-  constructor(capability: Capability) {
-    super(`Dafür fehlt die Berechtigung: ${capability}`)
-    this.name = 'ForbiddenError'
+export class ForbiddenError extends DomainError {
+  constructor(readonly capability: Capability) {
+    super('workshop.forbidden', { capability })
   }
 }
 
-export class VersionConflictError extends Error {
+/**
+ * A block type that is not in this tenant.
+ *
+ * Two shapes on purpose: from the editor the id came from a picker and the
+ * person needs no list, while over MCP the model chose the key itself and the
+ * alternatives are the difference between a fixed next call and another guess.
+ */
+export class UnknownModuleTypeError extends DomainError {
+  constructor(key?: string, available?: string[]) {
+    if (key === undefined || available === undefined) {
+      super('workshop.unknownModuleType')
+      return
+    }
+    super('workshop.unknownModuleTypeOptions', { key, available: available.join(', ') })
+  }
+}
+
+export class VersionConflictError extends DomainError {
   constructor(
     public readonly expected: bigint,
     public readonly actual: bigint,
   ) {
-    super(`Der Workshop wurde inzwischen geändert (erwartet ${expected}, ist ${actual}).`)
-    this.name = 'VersionConflictError'
+    // Stringified here rather than at the boundary: a bigint does not survive
+    // JSON, and an ActionResult crosses the RSC boundary on its way to the
+    // browser.
+    super('workshop.versionConflict', {
+      expected: expected.toString(),
+      actual: actual.toString(),
+    })
   }
 }
 

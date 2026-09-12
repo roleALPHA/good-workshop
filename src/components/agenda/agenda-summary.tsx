@@ -1,6 +1,7 @@
 import type { DayDoc } from '@/domain/agenda/types'
 import type { Schedule } from '@/domain/schedule/types'
 import { formatDuration, formatTime } from '@/features/agenda/duration'
+import { useLocale, useTranslations } from 'next-intl'
 
 /**
  * The line facilitators actually check before sending an agenda out. The
@@ -8,6 +9,8 @@ import { formatDuration, formatTime } from '@/features/agenda/duration'
  * on module_type and not a `desc` attribute.
  */
 export function AgendaSummary({ doc, schedule }: { doc: DayDoc; schedule: Schedule }) {
+  const locale = useLocale()
+  const t = useTranslations('agenda')
   let content = 0
   let breaks = 0
 
@@ -22,14 +25,14 @@ export function AgendaSummary({ doc, schedule }: { doc: DayDoc; schedule: Schedu
   return (
     <p className="tabular text-[15px] text-[var(--fg-muted)]">
       <span className="font-medium text-[var(--fg)]">
-        {formatTime(schedule.dayStartMinute)} – {formatTime(schedule.dayEndMinute)}
+        {formatTime(schedule.dayStartMinute, locale)} – {formatTime(schedule.dayEndMinute, locale)}
       </span>
       {' · '}
-      {formatDuration(content, { spaced: true })} Inhalt
+      {t('content', { duration: formatDuration(content, { spaced: true }) })}
       {' · '}
-      {formatDuration(breaks, { spaced: true })} Pausen
+      {t('breaks', { duration: formatDuration(breaks, { spaced: true }) })}
       {' · '}
-      {blocks} {blocks === 1 ? 'Block' : 'Blöcke'}
+      {t('blockCount', { count: blocks })}
     </p>
   )
 }

@@ -10,7 +10,7 @@ import { CategoryLegend } from './category-legend'
  * Rendered from the SAME document the table below it is rendered from, which
  * is the whole point of it living here. Both used to sit in the page, derived
  * from the server-rendered day -- so after the first edit the heading said
- * "0m Inhalt · 0 Blöcke" above three visible blocks. A summary that disagrees
+ * "0m content · 0 blocks" above three visible blocks. A summary that disagrees
  * with the list under it is worse than no summary.
  */
 export function DayHeader({

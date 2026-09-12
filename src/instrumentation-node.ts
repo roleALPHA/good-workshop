@@ -26,12 +26,12 @@ export async function announceSetup(): Promise<void> {
     const url = new URL('/setup', authConfig.appUrl)
 
     console.log('')
-    console.log('  Diese Installation hat noch keine Administratorin.')
+    console.log('  This installation has no administrator yet.')
     console.log('')
     console.log(`    ${url}`)
-    console.log(`    Einrichtungsschlüssel: ${currentSetupToken()}`)
+    console.log(`    Setup key: ${currentSetupToken()}`)
     console.log('')
-    console.log('  Der Schlüssel gilt, bis dieser Prozess neu startet.')
+    console.log('  The key is valid until this process restarts.')
     console.log('')
   } catch {
     // Database not reachable yet, or no schema. Nothing to announce, and

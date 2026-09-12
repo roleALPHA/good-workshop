@@ -13,6 +13,7 @@ import { readSession } from '@/server/auth/session'
 import { withTenant } from '@/server/db'
 import { workshop as workshopTable } from '@/server/db/schema'
 import { redirect } from 'next/navigation'
+import { getLocale, getTranslations } from 'next-intl/server'
 
 export const dynamic = 'force-dynamic'
 
@@ -51,11 +52,12 @@ export default async function DayPage({
   // The name other people see. A member id would be honest and useless -- the
   // point of presence is recognising a colleague.
   const session = await readSession()
-  const displayName = session?.displayName?.trim() || (session?.email ?? 'Jemand')
+  const [t, locale] = await Promise.all([getTranslations('workshop'), getLocale()])
+  const displayName = session?.displayName?.trim() || (session?.email ?? t('someone'))
 
   const data = await withTenant(actor, async (tx) => {
     const access = await assertWorkshopAccess(tx, actor, workshopId, 'workshop.read')
-    const { doc, contentVersion } = await loadDay(tx, access, dayId)
+    const { doc, contentVersion } = await loadDay(tx, access, dayId, locale)
     const meta = await tx
       .select({ title: workshopTable.title })
       .from(workshopTable)
@@ -64,7 +66,7 @@ export default async function DayPage({
     return {
       doc,
       contentVersion: contentVersion.toString(),
-      title: meta[0]?.title ?? 'Workshop',
+      title: meta[0]?.title ?? t('untitled'),
       days: await listDays(tx, workshopId),
       tags: await tagsOf(tx, workshopId),
       canUpdate: access.can('workshop.update'),
@@ -84,7 +86,7 @@ export default async function DayPage({
         <div className="flex flex-wrap items-baseline justify-between gap-3">
           <div className="min-w-0">
             <Link href="/library" className="text-[13px] text-[var(--fg-muted)] hover:underline">
-              ← Bibliothek
+              {t('backToLibrary')}
             </Link>
             <h1 className="mt-0.5 text-2xl font-semibold tracking-tight">{data.title}</h1>
             {data.canUpdate ? (
@@ -105,7 +107,7 @@ export default async function DayPage({
                 className="inline-flex items-center gap-1.5 rounded border border-[var(--border-strong)] px-2.5 py-1.5 text-[14px] hover:bg-[var(--surface-raised)]"
               >
                 <Users aria-hidden className="size-4" />
-                Zugriff
+                {t('access')}
               </Link>
             )}
             <Link
@@ -121,13 +123,13 @@ export default async function DayPage({
               className="inline-flex items-center gap-1.5 rounded border border-[var(--border-strong)] px-2.5 py-1.5 text-[14px] hover:bg-[var(--surface-raised)]"
             >
               <Printer aria-hidden className="size-4" />
-              Drucken
+              {t('print')}
             </Link>
           </div>
         </div>
 
         {data.days.length > 1 && (
-          <nav aria-label="Tage" className="mt-3 flex flex-wrap gap-1">
+          <nav aria-label={t('days')} className="mt-3 flex flex-wrap gap-1">
             {data.days.map((day) => (
               <Link
                 key={day.id}
@@ -139,7 +141,7 @@ export default async function DayPage({
                     : 'text-[var(--fg-muted)] hover:bg-[var(--surface-raised)]'
                 }`}
               >
-                {day.title || 'Tag'}
+                {day.title || t('untitledDay')}
               </Link>
             ))}
           </nav>

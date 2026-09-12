@@ -4,12 +4,7 @@ import { useRouter } from 'next/navigation'
 import { useState, useTransition } from 'react'
 import type { MemberRow } from '@/domain/tenant/members'
 import { setMemberRoleAction, setMemberStatusAction } from '@/server/actions/members'
-
-const STATUS: Record<MemberRow['status'], string> = {
-  invited: 'Eingeladen',
-  active: 'Aktiv',
-  disabled: 'Abgeschaltet',
-}
+import { useTranslations } from 'next-intl'
 
 /**
  * The list, edited in place.
@@ -21,6 +16,9 @@ const STATUS: Record<MemberRow['status'], string> = {
  * message nobody connects to what they just did.
  */
 export function MembersTable({ members }: { members: MemberRow[] }) {
+  const t = useTranslations('admin.members')
+  const tStatus = useTranslations('enums.memberStatus')
+  const tRole = useTranslations('enums.memberRole')
   const router = useRouter()
   const [error, setError] = useState<{ memberId: string; message: string } | null>(null)
   const [pending, startTransition] = useTransition()
@@ -58,11 +56,11 @@ export function MembersTable({ members }: { members: MemberRow[] }) {
                   : 'bg-[var(--surface-raised)] text-[var(--fg-muted)]'
               }`}
             >
-              {STATUS[person.status]}
+              {tStatus(person.status)}
             </span>
 
             <select
-              aria-label={`Rolle von ${person.email}`}
+              aria-label={t('roleOf', { email: person.email })}
               className="rounded border border-[var(--border-strong)] bg-[var(--surface)] px-2 py-1.5 text-[16px]"
               value={person.role}
               disabled={pending}
@@ -75,8 +73,8 @@ export function MembersTable({ members }: { members: MemberRow[] }) {
                 )
               }
             >
-              <option value="member">Mitglied</option>
-              <option value="admin">Admin</option>
+              <option value="member">{tRole('member')}</option>
+              <option value="admin">{tRole('admin')}</option>
             </select>
 
             <button
@@ -92,7 +90,7 @@ export function MembersTable({ members }: { members: MemberRow[] }) {
               }
               className="rounded border border-[var(--border-strong)] px-2.5 py-1.5 text-[14px] hover:bg-[var(--surface-raised)] disabled:opacity-40"
             >
-              {person.status === 'disabled' ? 'Wieder zulassen' : 'Abschalten'}
+              {person.status === 'disabled' ? t('enable') : t('disable')}
             </button>
           </div>
 

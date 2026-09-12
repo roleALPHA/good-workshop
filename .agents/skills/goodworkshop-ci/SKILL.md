@@ -1,13 +1,13 @@
 ---
 name: goodworkshop-ci
-description: 'CI/CD und Docker-Build für GoodWorkshop mit GitHub Actions und ghcr.io. Nutze diesen Skill bei Änderungen an Workflows unter .github/, am Dockerfile, an compose.yaml oder an der Release-Mechanik.'
+description: 'CI/CD and the Docker build for GoodWorkshop: workflows, multi-arch release to ghcr.io, Dockerfile rules, branch protection. Use this skill for changes to workflows under .github/, to the Dockerfile, to compose.yaml or to the release mechanics.'
 ---
 
 # goodworkshop-ci
 
-**Der verbindliche Inhalt steht in [`docs/konventionen-ci.md`](../../../docs/konventionen-ci.md).** Lies diese Datei,
-bevor du an den genannten Stellen etwas änderst.
+**The binding content is in [`docs/ci-conventions.md`](../../../docs/ci-conventions.md).** Read
+that file before changing anything in the areas it names.
 
-Sie liegt bewusst dort und nicht hier: die Regeln gelten für jeden Beitrag, nicht nur
-für den, der mit einem bestimmten Werkzeug arbeitet — und `.Codex/` ist nicht Teil des
-Repositorys. Eine zweite Kopie hier würde auseinanderdriften.
+It lives there rather than here on purpose: the rules apply to every contribution, not only to
+somebody working with a particular tool — and `.Codex/` is not part of the repository. A second
+copy here would drift.

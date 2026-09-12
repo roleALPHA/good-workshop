@@ -96,12 +96,71 @@ describe('formatTime', () => {
     [780, '13:00'],
     [1439, '23:59'],
   ])('formats %i as %j', (input, expected) => {
-    expect(formatTime(input)).toBe(expected)
+    expect(formatTime(input, 'de')).toBe(expected)
   })
 
   it('marks times that spill past midnight rather than wrapping silently', () => {
-    expect(formatTime(1440)).toBe('00:00 (+1)')
-    expect(formatTime(1530)).toBe('01:30 (+1)')
-    expect(formatTime(2970)).toBe('01:30 (+2)')
+    expect(formatTime(1440, 'de')).toBe('00:00 (+1)')
+    expect(formatTime(1530, 'de')).toBe('01:30 (+1)')
+    expect(formatTime(2970, 'de')).toBe('01:30 (+2)')
+  })
+
+  /**
+   * The timetable convention differs, and the column has to survive it.
+   *
+   * German, French and Spanish keep the 24-hour clock and the leading zero, so
+   * the time column stays two characters wide next to `tabular-nums`. English
+   * is a 12-hour clock, and `09:00 AM` is not how anybody writes half past
+   * nine.
+   */
+  it.each([
+    ['de', '09:00'],
+    ['fr', '09:00'],
+    ['es', '09:00'],
+  ] as const)('keeps a 24-hour clock in %s', (locale, expected) => {
+    expect(formatTime(540, locale)).toBe(expected)
+  })
+
+  it('uses a 12-hour clock in English', () => {
+    expect(formatTime(540, 'en')).toMatch(/^9:00\s*AM$/)
+    expect(formatTime(870, 'en')).toMatch(/^2:30\s*PM$/)
+  })
+
+  it('keeps the day-offset marker in every language', () => {
+    expect(formatTime(1530, 'en')).toMatch(/\(\+1\)$/)
+    expect(formatTime(1530, 'fr')).toBe('01:30 (+1)')
+  })
+})
+
+describe('parseDuration across languages', () => {
+  /** The neutral core is accepted everywhere, so no language is worse served. */
+  it.each(['de', 'en', 'fr', 'es'] as const)('accepts the neutral forms in %s', (locale) => {
+    expect(parseDuration('90', locale)).toBe(90)
+    expect(parseDuration('1:30', locale)).toBe(90)
+    expect(parseDuration('1h30', locale)).toBe(90)
+    expect(parseDuration('1.5h', locale)).toBe(90)
+    // The decimal comma is accepted everywhere, not per language: three of the
+    // four use it, and `1,5` has no other reading as a duration under English.
+    expect(parseDuration('1,5h', locale)).toBe(90)
+  })
+
+  it.each([
+    ['de', '1 Stunde 30 Minuten'],
+    ['en', '1 hour 30 minutes'],
+    ['fr', '1 heure 30 minutes'],
+    ['es', '1 hora 30 minutos'],
+  ] as const)('accepts the words of %s', (locale, input) => {
+    expect(parseDuration(input, locale)).toBe(90)
+  })
+
+  /**
+   * The assertion that keeps the four vocabularies from merging into one
+   * permissive blob. A parser that accepts everything everywhere is not
+   * multilingual, it is just loose.
+   */
+  it("does not accept another language's words", () => {
+    expect(parseDuration('1 Stunde', 'en')).toBeNull()
+    expect(parseDuration('1 hour', 'de')).toBeNull()
+    expect(parseDuration('90 minutos', 'fr')).toBeNull()
   })
 })

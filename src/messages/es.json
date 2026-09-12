@@ -1,0 +1,450 @@
+{
+  "admin": {
+    "branding": {
+      "title": "Identidad visual",
+      "intro": "El logotipo y el color de acento de esta instalación. El pie de página se queda como está.",
+      "logo": "Logotipo",
+      "logoHint": "SVG, PNG o WebP, como máximo {max, number} KB. Aparece en la cabecera y en la página de acceso.",
+      "logoTooLarge": "Como máximo {max, number} KB.",
+      "currentLogo": "Logotipo actual",
+      "logoFile": "Archivo del logotipo",
+      "replaceLogo": "Sustituir el logotipo",
+      "uploadLogo": "Subir un logotipo",
+      "removeLogo": "Eliminar",
+      "accent": "Color de acento",
+      "accentHint": "Un solo valor de color. El servidor construye a partir de él los tonos claros y oscuros y comprueba el contraste por el camino — un color que haría ilegible la interfaz se rechaza. Los colores de los tipos de bloque no se tocan: significan algo.",
+      "hex": "Valor hexadecimal",
+      "brandName": "Nombre (si no hay logotipo)",
+      "saved": "Guardado."
+    },
+    "members": {
+      "title": "Miembros",
+      "invite": "Invitar a un miembro",
+      "email": "Dirección de correo",
+      "emailPlaceholder": "companera@example.com",
+      "role": "Rol",
+      "roleOf": "Rol de {email}",
+      "inviting": "Invitando …",
+      "inviteAction": "Invitar",
+      "enable": "Volver a permitir",
+      "disable": "Desactivar",
+      "alreadyMember": "{email} ya era miembro.",
+      "invited": "{email} ha sido invitada.",
+      "linkOnItsWay": "El enlace de acceso va de camino.",
+      "noMailSetUp": "No hay envío de correo configurado. Pasa este enlace en persona — quien lo abra queda con la sesión iniciada como {email}."
+    },
+    "mail": {
+      "title": "Envío de correo",
+      "intro": "Los enlaces de acceso y las invitaciones van por aquí. Sin envío, solo entra quien ya tiene un passkey.",
+      "fromEnvironmentNotice": "Algunos valores vienen del entorno del servidor y no se pueden cambiar aquí. Están en el <code>.env</code> de la instalación.",
+      "fromEnvironment": "del entorno",
+      "transportLegend": "¿Cómo se debe enviar el correo?",
+      "transport": {
+        "graph": "Microsoft Graph",
+        "graphHint": "Para Microsoft 365 sin SMTP AUTH.",
+        "smtp": "SMTP",
+        "smtpHint": "Un relé de correo clásico.",
+        "console": "Escribir en el registro del servidor",
+        "consoleHint": "Sin envío. Los enlaces de acceso acaban en el registro — quien pueda leerlo entra en cualquier cuenta.",
+        "none": "Sin envío",
+        "noneHint": "Los enlaces de acceso solo se obtienen por línea de comandos."
+      },
+      "graphIntro": "Hace falta un registro de aplicación en Entra ID con el <b>permiso de aplicación</b> <code>Mail.Send</code> y el consentimiento del administrador.",
+      "graphTenantId": "ID de directorio o de inquilino",
+      "graphClientId": "ID de aplicación",
+      "graphClientSecret": "Secreto de cliente",
+      "graphSender": "Buzón remitente",
+      "smtpUrl": "URL de SMTP",
+      "smtpUrlHint": "Por ejemplo smtps://usuario:contrasena@relay.example.com:465",
+      "smtpFrom": "Dirección del remitente",
+      "secretStored": "guardado — déjalo vacío para conservarlo",
+      "saved": "Guardado.",
+      "testTitle": "Enviar un mensaje de prueba",
+      "testIntro": "Si un relé funciona se ve al enviar. Si no, el primer intento es el enlace de acceso de alguien — y un fallo parece entonces una cuenta rota.",
+      "testTo": "Para",
+      "testSend": "Enviar",
+      "testSent": "Enviado a {email}. Si no llega nada: carpeta de spam."
+    }
+  },
+  "agenda": {
+    "addBlock": "Añadir un bloque",
+    "addDayNote": "Añadir una nota sobre la jornada",
+    "addTag": "Añadir una etiqueta",
+    "blockCount": "{count, plural, one {# bloque} many {# bloques} other {# bloques}}",
+    "breaks": "{duration} de pausas",
+    "columns": {
+      "time": "Hora",
+      "titleAndDescription": "Título y descripción",
+      "info": "Información adicional"
+    },
+    "connecting": "Conectando …",
+    "content": "{duration} de contenido",
+    "dayNote": "Nota sobre la jornada",
+    "dayNotePlaceholder": "Sala, cómo llegar, quién trae qué …",
+    "delete": "Eliminar",
+    "deleteHint": "Quitar definitivamente",
+    "deleteLabel": "Eliminar {title}",
+    "drag": {
+      "atDayLevel": "al nivel de la jornada",
+      "cancelled": "Movimiento cancelado.",
+      "dropped": "{title} soltado {where}, posición {position, number}.",
+      "droppedWithTime": "{title} soltado {where}, posición {position, number}, nueva hora de inicio {time}.",
+      "inSection": "en la sección {title}",
+      "landed": "{title} queda {where}, posición {position, number}.",
+      "landedWithTime": "{title} queda {where}, posición {position, number}, nueva hora de inicio {time}.",
+      "picked": "{title} agarrado."
+    },
+    "dragHandle": "Mover {title}",
+    "end": "Fin",
+    "fewerFields": "Menos",
+    "field": {
+      "commaSeparated": "Separar con comas",
+      "legacyHeading": "Campos antiguos ({count, number})",
+      "legacyHint": "Estos valores vienen de una versión anterior de este tipo de bloque. Se conservan, pero ya no se pueden editar.",
+      "privateNote": "solo para ti",
+      "richTextReadOnly": "Contiene formato. La edición llegará con el editor de texto — hasta entonces el contenido se queda intacto.",
+      "unset": "— sin indicar —"
+    },
+    "filterPlaceholder": "Escribe para filtrar …",
+    "moreFields": "Más campos",
+    "noTypeMatches": "Ningún tipo de bloque coincide.",
+    "offline": "Sin conexión. Tus cambios se enviarán en cuanto vuelva.",
+    "overPlan": "{duration} de más",
+    "overlap": "Se solapa con el bloque anterior en {duration}",
+    "park": "Apartar",
+    "parkHint": "Sacarlo del desarrollo sin eliminarlo",
+    "parkLabel": "Apartar {title}",
+    "parkedHeading": "Apartados ({count, number})",
+    "parkedHint": "Pertenece a la jornada, no cuenta para el tiempo.",
+    "presence": "Otras personas en esta jornada",
+    "regionLabel": "Agenda {title}",
+    "removeTag": "Eliminar la etiqueta {name}",
+    "saving": "Guardando …",
+    "searchType": "Buscar tipo de bloque",
+    "tagPlaceholder": "+ etiqueta",
+    "unpark": "Volver al desarrollo",
+    "unparkLabel": "Devolver {title} al desarrollo"
+  },
+  "auth": {
+    "login": {
+      "title": "Iniciar sesión en GoodWorkshop",
+      "intro": "Sin contraseña. Con un passkey o con un enlace por correo.",
+      "email": "Dirección de correo",
+      "send": "Enviar un enlace de acceso",
+      "passkeyButton": "Iniciar sesión con un passkey",
+      "passkeyUnavailable": "Los passkeys necesitan HTTPS y no están disponibles en esta dirección. El enlace de acceso por correo sí funciona.",
+      "passkeyFailed": "No se ha podido confirmar el passkey.",
+      "unknownError": "Error desconocido",
+      "sentTitle": "Mira en tu bandeja de entrada.",
+      "sentBody": "Si existe una cuenta para esa dirección, un enlace de acceso va de camino. Es válido durante {minutes, plural, one {un minuto} many {# minutos} other {# minutos}}.",
+      "linkExpired": "Este enlace ha caducado o ya se ha usado. Pide uno nuevo.",
+      "linkIncomplete": "El enlace estaba incompleto. Pide uno nuevo."
+    },
+    "setup": {
+      "title": "Configurar GoodWorkshop",
+      "intro": "Esta instalación todavía no tiene a nadie que pueda administrarla. Regístrate como primera administradora — todo lo demás, incluido el envío de correo, se hace después en la interfaz.",
+      "email": "Tu dirección de correo",
+      "emailHint": "Con ella iniciarás sesión a partir de ahora. A las demás personas las invitarás después en la interfaz.",
+      "key": "Clave de instalación",
+      "keyHint": "Está en el registro del servidor:",
+      "submit": "Configurar esta instalación",
+      "submitting": "Un momento …",
+      "claimed": "La instalación pertenece ahora a {email}.",
+      "linkHere": "Todavía no hay envío de correo configurado, así que el enlace de acceso aparece aquí. Sirve una sola vez y caduca.",
+      "linkSent": "El enlace de acceso va de camino. Mira en tu bandeja de entrada."
+    }
+  },
+  "common": {
+    "save": "Guardar",
+    "cancel": "Cancelar",
+    "delete": "Eliminar",
+    "create": "Crear",
+    "loading": "Cargando …",
+    "loadMore": "Cargar más",
+    "saving": "Guardando …",
+    "back": "Volver"
+  },
+  "enums": {
+    "memberRole": {
+      "member": "Miembro",
+      "admin": "Admin"
+    },
+    "memberStatus": {
+      "invited": "Invitada",
+      "active": "Activa",
+      "disabled": "Desactivada"
+    },
+    "tokenScope": {
+      "workshops:read": "Leer talleres",
+      "workshops:write": "Escribir talleres",
+      "module_types:read": "Leer tipos de bloque",
+      "module_types:write": "Escribir tipos de bloque",
+      "tenant:read": "Leer el espacio"
+    },
+    "workshopAccess": {
+      "owner": "Propietaria",
+      "editor": "Editar",
+      "viewer": "Leer",
+      "none": "Sin acceso"
+    },
+    "workshopStatus": {
+      "draft": "Borrador",
+      "ready": "Listo",
+      "delivered": "Impartido",
+      "archived": "Archivado"
+    }
+  },
+  "errors": {
+    "conflict": "Otra persona ha cambiado este taller mientras tanto.",
+    "domain": {
+      "brand": {
+        "notHex": "Indica un color en hexadecimal, por ejemplo #7c3aed.",
+        "grey": "El gris no tiene un tono del que construir un color de acento. Elige un tono con color.",
+        "contrastOnBrand": "En modo {theme, select, light {claro} dark {oscuro} other {}} este tono solo alcanza {ratio}:1 para el texto sobre la superficie de acento. Hacen falta 4,5:1.",
+        "contrastSubtle": "En modo {theme, select, light {claro} dark {oscuro} other {}} este tono solo alcanza {ratio}:1 para el texto atenuado sobre superficie atenuada. Hacen falta 4,5:1.",
+        "checkNameAndColour": "Revisa el nombre y el color."
+      },
+      "collab": {
+        "unavailable": "El servicio de colaboración no responde. Sin él no se puede escribir, porque habría dos caminos de escritura hacia la misma jornada."
+      },
+      "folder": {
+        "gone": "Esa carpeta no existe.",
+        "intoItself": "Una carpeta no puede estar dentro de sí misma.",
+        "targetGone": "La carpeta de destino no existe.",
+        "intoOwnDescendant": "Una carpeta no puede ir dentro de una de sus propias subcarpetas."
+      },
+      "logo": {
+        "unsupportedType": "Se permiten SVG, PNG y WebP.",
+        "empty": "El archivo está vacío.",
+        "tooLarge": "El logotipo puede ocupar como máximo {max, number} KB (este archivo: {actual, number} KB).",
+        "notSvg": "Esto no parece un archivo SVG.",
+        "unsafeActive": "El SVG contiene {what}. Expórtalo sin scripts ni interactividad — la mayoría de los programas lo llaman «SVG simple».",
+        "unsafeExternal": "El SVG apunta hacia fuera mediante {what}. Expórtalo con las fuentes y las imágenes incrustadas, sin referencias externas.",
+        "unsafeDoctype": "El SVG contiene {what}. Expórtalo sin DTD y sin entidades.",
+        "typeMismatch": "El archivo no coincide con el formato indicado."
+      },
+      "mail": {
+        "noSmtpUrl": "Transporte SMTP, pero no hay ninguna URL de SMTP configurada — ni en el entorno ni en los ajustes.",
+        "transportNone": "Transporte «sin envío»: no se puede enviar ningún correo. Usa `node scripts/cli.mjs login-link --email …` o elige un transporte en los ajustes.",
+        "graphMissing": "Transporte Microsoft Graph, pero falta {field}."
+      },
+      "member": {
+        "adminOnly": "Solo los administradores del espacio pueden gestionar miembros.",
+        "invalidEmail": "Esa no es una dirección de correo válida.",
+        "gone": "Ese miembro no existe.",
+        "cannotDisableSelf": "No puedes desactivarte a ti misma.",
+        "lastAdmin": "Es la última administradora activa. Nombra antes a otra persona administradora — si no, nadie podrá acceder a la administración.",
+        "checkEmailAndRole": "Revisa la dirección de correo y el rol."
+      },
+      "setup": {
+        "wrongKey": "La clave de instalación no es correcta.",
+        "invalidEmail": "Esa no es una dirección de correo válida.",
+        "alreadyClaimed": "Esta instalación ya tiene una administradora.",
+        "identityFailed": "No se ha podido crear la identidad."
+      },
+      "sharing": {
+        "memberGone": "Ese miembro no existe.",
+        "memberDisabled": "Ese miembro está desactivado.",
+        "ownerHasAccess": "La propietaria ya tiene acceso completo."
+      },
+      "tags": {
+        "tooMany": "Como máximo {max, number} etiquetas por taller.",
+        "tooLong": "Una etiqueta puede tener como máximo {max, number} caracteres.",
+        "createFailed": "No se ha podido crear la etiqueta «{name}»."
+      },
+      "token": {
+        "nameRequired": "Dale un nombre al token — si no, más adelante no sabrás para qué era.",
+        "nameTooLong": "El nombre puede tener como máximo {max, number} caracteres.",
+        "unknownScopes": "Ámbitos desconocidos: {scopes}.",
+        "noScopes": "Un token sin ámbitos no puede hacer nada. Elige al menos uno.",
+        "gone": "Este token ya no existe."
+      },
+      "workshop": {
+        "notFound": "No encontrado.",
+        "forbidden": "No tienes permiso para eso: {capability}",
+        "versionConflict": "El taller ha cambiado mientras tanto (esperado {expected}, encontrado {actual}).",
+        "unknownModuleType": "Ese tipo de bloque no existe.",
+        "unknownModuleTypeOptions": "Tipo de bloque desconocido «{key}». Disponibles: {available}",
+        "descInvalid": "Valores inválidos: {issues}"
+      }
+    },
+    "failed": "No ha funcionado. Inténtalo de nuevo.",
+    "field": {
+      "desc": {
+        "notObject": "desc debe ser un objeto."
+      },
+      "field": {
+        "enum": "debe ser uno de estos valores: {allowed}",
+        "required": "es obligatorio",
+        "unexpected": "no forma parte de este tipo de bloque",
+        "type": "debe ser del tipo {type}",
+        "invalid": "no es válido ({keyword})"
+      },
+      "schema": {
+        "broken": "El esquema de este tipo de bloque no es válido.",
+        "notObject": "El esquema debe ser un objeto.",
+        "tooLarge": "El esquema es demasiado grande (máx. {max, number} bytes).",
+        "tooDeep": "Anidamiento demasiado profundo (máx. {max, number} niveles).",
+        "uncompilable": "El esquema no se puede compilar: {reason}",
+        "patternForbidden": "pattern no está permitido: una expresión regular escrita a mano puede bloquear el servidor. Usa format o enum en su lugar.",
+        "keywordForbidden": "La palabra clave «{key}» no está permitida."
+      }
+    },
+    "forbidden": "No tienes permiso para eso.",
+    "invalidField": "Entrada inválida: {field}",
+    "invalid_input": "Entrada inválida.",
+    "mail": {
+      "invalidAddress": "Indica una dirección válida.",
+      "checkSettings": "Estos ajustes no encajan."
+    },
+    "not_found": "No encontrado.",
+    "passkey": {
+      "unknown": "Este passkey es desconocido.",
+      "notYours": "Este passkey no pertenece a tu cuenta."
+    },
+    "setupFailed": "La instalación ha fallado. Los detalles están en el registro.",
+    "unauthenticated": "Inicia sesión, por favor."
+  },
+  "export": {
+    "columns": {
+      "time": "Hora",
+      "duration": "Duración",
+      "block": "Bloque",
+      "info": "Info"
+    },
+    "blockCount": "{count, plural, one {# bloque} many {# bloques} other {# bloques}}",
+    "overlap": "⚠ Solapamiento",
+    "details": "Detalles",
+    "split": "{content} de contenido, {breaks} de pausas",
+    "yes": "sí",
+    "no": "no"
+  },
+  "library": {
+    "allWorkshops": "Todos los talleres",
+    "bin": {
+      "title": "Papelera",
+      "back": "Volver a la biblioteca",
+      "empty": "La papelera está vacía.",
+      "emptyHint": "Lo que llega aquí se queda hasta que alguien lo elimina definitivamente.",
+      "discardedOn": "tirado el {date}",
+      "restore": "Restaurar",
+      "purge": "Eliminar definitivamente",
+      "purgeWarning": "Esto elimina <b>{title}</b> con todas sus jornadas y bloques. No hay vuelta atrás.",
+      "purgeConfirmLabel": "Escribe el título para confirmar:",
+      "purgeConfirm": "Eliminar irreversiblemente"
+    },
+    "creating": "Creando …",
+    "dayCount": "{count, plural, one {# jornada} many {# jornadas} other {# jornadas}}",
+    "empty": "Todavía no hay ningún taller aquí.",
+    "emptyFiltered": "No se ha encontrado nada.",
+    "emptyFilteredHint": "Otra búsqueda, otra carpeta u otra etiqueta.",
+    "emptyHint": "Crea uno — la primera jornada viene incluida.",
+    "folderName": "Nombre de la carpeta",
+    "folders": "Carpetas",
+    "hideFolders": "Ocultar carpetas",
+    "moveFolderHint": "Mover a otra carpeta",
+    "moveFolderLabel": "Mover la carpeta {name}",
+    "moveTo": "Mover a",
+    "moveToTrash": "Mover a la papelera",
+    "moveToTrashLabel": "Mover {title} a la papelera",
+    "name": "Nombre",
+    "navLabel": "Carpetas y etiquetas",
+    "newFolder": "Carpeta",
+    "newWorkshop": "Nuevo taller",
+    "removeFolder": "Eliminar la carpeta — su contenido sube un nivel",
+    "search": "Buscar",
+    "searchLabel": "Buscar talleres",
+    "showFolders": "Mostrar carpetas",
+    "subfolderName": "Nombre de la subcarpeta",
+    "tags": "Etiquetas",
+    "title": "Talleres",
+    "topLevel": "Nivel superior",
+    "trash": "Papelera",
+    "workshopTitle": "Título del taller",
+    "workshopTitleExample": "p. ej. Retiro de estrategia"
+  },
+  "mail": {
+    "magicLink": {
+      "subject": "Tu enlace de acceso para GoodWorkshop",
+      "body": "Hola:\n\naquí tienes tu enlace de acceso:\n{link}\n\nEs válido durante {minutes, plural, one {un minuto} many {# minutos} other {# minutos}} y solo sirve una vez.\n\nSi no lo has pedido, puedes ignorar este mensaje —\nsin el enlace no pasa nada."
+    },
+    "test": {
+      "subject": "GoodWorkshop: mensaje de prueba",
+      "body": "Este mensaje confirma que el envío de correo funciona.\n\nLos enlaces de acceso y las invitaciones irán a partir de ahora por el mismo camino."
+    }
+  },
+  "meta": {
+    "description": "Planificación de talleres de código abierto. Autoalojada, lista para MCP.",
+    "printTitle": "Vista de impresión"
+  },
+  "nav": {
+    "branding": "Identidad visual",
+    "members": "Miembros",
+    "mail": "Envío de correo",
+    "passkeys": "Passkeys",
+    "tokens": "Tokens",
+    "signOut": "Cerrar sesión",
+    "account": "Cuenta"
+  },
+  "settings": {
+    "intro": "Tu cuenta: idioma, passkeys y tokens de acceso.",
+    "language": {
+      "title": "Idioma",
+      "intro": "Se aplica a la interfaz, a tus exportaciones y a los correos que recibes.",
+      "label": "Idioma",
+      "apply": "Aplicar"
+    },
+    "passkeys": {
+      "added": "Passkey creado.",
+      "enrol": "Crear un passkey",
+      "fallbackName": "Passkey",
+      "intro": "Inicia sesión sin contraseña, con huella, cara o llave de seguridad. La llave en sí nunca sale de tu dispositivo.",
+      "lastUsed": "última vez el {date}",
+      "nameLabel": "Nombre (opcional)",
+      "namePlaceholder": "MacBook, iPhone, YubiKey …",
+      "needsHttps": "Los passkeys necesitan HTTPS. Esta instalación funciona en {origin}.",
+      "neverUsed": "aún sin usar",
+      "none": "Todavía no hay ningún passkey. Hasta entonces, cada acceso pasa por un enlace por correo.",
+      "notConfirmed": "No se ha podido confirmar el passkey.",
+      "remove": "Eliminar",
+      "removeLabel": "Eliminar {name}",
+      "requestRejected": "La solicitud ha sido rechazada.",
+      "synced": "sincronizado",
+      "title": "Passkeys",
+      "unavailable": "Esta instalación funciona en <code>{origin}</code>. Los navegadores solo permiten passkeys por HTTPS (o en <code>localhost</code>) — aquí no se puede crear ninguno. El enlace de acceso por correo sigue siendo la entrada.",
+      "waiting": "Esperando al dispositivo …"
+    },
+    "title": "Ajustes",
+    "tokens": {
+      "title": "Tokens de acceso",
+      "intro": "Para clientes MCP como Claude Desktop o Claude Code. Un token actúa como tú — nunca puede hacer más de lo que puedes tú.",
+      "freshLabel": "Tu nuevo token",
+      "freshHint": "Se muestra una sola vez — lo que se guarda es su hash. Introdúcelo en el cliente como <code>Authorization: Bearer …</code> contra <code>/api/mcp</code>.",
+      "hide": "Entendido, ocultar",
+      "lastUsed": "última vez el {date}",
+      "neverUsed": "nunca usado",
+      "revoke": "Revocar",
+      "revokeLabel": "Revocar el token {name}",
+      "nameLabel": "¿Para qué es?",
+      "namePlaceholder": "p. ej. Claude Desktop",
+      "scopesLabel": "¿Qué puede hacer?",
+      "noUserAdmin": "La gestión de usuarios queda deliberadamente fuera: un cliente MCP nunca debe invitar a nadie ni nombrar a nadie administrador.",
+      "creating": "Creando …",
+      "create": "Crear un token"
+    }
+  },
+  "workshop": {
+    "access": "Acceso",
+    "accessIntro": "Quien edita ve los cambios al momento — está en el mismo documento. Quien lee ve el desarrollo pero no cambia nada.",
+    "accessOf": "Acceso de {email}",
+    "backToLibrary": "← Biblioteca",
+    "days": "Jornadas",
+    "end": "Fin {time}",
+    "materials": "Material: {items}",
+    "print": "Imprimir",
+    "someone": "Alguien",
+    "untitled": "Taller",
+    "untitledDay": "Jornada",
+    "you": "tú"
+  }
+}

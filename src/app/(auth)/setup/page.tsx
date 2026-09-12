@@ -1,4 +1,5 @@
 import { redirect } from 'next/navigation'
+import { getTranslations } from 'next-intl/server'
 import { needsSetup } from '@/server/settings/setup'
 import { SetupForm } from './setup-form'
 
@@ -14,13 +15,12 @@ export const dynamic = 'force-dynamic'
 export default async function SetupPage() {
   if (!(await needsSetup())) redirect('/login')
 
+  const t = await getTranslations('auth.setup')
+
   return (
     <div>
-      <h1 className="text-xl font-semibold tracking-tight">GoodWorkshop einrichten</h1>
-      <p className="mt-1 text-[15px] text-[var(--fg-muted)]">
-        Diese Installation hat noch niemanden, der sie verwalten kann. Trag dich als erste
-        Administratorin ein — alles Weitere, auch der Mailversand, geht danach in der Oberfläche.
-      </p>
+      <h1 className="text-xl font-semibold tracking-tight">{t('title')}</h1>
+      <p className="mt-1 text-[15px] text-[var(--fg-muted)]">{t('intro')}</p>
 
       <SetupForm />
     </div>

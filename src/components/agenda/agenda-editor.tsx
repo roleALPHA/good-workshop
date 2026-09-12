@@ -43,6 +43,8 @@ import { DayHeader } from './day-header'
 import { ParkingArea } from './parking'
 import { PresenceBar } from './presence'
 import { DragHandle } from './drag-handle'
+import { useLocale, useTranslations } from 'next-intl'
+import type { Locale } from '@/i18n/config'
 
 const INDENT_PX = 28
 
@@ -88,6 +90,8 @@ const SILENT_ANNOUNCEMENTS: Announcements = {
  * schedule is derived from the new document on the next render, for free.
  */
 export function AgendaEditor({ document: agenda }: { document: AgendaDocument }) {
+  const t = useTranslations('agenda')
+  const locale = useLocale()
   const doc = agenda.doc
   const [activeId, setActiveId] = useState<string | null>(null)
   const [offsetX, setOffsetX] = useState(0)
@@ -145,7 +149,9 @@ export function AgendaEditor({ document: agenda }: { document: AgendaDocument })
   // expanded rows turn the agenda back into a wall of forms.
   const [expandedId, setExpandedId] = useState<string | null>(null)
 
-  const liveMessage = activeId ? describeProjection(doc, rows, activeId, projection) : dropMessage
+  const liveMessage = activeId
+    ? describeProjection(doc, rows, activeId, projection, t, locale)
+    : dropMessage
 
   const sensors = useSensors(
     useSensor(MouseSensor, MOUSE_OPTIONS),
@@ -177,16 +183,17 @@ export function AgendaEditor({ document: agenda }: { document: AgendaDocument })
 
   function handleDragEnd() {
     if (activeId && projection?.valid) {
-      setDropMessage(
-        describeProjection(doc, rows, activeId, projection).replace('landet', 'abgelegt'),
-      )
+      // Its own message rather than a word swapped out of the previous one.
+      // `.replace('landet', 'abgelegt')` worked only in German, and only until
+      // somebody rephrased the sentence it was reaching into.
+      setDropMessage(describeProjection(doc, rows, activeId, projection, t, locale, 'dropped'))
       agenda.move(activeId, projection)
     }
     reset()
   }
 
   function handleDragCancel() {
-    if (activeId) setDropMessage('Verschieben abgebrochen.')
+    if (activeId) setDropMessage(t('drag.cancelled'))
     reset()
   }
 
@@ -266,7 +273,7 @@ export function AgendaEditor({ document: agenda }: { document: AgendaDocument })
       onDragCancel={handleDragCancel}
     >
       <section
-        aria-label={`Agenda ${doc.title}`}
+        aria-label={t('regionLabel', { title: doc.title })}
         className="gw-agenda"
         // Always present, so anything waiting on a write -- a test, or a person
         // watching the corner of the screen -- has one honest signal instead of
@@ -385,7 +392,7 @@ export function AgendaEditor({ document: agenda }: { document: AgendaDocument })
             </span>
             <span className="tabular text-[13px] text-[var(--fg-muted)]">
               {activeRow.kind === 'cluster'
-                ? `${activeRow.childCount} ${activeRow.childCount === 1 ? 'Block' : 'Blöcke'}`
+                ? t('blockCount', { count: activeRow.childCount })
                 : formatDuration(activeRow.module.durationMinutes)}
             </span>
           </div>
@@ -452,6 +459,7 @@ const pointerWithinOrClosestCorners: CollisionDetection = (args) => {
  * tell them something went wrong. Only trouble is worth interrupting for.
  */
 function StatusLine({ status }: { status: DocumentStatus }) {
+  const t = useTranslations('agenda')
   if (status.kind === 'local' || status.kind === 'saved') return null
 
   // Nothing to say while a connection is healthy. Who else is here is named in
@@ -462,7 +470,7 @@ function StatusLine({ status }: { status: DocumentStatus }) {
   if (status.kind === 'connecting' || status.kind === 'saving') {
     return (
       <p className="px-4 py-1 text-[13px] text-[var(--fg-subtle)] md:px-2">
-        {status.kind === 'connecting' ? 'Verbinde …' : 'Wird gespeichert …'}
+        {status.kind === 'connecting' ? t('connecting') : t('saving')}
       </p>
     )
   }
@@ -472,7 +480,7 @@ function StatusLine({ status }: { status: DocumentStatus }) {
       role="alert"
       className="mx-4 my-2 rounded border border-[var(--border)] bg-[var(--warn-bg)] px-3 py-2 text-[14px] text-[var(--warn-fg)] md:mx-2"
     >
-      {status.message}
+      {status.kind === 'offline' ? t('offline') : status.message}
     </p>
   )
 }
@@ -497,12 +505,24 @@ function LiveRegion({ message }: { message: string }) {
   )
 }
 
-/** Describes where the active row would land, in domain terms. */
+/**
+ * Describes where the active row would land, in domain terms.
+ *
+ * Takes a translator rather than reaching for a hook: this is a plain function
+ * called from inside a drag callback, and the sentence it builds is read aloud
+ * by a screen reader in the facilitator's own language. docs/ui-conventions.md
+ * is explicit that these announcements name the domain -- "Icebreaker on
+ * position 3 in section Warm-up" -- and not coordinates, which is why the
+ * pieces are separate messages rather than one string with a slot.
+ */
 function describeProjection(
   doc: DayDoc,
   rows: ReturnType<typeof flattenDay>,
   activeId: string,
   projection: Projection | null,
+  t: ReturnType<typeof useTranslations<'agenda'>>,
+  locale: Locale,
+  tense: 'landing' | 'dropped' = 'landing',
 ): string {
   const titleOf = (id: string) => {
     const row = rows.find((r) => r.id === id)
@@ -512,17 +532,37 @@ function describeProjection(
     return id
   }
 
-  if (!projection?.valid) return `${titleOf(activeId)} aufgenommen.`
+  if (!projection?.valid) return t('drag.picked', { title: titleOf(activeId) })
 
   const next = applyMove(doc, activeId, projection)
   const nextRows = flattenDay(next)
   const entry = computeSchedule(next.startMinute, toScheduleItems(nextRows)).entries.get(activeId)
 
   const where =
-    projection.parentId !== null ? `in Abschnitt ${titleOf(projection.parentId)}` : 'auf Tagesebene'
+    projection.parentId !== null
+      ? t('drag.inSection', { title: titleOf(projection.parentId) })
+      : t('drag.atDayLevel')
   const position = nextRows.findIndex((r) => r.id === activeId) + 1
 
-  return `${titleOf(activeId)} landet ${where}, Position ${position}${
-    entry ? `, neue Startzeit ${formatTime(entry.startMinute)}` : ''
-  }.`
+  const title = titleOf(activeId)
+
+  if (tense === 'dropped') {
+    return entry
+      ? t('drag.droppedWithTime', {
+          title,
+          where,
+          position,
+          time: formatTime(entry.startMinute, locale),
+        })
+      : t('drag.dropped', { title, where, position })
+  }
+
+  return entry
+    ? t('drag.landedWithTime', {
+        title,
+        where,
+        position,
+        time: formatTime(entry.startMinute, locale),
+      })
+    : t('drag.landed', { title, where, position })
 }

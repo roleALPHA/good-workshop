@@ -5,13 +5,21 @@ import { uuidv7 } from 'uuidv7'
 import type { McpServer } from '@modelcontextprotocol/sdk/server/mcp.js'
 import {
   assertWorkshopAccess,
-  ForbiddenError,
-  NotFoundError,
   VersionConflictError,
   type WorkshopAccess,
 } from '@/domain/agenda/access'
 import { loadDay } from '@/domain/agenda/repo'
+import { localiseModuleType } from '@/domain/moduleType/localise'
 import { publicToolError } from './errors'
+
+/**
+ * MCP answers in English, always.
+ *
+ * The audience is a model, and the text is prompt material it decides its next
+ * call from. See the note in ./errors.ts; `get_workshop` takes an explicit
+ * locale for the Markdown a human will actually read.
+ */
+const MCP_LOCALE = 'en' as const
 import {
   addClusterBlock,
   addModuleBlock,
@@ -30,6 +38,7 @@ import { renderDayMarkdown } from '@/server/export/markdown'
 import { withTenant, type Tx } from '@/server/db'
 import { auditEvent, moduleType, workshop } from '@/server/db/schema'
 import { requireScope, type PatActor } from './auth'
+import { LOCALES } from '@/i18n/config'
 
 /**
  * The tools an LLM client gets.
@@ -88,16 +97,20 @@ export function registerTools(server: McpServer, ctx: Ctx): void {
   server.registerTool(
     'list_module_types',
     {
-      title: 'Modultypen auflisten',
+      title: 'List block types',
       description:
-        'Alle verfügbaren Blocktypen mit ihren Feldschemata. Vor dem Anlegen von Blöcken aufrufen: die Schemata sagen, welche Angaben ein Typ akzeptiert.',
+        'Every available block type with its field schema. Call this before creating blocks: the schemas say which values a type accepts.',
       inputSchema: {},
     },
     async () => {
       requireScope(actor, 'module_types:read')
-      const types = await withTenant(actor, (tx) =>
+      // list_module_types reads the table directly rather than going through
+      // loadDay, so the localisation has to happen here too -- in English,
+      // like everything else this surface says.
+      const rows = await withTenant(actor, (tx) =>
         tx.select().from(moduleType).where(eq(moduleType.isActive, true)),
       )
+      const types = rows.map((row) => localiseModuleType(row, MCP_LOCALE))
 
       return ok(
         types
@@ -120,8 +133,8 @@ export function registerTools(server: McpServer, ctx: Ctx): void {
   server.registerTool(
     'list_workshops',
     {
-      title: 'Workshops auflisten',
-      description: 'Die Workshops, auf die dieses Token Zugriff hat.',
+      title: 'List workshops',
+      description: 'The workshops this token has access to.',
       inputSchema: { limit: z.number().int().min(1).max(100).default(25) },
     },
     async ({ limit }) => {
@@ -150,24 +163,41 @@ export function registerTools(server: McpServer, ctx: Ctx): void {
   server.registerTool(
     'get_workshop',
     {
-      title: 'Workshop lesen',
+      title: 'Read a workshop day',
       description:
-        'Der Ablauf eines Workshoptags mit berechneten Startzeiten. `view: markdown` liefert den fertigen Export.',
+        'The agenda of a workshop day with computed start times. `view: markdown` returns the finished export.',
       inputSchema: {
         workshopId: z.string().uuid(),
         dayId: z.string().uuid().optional(),
         view: z.enum(['outline', 'markdown']).default('outline'),
+        /**
+         * The one place this surface is not English.
+         *
+         * `view: markdown` returns a document a person will paste somewhere,
+         * so it takes the language they asked for rather than the one the
+         * tool descriptions happen to be written in. Everything else here --
+         * titles, descriptions, errors -- is prompt material for a model.
+         */
+        locale: z
+          .enum(LOCALES)
+          .optional()
+          .describe('Language for `view: markdown`. Defaults to English.'),
       },
     },
-    async ({ workshopId, dayId, view }) => {
+    async ({ workshopId, dayId, view, locale }) => {
       requireScope(actor, 'workshops:read')
 
       return withTenant(actor, async (tx) => {
         const access = await assertWorkshopAccess(tx, actor, workshopId, 'workshop.read')
         const resolvedDayId = dayId ?? (await firstDayOf(tx, workshopId))
-        if (!resolvedDayId) return fail('Dieser Workshop hat noch keinen Tag.')
+        if (!resolvedDayId) return fail('This workshop has no day yet.')
 
-        const { doc, contentVersion } = await loadDay(tx, access, resolvedDayId)
+        const { doc, contentVersion } = await loadDay(
+          tx,
+          access,
+          resolvedDayId,
+          locale ?? MCP_LOCALE,
+        )
         const meta = await tx
           .select({ title: workshop.title })
           .from(workshop)
@@ -176,7 +206,7 @@ export function registerTools(server: McpServer, ctx: Ctx): void {
         const title = meta[0]?.title ?? 'Workshop'
 
         if (view === 'markdown') {
-          return ok(renderDayMarkdown({ title }, doc), {
+          return ok(renderDayMarkdown({ title }, doc, { locale: locale ?? MCP_LOCALE }), {
             contentVersion: contentVersion.toString(),
           })
         }
@@ -186,7 +216,7 @@ export function registerTools(server: McpServer, ctx: Ctx): void {
 
         const lines = rows.map((row, index) => {
           const entry = schedule.entries.get(row.id)
-          const time = entry ? formatTime(entry.startMinute) : '--:--'
+          const time = entry ? formatTime(entry.startMinute, MCP_LOCALE) : '--:--'
           if (row.kind === 'cluster') return `${index}. [${time}] ## ${row.cluster.title}`
           if (row.kind !== 'module') return `${index}. [${time}] (Puffer)`
           const type = doc.moduleTypes[row.module.moduleTypeId]
@@ -196,7 +226,7 @@ export function registerTools(server: McpServer, ctx: Ctx): void {
         return ok(
           [
             `${title} — ${doc.title || 'Tag'}`,
-            `contentVersion: ${contentVersion} (bei Änderungen mitschicken)`,
+            `contentVersion: ${contentVersion} (send this back with any change)`,
             '',
             ...lines,
           ].join('\n'),
@@ -209,8 +239,8 @@ export function registerTools(server: McpServer, ctx: Ctx): void {
   server.registerTool(
     'list_days',
     {
-      title: 'Tage auflisten',
-      description: 'Die Tage eines Workshops.',
+      title: 'List days',
+      description: 'The days of a workshop.',
       inputSchema: { workshopId: z.string().uuid() },
     },
     async ({ workshopId }) => {
@@ -228,8 +258,8 @@ export function registerTools(server: McpServer, ctx: Ctx): void {
   server.registerTool(
     'create_workshop',
     {
-      title: 'Workshop anlegen',
-      description: 'Legt einen Workshop mit erstem Tag an und liefert beide Ids.',
+      title: 'Create a workshop',
+      description: 'Creates a workshop with its first day and returns both ids.',
       inputSchema: {
         title: z.string().trim().min(1).max(300),
         date: z
@@ -251,7 +281,7 @@ export function registerTools(server: McpServer, ctx: Ctx): void {
     },
   )
 
-  // ── Agenda-Schreibvorgänge ──────────────────────────────────────────────
+  // ── Agenda writes ───────────────────────────────────────────────────────
   //
   // Every one of these goes through the collaboration room rather than through
   // the repository, and that is load-bearing rather than tidy. The room's
@@ -302,10 +332,10 @@ export function registerTools(server: McpServer, ctx: Ctx): void {
   server.registerTool(
     'apply_agenda',
     {
-      title: 'Tagesablauf schreiben',
+      title: 'Write a day agenda',
       description:
-        'Schreibt einen kompletten Tagesablauf in einem Zug. `replace` ersetzt den Tag, `append` hängt an. ' +
-        'Für das Erstellen eines Ablaufs immer dieses Werkzeug benutzen — nicht zwanzig einzelne Aufrufe.',
+        'Writes a complete day agenda in one go. `replace` replaces the day, `append` adds to it. ' +
+        'Always use this tool to build an agenda -- not twenty separate calls.',
       inputSchema: {
         workshopId: z.string().uuid(),
         dayId: z.string().uuid(),
@@ -343,7 +373,7 @@ export function registerTools(server: McpServer, ctx: Ctx): void {
       requireScope(actor, 'workshops:write')
       try {
         const types = await preflight(workshopId, expectedVersion, (tx) => readTypes(tx))
-        if (!types) return fail('Modultypen konnten nicht gelesen werden.')
+        if (!types) return fail('The block types could not be read.')
 
         // Every type is resolved before anything is written: a day half
         // applied because the eleventh block named a type that does not exist
@@ -379,7 +409,7 @@ export function registerTools(server: McpServer, ctx: Ctx): void {
         })
 
         await record('agenda.apply', workshopId, { dayId, mode, created: result })
-        return ok(`${result} Einträge geschrieben.`, {
+        return ok(`${result} entries written.`, {
           created: result,
           contentVersion: contentVersion.toString(),
         })
@@ -392,10 +422,10 @@ export function registerTools(server: McpServer, ctx: Ctx): void {
   server.registerTool(
     'add_module',
     {
-      title: 'Block hinzufügen',
+      title: 'Add a block',
       description:
-        'Hängt einen einzelnen Block an das Ende des Tages oder eines Clusters. ' +
-        'Für ganze Abläufe apply_agenda benutzen.',
+        'Appends a single block to the end of the day or of a cluster. ' +
+        'Use apply_agenda for whole agendas.',
       inputSchema: {
         workshopId: z.string().uuid(),
         dayId: z.string().uuid(),
@@ -410,7 +440,7 @@ export function registerTools(server: McpServer, ctx: Ctx): void {
       requireScope(actor, 'workshops:write')
       try {
         const types = await preflight(workshopId, expectedVersion, (tx) => readTypes(tx))
-        if (!types) return fail('Modultypen konnten nicht gelesen werden.')
+        if (!types) return fail('The block types could not be read.')
         if (!types.has(typeKey)) return fail(unknownTypes([typeKey], types))
 
         const id = uuidv7()
@@ -432,9 +462,9 @@ export function registerTools(server: McpServer, ctx: Ctx): void {
   server.registerTool(
     'move_module',
     {
-      title: 'Block verschieben',
+      title: 'Move a block',
       description:
-        'Verschiebt einen Block. `afterId` ist die Id des Blocks, hinter dem er landen soll, oder null für ganz oben.',
+        'Moves a block. `afterId` is the id of the block it should land after, or null for the top.',
       inputSchema: {
         workshopId: z.string().uuid(),
         moduleId: z.string().uuid(),
@@ -469,9 +499,8 @@ export function registerTools(server: McpServer, ctx: Ctx): void {
   server.registerTool(
     'delete_module',
     {
-      title: 'Block löschen',
-      description:
-        'Löscht einen Block endgültig. Bei einem Cluster werden seine Blöcke mitgelöscht.',
+      title: 'Delete a block',
+      description: 'Deletes a block for good. Deleting a cluster deletes the blocks inside it.',
       inputSchema: {
         workshopId: z.string().uuid(),
         dayId: z.string().uuid(),
@@ -486,10 +515,10 @@ export function registerTools(server: McpServer, ctx: Ctx): void {
         const { result, contentVersion } = await inRoom(workshopId, dayId, (doc) =>
           removeBlock(doc, moduleId),
         )
-        if (result === 0) return fail(`Block ${moduleId} liegt nicht an diesem Tag.`)
+        if (result === 0) return fail(`Block ${moduleId} is not on this day.`)
 
         await record('module.delete', workshopId, { moduleId, removed: result })
-        return ok(`Gelöscht (${result}).`, { contentVersion: contentVersion.toString() })
+        return ok(`Deleted (${result}).`, { contentVersion: contentVersion.toString() })
       } catch (error) {
         return toolError(error)
       }
@@ -499,9 +528,8 @@ export function registerTools(server: McpServer, ctx: Ctx): void {
   server.registerTool(
     'set_day_start',
     {
-      title: 'Tagesbeginn setzen',
-      description:
-        'Setzt die Startzeit eines Tages in Minuten seit Mitternacht (z. B. 540 = 09:00).',
+      title: 'Set the day start',
+      description: 'Sets a day start time in minutes since midnight (e.g. 540 = 09:00).',
       inputSchema: {
         workshopId: z.string().uuid(),
         dayId: z.string().uuid(),
@@ -520,7 +548,7 @@ export function registerTools(server: McpServer, ctx: Ctx): void {
         )
 
         await record('day.update', workshopId, { dayId, startMinute })
-        return ok(`Tagesbeginn: ${formatTime(startMinute)}`, {
+        return ok(`Day starts at ${formatTime(startMinute, MCP_LOCALE)}`, {
           contentVersion: contentVersion.toString(),
         })
       } catch (error) {
@@ -556,6 +584,16 @@ function moduleFrom(
   const type = types.get(input.typeKey)!
   return {
     moduleTypeId: type.id,
+    /**
+     * The STORED name, deliberately not the English one this surface otherwise
+     * speaks.
+     *
+     * This is persisted into workshop_module.title, where a person reads it in
+     * their own interface afterwards. The canonical row is the honest default
+     * there; filling a German facilitator's agenda with English block titles
+     * because a model created them would be the wrong kind of consistent. A
+     * model that wants a particular title passes one.
+     */
     title: input.title ?? type.name,
     durationMinutes: input.durationMinutes ?? type.defaultDurationMinutes,
     pinnedStartMinute: input.pinnedStartMinute ?? null,
@@ -564,9 +602,7 @@ function moduleFrom(
 
 /** Errors name the allowed values, so the next call can be right. */
 function unknownTypes(keys: string[], types: Map<string, ResolvedType>): string {
-  return (
-    `Unbekannte Modultypen: ${keys.join(', ')}. ` + `Verfügbar: ${[...types.keys()].join(', ')}`
-  )
+  return `Unknown block types: ${keys.join(', ')}. ` + `Available: ${[...types.keys()].join(', ')}`
 }
 
 /**
@@ -576,17 +612,18 @@ function unknownTypes(keys: string[], types: Map<string, ResolvedType>): string 
  * will retry the same call forever.
  */
 function toolError(error: unknown) {
+  // Every domain error -- not-found, forbidden, unknown block type -- is an
+  // answer to the request and reaches the caller intact; everything else is an
+  // internal failure and gets an id instead of its innards. See
+  // publicToolError, which now renders them all in English from the same
+  // catalog the interface uses.
+  const { message } = publicToolError(error)
+
   if (error instanceof VersionConflictError) {
-    return fail(
-      `Der Workshop wurde inzwischen geändert (aktuelle Version: ${error.actual}). ` +
-        'Lies ihn mit get_workshop neu und schicke die neue contentVersion mit.',
-    )
+    // The one error that has to say what to do next, or a model retries the
+    // same call forever.
+    return fail(`${message} Read it again with get_workshop and send the new contentVersion.`)
   }
-  // NotFoundError and ForbiddenError are answers to the request and say so;
-  // everything else is an internal failure and gets an id instead of its
-  // innards. See publicToolError.
-  if (error instanceof NotFoundError || error instanceof ForbiddenError) {
-    return fail(error.message)
-  }
-  return fail(publicToolError(error).message)
+
+  return fail(message)
 }

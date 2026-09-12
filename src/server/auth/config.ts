@@ -131,9 +131,8 @@ export function auditAuthConfig(): string[] {
     // mail in the browser is the intended path now, and warning about it on
     // every boot would train people to ignore this list.
     warnings.push(
-      'GW_MAIL_TRANSPORT ist nicht gesetzt: der Mailversand richtet sich nach den ' +
-        'Einstellungen in der Oberfläche. Solange dort nichts konfiguriert ist, kann keine ' +
-        'Mail zugestellt werden.',
+      'GW_MAIL_TRANSPORT is not set: mail delivery follows the settings in the interface. ' +
+        'Until something is configured there, no mail can be delivered.',
     )
   }
   if (!authConfig.passkeysAvailable && authConfig.mailTransport === 'none') {

@@ -10,7 +10,8 @@ import {
   workshopDay,
 } from '@/server/db/schema'
 import { keyAtEnd } from '@/domain/agenda/ordering'
-import type { WorkshopAccess } from '@/domain/agenda/access'
+import { NotFoundError, type WorkshopAccess } from '@/domain/agenda/access'
+import { DomainError } from '@/domain/errors'
 
 /**
  * The workshop library: folders, and the workshops inside them.
@@ -23,10 +24,21 @@ import type { WorkshopAccess } from '@/domain/agenda/access'
 
 export type WorkshopTag = { id: string; name: string; color: string }
 
+/**
+ * The four values the `workshop_status` check constraint allows, as a type.
+ *
+ * It was `string`, which made every lookup keyed on it -- the status chip, now
+ * the message catalog -- a lookup that could silently miss. The database has
+ * always been this strict; the type simply did not say so.
+ */
+export const WORKSHOP_STATUSES = ['draft', 'ready', 'delivered', 'archived'] as const
+
+export type WorkshopStatus = (typeof WORKSHOP_STATUSES)[number]
+
 export type WorkshopSummary = {
   id: string
   title: string
-  status: string
+  status: WorkshopStatus
   folderId: string | null
   updatedAt: Date
   dayCount: number
@@ -183,7 +195,9 @@ export async function listWorkshops(
     workshops: page.map((row) => ({
       id: row.id,
       title: row.title,
-      status: row.status,
+      // Guaranteed by the workshop_status check constraint; drizzle types the
+      // column as plain text.
+      status: row.status as WorkshopStatus,
       folderId: row.folderId,
       updatedAt: row.updatedAt,
       dayCount: row.dayCount,
@@ -289,7 +303,7 @@ export async function createWorkshop(
     .from(member)
     .where(eq(member.id, actor.memberId))
     .limit(1)
-  if (!memberships[0]) throw new Error('Mitgliedschaft nicht gefunden.')
+  if (!memberships[0]) throw new Error('membership row missing for the current actor')
 
   const siblings = await tx
     .select({ id: workshop.id, position: workshop.position })
@@ -397,7 +411,7 @@ export async function listTrashedWorkshops(tx: Tx, actor: Actor) {
     .orderBy(desc(workshop.deletedAt))
 }
 
-export class FolderMoveError extends Error {}
+export class FolderMoveError extends DomainError {}
 
 /**
  * Moves a folder, and the whole subtree under it, to a new parent.
@@ -421,12 +435,12 @@ export async function moveFolder(tx: Tx, id: string, parentId: string | null): P
     .limit(1)
 
   const moving = rows[0]
-  if (!moving) throw new FolderMoveError('Dieser Ordner existiert nicht.')
+  if (!moving) throw new FolderMoveError('folder.gone')
   if (moving.parentId === parentId) return
 
   let ancestors: string[] = []
   if (parentId !== null) {
-    if (parentId === id) throw new FolderMoveError('Ein Ordner kann nicht in sich selbst liegen.')
+    if (parentId === id) throw new FolderMoveError('folder.intoItself')
 
     const targets = await tx
       .select({ ancestors: folder.ancestorIds })
@@ -435,9 +449,9 @@ export async function moveFolder(tx: Tx, id: string, parentId: string | null): P
       .limit(1)
 
     const target = targets[0]
-    if (!target) throw new FolderMoveError('Der Zielordner existiert nicht.')
+    if (!target) throw new FolderMoveError('folder.targetGone')
     if (target.ancestors.includes(id)) {
-      throw new FolderMoveError('Ein Ordner kann nicht in einen seiner eigenen Unterordner.')
+      throw new FolderMoveError('folder.intoOwnDescendant')
     }
 
     ancestors = [...target.ancestors, parentId]
@@ -488,7 +502,7 @@ export async function deleteFolder(tx: Tx, id: string): Promise<void> {
     .limit(1)
 
   const found = rows[0]
-  if (!found) throw new Error('Ordner nicht gefunden.')
+  if (!found) throw new NotFoundError()
   const parentId = found.parentId
 
   // The descendants keep their shape; they only lose this one ancestor.
@@ -538,7 +552,7 @@ export async function createFolder(
       .from(folder)
       .where(eq(folder.id, parentId))
       .limit(1)
-    if (!parents[0]) throw new Error('Übergeordneter Ordner nicht gefunden.')
+    if (!parents[0]) throw new NotFoundError()
     ancestors = [...parents[0].ancestors, parentId]
   }
 

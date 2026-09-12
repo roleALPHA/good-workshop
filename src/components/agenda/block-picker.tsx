@@ -6,6 +6,7 @@ import type { ModuleTypeDto } from '@/domain/agenda/types'
 import { formatDuration } from '@/features/agenda/duration'
 import { catClass } from '@/lib/category-colors'
 import { cn } from '@/lib/cn'
+import { useTranslations } from 'next-intl'
 
 /**
  * Adding a block, inline.
@@ -23,6 +24,7 @@ export function BlockPicker({
   onAdd: (typeKey: string) => void
   disabled?: boolean
 }) {
+  const t = useTranslations('agenda')
   const [open, setOpen] = useState(false)
   const [filter, setFilter] = useState('')
 
@@ -36,7 +38,7 @@ export function BlockPicker({
         className="mx-4 my-3 inline-flex items-center gap-1.5 rounded border border-dashed border-[var(--border-strong)] px-3 py-2 text-[15px] text-[var(--fg-muted)] hover:border-[var(--brand-ring)] hover:text-[var(--fg)] md:mx-2"
       >
         <Plus aria-hidden className="size-4" />
-        Block hinzufügen
+        {t('addBlock')}
       </button>
     )
   }
@@ -50,8 +52,8 @@ export function BlockPicker({
       <input
         autoFocus
         type="text"
-        aria-label="Blocktyp suchen"
-        placeholder="Tippen zum Filtern …"
+        aria-label={t('searchType')}
+        placeholder={t('filterPlaceholder')}
         className="w-full rounded border border-[var(--border-strong)] bg-[var(--surface)] px-2.5 py-1.5 text-[16px]"
         value={filter}
         onChange={(e) => setFilter(e.target.value)}
@@ -91,7 +93,7 @@ export function BlockPicker({
       </ul>
 
       {matches.length === 0 && (
-        <p className="mt-2 text-[14px] text-[var(--fg-muted)]">Kein Blocktyp passt dazu.</p>
+        <p className="mt-2 text-[14px] text-[var(--fg-muted)]">{t('noTypeMatches')}</p>
       )}
     </div>
   )

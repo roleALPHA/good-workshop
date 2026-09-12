@@ -1,13 +1,14 @@
 ---
 name: goodworkshop-ui
-description: 'UI/UX-Konventionen für GoodWorkshop: Mobile-first, Inline-Bearbeitung ohne Dialoge, Farbtokens, Branding, Accessibility. Nutze diesen Skill bei jeder Änderung an einer React-Komponente, an Tailwind-Tokens, am Layout oder an Farben.'
+description: 'UI/UX conventions for GoodWorkshop: mobile-first, inline editing without dialogs, colour tokens, branding, accessibility, and where translated strings live. Use this skill for any change to a React component, to Tailwind tokens, to the layout or to colours.'
 ---
 
 # goodworkshop-ui
 
-**Der verbindliche Inhalt steht in [`docs/konventionen-ui.md`](../../../docs/konventionen-ui.md).** Lies diese Datei,
-bevor du an den genannten Stellen etwas änderst.
+**The binding content is in [`docs/ui-conventions.md`](../../../docs/ui-conventions.md).** Read
+that file before changing anything in the areas it names. For strings specifically, read
+[`docs/languages.md`](../../../docs/languages.md) as well.
 
-Sie liegt bewusst dort und nicht hier: die Regeln gelten für jeden Beitrag, nicht nur
-für den, der mit einem bestimmten Werkzeug arbeitet — und `.Codex/` ist nicht Teil des
-Repositorys. Eine zweite Kopie hier würde auseinanderdriften.
+It lives there rather than here on purpose: the rules apply to every contribution, not only to
+somebody working with a particular tool — and `.Codex/` is not part of the repository. A second
+copy here would drift.

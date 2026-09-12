@@ -1,4 +1,5 @@
 import { describe, expect, it } from 'vitest'
+import { UnknownModuleTypeError, VersionConflictError } from '@/domain/agenda/access'
 import { publicToolError } from './errors'
 
 /**
@@ -47,11 +48,26 @@ describe('publicToolError', () => {
   })
 
   it('keeps errors that were written for the caller intact', () => {
-    // Not everything is an internal failure. "Unbekannter Modultyp." and the
+    // Not everything is an internal failure. An unknown block type and a
     // version conflict are answers to the request, and flattening them into
     // "something went wrong" would make the tool unusable for a model that has
     // to decide what to do next.
-    const known = Object.assign(new Error('Unbekannter Modultyp.'), { expose: true })
-    expect(publicToolError(known).message).toBe('Unbekannter Modultyp.')
+    //
+    // This used to be the theory and not the behaviour: publicToolError looked
+    // for `expose === true` and nothing in the tree ever set it, so every one
+    // of these was flattened. DomainError sets it on the base class.
+    const known = new UnknownModuleTypeError('kaffeepause', ['break', 'check_in'])
+    const { message } = publicToolError(known)
+    expect(message).toContain('kaffeepause')
+    expect(message).toContain('break, check_in')
+  })
+
+  it('answers in English, whatever the caller reads', () => {
+    // The audience is a model, and the text is prompt material it decides its
+    // next call from. See the note in errors.ts.
+    const { message } = publicToolError(new VersionConflictError(7n, 9n))
+    expect(message).toContain('has changed in the meantime')
+    expect(message).toContain('7')
+    expect(message).toContain('9')
   })
 })

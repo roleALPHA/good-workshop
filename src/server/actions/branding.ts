@@ -3,12 +3,12 @@
 import { revalidatePath } from 'next/cache'
 import { eq, sql } from 'drizzle-orm'
 import { z } from 'zod'
-import { BrandError, brandSwatch, readBrand } from '@/domain/tenant/branding'
-import { LogoError, readLogo } from '@/domain/tenant/logo'
+import { brandSwatch, readBrand } from '@/domain/tenant/branding'
+import { readLogo } from '@/domain/tenant/logo'
 import { assertTenantAdmin } from '@/domain/tenant/members'
 import { withTenant } from '@/server/db'
 import { tenant } from '@/server/db/schema'
-import { currentActor, type ActionResult } from './context'
+import { currentActor, fail, toResult, type ActionResult } from './context'
 
 /**
  * Tenant branding: one accent colour and one logo.
@@ -27,7 +27,7 @@ export type BrandingView = {
 
 export async function loadBranding(): Promise<ActionResult<BrandingView>> {
   const actor = await currentActor()
-  if (!actor) return fail('Bitte melde dich an.')
+  if (!actor) return fail('unauthenticated', 'unauthenticated')
 
   try {
     assertTenantAdmin(actor)
@@ -63,12 +63,12 @@ export async function saveBrandAction(raw: {
   brandHex: string | null
 }): Promise<ActionResult<{ swatch: string | null }>> {
   const actor = await currentActor()
-  if (!actor) return fail('Bitte melde dich an.')
+  if (!actor) return fail('unauthenticated', 'unauthenticated')
 
   const parsed = z
     .object({ brandName: z.string().trim().max(120), brandHex: z.string().trim().nullable() })
     .safeParse(raw)
-  if (!parsed.success) return fail('Bitte Name und Farbe prüfen.')
+  if (!parsed.success) return fail('invalid_input', 'brand.checkNameAndColour')
 
   try {
     assertTenantAdmin(actor)
@@ -101,7 +101,7 @@ export async function uploadLogoAction(raw: {
   mime: string
 }): Promise<ActionResult<null>> {
   const actor = await currentActor()
-  if (!actor) return fail('Bitte melde dich an.')
+  if (!actor) return fail('unauthenticated', 'unauthenticated')
 
   try {
     assertTenantAdmin(actor)
@@ -129,7 +129,7 @@ export async function uploadLogoAction(raw: {
 
 export async function removeLogoAction(): Promise<ActionResult<null>> {
   const actor = await currentActor()
-  if (!actor) return fail('Bitte melde dich an.')
+  if (!actor) return fail('unauthenticated', 'unauthenticated')
 
   try {
     assertTenantAdmin(actor)
@@ -145,17 +145,4 @@ export async function removeLogoAction(): Promise<ActionResult<null>> {
   } catch (error) {
     return toResult(error)
   }
-}
-
-const fail = <T>(message: string): ActionResult<T> => ({ ok: false, error: 'forbidden', message })
-
-function toResult<T>(error: unknown): ActionResult<T> {
-  // Both carry a sentence written for the person reading it, including what to
-  // do instead. Replacing them with "that did not work" would throw away the
-  // only useful part.
-  if (error instanceof BrandError || error instanceof LogoError) {
-    return { ok: false, error: 'invalid_input', message: error.message }
-  }
-  console.error('branding action failed', error)
-  return { ok: false, error: 'failed', message: 'Das hat nicht geklappt.' }
 }

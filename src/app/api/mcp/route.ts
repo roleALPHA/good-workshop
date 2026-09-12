@@ -69,7 +69,7 @@ export function GET() {
   return NextResponse.json(
     {
       error: 'method_not_allowed',
-      hint: 'MCP über POST. Dieser Server sendet nichts von sich aus.',
+      hint: 'MCP over POST. This server does not send anything on its own.',
     },
     { status: 405 },
   )

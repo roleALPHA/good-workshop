@@ -1,4 +1,5 @@
-import { render, screen } from '@testing-library/react'
+import { screen } from '@testing-library/react'
+import { renderWithIntl as render } from '@/test/intl'
 import { describe, expect, it } from 'vitest'
 import type { ScheduleEntry } from '@/domain/schedule/types'
 import { OverlapWarning, TimeCell } from './time-cell'

@@ -1,6 +1,7 @@
 'use client'
 
 import { useState, type ReactNode } from 'react'
+import { useTranslations } from 'next-intl'
 import { ChevronDown, Folder as FolderIcon } from 'lucide-react'
 
 /**
@@ -21,6 +22,7 @@ export function FolderPanel({
   current: string | null
   children: ReactNode
 }) {
+  const t = useTranslations('library')
   const [open, setOpen] = useState(false)
 
   return (
@@ -33,12 +35,12 @@ export function FolderPanel({
         className="mb-2 inline-flex w-full items-center gap-1.5 rounded border border-[var(--border)] px-2 py-1.5 text-[14px] text-[var(--fg-muted)] md:hidden"
       >
         <FolderIcon aria-hidden className="size-3.5 shrink-0" />
-        <span className="min-w-0 flex-1 truncate text-left">{current ?? 'Alle Workshops'}</span>
+        <span className="min-w-0 flex-1 truncate text-left">{current ?? t('allWorkshops')}</span>
         <ChevronDown
           aria-hidden
           className={`size-3.5 shrink-0 transition-transform ${open ? 'rotate-180' : ''}`}
         />
-        <span className="sr-only">{open ? 'Ordner ausblenden' : 'Ordner einblenden'}</span>
+        <span className="sr-only">{open ? t('hideFolders') : t('showFolders')}</span>
       </button>
 
       {/* `hidden` rather than unmounted: the tree is server-rendered, and

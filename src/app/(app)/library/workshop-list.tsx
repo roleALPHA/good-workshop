@@ -5,13 +5,7 @@ import { useState, useTransition } from 'react'
 import type { WorkshopSummary } from '@/domain/workshop/repo'
 import { Trash2 } from 'lucide-react'
 import { loadLibrary, trashWorkshopAction } from '@/server/actions/workshop'
-
-const STATUS: Record<string, string> = {
-  draft: 'Entwurf',
-  ready: 'Bereit',
-  delivered: 'Durchgeführt',
-  archived: 'Archiviert',
-}
+import { useTranslations } from 'next-intl'
 
 /**
  * The list, one page at a time.
@@ -31,6 +25,9 @@ export function WorkshopList({
   query: { folderId: string | null; tagId?: string; search?: string }
   filtered: boolean
 }) {
+  const t = useTranslations('library')
+  const tc = useTranslations('common')
+  const tStatus = useTranslations('enums.workshopStatus')
   const [workshops, setWorkshops] = useState(initial)
   const [cursor, setCursor] = useState(initialCursor)
   const [pending, startTransition] = useTransition()
@@ -71,11 +68,9 @@ export function WorkshopList({
   if (workshops.length === 0) {
     return (
       <div className="rounded border border-dashed border-[var(--border-strong)] px-6 py-10 text-center">
-        <p className="font-medium">{filtered ? 'Nichts gefunden.' : 'Noch kein Workshop hier.'}</p>
+        <p className="font-medium">{filtered ? t('emptyFiltered') : t('empty')}</p>
         <p className="mt-1 text-[15px] text-[var(--fg-muted)]">
-          {filtered
-            ? 'Andere Suche, anderer Ordner oder anderes Tag.'
-            : 'Leg einen an — der erste Tag ist gleich mit dabei.'}
+          {filtered ? t('emptyFilteredHint') : t('emptyHint')}
         </p>
       </div>
     )
@@ -102,10 +97,10 @@ export function WorkshopList({
               ))}
 
               <span className="tabular shrink-0 text-[14px] text-[var(--fg-muted)]">
-                {workshop.dayCount} {workshop.dayCount === 1 ? 'Tag' : 'Tage'}
+                {t('dayCount', { count: workshop.dayCount })}
               </span>
               <span className="shrink-0 rounded bg-[var(--surface-raised)] px-1.5 py-0.5 text-[13px] text-[var(--fg-muted)]">
-                {STATUS[workshop.status] ?? workshop.status}
+                {tStatus(workshop.status)}
               </span>
             </Link>
 
@@ -116,11 +111,11 @@ export function WorkshopList({
                 type="button"
                 onClick={() => trash(workshop.id, workshop.title)}
                 disabled={pending}
-                aria-label={`${workshop.title} in den Papierkorb`}
+                aria-label={t('moveToTrashLabel', { title: workshop.title })}
                 className="inline-flex items-center gap-1.5 rounded px-2 py-1 text-[13px] text-[var(--fg-muted)] hover:bg-[var(--surface-raised)] disabled:opacity-60"
               >
                 <Trash2 aria-hidden className="size-3.5" />
-                In den Papierkorb
+                {t('moveToTrash')}
               </button>
             </div>
           </li>
@@ -140,7 +135,7 @@ export function WorkshopList({
           disabled={pending}
           className="mt-3 w-full rounded border border-[var(--border-strong)] px-3 py-2 text-[15px] hover:bg-[var(--surface-raised)] disabled:opacity-60"
         >
-          {pending ? 'Lädt …' : 'Mehr laden'}
+          {pending ? tc('loading') : tc('loadMore')}
         </button>
       )}
     </>

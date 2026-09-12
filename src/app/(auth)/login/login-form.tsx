@@ -1,10 +1,19 @@
 'use client'
 
 import { useState } from 'react'
+import { useTranslations } from 'next-intl'
 import { startAuthentication } from '@simplewebauthn/browser'
 import { requestMagicLink } from './actions'
 
-export function LoginForm({ passkeysAvailable }: { passkeysAvailable: boolean }) {
+export function LoginForm({
+  passkeysAvailable,
+  linkTtlMinutes,
+}: {
+  passkeysAvailable: boolean
+  /** Was hardcoded as "15 Minuten" in the prose; it is configurable. */
+  linkTtlMinutes: number
+}) {
+  const t = useTranslations('auth.login')
   const [sent, setSent] = useState(false)
   const [pending, setPending] = useState(false)
   const [passkeyError, setPasskeyError] = useState<string | null>(null)
@@ -23,11 +32,11 @@ export function LoginForm({ passkeysAvailable }: { passkeysAvailable: boolean })
         body: JSON.stringify(assertion),
       }).then((r) => r.json())
 
-      if (!result.ok) throw new Error('Der Passkey konnte nicht bestätigt werden.')
+      if (!result.ok) throw new Error(t('passkeyFailed'))
       window.location.href = '/'
     } catch (error) {
       // A cancelled prompt is not a failure worth shouting about.
-      const message = error instanceof Error ? error.message : 'Unbekannter Fehler'
+      const message = error instanceof Error ? error.message : t('unknownError')
       setPasskeyError(/abort|cancel|NotAllowed/i.test(message) ? null : message)
     } finally {
       setPending(false)
@@ -37,10 +46,9 @@ export function LoginForm({ passkeysAvailable }: { passkeysAvailable: boolean })
   if (sent) {
     return (
       <div className="mt-6 rounded border border-[var(--border)] bg-[var(--surface)] p-4">
-        <p className="font-medium">Schau in dein Postfach.</p>
+        <p className="font-medium">{t('sentTitle')}</p>
         <p className="mt-1 text-[15px] text-[var(--fg-muted)]">
-          Falls es zu dieser Adresse ein Konto gibt, ist ein Anmeldelink unterwegs. Er gilt 15
-          Minuten.
+          {t('sentBody', { minutes: linkTtlMinutes })}
         </p>
       </div>
     )
@@ -55,12 +63,11 @@ export function LoginForm({ passkeysAvailable }: { passkeysAvailable: boolean })
           disabled={pending}
           className="w-full rounded bg-[var(--brand)] px-4 py-2.5 font-medium text-[var(--brand-fg)] hover:bg-[var(--brand-hover)] disabled:opacity-60"
         >
-          Mit Passkey anmelden
+          {t('passkeyButton')}
         </button>
       ) : (
         <p className="rounded border border-[var(--border)] bg-[var(--surface)] px-3 py-2 text-[14px] text-[var(--fg-muted)]">
-          Passkeys brauchen HTTPS und sind auf dieser Adresse nicht verfügbar. Der Anmeldelink per
-          E-Mail funktioniert.
+          {t('passkeyUnavailable')}
         </p>
       )}
 
@@ -78,7 +85,7 @@ export function LoginForm({ passkeysAvailable }: { passkeysAvailable: boolean })
         className="space-y-2"
       >
         <label htmlFor="email" className="block text-[14px] font-medium">
-          E-Mail-Adresse
+          {t('email')}
         </label>
         <input
           id="email"
@@ -92,7 +99,7 @@ export function LoginForm({ passkeysAvailable }: { passkeysAvailable: boolean })
           type="submit"
           className="w-full rounded border border-[var(--border-strong)] px-4 py-2.5 font-medium hover:bg-[var(--surface-raised)]"
         >
-          Anmeldelink schicken
+          {t('send')}
         </button>
       </form>
     </div>

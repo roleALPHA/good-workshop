@@ -3,6 +3,7 @@
 import { useRouter, useSearchParams } from 'next/navigation'
 import { useEffect, useState } from 'react'
 import { Search } from 'lucide-react'
+import { useTranslations } from 'next-intl'
 
 /**
  * Search in the URL, not in component state.
@@ -12,6 +13,8 @@ import { Search } from 'lucide-react'
  * a round trip per keystroke is a round trip per keystroke.
  */
 export function SearchBox() {
+  const t = useTranslations('library')
+
   const router = useRouter()
   const params = useSearchParams()
   const current = params.get('q') ?? ''
@@ -41,8 +44,8 @@ export function SearchBox() {
       />
       <input
         type="search"
-        aria-label="Workshops durchsuchen"
-        placeholder="Suchen"
+        aria-label={t('searchLabel')}
+        placeholder={t('search')}
         className="w-44 rounded border border-[var(--border-strong)] bg-[var(--surface)] py-1.5 pr-2.5 pl-8 text-[16px]"
         value={value}
         onChange={(e) => setValue(e.target.value)}

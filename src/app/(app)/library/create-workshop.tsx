@@ -4,6 +4,7 @@ import { useRouter } from 'next/navigation'
 import { useState, useTransition } from 'react'
 import { Plus } from 'lucide-react'
 import { createWorkshopAction } from '@/server/actions/workshop'
+import { useTranslations } from 'next-intl'
 
 /**
  * Creating a workshop is one field, inline.
@@ -12,6 +13,9 @@ import { createWorkshopAction } from '@/server/actions/workshop'
  * the new entry, so you can see what you already have.
  */
 export function CreateWorkshop({ folderId }: { folderId: string | null }) {
+  const t = useTranslations('library')
+  const tc = useTranslations('common')
+
   const router = useRouter()
   const [open, setOpen] = useState(false)
   const [title, setTitle] = useState('')
@@ -42,7 +46,7 @@ export function CreateWorkshop({ folderId }: { folderId: string | null }) {
         className="inline-flex items-center gap-1.5 rounded bg-[var(--brand)] px-3 py-1.5 text-[15px] font-medium text-[var(--brand-fg)] hover:bg-[var(--brand-hover)]"
       >
         <Plus aria-hidden className="size-4" />
-        Neuer Workshop
+        {t('newWorkshop')}
       </button>
     )
   }
@@ -52,8 +56,8 @@ export function CreateWorkshop({ folderId }: { folderId: string | null }) {
       <div>
         <input
           autoFocus
-          aria-label="Titel des Workshops"
-          placeholder="z. B. Strategie-Retreat"
+          aria-label={t('workshopTitle')}
+          placeholder={t('workshopTitleExample')}
           className="w-56 rounded border border-[var(--border-strong)] bg-[var(--surface)] px-2.5 py-1.5 text-[16px]"
           value={title}
           onChange={(e) => {
@@ -77,7 +81,7 @@ export function CreateWorkshop({ folderId }: { folderId: string | null }) {
         disabled={pending || title.trim() === ''}
         className="rounded bg-[var(--brand)] px-3 py-1.5 text-[15px] font-medium text-[var(--brand-fg)] hover:bg-[var(--brand-hover)] disabled:opacity-60"
       >
-        {pending ? 'Anlegen …' : 'Anlegen'}
+        {pending ? t('creating') : tc('create')}
       </button>
     </div>
   )

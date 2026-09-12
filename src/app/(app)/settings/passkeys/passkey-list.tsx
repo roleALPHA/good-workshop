@@ -1,6 +1,7 @@
 'use client'
 
 import { useState, useTransition } from 'react'
+import { useFormatter, useTranslations } from 'next-intl'
 import { startRegistration } from '@simplewebauthn/browser'
 import { removePasskey, type PasskeyPage } from '@/server/actions/passkeys'
 
@@ -13,6 +14,9 @@ import { removePasskey, type PasskeyPage } from '@/server/actions/passkeys'
  * the device, which is the entire point of the mechanism.
  */
 export function PasskeyList({ initial }: { initial: PasskeyPage }) {
+  const t = useTranslations('settings.passkeys')
+  const tAuth = useTranslations('auth.login')
+  const format = useFormatter()
   const [passkeys, setPasskeys] = useState(initial.passkeys)
   const [nickname, setNickname] = useState('')
   const [error, setError] = useState<string | null>(null)
@@ -26,7 +30,7 @@ export function PasskeyList({ initial }: { initial: PasskeyPage }) {
     setPending(true)
     try {
       const options = await fetch('/api/auth/passkey/register').then((r) => r.json())
-      if (options.error) throw new Error(options.reason ?? 'Die Anfrage wurde abgelehnt.')
+      if (options.error) throw new Error(options.reason ?? t('requestRejected'))
 
       const attestation = await startRegistration({ optionsJSON: options })
 
@@ -36,7 +40,7 @@ export function PasskeyList({ initial }: { initial: PasskeyPage }) {
         body: JSON.stringify({ response: attestation, nickname }),
       }).then((r) => r.json())
 
-      if (!result.ok) throw new Error('Der Passkey konnte nicht bestätigt werden.')
+      if (!result.ok) throw new Error(t('notConfirmed'))
 
       setAdded(true)
       setNickname('')
@@ -45,7 +49,7 @@ export function PasskeyList({ initial }: { initial: PasskeyPage }) {
       // component would otherwise have to invent.
       window.location.reload()
     } catch (caught) {
-      const message = caught instanceof Error ? caught.message : 'Unbekannter Fehler'
+      const message = caught instanceof Error ? caught.message : tAuth('unknownError')
       // A cancelled prompt is a decision, not a failure worth shouting about.
       setError(/abort|cancel|NotAllowed/i.test(message) ? null : message)
     } finally {
@@ -69,9 +73,10 @@ export function PasskeyList({ initial }: { initial: PasskeyPage }) {
           role="alert"
           className="mb-4 rounded border border-[var(--border)] bg-[var(--warn-bg)] px-3 py-2 text-[14px] text-[var(--warn-fg)]"
         >
-          Diese Installation läuft auf <code>{initial.origin}</code>. Browser erlauben Passkeys nur
-          über HTTPS (oder auf <code>localhost</code>) — anlegen lässt sich hier keiner. Der
-          Anmeldelink per E-Mail bleibt der Weg hinein.
+          {t.rich('unavailable', {
+            origin: initial.origin,
+            code: (chunks) => <code>{chunks}</code>,
+          })}
         </p>
       )}
 
@@ -83,32 +88,34 @@ export function PasskeyList({ initial }: { initial: PasskeyPage }) {
               className="flex flex-wrap items-baseline gap-x-3 gap-y-1 px-4 py-3"
             >
               <span className="min-w-0 flex-1 truncate font-medium">
-                {passkey.nickname || 'Passkey'}
+                {passkey.nickname || t('fallbackName')}
               </span>
               {passkey.backedUp && (
                 <span className="shrink-0 rounded bg-[var(--surface-raised)] px-1.5 py-0.5 text-[13px] text-[var(--fg-muted)]">
-                  synchronisiert
+                  {t('synced')}
                 </span>
               )}
               <span className="shrink-0 text-[14px] text-[var(--fg-muted)]">
                 {passkey.lastUsedAt
-                  ? `zuletzt ${new Date(passkey.lastUsedAt).toLocaleDateString('de-DE')}`
-                  : 'noch nicht benutzt'}
+                  ? t('lastUsed', {
+                      date: format.dateTime(new Date(passkey.lastUsedAt), 'short'),
+                    })
+                  : t('neverUsed')}
               </span>
               <button
                 type="button"
                 onClick={() => remove(passkey.id)}
-                aria-label={`${passkey.nickname || 'Passkey'} entfernen`}
+                aria-label={t('removeLabel', { name: passkey.nickname || t('fallbackName') })}
                 className="shrink-0 rounded px-2 py-1 text-[14px] text-[var(--fg-muted)] hover:bg-[var(--surface-raised)]"
               >
-                Entfernen
+                {t('remove')}
               </button>
             </li>
           ))}
         </ul>
       ) : (
         <p className="mb-6 rounded border border-dashed border-[var(--border-strong)] px-4 py-6 text-center text-[15px] text-[var(--fg-muted)]">
-          Noch kein Passkey. Bis dahin führt jede Anmeldung über einen Link per E-Mail.
+          {t('none')}
         </p>
       )}
 
@@ -117,18 +124,18 @@ export function PasskeyList({ initial }: { initial: PasskeyPage }) {
           {error}
         </p>
       )}
-      {added && <p className="mb-3 text-[14px] text-[var(--fg-muted)]">Passkey angelegt.</p>}
+      {added && <p className="mb-3 text-[14px] text-[var(--fg-muted)]">{t('added')}</p>}
 
       <div className="flex flex-wrap items-end gap-3">
         <div className="min-w-[14rem] flex-1">
           <label htmlFor="passkey-name" className="text-[14px] font-medium">
-            Name (optional)
+            {t('nameLabel')}
           </label>
           <input
             id="passkey-name"
             value={nickname}
             onChange={(event) => setNickname(event.target.value)}
-            placeholder="MacBook, iPhone, YubiKey …"
+            placeholder={t('namePlaceholder')}
             className="mt-1 w-full rounded border border-[var(--border)] bg-[var(--surface)] px-3 py-2 text-[15px]"
           />
         </div>
@@ -138,7 +145,7 @@ export function PasskeyList({ initial }: { initial: PasskeyPage }) {
           disabled={pending || !initial.available}
           className="rounded bg-[var(--brand)] px-4 py-2 text-[15px] font-medium text-[var(--brand-fg)] hover:bg-[var(--brand-hover)] disabled:opacity-60"
         >
-          {pending ? 'Warte auf das Gerät …' : 'Passkey anlegen'}
+          {pending ? t('waiting') : t('enrol')}
         </button>
       </div>
     </>

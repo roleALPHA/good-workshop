@@ -263,7 +263,7 @@ describe('an MCP write', () => {
 
     await expect(
       editInRoom({ ...target(), authorization: `Bearer ${readOnly.token}` }, () => undefined),
-    ).rejects.toThrow(/nicht erreichbar/)
+    ).rejects.toThrow('collab.unavailable')
   })
 })
 

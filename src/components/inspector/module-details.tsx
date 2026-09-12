@@ -1,9 +1,11 @@
 'use client'
 
 import { useEffect, useMemo, useState } from 'react'
+import { useTranslations } from 'next-intl'
 import type { ModuleDto, ModuleTypeDto } from '@/domain/agenda/types'
 import { isVisible, parseSchema } from '@/domain/moduleType/profile'
 import { validateModuleDesc, type FieldError } from '@/domain/moduleType/validate'
+import type { Translate } from '@/i18n/translator'
 import { Field } from './fields'
 
 /**
@@ -27,6 +29,7 @@ export type ModuleDetailsProps = {
 }
 
 export function ModuleDetails({ module: mod, type, onChange }: ModuleDetailsProps) {
+  const t = useTranslations('errors.field')
   const [values, setValues] = useState<Record<string, unknown>>(mod.desc)
   const [errors, setErrors] = useState<Record<string, string>>({})
 
@@ -82,7 +85,11 @@ export function ModuleDetails({ module: mod, type, onChange }: ModuleDetailsProp
     }
 
     if (!result.ok) {
-      setErrors(firstErrorPerField(result.errors))
+      // Cast to the loose shape: the key is chosen at runtime from
+      // FieldErrorKey, and next-intl's typed signature wants the union of every
+      // message's arguments at once. src/i18n/catalogs.test.ts is what checks
+      // these keys exist -- in all four languages, which the type cannot.
+      setErrors(firstErrorPerField(result.errors, t as unknown as Translate))
       return
     }
 
@@ -142,15 +149,13 @@ export function ModuleDetails({ module: mod, type, onChange }: ModuleDetailsProp
  * describes how to edit them.
  */
 function LegacyFields({ entries }: { entries: [string, unknown][] }) {
+  const t = useTranslations('agenda')
   return (
     <details className="mt-4 rounded border border-[var(--border)] bg-[var(--surface-raised)] p-3">
       <summary className="cursor-pointer text-[14px] font-medium">
-        Alte Felder ({entries.length})
+        {t('field.legacyHeading', { count: entries.length })}
       </summary>
-      <p className="mt-1 text-[13px] text-[var(--fg-muted)]">
-        Diese Angaben stammen aus einer früheren Fassung dieses Modultyps. Sie bleiben erhalten,
-        lassen sich aber nicht mehr bearbeiten.
-      </p>
+      <p className="mt-1 text-[13px] text-[var(--fg-muted)]">{t('field.legacyHint')}</p>
       <dl className="mt-2 space-y-1">
         {entries.map(([key, value]) => (
           <div key={key} className="text-[14px]">
@@ -165,9 +170,15 @@ function LegacyFields({ entries }: { entries: [string, unknown][] }) {
   )
 }
 
-/** One complaint per field: four messages about one input is noise. */
-function firstErrorPerField(errors: FieldError[]): Record<string, string> {
+/**
+ * One complaint per field: four messages about one input is noise.
+ *
+ * The validator hands back keys rather than sentences -- the same list also
+ * goes to a server action and to an MCP client, which need different languages
+ * -- so rendering happens here, where the person's own language is known.
+ */
+function firstErrorPerField(errors: FieldError[], t: Translate): Record<string, string> {
   const map: Record<string, string> = {}
-  for (const error of errors) map[error.path] ??= error.message
+  for (const error of errors) map[error.path] ??= t(error.messageKey, error.params)
   return map
 }

@@ -1,5 +1,6 @@
 import Ajv2020, { type ErrorObject, type ValidateFunction } from 'ajv/dist/2020'
 import addFormats from 'ajv-formats'
+import { DomainError } from '@/domain/errors'
 
 /**
  * The one place a module's `desc` is validated.
@@ -13,7 +14,52 @@ import addFormats from 'ajv-formats'
  * Ajv validates `json_desc` against the tenant's schema.
  */
 
-export type FieldError = { path: string; message: string; allowed?: unknown[] }
+/**
+ * A key and its arguments, never a sentence.
+ *
+ * These reach three audiences with three languages: the inspector renders them
+ * next to the field in the person's own language, a server action folds them
+ * into an ActionResult, and MCP shows them to a model in English. See
+ * src/domain/errors.ts for why the domain layer refuses to pick one.
+ */
+export const FIELD_ERROR_KEYS = [
+  'desc.notObject',
+  'field.enum',
+  'field.required',
+  'field.unexpected',
+  'field.type',
+  'field.invalid',
+  'schema.broken',
+  'schema.notObject',
+  'schema.tooLarge',
+  'schema.tooDeep',
+  'schema.uncompilable',
+  'schema.patternForbidden',
+  'schema.keywordForbidden',
+] as const
+
+export type FieldErrorKey = (typeof FIELD_ERROR_KEYS)[number]
+
+export type FieldError = {
+  path: string
+  messageKey: FieldErrorKey
+  params?: Record<string, string | number>
+  allowed?: unknown[]
+}
+
+/**
+ * A failed `desc` validation, as something throwable.
+ *
+ * Carries the field errors rather than a rendered sentence: the boundary that
+ * catches it knows which language to render them in, and the same list is shown
+ * inline in the inspector, folded into a server action's result, and handed to
+ * a model in English.
+ */
+export class ModuleDescError extends DomainError {
+  constructor(readonly issues: FieldError[]) {
+    super('workshop.descInvalid', { count: issues.length })
+  }
+}
 
 export type ValidationResult =
   { ok: true; value: Record<string, unknown> } | { ok: false; errors: FieldError[] }
@@ -50,7 +96,7 @@ export function validateModuleDesc(
   desc: unknown,
 ): ValidationResult {
   if (typeof desc !== 'object' || desc === null || Array.isArray(desc)) {
-    return { ok: false, errors: [{ path: '', message: 'desc muss ein Objekt sein.' }] }
+    return { ok: false, errors: [{ path: '', messageKey: 'desc.notObject' }] }
   }
 
   // Ajv mutates the input when filling defaults; a copy keeps the caller's
@@ -64,10 +110,7 @@ export function validateModuleDesc(
     // A schema that will not compile is a broken module type, not a broken
     // module. Refusing every write against it would be worse than accepting
     // the document unvalidated and flagging the type.
-    return {
-      ok: false,
-      errors: [{ path: '', message: 'Das Schema dieses Modultyps ist ungültig.' }],
-    }
+    return { ok: false, errors: [{ path: '', messageKey: 'schema.broken' }] }
   }
 
   if (validate(value)) return { ok: true, value }
@@ -86,23 +129,26 @@ function toFieldError(error: ErrorObject): FieldError {
   const path = error.instancePath.replace(/^\//, '').replaceAll('/', '.')
 
   switch (error.keyword) {
-    case 'enum':
+    case 'enum': {
+      const allowed = error.params.allowedValues as unknown[]
       return {
         path,
-        message: `muss einer dieser Werte sein: ${(error.params.allowedValues as unknown[]).join(', ')}`,
-        allowed: error.params.allowedValues as unknown[],
+        messageKey: 'field.enum',
+        params: { allowed: allowed.join(', ') },
+        allowed,
       }
+    }
     case 'required':
-      return { path: String(error.params.missingProperty), message: 'ist erforderlich' }
+      return { path: String(error.params.missingProperty), messageKey: 'field.required' }
     case 'additionalProperties':
-      return {
-        path: String(error.params.additionalProperty),
-        message: 'ist in diesem Modultyp nicht vorgesehen',
-      }
+      return { path: String(error.params.additionalProperty), messageKey: 'field.unexpected' }
     case 'type':
-      return { path, message: `muss vom Typ ${String(error.params.type)} sein` }
+      return { path, messageKey: 'field.type', params: { type: String(error.params.type) } }
     default:
-      return { path, message: error.message ?? 'ist ungültig' }
+      // Ajv's own `message` is English prose. Leaking it into a German or
+      // Spanish interface is what used to happen here; naming the keyword
+      // instead keeps the detail without the language.
+      return { path, messageKey: 'field.invalid', params: { keyword: error.keyword } }
   }
 }
 
@@ -153,12 +199,12 @@ export function validateSchemaDefinition(schema: unknown): ValidationResult {
   const errors: FieldError[] = []
 
   if (typeof schema !== 'object' || schema === null) {
-    return { ok: false, errors: [{ path: '', message: 'Das Schema muss ein Objekt sein.' }] }
+    return { ok: false, errors: [{ path: '', messageKey: 'schema.notObject' }] }
   }
 
   const serialised = JSON.stringify(schema)
   if (serialised.length > MAX_SCHEMA_BYTES) {
-    errors.push({ path: '', message: `Das Schema ist zu groß (max. ${MAX_SCHEMA_BYTES} Bytes).` })
+    errors.push({ path: '', messageKey: 'schema.tooLarge', params: { max: MAX_SCHEMA_BYTES } })
   }
 
   walk(schema, '', 0, errors)
@@ -169,7 +215,11 @@ export function validateSchemaDefinition(schema: unknown): ValidationResult {
     } catch (error) {
       errors.push({
         path: '',
-        message: error instanceof Error ? error.message : 'Das Schema lässt sich nicht übersetzen.',
+        messageKey: 'schema.uncompilable',
+        // Ajv's reason, verbatim and in English. It names a keyword and a
+        // pointer, which is what a schema author needs; paraphrasing it in four
+        // languages would lose exactly that.
+        params: { reason: error instanceof Error ? error.message : '' },
       })
     }
   }
@@ -194,7 +244,7 @@ function walk(
   keysAreNames = false,
 ): void {
   if (depth > MAX_DEPTH) {
-    errors.push({ path, message: `Zu tief verschachtelt (max. ${MAX_DEPTH} Ebenen).` })
+    errors.push({ path, messageKey: 'schema.tooDeep', params: { max: MAX_DEPTH } })
     return
   }
   if (Array.isArray(node)) {
@@ -217,11 +267,7 @@ function walk(
     if (key.startsWith('x-')) continue
 
     if (key === 'pattern') {
-      errors.push({
-        path: childPath,
-        message:
-          'pattern ist nicht erlaubt: ein selbst geschriebener regulärer Ausdruck kann den Server blockieren. Nutze stattdessen format oder enum.',
-      })
+      errors.push({ path: childPath, messageKey: 'schema.patternForbidden' })
       continue
     }
     if (
@@ -230,11 +276,11 @@ function walk(
       key === '$id' ||
       key === 'unevaluatedProperties'
     ) {
-      errors.push({ path: childPath, message: `${key} ist nicht erlaubt.` })
+      errors.push({ path: childPath, messageKey: 'schema.keywordForbidden', params: { key } })
       continue
     }
     if (!ALLOWED_KEYWORDS.has(key)) {
-      errors.push({ path: childPath, message: `Das Schlüsselwort "${key}" ist nicht erlaubt.` })
+      errors.push({ path: childPath, messageKey: 'schema.keywordForbidden', params: { key } })
       continue
     }
 

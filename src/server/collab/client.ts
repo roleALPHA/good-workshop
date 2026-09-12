@@ -4,6 +4,7 @@ import * as decoding from 'lib0/decoding'
 import * as encoding from 'lib0/encoding'
 import * as syncProtocol from 'y-protocols/sync'
 import { Awareness, encodeAwarenessUpdate, removeAwarenessStates } from 'y-protocols/awareness'
+import { DomainError } from '@/domain/errors'
 
 /**
  * Joining a room from the server side.
@@ -25,13 +26,25 @@ const MESSAGE_CONTROL = 2
 
 const SYNC_STEP_2 = 1
 
-export class CollabUnavailableError extends Error {
-  constructor(detail: string) {
-    super(
-      `Der Kollaborationsdienst ist nicht erreichbar (${detail}). ` +
-        'Ohne ihn kann nicht geschrieben werden, weil sonst zwei Schreibwege auf denselben Tag zeigen.',
-    )
-    this.name = 'CollabUnavailableError'
+/**
+ * The collaboration service is not answering.
+ *
+ * A DomainError, so it reaches the caller as itself rather than as "the call
+ * failed" -- docs/architecture.md promises exactly that ("the call fails with a
+ * named error"), and until DomainError set `expose` the promise was not kept.
+ *
+ * `detail` stays on the instance and out of the message. It names the host and
+ * port that could not be reached, which is precisely what publicToolError
+ * exists to keep out of a client's hands -- a personal access token is a
+ * credential somebody hands to a third-party LLM client.
+ */
+export class CollabUnavailableError extends DomainError {
+  constructor(readonly detail: string) {
+    super('collab.unavailable')
+    // Logged here rather than at the boundary: an exposed domain error skips
+    // publicToolError's console.error, and the host and port that could not be
+    // reached are the only thing that makes this diagnosable.
+    console.error('collab: unreachable', { detail })
   }
 }
 
@@ -109,7 +122,7 @@ export async function editInRoom<T>(
       // always a token without workshops:write, and worth saying so.
       rejectClosed(new CollabUnavailableError(`HTTP ${response.statusCode}`)),
     )
-    socket.on('close', () => rejectClosed(new CollabUnavailableError('Verbindung beendet')))
+    socket.on('close', () => rejectClosed(new CollabUnavailableError('connection closed')))
   })
   // Nothing awaits `closed` on its own; without this Node reports the
   // rejection as unhandled the moment the socket is closed normally.
@@ -200,7 +213,7 @@ async function withDeadline<T>(ms: number, run: () => Promise<T>): Promise<T> {
   let timer: NodeJS.Timeout | undefined
   const expired = new Promise<never>((_, rejectExpired) => {
     timer = setTimeout(
-      () => rejectExpired(new CollabUnavailableError(`keine Antwort nach ${ms} ms`)),
+      () => rejectExpired(new CollabUnavailableError(`no answer after ${ms} ms`)),
       ms,
     )
   })

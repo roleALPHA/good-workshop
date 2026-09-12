@@ -5,6 +5,7 @@ import { cn } from '@/lib/cn'
 import { RichText } from '@/lib/richtext/render'
 import { fromPlainText, isPlainParagraphs, toPlainText } from '@/lib/richtext/plain'
 import { isRichTextValue, type RichTextValue } from '@/lib/richtext/schema'
+import { useTranslations } from 'next-intl'
 
 /**
  * One widget per supported type, and nothing more.
@@ -26,6 +27,7 @@ const inputClass =
   'w-full rounded border border-[var(--border-strong)] bg-[var(--surface)] px-2.5 py-1.5 text-[16px] focus-visible:border-[var(--brand-ring)]'
 
 export function Field({ field, value, error, onChange }: FieldProps) {
+  const t = useTranslations('agenda')
   const id = `field-${field.key}`
 
   return (
@@ -38,7 +40,9 @@ export function Field({ field, value, error, onChange }: FieldProps) {
           </span>
         )}
         {field.private && (
-          <span className="ml-2 text-[12px] font-normal text-[var(--fg-subtle)]">nur für dich</span>
+          <span className="ml-2 text-[12px] font-normal text-[var(--fg-subtle)]">
+            {t('field.privateNote')}
+          </span>
         )}
       </label>
 
@@ -64,6 +68,7 @@ function Widget({
   onChange,
   invalid,
 }: FieldProps & { id: string; invalid: boolean }) {
+  const t = useTranslations('agenda')
   const klass = cn(inputClass, invalid && 'border-[var(--danger-fg)]')
 
   switch (field.widget) {
@@ -117,7 +122,7 @@ function Widget({
           value={typeof value === 'string' ? value : ''}
           onChange={(e) => onChange(e.target.value || undefined)}
         >
-          <option value="">— keine Angabe —</option>
+          <option value="">{t('field.unset')}</option>
           {field.options?.map((option) => (
             <option key={option.value} value={option.value}>
               {option.label}
@@ -176,16 +181,14 @@ function RichTextField({
   onChange: (value: unknown) => void
   className: string
 }) {
+  const t = useTranslations('agenda')
   const rich: RichTextValue | null = isRichTextValue(value) ? value : null
 
   if (rich && !isPlainParagraphs(rich)) {
     return (
       <div className="rounded border border-[var(--border)] bg-[var(--surface-raised)] p-2.5">
         <RichText value={rich} className="text-[15px]" />
-        <p className="mt-2 text-[13px] text-[var(--fg-muted)]">
-          Enthält Formatierung. Bearbeiten kommt mit dem Text-Editor — bis dahin bleibt der Inhalt
-          hier unangetastet.
-        </p>
+        <p className="mt-2 text-[13px] text-[var(--fg-muted)]">{t('field.richTextReadOnly')}</p>
       </div>
     )
   }
@@ -213,6 +216,7 @@ function TagsField({
   onChange: (value: unknown) => void
   className: string
 }) {
+  const t = useTranslations('agenda')
   const items = Array.isArray(value) ? value.filter((v): v is string => typeof v === 'string') : []
 
   return (
@@ -221,7 +225,7 @@ function TagsField({
         id={id}
         type="text"
         className={className}
-        placeholder="Mit Komma trennen"
+        placeholder={t('field.commaSeparated')}
         defaultValue={items.join(', ')}
         onBlur={(e) => {
           const next = e.target.value

@@ -15,7 +15,7 @@ const baseURL = `http://localhost:${PORT}`
  * tested; what E2E adds is proof that the whole pipeline survives a real
  * browser -- server render, CSS tokens, responsive collapse, accessibility tree.
  *
- * See docs/konventionen-tests.md for the flow list.
+ * See docs/testing-conventions.md for the flow list.
  */
 export default defineConfig({
   testDir: './e2e',
@@ -31,6 +31,24 @@ export default defineConfig({
 
   use: {
     baseURL,
+    /**
+     * Pinned, and this is load-bearing rather than tidy.
+     *
+     * The application resolves its language from Accept-Language when there is
+     * no session and no cookie. Playwright sends the host's locale, which in a
+     * CI container is en-US -- so without this line the suite would render in
+     * English and every German accessible name in e2e/ would stop matching at
+     * once, with a failure that looks like broken markup rather than a language
+     * switch. German is the source text; the suite asserts against it.
+     *
+     * English is covered deliberately, by e2e/locale.spec.ts, which sets its
+     * own locale rather than relying on the environment.
+     *
+     * `locale` and not an explicit Accept-Language header: Playwright derives
+     * the header from this, and a header set here would override -- silently --
+     * the locale that project sets for itself.
+     */
+    locale: 'de-DE',
     // Only on a retry: traces and video on every run turn a fast suite into a
     // slow one and bury the interesting artefact among hundreds of boring ones.
     trace: 'on-first-retry',
@@ -49,6 +67,20 @@ export default defineConfig({
       testMatch: /(entry|setup)\.spec\.ts/,
     },
     { name: 'mobile', use: { ...devices['Pixel 5'] }, testMatch: /(entry|setup)\.spec\.ts/ },
+
+    /**
+     * The one project that is deliberately NOT German.
+     *
+     * Everything else pins de-DE so the suite keeps asserting the source text.
+     * This one sets its own locale and no cookie, which is the only way to
+     * exercise the Accept-Language leg of the resolution -- the leg a signed-out
+     * first-time visitor actually arrives on.
+     */
+    {
+      name: 'locale',
+      testMatch: /locale\.spec\.ts/,
+      use: { ...devices['Desktop Chrome'], locale: 'en-US' },
+    },
 
     // Everything past the login needs a database, so the authenticated tests
     // are skipped where there is none rather than failing confusingly.

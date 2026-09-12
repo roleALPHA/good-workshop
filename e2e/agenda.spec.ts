@@ -133,7 +133,7 @@ test.describe('inline editing in the day view', () => {
     // The summary used to be rendered from the server's copy of the day and
     // never updated, so after the first edit it announced totals for an agenda
     // nobody could see -- most starkly on a fresh workshop, where it said
-    // "0 Blöcke" above three of them.
+    // "0 Blöcke" above three of them -- German, because the suite is pinned to it.
     const summary = page.getByRole('main')
     const before = (await summary.textContent()) ?? ''
     const total = /·\s([0-9hm ]+)\sInhalt/.exec(before)?.[1]?.trim()

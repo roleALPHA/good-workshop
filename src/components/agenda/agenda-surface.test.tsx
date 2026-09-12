@@ -1,4 +1,5 @@
-import { render, screen, within } from '@testing-library/react'
+import { screen, within } from '@testing-library/react'
+import { renderWithIntl as render } from '@/test/intl'
 import { describe, expect, it, vi } from 'vitest'
 import { createDemoDay } from '@/features/agenda/fixtures/day-fixture'
 import { AgendaSurface } from './agenda-surface'

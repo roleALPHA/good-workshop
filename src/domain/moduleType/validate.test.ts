@@ -30,7 +30,10 @@ describe('validateModuleDesc', () => {
     if (result.ok) return
     expect(result.errors[0]!.path).toBe('format')
     expect(result.errors[0]!.allowed).toContain('round')
-    expect(result.errors[0]!.message).toMatch(/round/)
+    // The key and its argument, not a sentence: the language is chosen at the
+    // boundary that renders it. See src/domain/errors.ts.
+    expect(result.errors[0]!.messageKey).toBe('field.enum')
+    expect(String(result.errors[0]!.params?.allowed)).toMatch(/round/)
   })
 
   it('rejects a field the type does not declare', () => {
@@ -42,7 +45,10 @@ describe('validateModuleDesc', () => {
   it('rejects a wrong type with the expected type named', () => {
     const result = validateModuleDesc(typeFor('group_work'), { group_size: 'vier' })
     expect(result.ok).toBe(false)
-    if (!result.ok) expect(result.errors[0]!.message).toMatch(/integer/)
+    if (!result.ok) {
+      expect(result.errors[0]!.messageKey).toBe('field.type')
+      expect(result.errors[0]!.params?.type).toBe('integer')
+    }
   })
 
   it('enforces numeric bounds', () => {
@@ -94,7 +100,7 @@ describe('validateSchemaDefinition', () => {
     // cover the realistic cases; this will look over-strict until the first hang.
     const result = validateSchemaDefinition(wrap({ code: { type: 'string', pattern: '^(a+)+$' } }))
     expect(result.ok).toBe(false)
-    if (!result.ok) expect(result.errors[0]!.message).toMatch(/pattern/)
+    if (!result.ok) expect(result.errors[0]!.messageKey).toBe('schema.patternForbidden')
   })
 
   it.each(['$ref', '$dynamicRef', '$id', 'unevaluatedProperties'])('rejects %s', (keyword) => {
@@ -105,7 +111,10 @@ describe('validateSchemaDefinition', () => {
   it('rejects an unknown keyword', () => {
     const result = validateSchemaDefinition(wrap({ x: { type: 'string', erfunden: 1 } }))
     expect(result.ok).toBe(false)
-    if (!result.ok) expect(result.errors[0]!.message).toMatch(/erfunden/)
+    if (!result.ok) {
+      expect(result.errors[0]!.messageKey).toBe('schema.keywordForbidden')
+      expect(result.errors[0]!.params?.key).toBe('erfunden')
+    }
   })
 
   it('allows property names that happen to look like keywords', () => {

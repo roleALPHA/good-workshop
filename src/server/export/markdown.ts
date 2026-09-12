@@ -4,6 +4,10 @@ import { formatDuration, formatTime } from '@/features/agenda/duration'
 import { flattenDay, toScheduleItems } from '@/features/agenda/flatten'
 import { richTextToMarkdown } from '@/lib/richtext/markdown'
 import { isRichTextValue } from '@/lib/richtext/schema'
+import { DEFAULT_LOCALE, type Locale } from '@/i18n/config'
+import { parseSchema } from '@/domain/moduleType/profile'
+import type { ModuleTypeDto } from '@/domain/agenda/types'
+import { translator } from '@/i18n/translator'
 
 /**
  * The Markdown exporter.
@@ -20,6 +24,14 @@ import { isRichTextValue } from '@/lib/richtext/schema'
  */
 
 export type ExportOptions = {
+  /**
+   * The language the file is written in.
+   *
+   * A parameter rather than something read from the request: an export is
+   * often handed to somebody other than the person producing it, and the MCP
+   * tool that returns Markdown has no viewer at all.
+   */
+  locale?: Locale
   flavor?: 'agenda' | 'outline'
   includeDescriptions?: boolean
   includeFacilitatorNotes?: boolean
@@ -35,6 +47,7 @@ export type WorkshopMeta = {
 }
 
 const DEFAULTS: Required<ExportOptions> = {
+  locale: DEFAULT_LOCALE,
   flavor: 'agenda',
   includeDescriptions: true,
   // Off by default: notes are explicitly the facilitator's own, and the common
@@ -75,14 +88,14 @@ export function renderDayMarkdown(
   const summary = [
     day.title || null,
     day.date,
-    `${formatTime(schedule.dayStartMinute)}–${formatTime(schedule.dayEndMinute)}`,
-    contentSplit(day),
+    `${formatTime(schedule.dayStartMinute, opts.locale)}–${formatTime(schedule.dayEndMinute, opts.locale)}`,
+    contentSplit(day, opts.locale),
   ].filter(Boolean)
   out.push(`> ${summary.join(' · ')}`)
 
   out.push(
     opts.flavor === 'agenda'
-      ? renderTable(day, rows, schedule)
+      ? renderTable(day, rows, schedule, opts)
       : renderOutline(day, rows, schedule, opts),
   )
 
@@ -105,8 +118,13 @@ function renderTable(
   day: DayDoc,
   rows: ReturnType<typeof flattenDay>,
   schedule: ReturnType<typeof computeSchedule>,
+  opts: Required<ExportOptions>,
 ): string {
-  const lines = ['| Zeit | Dauer | Block | Info |', '| --- | --- | --- | --- |']
+  const t = translator(opts.locale, 'export')
+  const lines = [
+    `| ${t('columns.time')} | ${t('columns.duration')} | ${t('columns.block')} | ${t('columns.info')} |`,
+    '| --- | --- | --- | --- |',
+  ]
 
   for (const row of rows) {
     const entry = schedule.entries.get(row.id)
@@ -114,7 +132,7 @@ function renderTable(
 
     if (row.kind === 'cluster') {
       lines.push(
-        `| ${formatTime(entry.startMinute)} | ${formatDuration(entry.durationMinutes)} | **${cell(row.cluster.title)}** | ${row.childCount} Blöcke |`,
+        `| ${formatTime(entry.startMinute, opts.locale)} | ${formatDuration(entry.durationMinutes)} | **${cell(row.cluster.title)}** | ${t('blockCount', { count: row.childCount })} |`,
       )
       continue
     }
@@ -122,12 +140,12 @@ function renderTable(
 
     const type = day.moduleTypes[row.module.moduleTypeId]
     const title = row.depth === 1 ? `↳ ${cell(row.module.title)}` : cell(row.module.title)
-    const info = [type?.name, entry.conflict?.kind === 'overlap' ? '⚠ Überschneidung' : null]
+    const info = [type?.name, entry.conflict?.kind === 'overlap' ? t('overlap') : null]
       .filter(Boolean)
       .join(' · ')
 
     lines.push(
-      `| ${formatTime(entry.startMinute)}${entry.pinned ? ' 🔒' : ''} | ${formatDuration(entry.durationMinutes)} | ${title} | ${cell(info)} |`,
+      `| ${formatTime(entry.startMinute, opts.locale)}${entry.pinned ? ' 🔒' : ''} | ${formatDuration(entry.durationMinutes)} | ${title} | ${cell(info)} |`,
     )
   }
 
@@ -150,7 +168,7 @@ function renderOutline(
       lines.push(
         '',
         `## ${text(row.cluster.title)}`,
-        `*${formatTime(entry.startMinute)} · ${formatDuration(entry.durationMinutes, { spaced: true })}*`,
+        `*${formatTime(entry.startMinute, opts.locale)} · ${formatDuration(entry.durationMinutes, { spaced: true })}*`,
       )
       continue
     }
@@ -159,10 +177,10 @@ function renderOutline(
     const type = day.moduleTypes[row.module.moduleTypeId]
     lines.push(
       '',
-      `### ${formatTime(entry.startMinute)}${entry.pinned ? ' 🔒' : ''} · ${text(row.module.title)}`,
+      `### ${formatTime(entry.startMinute, opts.locale)}${entry.pinned ? ' 🔒' : ''} · ${text(row.module.title)}`,
       `\`${formatDuration(entry.durationMinutes)}\`${type ? ` · ${type.name}` : ''}`,
     )
-    lines.push(...describeModule(row.module.desc, opts))
+    lines.push(...describeModule(row.module.desc, type, opts))
   }
 
   return lines.join('\n')
@@ -178,29 +196,59 @@ function renderDetails(
 
   for (const row of rows) {
     if (row.kind !== 'module') continue
-    const body = describeModule(row.module.desc, opts)
+    const body = describeModule(row.module.desc, day.moduleTypes[row.module.moduleTypeId], opts)
     if (body.length === 0) continue
 
     const entry = schedule.entries.get(row.id)
     lines.push(
       '',
-      `### ${entry ? formatTime(entry.startMinute) + ' · ' : ''}${text(row.module.title)}`,
+      `### ${entry ? formatTime(entry.startMinute, opts.locale) + ' · ' : ''}${text(row.module.title)}`,
       ...body,
     )
   }
 
-  return lines.length > 0 ? ['## Details', ...lines].join('\n') : ''
+  return lines.length > 0
+    ? [`## ${translator(opts.locale, 'export')('details')}`, ...lines].join('\n')
+    : ''
 }
 
 /**
- * Renders a module's `desc` without knowing anything about its type.
+ * Renders a module's `desc`, labelling its fields from the type's own schema.
  *
  * Rich text becomes Markdown, arrays become comma lists, scalars become a
- * labelled line. Everything else is skipped. A tenant-defined type therefore
- * exports sensibly with zero code.
+ * labelled line. Everything else is skipped.
+ *
+ * The labels used to be a table in this file, next to a second table for enum
+ * values. The comment there said they belonged in the schema and named the
+ * blocker: "DayDoc carries module types without their JSON Schema". That has
+ * not been true for a while -- ModuleTypeDto.jsonSchema is declared in
+ * domain/agenda/types.ts and filled in loadDay -- and the two tables had
+ * quietly disagreed with the inspector in the meantime.
+ *
+ * So both are gone, and this reads the same FieldSpec[] the inspector renders.
+ * Which also means a TENANT-DEFINED type exports with its real labels for the
+ * first time, rather than with `key.replaceAll('_', ' ')` -- something this
+ * function's own docstring already claimed.
  */
-function describeModule(desc: Record<string, unknown>, opts: Required<ExportOptions>): string[] {
+function describeModule(
+  desc: Record<string, unknown>,
+  type: ModuleTypeDto | undefined,
+  opts: Required<ExportOptions>,
+): string[] {
+  const t = translator(opts.locale, 'export')
   const lines: string[] = []
+  const fields = new Map(
+    parseSchema(type?.jsonSchema)
+      .flatMap((group) => group.fields)
+      .map((field) => [field.key, field]),
+  )
+
+  /** The schema's title, or the key made readable -- never a raw key. */
+  const label = (key: string) => fields.get(key)?.label ?? key.replaceAll('_', ' ')
+
+  /** An export handed to participants must not read "Sozialform: plenary". */
+  const value = (key: string, raw: string) =>
+    fields.get(key)?.options?.find((option) => option.value === raw)?.label ?? raw
 
   const push = (key: string, raw: unknown) => {
     if (key === 'facilitator_notes' && !opts.includeFacilitatorNotes) return
@@ -217,18 +265,20 @@ function describeModule(desc: Record<string, unknown>, opts: Required<ExportOpti
       return
     }
     if (Array.isArray(raw) && raw.length > 0) {
-      const items = raw.filter((v): v is string => typeof v === 'string').map(value)
+      const items = raw
+        .filter((v): v is string => typeof v === 'string')
+        .map((item) => value(key, item))
       if (items.length > 0) lines.push('', `**${label(key)}:** ${items.join(', ')}`)
       return
     }
     if (typeof raw === 'string' && raw.trim() !== '') {
-      lines.push('', `**${label(key)}:** ${value(raw)}`)
+      lines.push('', `**${label(key)}:** ${value(key, raw)}`)
       return
     }
     if (typeof raw === 'number') {
       lines.push('', `**${label(key)}:** ${raw}`)
     } else if (typeof raw === 'boolean') {
-      lines.push('', `**${label(key)}:** ${raw ? 'ja' : 'nein'}`)
+      lines.push('', `**${label(key)}:** ${raw ? t('yes') : t('no')}`)
     }
   }
 
@@ -241,63 +291,6 @@ function describeModule(desc: Record<string, unknown>, opts: Required<ExportOpti
 
   return lines.filter((line, index, all) => !(line === '' && all[index - 1] === ''))
 }
-
-const LABELS: Record<string, string> = {
-  facilitator_notes: 'Moderationsnotizen',
-  materials: 'Material',
-  participation: 'Sozialform',
-  group_size: 'Gruppengröße',
-  number_of_groups: 'Anzahl Gruppen',
-  deliverable: 'Ergebnis',
-  room_setup: 'Raumaufbau',
-  catering_note: 'Verpflegung',
-  method: 'Verfahren',
-  options: 'Optionen',
-  prompt: 'Impulsfrage',
-  question: 'Leitfrage',
-  task: 'Arbeitsauftrag',
-  instructions: 'Anleitung',
-  debrief: 'Auswertung',
-  activity: 'Aktivität',
-  presenter: 'Vortragende:r',
-  key_points: 'Kernaussagen',
-  format: 'Format',
-}
-
-const label = (key: string) => LABELS[key] ?? key.replaceAll('_', ' ')
-
-/**
- * Enum values are machine keys; an export handed to participants must not read
- * "Sozialform: plenary".
- *
- * A lookup table here rather than in the schema, for now: `DayDoc` carries
- * module types without their JSON Schema, and widening that shape to serve the
- * exporter would push schema plumbing into the editor's hot path. When
- * tenant-defined enums arrive this moves into `x-gw.enumLabels` and is read
- * from the type -- the fallback below already makes an unknown value render as
- * itself rather than disappear.
- */
-const VALUE_LABELS: Record<string, string> = {
-  plenary: 'Plenum',
-  small_groups: 'Kleingruppen',
-  pairs: 'Paare',
-  individual: 'Einzelarbeit',
-  none: 'keine',
-  round: 'Reihum',
-  popcorn: 'Popcorn',
-  written: 'Schriftlich',
-  temperature: 'Stimmungsbild',
-  dot_voting: 'Punktabfrage',
-  fist_of_five: 'Fist of Five',
-  consent: 'Konsent',
-  majority: 'Mehrheit',
-  seated: 'Im Sitzen',
-  standing: 'Im Stehen',
-  room: 'Ganzer Raum',
-  outdoor: 'Draußen',
-}
-
-const value = (raw: string) => VALUE_LABELS[raw] ?? raw
 
 /**
  * User text on its way into the document.
@@ -324,7 +317,7 @@ const cell = (value: string) => text(value).replaceAll('|', '\\|').replaceAll('\
 
 const yaml = (value: string) => JSON.stringify(value)
 
-function contentSplit(day: DayDoc): string {
+function contentSplit(day: DayDoc, locale: Locale): string {
   let content = 0
   let breaks = 0
   for (const mod of day.modules) {
@@ -332,5 +325,8 @@ function contentSplit(day: DayDoc): string {
     if (type?.countsAsContent === false) breaks += mod.durationMinutes
     else content += mod.durationMinutes
   }
-  return `${formatDuration(content, { spaced: true })} Inhalt, ${formatDuration(breaks, { spaced: true })} Pausen`
+  return translator(locale, 'export')('split', {
+    content: formatDuration(content, { spaced: true }),
+    breaks: formatDuration(breaks, { spaced: true }),
+  })
 }

@@ -1,0 +1,450 @@
+{
+  "admin": {
+    "branding": {
+      "title": "Branding",
+      "intro": "The logo and accent colour of this installation. The footer stays as it is.",
+      "logo": "Logo",
+      "logoHint": "SVG, PNG or WebP, at most {max, number} KB. Appears in the header and on the sign-in page.",
+      "logoTooLarge": "At most {max, number} KB.",
+      "currentLogo": "Current logo",
+      "logoFile": "Logo file",
+      "replaceLogo": "Replace the logo",
+      "uploadLogo": "Upload a logo",
+      "removeLogo": "Remove",
+      "accent": "Accent colour",
+      "accentHint": "One colour value. The server builds the light and dark steps from it and checks the contrast while doing so — a colour that would make the interface unreadable is refused. The block type colours are left alone: they mean something.",
+      "hex": "Hex value",
+      "brandName": "Name (when no logo is set)",
+      "saved": "Saved."
+    },
+    "members": {
+      "title": "Members",
+      "invite": "Invite a member",
+      "email": "E-mail address",
+      "emailPlaceholder": "colleague@example.com",
+      "role": "Role",
+      "roleOf": "Role of {email}",
+      "inviting": "Inviting …",
+      "inviteAction": "Invite",
+      "enable": "Allow again",
+      "disable": "Disable",
+      "alreadyMember": "{email} was already a member.",
+      "invited": "{email} has been invited.",
+      "linkOnItsWay": "The sign-in link is on its way.",
+      "noMailSetUp": "No mail delivery is configured. Pass this link on in person — whoever opens it is signed in as {email}."
+    },
+    "mail": {
+      "title": "Mail delivery",
+      "intro": "Sign-in links and invitations go this way. Without delivery, only somebody who already has a passkey can get in.",
+      "fromEnvironmentNotice": "Some values come from the server's environment and cannot be changed here. They are in the installation's <code>.env</code>.",
+      "fromEnvironment": "from the environment",
+      "transportLegend": "How should mail be sent?",
+      "transport": {
+        "graph": "Microsoft Graph",
+        "graphHint": "For Microsoft 365 without SMTP AUTH.",
+        "smtp": "SMTP",
+        "smtpHint": "A classic mail relay.",
+        "console": "Write to the server log",
+        "consoleHint": "No delivery. Sign-in links end up in the log — anybody who can read it can get into any account.",
+        "none": "No delivery",
+        "noneHint": "Sign-in links only exist through the command line."
+      },
+      "graphIntro": "You need an app registration in Entra ID with the <b>application permission</b> <code>Mail.Send</code> and admin consent.",
+      "graphTenantId": "Directory or tenant ID",
+      "graphClientId": "Application ID",
+      "graphClientSecret": "Client secret",
+      "graphSender": "Sender mailbox",
+      "smtpUrl": "SMTP URL",
+      "smtpUrlHint": "Something like smtps://user:password@relay.example.com:465",
+      "smtpFrom": "Sender address",
+      "secretStored": "stored — leave empty to keep it",
+      "saved": "Saved.",
+      "testTitle": "Send a test message",
+      "testIntro": "Whether a relay works shows when something is sent. Otherwise the first attempt is somebody's sign-in link — and a failure then looks like a broken account.",
+      "testTo": "To",
+      "testSend": "Send",
+      "testSent": "Sent to {email}. If nothing arrives: check the spam folder."
+    }
+  },
+  "agenda": {
+    "addBlock": "Add a block",
+    "addDayNote": "Add a note about the day",
+    "addTag": "Add a tag",
+    "blockCount": "{count, plural, one {# block} other {# blocks}}",
+    "breaks": "{duration} breaks",
+    "columns": {
+      "time": "Time",
+      "titleAndDescription": "Title and description",
+      "info": "Additional info"
+    },
+    "connecting": "Connecting …",
+    "content": "{duration} content",
+    "dayNote": "Note about the day",
+    "dayNotePlaceholder": "Room, directions, who brings what …",
+    "delete": "Delete",
+    "deleteHint": "Remove for good",
+    "deleteLabel": "Delete {title}",
+    "drag": {
+      "atDayLevel": "at day level",
+      "cancelled": "Move cancelled.",
+      "dropped": "{title} dropped {where}, position {position, number}.",
+      "droppedWithTime": "{title} dropped {where}, position {position, number}, new start time {time}.",
+      "inSection": "in section {title}",
+      "landed": "{title} lands {where}, position {position, number}.",
+      "landedWithTime": "{title} lands {where}, position {position, number}, new start time {time}.",
+      "picked": "{title} picked up."
+    },
+    "dragHandle": "Move {title}",
+    "end": "End",
+    "fewerFields": "Fewer",
+    "field": {
+      "commaSeparated": "Separate with commas",
+      "legacyHeading": "Old fields ({count, number})",
+      "legacyHint": "These values come from an earlier version of this block type. They are kept, but can no longer be edited.",
+      "privateNote": "only for you",
+      "richTextReadOnly": "Contains formatting. Editing comes with the text editor — until then the content here stays untouched.",
+      "unset": "— not set —"
+    },
+    "filterPlaceholder": "Type to filter …",
+    "moreFields": "More fields",
+    "noTypeMatches": "No block type matches that.",
+    "offline": "No connection. Your changes will be sent as soon as it is back.",
+    "overPlan": "{duration} over plan",
+    "overlap": "Overlaps the previous block by {duration}",
+    "park": "Park",
+    "parkHint": "Take it out of the schedule without deleting it",
+    "parkLabel": "Park {title}",
+    "parkedHeading": "Parked ({count, number})",
+    "parkedHint": "Belongs to the day, does not count towards the time.",
+    "presence": "Other people on this day",
+    "regionLabel": "Agenda {title}",
+    "removeTag": "Remove tag {name}",
+    "saving": "Saving …",
+    "searchType": "Search block types",
+    "tagPlaceholder": "+ tag",
+    "unpark": "Back into the schedule",
+    "unparkLabel": "Put {title} back into the schedule"
+  },
+  "auth": {
+    "login": {
+      "title": "Sign in to GoodWorkshop",
+      "intro": "No password. Either with a passkey or through a link by e-mail.",
+      "email": "E-mail address",
+      "send": "Send a sign-in link",
+      "passkeyButton": "Sign in with a passkey",
+      "passkeyUnavailable": "Passkeys need HTTPS and are not available on this address. The sign-in link by e-mail works.",
+      "passkeyFailed": "The passkey could not be confirmed.",
+      "unknownError": "Unknown error",
+      "sentTitle": "Check your inbox.",
+      "sentBody": "If there is an account for that address, a sign-in link is on its way. It is valid for {minutes, plural, one {one minute} other {# minutes}}.",
+      "linkExpired": "This link has expired or has already been used. Ask for a new one.",
+      "linkIncomplete": "The link was incomplete. Ask for a new one."
+    },
+    "setup": {
+      "title": "Set up GoodWorkshop",
+      "intro": "This installation has nobody who can administer it yet. Enter yourself as the first administrator — everything else, mail delivery included, happens in the interface afterwards.",
+      "email": "Your e-mail address",
+      "emailHint": "This is how you will sign in from now on. You invite other people in the interface afterwards.",
+      "key": "Setup key",
+      "keyHint": "It is in the server log:",
+      "submit": "Set up this installation",
+      "submitting": "One moment …",
+      "claimed": "The installation now belongs to {email}.",
+      "linkHere": "No mail delivery is configured yet, so the sign-in link is here. It works once and then expires.",
+      "linkSent": "The sign-in link is on its way. Check your inbox."
+    }
+  },
+  "common": {
+    "save": "Save",
+    "cancel": "Cancel",
+    "delete": "Delete",
+    "create": "Create",
+    "loading": "Loading …",
+    "loadMore": "Load more",
+    "saving": "Saving …",
+    "back": "Back"
+  },
+  "enums": {
+    "memberRole": {
+      "member": "Member",
+      "admin": "Admin"
+    },
+    "memberStatus": {
+      "invited": "Invited",
+      "active": "Active",
+      "disabled": "Disabled"
+    },
+    "tokenScope": {
+      "workshops:read": "Read workshops",
+      "workshops:write": "Write workshops",
+      "module_types:read": "Read block types",
+      "module_types:write": "Write block types",
+      "tenant:read": "Read the tenant"
+    },
+    "workshopAccess": {
+      "owner": "Owner",
+      "editor": "Edit",
+      "viewer": "Read",
+      "none": "No access"
+    },
+    "workshopStatus": {
+      "draft": "Draft",
+      "ready": "Ready",
+      "delivered": "Delivered",
+      "archived": "Archived"
+    }
+  },
+  "errors": {
+    "conflict": "Somebody else has changed this workshop in the meantime.",
+    "domain": {
+      "brand": {
+        "notHex": "Please give a colour as a hex value, e.g. #7c3aed.",
+        "grey": "Grey has no hue to build an accent colour from. Pick something with colour in it.",
+        "contrastOnBrand": "In {theme, select, light {light} dark {dark} other {}} mode this shade only reaches {ratio}:1 for text on the accent surface. 4.5:1 is required.",
+        "contrastSubtle": "In {theme, select, light {light} dark {dark} other {}} mode this shade only reaches {ratio}:1 for muted text on a muted surface. 4.5:1 is required.",
+        "checkNameAndColour": "Please check the name and the colour."
+      },
+      "collab": {
+        "unavailable": "The collaboration service is unreachable. Nothing can be written without it, because that would mean two write paths onto the same day."
+      },
+      "folder": {
+        "gone": "There is no such folder.",
+        "intoItself": "A folder cannot sit inside itself.",
+        "targetGone": "There is no such target folder.",
+        "intoOwnDescendant": "A folder cannot go into one of its own subfolders."
+      },
+      "logo": {
+        "unsupportedType": "SVG, PNG and WebP are allowed.",
+        "empty": "The file is empty.",
+        "tooLarge": "The logo may be at most {max, number} KB (this file: {actual, number} KB).",
+        "notSvg": "That does not look like an SVG file.",
+        "unsafeActive": "The SVG contains {what}. Export it without scripts and without interactivity — most programs call that “plain SVG”.",
+        "unsafeExternal": "The SVG points outwards via {what}. Export it with fonts and images embedded, without external references.",
+        "unsafeDoctype": "The SVG contains {what}. Export it without a DTD and without entities.",
+        "typeMismatch": "The file does not match the format it claims."
+      },
+      "mail": {
+        "noSmtpUrl": "Transport SMTP, but no SMTP URL is configured — neither in the environment nor in the settings.",
+        "transportNone": "Transport “no delivery”: no mail can be sent. Use `node scripts/cli.mjs login-link --email …` or pick a transport in the settings.",
+        "graphMissing": "Transport Microsoft Graph, but {field} is missing."
+      },
+      "member": {
+        "adminOnly": "Only tenant admins may manage members.",
+        "invalidEmail": "That is not a valid e-mail address.",
+        "gone": "There is no such member.",
+        "cannotDisableSelf": "You cannot disable yourself.",
+        "lastAdmin": "That is the last active admin. Make somebody else an admin first — otherwise nobody can reach the administration any more.",
+        "checkEmailAndRole": "Please check the e-mail address and the role."
+      },
+      "setup": {
+        "wrongKey": "That setup key is not correct.",
+        "invalidEmail": "That is not a valid e-mail address.",
+        "alreadyClaimed": "This installation already has an administrator.",
+        "identityFailed": "The identity could not be created."
+      },
+      "sharing": {
+        "memberGone": "There is no such member.",
+        "memberDisabled": "This member is disabled.",
+        "ownerHasAccess": "The owner already has full access."
+      },
+      "tags": {
+        "tooMany": "At most {max, number} tags per workshop.",
+        "tooLong": "A tag may be at most {max, number} characters long.",
+        "createFailed": "The tag “{name}” could not be created."
+      },
+      "token": {
+        "nameRequired": "Give the token a name — otherwise you will not know later what it was for.",
+        "nameTooLong": "The name may be at most {max, number} characters long.",
+        "unknownScopes": "Unknown scopes: {scopes}.",
+        "noScopes": "A token with no scopes can do nothing. Pick at least one.",
+        "gone": "This token no longer exists."
+      },
+      "workshop": {
+        "notFound": "Not found.",
+        "forbidden": "You do not have permission for that: {capability}",
+        "versionConflict": "The workshop has changed in the meantime (expected {expected}, found {actual}).",
+        "unknownModuleType": "There is no such block type.",
+        "unknownModuleTypeOptions": "Unknown block type “{key}”. Available: {available}",
+        "descInvalid": "Invalid values: {issues}"
+      }
+    },
+    "failed": "That did not work. Try again.",
+    "field": {
+      "desc": {
+        "notObject": "desc must be an object."
+      },
+      "field": {
+        "enum": "must be one of these values: {allowed}",
+        "required": "is required",
+        "unexpected": "is not part of this block type",
+        "type": "must be of type {type}",
+        "invalid": "is invalid ({keyword})"
+      },
+      "schema": {
+        "broken": "The schema of this block type is invalid.",
+        "notObject": "The schema must be an object.",
+        "tooLarge": "The schema is too large (max. {max, number} bytes).",
+        "tooDeep": "Nested too deeply (max. {max, number} levels).",
+        "uncompilable": "The schema cannot be compiled: {reason}",
+        "patternForbidden": "pattern is not allowed: a hand-written regular expression can block the server. Use format or enum instead.",
+        "keywordForbidden": "The keyword “{key}” is not allowed."
+      }
+    },
+    "forbidden": "You do not have permission for that.",
+    "invalidField": "Invalid input: {field}",
+    "invalid_input": "Invalid input.",
+    "mail": {
+      "invalidAddress": "Please give a valid address.",
+      "checkSettings": "These settings do not fit together."
+    },
+    "not_found": "Not found.",
+    "passkey": {
+      "unknown": "This passkey is unknown.",
+      "notYours": "This passkey does not belong to your account."
+    },
+    "setupFailed": "Setup failed. The details are in the log.",
+    "unauthenticated": "Please sign in."
+  },
+  "export": {
+    "columns": {
+      "time": "Time",
+      "duration": "Duration",
+      "block": "Block",
+      "info": "Info"
+    },
+    "blockCount": "{count, plural, one {# block} other {# blocks}}",
+    "overlap": "⚠ Overlap",
+    "details": "Details",
+    "split": "{content} content, {breaks} breaks",
+    "yes": "yes",
+    "no": "no"
+  },
+  "library": {
+    "allWorkshops": "All workshops",
+    "bin": {
+      "title": "Bin",
+      "back": "Back to the library",
+      "empty": "The bin is empty.",
+      "emptyHint": "What lands here stays until somebody removes it for good.",
+      "discardedOn": "discarded on {date}",
+      "restore": "Restore",
+      "purge": "Delete for good",
+      "purgeWarning": "This removes <b>{title}</b> with all its days and blocks. There is no way back.",
+      "purgeConfirmLabel": "Type the title to confirm:",
+      "purgeConfirm": "Delete irreversibly"
+    },
+    "creating": "Creating …",
+    "dayCount": "{count, plural, one {# day} other {# days}}",
+    "empty": "No workshop here yet.",
+    "emptyFiltered": "Nothing found.",
+    "emptyFilteredHint": "Another search, another folder or another tag.",
+    "emptyHint": "Create one — the first day comes with it.",
+    "folderName": "Folder name",
+    "folders": "Folders",
+    "hideFolders": "Hide folders",
+    "moveFolderHint": "Move into another folder",
+    "moveFolderLabel": "Move folder {name}",
+    "moveTo": "Move to",
+    "moveToTrash": "Move to the bin",
+    "moveToTrashLabel": "Move {title} to the bin",
+    "name": "Name",
+    "navLabel": "Folders and tags",
+    "newFolder": "Folder",
+    "newWorkshop": "New workshop",
+    "removeFolder": "Remove the folder — its contents move up one level",
+    "search": "Search",
+    "searchLabel": "Search workshops",
+    "showFolders": "Show folders",
+    "subfolderName": "Subfolder name",
+    "tags": "Tags",
+    "title": "Workshops",
+    "topLevel": "Top level",
+    "trash": "Bin",
+    "workshopTitle": "Workshop title",
+    "workshopTitleExample": "e.g. Strategy retreat"
+  },
+  "mail": {
+    "magicLink": {
+      "subject": "Your sign-in link for GoodWorkshop",
+      "body": "Hello,\n\nhere is your sign-in link:\n{link}\n\nIt is valid for {minutes, plural, one {one minute} other {# minutes}} and works once only.\n\nIf you did not ask for this, you can ignore this message —\nnothing happens without the link."
+    },
+    "test": {
+      "subject": "GoodWorkshop: test message",
+      "body": "This message confirms that mail delivery works.\n\nSign-in links and invitations now go the same way."
+    }
+  },
+  "meta": {
+    "description": "Open-source workshop planning. Self-hosted, MCP-ready.",
+    "printTitle": "Print view"
+  },
+  "nav": {
+    "branding": "Branding",
+    "members": "Members",
+    "mail": "Mail delivery",
+    "passkeys": "Passkeys",
+    "tokens": "Tokens",
+    "signOut": "Sign out",
+    "account": "Account"
+  },
+  "settings": {
+    "intro": "Your account: language, passkeys and access tokens.",
+    "language": {
+      "title": "Language",
+      "intro": "Applies to the interface, your exports and the e-mails you receive.",
+      "label": "Language",
+      "apply": "Apply"
+    },
+    "passkeys": {
+      "added": "Passkey created.",
+      "enrol": "Create a passkey",
+      "fallbackName": "Passkey",
+      "intro": "Sign in without a password, using a fingerprint, your face or a security key. The key itself never leaves your device.",
+      "lastUsed": "last used {date}",
+      "nameLabel": "Name (optional)",
+      "namePlaceholder": "MacBook, iPhone, YubiKey …",
+      "needsHttps": "Passkeys need HTTPS. This installation runs on {origin}.",
+      "neverUsed": "not used yet",
+      "none": "No passkey yet. Until there is, every sign-in goes through a link by e-mail.",
+      "notConfirmed": "The passkey could not be confirmed.",
+      "remove": "Remove",
+      "removeLabel": "Remove {name}",
+      "requestRejected": "The request was refused.",
+      "synced": "synced",
+      "title": "Passkeys",
+      "unavailable": "This installation runs on <code>{origin}</code>. Browsers only allow passkeys over HTTPS (or on <code>localhost</code>) — none can be created here. The sign-in link by e-mail remains the way in.",
+      "waiting": "Waiting for the device …"
+    },
+    "title": "Settings",
+    "tokens": {
+      "title": "Access tokens",
+      "intro": "For MCP clients such as Claude Desktop or Claude Code. A token acts as you — it can never do more than you can.",
+      "freshLabel": "Your new token",
+      "freshHint": "It is shown once only — what is stored is its hash. Enter it in the client as <code>Authorization: Bearer …</code> against <code>/api/mcp</code>.",
+      "hide": "Got it, hide this",
+      "lastUsed": "last used {date}",
+      "neverUsed": "never used",
+      "revoke": "Revoke",
+      "revokeLabel": "Revoke token {name}",
+      "nameLabel": "What is it for?",
+      "namePlaceholder": "e.g. Claude Desktop",
+      "scopesLabel": "What may it do?",
+      "noUserAdmin": "User administration is deliberately not on offer: an MCP client must never invite anybody or make anybody an admin.",
+      "creating": "Creating …",
+      "create": "Create a token"
+    }
+  },
+  "workshop": {
+    "access": "Access",
+    "accessIntro": "Editors see changes immediately — they are in the same document. Readers see the schedule but change nothing.",
+    "accessOf": "Access of {email}",
+    "backToLibrary": "← Library",
+    "days": "Days",
+    "end": "End {time}",
+    "materials": "Materials: {items}",
+    "print": "Print",
+    "someone": "Somebody",
+    "untitled": "Workshop",
+    "untitledDay": "Day",
+    "you": "you"
+  }
+}

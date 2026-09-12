@@ -3,6 +3,7 @@
 import { Inbox, Undo2 } from 'lucide-react'
 import type { DayDoc } from '@/domain/agenda/types'
 import { formatDuration } from '@/features/agenda/duration'
+import { useTranslations } from 'next-intl'
 
 /**
  * The blocks set aside: in the day, out of the schedule.
@@ -24,6 +25,7 @@ export function ParkingArea({
   /** Absent for readers, who see the shelf but cannot move anything off it. */
   onUnpark?: (moduleId: string) => void
 }) {
+  const t = useTranslations('agenda')
   const parked = doc.modules.filter((mod) => mod.parked)
   if (parked.length === 0) return null
 
@@ -34,11 +36,9 @@ export function ParkingArea({
         className="flex items-center gap-1.5 text-[13px] font-semibold tracking-wide text-[var(--fg-subtle)] uppercase"
       >
         <Inbox aria-hidden className="size-3.5" />
-        Geparkt ({parked.length})
+        {t('parkedHeading', { count: parked.length })}
       </h2>
-      <p className="mt-1 text-[13px] text-[var(--fg-subtle)]">
-        Gehört zum Tag, zählt nicht zur Zeit.
-      </p>
+      <p className="mt-1 text-[13px] text-[var(--fg-subtle)]">{t('parkedHint')}</p>
 
       <ul className="mt-2 divide-y divide-[var(--border)] rounded border border-[var(--border)]">
         {parked.map((mod) => (
@@ -57,11 +57,11 @@ export function ParkingArea({
               <button
                 type="button"
                 onClick={() => onUnpark(mod.id)}
-                aria-label={`${mod.title} zurück in den Ablauf`}
+                aria-label={t('unparkLabel', { title: mod.title })}
                 className="inline-flex shrink-0 items-center gap-1 rounded px-2 py-1 text-[13px] text-[var(--fg-muted)] hover:bg-[var(--surface-raised)]"
               >
                 <Undo2 aria-hidden className="size-3.5" />
-                In den Ablauf
+                {t('unpark')}
               </button>
             )}
           </li>

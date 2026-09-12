@@ -456,7 +456,9 @@ test('applies a whole agenda from an LLM into an open day', async ({ page, reque
   })
 
   const written = await (await writing).text()
-  expect(written, written).toContain('3 Einträge geschrieben')
+  // English, like everything MCP says: the audience is a model, not a reader.
+  // See the note in src/server/mcp/errors.ts.
+  expect(written, written).toContain('3 entries written')
   await expect(page.getByRole('group', { name: 'Aufwärmen' })).toBeVisible()
   await expect(page.getByRole('article', { name: 'Kaffee' })).toBeVisible()
 })

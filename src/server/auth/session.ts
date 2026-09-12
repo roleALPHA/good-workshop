@@ -1,4 +1,5 @@
 import { randomUUID } from 'node:crypto'
+import { cache } from 'react'
 import { cookies } from 'next/headers'
 import { and, eq, gt, isNull, sql } from 'drizzle-orm'
 import { withAuth, withTenantOnly } from '@/server/db'
@@ -42,6 +43,14 @@ export type SessionUser = {
   tenantId: string
   memberId: string
   tenantRole: 'member' | 'admin'
+  /**
+   * The person's own language choice, straight from identity.locale.
+   *
+   * Untrusted despite the column being `not null`: it is a documented seam for
+   * OIDC/SAML imports and carries no check constraint, so src/i18n/resolve.ts
+   * validates it rather than trusting the type.
+   */
+  locale: string
 }
 
 export async function createSession(
@@ -85,6 +94,21 @@ export async function readSession(): Promise<SessionUser | null> {
   return raw ? verifySessionCookie(raw) : null
 }
 
+/**
+ * readSession, deduplicated within one render pass.
+ *
+ * The layout, the page and now src/i18n/request.ts all want the same session,
+ * and each call is two indexed reads plus an idempotent `last_seen_at` write.
+ * React's `cache` collapses them into one -- the same trick loadTenantBrand
+ * uses in src/components/layout/tenant-brand.tsx, and the reason adding locale
+ * resolution as a fourth caller is a net *reduction* in queries rather than a
+ * new cost.
+ *
+ * Only for the request-scoped render pass. A Server Action that mutates the
+ * session must still call readSession directly.
+ */
+export const readSessionCached = cache(readSession)
+
 /** The cookie names, for callers that parse a raw Cookie header themselves. */
 export const SESSION_COOKIE_NAMES = [SECURE_COOKIE, PLAIN_COOKIE] as const
 
@@ -117,6 +141,7 @@ export async function verifySessionCookie(raw: string): Promise<SessionUser | nu
         email: identity.email,
         displayName: identity.displayName,
         identityStatus: identity.status,
+        locale: identity.locale,
       })
       .from(authSession)
       .innerJoin(identity, eq(identity.id, authSession.identityId))
@@ -173,6 +198,7 @@ export async function verifySessionCookie(raw: string): Promise<SessionUser | nu
     tenantId: account.tenantId,
     memberId: membership.id,
     tenantRole: membership.role as 'member' | 'admin',
+    locale: account.locale,
   }
 }
 

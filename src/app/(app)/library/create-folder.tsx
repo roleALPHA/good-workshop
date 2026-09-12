@@ -4,9 +4,12 @@ import { useRouter } from 'next/navigation'
 import { useRef, useState, useTransition } from 'react'
 import { FolderPlus } from 'lucide-react'
 import { createFolderAction } from '@/server/actions/workshop'
+import { useTranslations } from 'next-intl'
 
 /** Inline, like everything else that creates something here. */
 export function CreateFolder({ parentId }: { parentId: string | null }) {
+  const t = useTranslations('library')
+
   const router = useRouter()
   const [open, setOpen] = useState(false)
   const [name, setName] = useState('')
@@ -54,7 +57,7 @@ export function CreateFolder({ parentId }: { parentId: string | null }) {
         className="inline-flex items-center gap-1.5 rounded px-2 py-1 text-[14px] text-[var(--fg-muted)] hover:bg-[var(--surface-raised)]"
       >
         <FolderPlus aria-hidden className="size-3.5" />
-        Ordner
+        {t('newFolder')}
       </button>
     )
   }
@@ -63,8 +66,8 @@ export function CreateFolder({ parentId }: { parentId: string | null }) {
     <div>
       <input
         autoFocus
-        aria-label={parentId ? 'Name des Unterordners' : 'Name des Ordners'}
-        placeholder="Name"
+        aria-label={parentId ? t('subfolderName') : t('folderName')}
+        placeholder={t('name')}
         disabled={pending}
         className="w-full rounded border border-[var(--border-strong)] bg-[var(--surface)] px-2 py-1 text-[16px]"
         value={name}

@@ -78,7 +78,7 @@ export function startCollabServer(options: CollabServerOptions) {
   http.on('upgrade', (request, socket, head) => {
     void (async () => {
       const target = parseTarget(request, path)
-      if (!target) return reject(socket, 400, 'Ungültiger Pfad.')
+      if (!target) return reject(socket, 400, 'Invalid path.')
 
       if (!sameOrigin(request)) {
         // Logged, because the failure mode is a document that silently stays
@@ -88,11 +88,11 @@ export function startCollabServer(options: CollabServerOptions) {
           origin: request.headers.origin,
           expected: authConfig.origin,
         })
-        return reject(socket, 403, 'Fremde Herkunft.')
+        return reject(socket, 403, 'Foreign origin.')
       }
 
       const actor = await authenticate(request, target.workshopId, target.dayId)
-      if (!actor) return reject(socket, 401, 'Nicht angemeldet oder kein Zugriff.')
+      if (!actor) return reject(socket, 401, 'Not signed in, or no access.')
 
       wss.handleUpgrade(request, socket, head, (ws) => {
         // A failure in here used to be an unhandled rejection and an open,
@@ -100,7 +100,7 @@ export function startCollabServer(options: CollabServerOptions) {
         // and blamed the network. Close it and say why.
         attach(ws, target.workshopId, target.dayId, actor, timings).catch((error) => {
           console.error('collab: attach failed', { workshop: target.workshopId, error })
-          ws.close(1011, 'Raum konnte nicht geöffnet werden.')
+          ws.close(1011, 'The room could not be opened.')
         })
       })
     })().catch((error) => {

@@ -7,17 +7,14 @@
  * which is a selling point worth protecting rather than a coincidence.
  */
 
+import { DomainError } from '@/domain/errors'
+
 export const MAX_LOGO_BYTES = 256 * 1024
 
 export const LOGO_TYPES = ['image/svg+xml', 'image/png', 'image/webp'] as const
 export type LogoType = (typeof LOGO_TYPES)[number]
 
-export class LogoError extends Error {
-  constructor(message: string) {
-    super(message)
-    this.name = 'LogoError'
-  }
-}
+export class LogoError extends DomainError {}
 
 /**
  * Things an SVG must not contain.
@@ -31,15 +28,25 @@ export class LogoError extends Error {
  * Belt and braces: the logo is only ever served into an `<img>`, and browsers
  * do not execute script in an SVG loaded that way. This check is the braces.
  */
-const FORBIDDEN: [RegExp, string][] = [
-  [/<\s*script/i, '<script>'],
-  [/<\s*foreignObject/i, '<foreignObject>'],
+/**
+ * The third element is the message key; the second names the construct inside
+ * it.
+ *
+ * That construct stays as markup (`<script>`, `on…=`) rather than becoming
+ * prose. It is code: it reads the same to a French admin as to a German one,
+ * and a translated paraphrase would be less precise rather than more.
+ */
+type ForbiddenKey = 'logo.unsafeActive' | 'logo.unsafeExternal' | 'logo.unsafeDoctype'
+
+const FORBIDDEN: [RegExp, string, ForbiddenKey][] = [
+  [/<\s*script/i, '<script>', 'logo.unsafeActive'],
+  [/<\s*foreignObject/i, '<foreignObject>', 'logo.unsafeActive'],
   // Can pull in a remote stylesheet with @import, which is a request to a
   // third party from inside somebody's private installation.
-  [/<\s*style/i, '<style>'],
-  [/<\s*(iframe|embed|object)/i, 'eingebettete Fremdinhalte'],
-  [/\son[a-z]+\s*=/i, 'Event-Handler wie onload='],
-  [/javascript\s*:/i, 'javascript:-URLs'],
+  [/<\s*style/i, '<style>', 'logo.unsafeActive'],
+  [/<\s*(iframe|embed|object)/i, '<iframe>/<embed>/<object>', 'logo.unsafeActive'],
+  [/\son[a-z]+\s*=/i, 'on…=', 'logo.unsafeActive'],
+  [/javascript\s*:/i, 'javascript:', 'logo.unsafeActive'],
   // Local references (#gradient) are fine and common; anything reaching out is
   // a request to another server every time the page is opened.
   //
@@ -47,12 +54,12 @@ const FORBIDDEN: [RegExp, string][] = [
   // required a quote before the scheme, so `<use href=data:image/svg+xml,...>`
   // walked straight past it -- and unquoted attributes are perfectly ordinary
   // HTML-ish markup that browsers accept without complaint.
-  [/(?:xlink:)?href\s*=\s*(?:["'](?!#)[^"']*:|(?!["'#])[^\s>]*:)/i, 'externe Verweise'],
+  [/(?:xlink:)?href\s*=\s*(?:["'](?!#)[^"']*:|(?!["'#])[^\s>]*:)/i, 'href', 'logo.unsafeExternal'],
   // Entities are a way to write anything at all somewhere else in the document
   // and have the parser assemble it here, which defeats every pattern above.
   // A logo has no legitimate use for a DTD.
-  [/<!DOCTYPE/i, 'eine DTD'],
-  [/<!ENTITY/i, 'XML-Entities'],
+  [/<!DOCTYPE/i, '<!DOCTYPE>', 'logo.unsafeDoctype'],
+  [/<!ENTITY/i, '<!ENTITY>', 'logo.unsafeDoctype'],
 ]
 
 export type Logo = { data: string; mime: LogoType }
@@ -66,13 +73,14 @@ export type Logo = { data: string; mime: LogoType }
  */
 export function readLogo(bytes: Uint8Array, mime: string): Logo {
   if (!LOGO_TYPES.includes(mime as LogoType)) {
-    throw new LogoError('Erlaubt sind SVG, PNG und WebP.')
+    throw new LogoError('logo.unsupportedType')
   }
-  if (bytes.byteLength === 0) throw new LogoError('Die Datei ist leer.')
+  if (bytes.byteLength === 0) throw new LogoError('logo.empty')
   if (bytes.byteLength > MAX_LOGO_BYTES) {
-    throw new LogoError(
-      `Das Logo darf höchstens ${Math.round(MAX_LOGO_BYTES / 1024)} KB groß sein (diese Datei: ${Math.round(bytes.byteLength / 1024)} KB).`,
-    )
+    throw new LogoError('logo.tooLarge', {
+      max: Math.round(MAX_LOGO_BYTES / 1024),
+      actual: Math.round(bytes.byteLength / 1024),
+    })
   }
 
   if (mime === 'image/svg+xml') {
@@ -84,20 +92,16 @@ export function readLogo(bytes: Uint8Array, mime: string): Logo {
     // further down. The declared type is the client's claim, and the file is
     // served back under it.
     if (!/^\s*(?:<\?xml[^>]*>\s*)?<\s*svg[\s>]/i.test(text)) {
-      throw new LogoError('Das sieht nicht nach einer SVG-Datei aus.')
+      throw new LogoError('logo.notSvg')
     }
 
-    for (const [pattern, what] of FORBIDDEN) {
-      if (pattern.test(text)) {
-        throw new LogoError(
-          `Das SVG enthält ${what}. Exportiere es ohne Skripte und ohne externe Verweise — die meisten Programme nennen das „einfaches SVG" oder „ohne Interaktivität".`,
-        )
-      }
+    for (const [pattern, what, key] of FORBIDDEN) {
+      if (pattern.test(text)) throw new LogoError(key, { what })
     }
   } else if (!looksLikeRaster(bytes, mime)) {
     // The declared type is the client's claim; the first bytes are the file's
     // own answer. Storing a mislabelled file means serving it mislabelled too.
-    throw new LogoError('Die Datei passt nicht zum angegebenen Format.')
+    throw new LogoError('logo.typeMismatch')
   }
 
   return { data: Buffer.from(bytes).toString('base64'), mime: mime as LogoType }

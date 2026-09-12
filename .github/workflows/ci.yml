@@ -30,12 +30,12 @@ jobs:
       - run: pnpm lint
       - run: pnpm format:check
       - run: pnpm typecheck
-      # Die README ist Teil des Produkts: sie ist der einzige Weg, auf dem eine
-      # Betreiberin erfährt, was zu setzen ist. Dieser Schritt prüft nicht, ob
-      # ihre Sätze stimmen, sondern die Kopplungen, an denen sie bisher still
-      # falsch wurde -- eine dokumentierte Variable, die keinen Container
-      # erreicht, ein Befehl, den es nicht mehr gibt.
-      - name: Doku und Code stimmen überein
+      # The README is part of the product: it is the only channel through which
+      # an operator learns what to set. This step does not check whether its
+      # sentences are true, but the couplings along which it has quietly gone
+      # wrong before -- a documented variable that reaches no container, a
+      # command that no longer exists.
+      - name: Documentation and code agree
         run: pnpm check:docs
 
   unit:
@@ -90,9 +90,9 @@ jobs:
 
       - name: Bootstrap roles
         run: pnpm db:bootstrap
-      # Dieselbe Reihenfolge wie in compose.yaml: erst lesen und abbrechen, dann
-      # schreiben. Steht der Schritt hier, bleibt er auch dann geprüft, wenn
-      # niemand das Image baut.
+      # The same order as in compose.yaml: read and stop first, then write.
+      # Having the step here keeps it exercised even when nobody builds the
+      # image.
       - name: Preflight
         run: pnpm db:preflight
       - name: Apply migrations
@@ -175,18 +175,18 @@ jobs:
             exit 1
           }
 
-  # DER WEG, DEN EINE BETREIBERIN WIRKLICH GEHT.
+  # THE ROUTE AN OPERATOR ACTUALLY TAKES.
   #
-  # Alle anderen Jobs sprechen eine Datenbank an, die der Runner gestartet hat,
-  # mit `trust` und über TCP. Damit war compose.yaml ungetestet -- und genau
-  # dort lagen zwei Fehler, die jede frische Installation unbrauchbar machten:
-  # der Postgres-Entrypoint initialisiert ohne Passwort oder `trust` gar nicht,
-  # und Peer-Authentifizierung über die Containergrenze kann nie treffen, weil
-  # die uid des App-Containers im Datenbank-Container niemandem gehört.
+  # Every other job talks to a database the runner started, with `trust` and
+  # over TCP. Which left compose.yaml untested -- and that is exactly where two
+  # faults sat that made every fresh installation unusable: the Postgres
+  # entrypoint does not initialise at all without a password or `trust`, and
+  # peer authentication across the container boundary can never match, because
+  # the app container's uid belongs to nobody in the database container.
   #
-  # Beides hätte dieser Job am Tag seiner Entstehung gemeldet.
+  # This job would have reported both on the day it was written.
   compose:
-    name: On-Prem-Stack
+    name: On-prem stack
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@fbc6f3992d24b796d5a048ff273f7fcc4a7b6c09 # v5
@@ -210,19 +210,19 @@ jobs:
           GW_BOOTSTRAP_ADMIN_EMAIL=ci@example.test
           ENV
 
-      # Ohne --profile tls, und das ist Absicht: der Proxy braucht einen
-      # öffentlich auflösenden Hostnamen, den ein Runner nicht hat. Geprüft wird
-      # damit zugleich, dass ein `up` ohne das Profil nicht an einem Wert
-      # scheitert, den nur der Proxy braucht -- das tat es schon einmal.
-      - name: Stack hochfahren
+      # Without --profile tls, and that is deliberate: the proxy needs a publicly
+      # resolving hostname, which a runner does not have. It therefore also
+      # checks that an `up` without the profile does not fail on a value only the
+      # proxy needs -- which it once did.
+      - name: Bring the stack up
         run: docker compose up -d --wait --wait-timeout 180
 
-      - name: Die Startkette hat getan, was sie verspricht
+      - name: The startup chain did what it promises
         run: |
           docker compose logs migrate
-          for expected in "Bootstrap complete" "Vorprüfung" "Migrations applied" "Provisioned"; do
+          for expected in "Bootstrap complete" "Preflight" "Migrations applied" "Provisioned"; do
             docker compose logs migrate | grep -q "$expected" || {
-              echo "::error::In der Startkette fehlt: $expected"
+              echo "::error::The startup chain is missing: $expected"
               exit 1
             }
           done
@@ -232,31 +232,30 @@ jobs:
           curl -fsS --retry 10 --retry-delay 2 --retry-all-errors             http://127.0.0.1:3000/api/health > /tmp/health.json
           cat /tmp/health.json
           grep -q '"status":"ok"' /tmp/health.json || {
-            echo "::error::Der Stack meldet sich nicht gesund"
+            echo "::error::The stack does not report healthy"
             exit 1
           }
-          # GW_OPS_TOKEN und GW_VERSION müssen den Container erreichen. Beide
-          # standen schon einmal in der Anleitung, ohne durchgereicht zu werden.
+          # GW_OPS_TOKEN and GW_VERSION have to reach the container. Both were
+          # once in the instructions without being passed through.
           curl -fsS -H 'x-ops-token: ci-token' http://127.0.0.1:3000/api/health > /tmp/ops.json
           grep -q '"version":"ci"' /tmp/ops.json || {
-            echo "::error::Der ausführliche Healthcheck meldet nicht die Version aus der .env"
+            echo "::error::The verbose healthcheck does not report the version from the .env"
             cat /tmp/ops.json
             exit 1
           }
 
-      # Der Web-Container darf von den DATENBANKROLLEN ausschließlich gw_app
-      # kennen. Läge das Superuser-Passwort mit darin, wäre die Rollentrennung,
-      # auf der RLS und NOINHERIT aufbauen, eine Zeile wert.
+      # Of the DATABASE ROLES the web container may know gw_app and nothing
+      # else. Were the superuser password in there too, the separation of roles
+      # that RLS and NOINHERIT build on would be worth one line.
       #
-      # `app` gehört dazu und ist keine Rolle: das ist der Schlüssel, mit dem
-      # die Anwendung die in der Oberfläche hinterlegten Zugangsdaten
-      # entschlüsselt. Deshalb wird hier auf die genaue Liste geprüft und nicht
-      # auf "nur eines" -- ein weiterer Eintrag soll auffallen.
-      - name: Der App-Container kennt nur seine eigene Rolle
+      # `app` belongs there and is not a role: that is the key with which the
+      # application decrypts the credentials entered in the interface. Which is
+      # why the exact list is checked here rather than "only one" -- a further
+      # entry should stand out.
+      - name: The app container knows only its own role
         run: |
-          # `xargs` ohne Argumente: trimmt und fügt mit einfachen Leerzeichen
-          # zusammen, damit der Vergleich nicht an einem \r oder einem
-          # nachgestellten Leerzeichen scheitert.
+          # `xargs` with no arguments: trims and joins with single spaces, so the
+          # comparison does not fail on a \r or a trailing space.
           secrets=$(docker compose exec -T app ls /run/db-secrets | tr -d '\r' | sort | xargs)
           echo "app sieht: $secrets"
           [ "$secrets" = "app gw_app" ] || {
@@ -271,23 +270,23 @@ jobs:
             exit 1
           fi
 
-      # Die Regression, die eine Installation beim ZWEITEN Start verlor: der
-      # erste `up` gelang, der zweite nicht.
-      - name: Ein zweiter up ändert nichts
+      # The regression that lost an installation on the SECOND start: the first
+      # `up` succeeded, the second did not.
+      - name: A second up changes nothing
         run: |
           docker compose up -d --wait --wait-timeout 180
           docker compose logs migrate | grep -q "Migrations applied" || {
-            echo "::error::Der zweite Start ist nicht sauber durchgelaufen"
+            echo "::error::The second start did not come through cleanly"
             docker compose logs migrate
             exit 1
           }
           curl -fsS http://127.0.0.1:3000/api/health | grep -q '"status":"ok"'
 
-      - name: Die dokumentierte Sicherung funktioniert
+      - name: The documented backup works
         run: |
           docker compose exec -T -u postgres db pg_dump goodworkshop > /tmp/dump.sql
           grep -q 'CREATE TABLE' /tmp/dump.sql || {
-            echo "::error::Der Dump enthält kein Schema"
+            echo "::error::The dump contains no schema"
             exit 1
           }
 

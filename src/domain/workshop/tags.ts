@@ -3,6 +3,7 @@ import { eq, sql } from 'drizzle-orm'
 import type { WorkshopAccess } from '@/domain/agenda/access'
 import type { Tx } from '@/server/db'
 import { tag, workshopTag } from '@/server/db/schema'
+import { DomainError } from '@/domain/errors'
 
 /**
  * Tags, created on the way in.
@@ -14,14 +15,11 @@ import { tag, workshopTag } from '@/server/db/schema'
  * same thing.
  */
 
-export class TagError extends Error {
-  constructor(message: string) {
-    super(message)
-    this.name = 'TagError'
-  }
-}
+export class TagError extends DomainError {}
 
 const MAX_TAGS_PER_WORKSHOP = 12
+/** Named because the limit now reaches the person as a number in a sentence. */
+const MAX_TAG_LENGTH = 40
 
 export async function setWorkshopTags(
   tx: Tx,
@@ -30,10 +28,10 @@ export async function setWorkshopTags(
 ): Promise<void> {
   const wanted = [...new Set(names.map((name) => name.trim()).filter(Boolean))]
   if (wanted.length > MAX_TAGS_PER_WORKSHOP) {
-    throw new TagError(`Höchstens ${MAX_TAGS_PER_WORKSHOP} Tags pro Workshop.`)
+    throw new TagError('tags.tooMany', { max: MAX_TAGS_PER_WORKSHOP })
   }
-  if (wanted.some((name) => name.length > 40)) {
-    throw new TagError('Ein Tag darf höchstens 40 Zeichen haben.')
+  if (wanted.some((name) => name.length > MAX_TAG_LENGTH)) {
+    throw new TagError('tags.tooLong', { max: MAX_TAG_LENGTH })
   }
 
   const ids = await Promise.all(wanted.map((name) => tagIdFor(tx, name)))
@@ -57,7 +55,7 @@ async function tagIdFor(tx: Tx, name: string): Promise<string> {
   await tx.insert(tag).values({ id: uuidv7(), name }).onConflictDoNothing()
 
   const rows = await tx.select({ id: tag.id }).from(tag).where(eq(tag.name, name)).limit(1)
-  if (!rows[0]) throw new TagError(`Der Tag "${name}" konnte nicht angelegt werden.`)
+  if (!rows[0]) throw new TagError('tags.createFailed', { name })
   return rows[0].id
 }
 

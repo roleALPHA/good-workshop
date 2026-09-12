@@ -15,6 +15,7 @@ import { withTenant } from '@/server/db'
 import { workshop } from '@/server/db/schema'
 import { materializeDay } from './materialize'
 import { appendUpdate, loadDoc, maybeCompact } from './store'
+import { DEFAULT_LOCALE } from '@/i18n/config'
 
 /**
  * Decode, replace the identity, re-encode.
@@ -137,7 +138,18 @@ export class Room {
       if (dayOf(this.doc).get('seeded') === true) return
 
       const access = await assertWorkshopAccess(tx, this.actor, this.workshopId, 'workshop.read')
-      const { doc } = await loadDay(tx, access, this.dayId)
+      /**
+       * The locale is irrelevant here, and it is worth saying why rather than
+       * leaving DEFAULT_LOCALE looking like a shortcut.
+       *
+       * seedFromDayDoc copies the day's fields and its blocks into the CRDT --
+       * and of a block only its `moduleTypeId`. The localised `moduleTypes` map
+       * this returns is dropped on the floor. Which is the right shape: the
+       * shared document is one per day and its readers are several people with
+       * possibly different languages, so a translated name in there would be
+       * one language baked into state everybody shares.
+       */
+      const { doc } = await loadDay(tx, access, this.dayId, DEFAULT_LOCALE)
       // Deliberately not tagged 'load': this IS new state and has to reach the
       // log, or the next room would seed all over again.
       seedFromDayDoc(this.doc, doc)

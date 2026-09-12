@@ -1,33 +1,32 @@
-# Automatisches HTTPS von Let's Encrypt. Der Hostname muss öffentlich auf
-# diesen Server auflösen, sonst schlägt die Ausstellung fehl.
+# Automatic HTTPS from Let's Encrypt. The hostname has to resolve publicly to
+# this server, or issuance fails.
 #
-# Passkeys hängen an genau diesem Namen (GW_RP_ID). Eine spätere Änderung
-# macht alle registrierten Passkeys ungültig.
+# Passkeys hang off exactly this name (GW_RP_ID). Changing it later invalidates
+# every registered passkey.
 {$GW_HOSTNAME} {
 	encode zstd gzip
 
-	# Die Anwendung setzt ihre eigenen Sicherheitsheader (src/middleware.ts):
-	# CSP mit Nonce, frame-ancestors, nosniff, Referrer- und Permissions-Policy,
-	# HSTS. Lange stand hier, sie täte das -- sie tat es nicht, und dieser
-	# Kommentar war der Grund, dass niemand nachsah.
+	# The application sets its own security headers (src/middleware.ts): CSP with
+	# a nonce, frame-ancestors, nosniff, referrer and permissions policy, HSTS.
+	# For a long time this comment claimed it did -- it did not, and the comment
+	# was the reason nobody looked.
 	#
-	# HSTS bleibt zusätzlich hier: dieser Block ist die Stelle, an der TLS
-	# tatsächlich terminiert, und er gilt auch für Antworten, die gar nicht erst
-	# bei der Anwendung ankommen.
+	# HSTS stays here as well: this block is where TLS actually terminates, and
+	# it applies to responses that never reach the application at all.
 	header {
 		Strict-Transport-Security "max-age=31536000; includeSubDomains"
 	}
 
-	# Live-Kollaboration: eigener Prozess, eigener Port, gleicher Hostname.
-	# Caddy leitet den WebSocket-Upgrade unverändert weiter -- ohne diesen
-	# Block landete er beim Next-Server, der ihn nicht bedienen kann.
+	# Live collaboration: its own process, its own port, the same hostname. Caddy
+	# forwards the WebSocket upgrade unchanged -- without this block it would end
+	# up at the Next server, which cannot serve it.
 	handle /collab* {
 		reverse_proxy app:3001
 	}
 
 	reverse_proxy app:3000 {
-		# Next.js streamt Server-Komponenten; Puffern ließe die Seite erst
-		# am Stück erscheinen.
+		# Next.js streams server components; buffering would make the page appear
+		# only in one piece.
 		flush_interval -1
 	}
 }

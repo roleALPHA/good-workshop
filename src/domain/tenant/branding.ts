@@ -7,6 +7,7 @@ import {
   toHex,
   type Rgb,
 } from '@/lib/color/oklch'
+import { DomainError, type DomainErrorKey, type DomainErrorParams } from '@/domain/errors'
 
 /**
  * A tenant's accent colour, turned into a ramp the server vouches for.
@@ -78,14 +79,14 @@ export const SUGGESTED_BRAND_HEX = '#7c3aed'
 
 export type Brand = { hue: number; chroma: number }
 
-export class BrandError extends Error {
+export class BrandError extends DomainError {
   /** A colour close to what they asked for that would have been accepted. */
   constructor(
-    message: string,
+    key: DomainErrorKey,
     readonly suggestion: string | null = null,
+    params: DomainErrorParams = {},
   ) {
-    super(message)
-    this.name = 'BrandError'
+    super(key, params)
   }
 }
 
@@ -100,14 +101,11 @@ export class BrandError extends Error {
  */
 export function readBrand(hex: string): Brand {
   const rgb = parseHex(hex)
-  if (!rgb) throw new BrandError('Bitte eine Farbe als Hex-Wert angeben, z. B. #7c3aed.')
+  if (!rgb) throw new BrandError('brand.notHex')
 
   const { c, h } = rgbToOklch(rgb)
   if (c < 0.02) {
-    throw new BrandError(
-      'Grau hat keinen Farbton, aus dem sich eine Akzentfarbe bauen lässt. Nimm einen bunten Ton.',
-      SUGGESTED_BRAND_HEX,
-    )
+    throw new BrandError('brand.grey', SUGGESTED_BRAND_HEX)
   }
 
   const chroma = Math.min(c, MAX_CHROMA)
@@ -118,9 +116,13 @@ export function readBrand(hex: string): Brand {
     // Should not happen with the ramp above -- fixed perceptual lightness is
     // what buys the guarantee. It fires if somebody edits those constants, and
     // then it fires here rather than in somebody's unreadable interface.
+    // Two keys rather than one with the surface as a parameter: naming the
+    // surface is a full clause, and a clause is a thing to translate, not a
+    // noun to slot in.
     throw new BrandError(
-      `Dieser Ton erreicht in ${failure.theme === 'light' ? 'hell' : 'dunkel'} nur ${failure.ratio.toFixed(1)}:1 auf ${failure.what}. Nötig sind 4,5:1.`,
+      failure.what === 'onBrand' ? 'brand.contrastOnBrand' : 'brand.contrastSubtle',
       failure.suggestion,
+      { theme: failure.theme, ratio: failure.ratio.toFixed(1) },
     )
   }
 
@@ -139,14 +141,19 @@ export function brandCss(brand: Brand | null): string | null {
   return `:root{--brand-h:${brand.hue.toFixed(2)};--brand-c:${brand.chroma.toFixed(4)}}`
 }
 
-type Failure = { theme: 'light' | 'dark'; what: string; ratio: number; suggestion: string | null }
+type Failure = {
+  theme: 'light' | 'dark'
+  what: 'onBrand' | 'subtle'
+  ratio: number
+  suggestion: string | null
+}
 
 function firstContrastFailure(brand: Brand): Failure | null {
   for (const theme of ['light', 'dark'] as const) {
     const steps = RAMP[theme]
-    const pairs: [string, Step, Step][] = [
-      ['Text auf der Akzentfläche', steps.fg, steps.brand],
-      ['gedämpftem Text auf gedämpfter Fläche', steps.subtleFg, steps.subtleBg],
+    const pairs: [Failure['what'], Step, Step][] = [
+      ['onBrand', steps.fg, steps.brand],
+      ['subtle', steps.subtleFg, steps.subtleBg],
     ]
 
     for (const [what, foreground, background] of pairs) {

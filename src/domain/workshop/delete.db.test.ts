@@ -248,9 +248,11 @@ describe('moving a folder', () => {
     const child = await makeFolder('A4-Kind', a)
     const grandchild = await makeFolder('A4-Enkel', child)
 
+    // The key, not the sentence: a `DomainError` carries `messageKey` and the
+    // German text lives in the catalogue, where a wording change is free.
     await expect(
       withTenant(as(adminId, 'admin'), (tx) => moveFolder(tx, a, grandchild)),
-    ).rejects.toThrow(/Unterordner/)
+    ).rejects.toMatchObject({ messageKey: 'folder.intoOwnDescendant' })
 
     // And nothing moved.
     expect(await pathOf(child)).toEqual([a])

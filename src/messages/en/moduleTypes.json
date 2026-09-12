@@ -1,0 +1,195 @@
+{
+  "groups": {
+    "Ablauf": "Schedule",
+    "Inhalt": "Content",
+    "Moderation": "Facilitation",
+    "Vorbereitung": "Preparation",
+    "_default": "More details"
+  },
+  "fields": {
+    "activity": {
+      "title": "Activity"
+    },
+    "agenda_overview": {
+      "title": "Agenda overview"
+    },
+    "catering_note": {
+      "title": "Catering"
+    },
+    "deadline_field": {
+      "title": "Capture deadlines"
+    },
+    "debrief": {
+      "title": "Debrief"
+    },
+    "deliverable": {
+      "title": "Deliverable"
+    },
+    "description": {
+      "title": "Description"
+    },
+    "facilitator_notes": {
+      "title": "Facilitator notes",
+      "description": "Visible to you only, not in the participant export."
+    },
+    "format": {
+      "title": "Format",
+      "enum": {
+        "round": "Round robin",
+        "popcorn": "Popcorn",
+        "written": "Written",
+        "temperature": "Temperature check",
+        "pairs": "In pairs"
+      }
+    },
+    "group_size": {
+      "title": "Group size"
+    },
+    "individual_first": {
+      "title": "Alone first, then shared"
+    },
+    "instructions": {
+      "title": "Instructions"
+    },
+    "key_points": {
+      "title": "Key points"
+    },
+    "materials": {
+      "title": "Materials",
+      "help": "Everything that has to be on the table"
+    },
+    "method": {
+      "title": "Method",
+      "enum": {
+        "dot_voting": "Dot voting",
+        "fist_of_five": "Fist of Five",
+        "consent": "Consent",
+        "majority": "Majority"
+      }
+    },
+    "method_url": {
+      "title": "Method description"
+    },
+    "number_of_groups": {
+      "title": "Number of groups"
+    },
+    "options": {
+      "title": "Options"
+    },
+    "owner_field": {
+      "title": "Capture owners"
+    },
+    "participation": {
+      "title": "Format",
+      "enum": {
+        "plenary": "Plenary",
+        "small_groups": "Small groups",
+        "pairs": "Pairs",
+        "individual": "Individual",
+        "none": "none"
+      }
+    },
+    "presenter": {
+      "title": "Presenter"
+    },
+    "prompt": {
+      "title": "Opening question"
+    },
+    "question": {
+      "title": "Guiding question"
+    },
+    "room_setup": {
+      "title": "Room setup"
+    },
+    "slides_url": {
+      "title": "Slides"
+    },
+    "space_needed": {
+      "title": "Space needed",
+      "enum": {
+        "seated": "Seated",
+        "standing": "Standing",
+        "room": "Whole room",
+        "outdoor": "Outdoors"
+      }
+    },
+    "task": {
+      "title": "Task"
+    },
+    "timebox_per_person_seconds": {
+      "title": "Time per person (sec.)"
+    }
+  },
+  "types": {
+    "admin": {
+      "name": "Welcome & housekeeping",
+      "description": "Arriving, the plan, the ground rules."
+    },
+    "break": {
+      "name": "Break",
+      "description": ""
+    },
+    "buffer": {
+      "name": "Buffer",
+      "description": ""
+    },
+    "check_in": {
+      "name": "Check-in",
+      "description": "Everybody gets a turn to speak."
+    },
+    "check_out": {
+      "name": "Check-out",
+      "description": "",
+      "fields": {
+        "prompt": {
+          "title": "Closing question"
+        }
+      }
+    },
+    "decision": {
+      "name": "Decision / vote",
+      "description": ""
+    },
+    "discussion": {
+      "name": "Plenary discussion",
+      "description": ""
+    },
+    "energizer": {
+      "name": "Energizer",
+      "description": ""
+    },
+    "exercise": {
+      "name": "Exercise",
+      "description": ""
+    },
+    "group_work": {
+      "name": "Group work",
+      "description": ""
+    },
+    "lunch": {
+      "name": "Lunch",
+      "description": ""
+    },
+    "next_steps": {
+      "name": "Next steps",
+      "description": ""
+    },
+    "note": {
+      "name": "Note",
+      "description": ""
+    },
+    "presentation": {
+      "name": "Input / presentation",
+      "description": ""
+    },
+    "reflection": {
+      "name": "Reflection",
+      "description": "",
+      "fields": {
+        "prompt": {
+          "title": "Reflection question"
+        }
+      }
+    }
+  }
+}

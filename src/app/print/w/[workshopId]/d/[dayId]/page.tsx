@@ -11,6 +11,7 @@ import { isRichTextValue } from '@/lib/richtext/schema'
 import { readSession } from '@/server/auth/session'
 import { withTenant } from '@/server/db'
 import { workshop as workshopTable } from '@/server/db/schema'
+import { getLocale, getTranslations } from 'next-intl/server'
 
 export const runtime = 'nodejs'
 export const dynamic = 'force-dynamic'
@@ -38,6 +39,7 @@ export default async function PrintPage({
   const { workshopId, dayId } = await params
   const { notes } = await searchParams
   const showNotes = notes === '1'
+  const [t, locale] = await Promise.all([getTranslations('workshop'), getLocale()])
 
   const actor = {
     tenantId: session.tenantId,
@@ -50,13 +52,13 @@ export default async function PrintPage({
   try {
     data = await withTenant(actor, async (tx) => {
       const access = await assertWorkshopAccess(tx, actor, workshopId, 'workshop.export')
-      const { doc } = await loadDay(tx, access, dayId)
+      const { doc } = await loadDay(tx, access, dayId, locale)
       const meta = await tx
         .select({ title: workshopTable.title })
         .from(workshopTable)
         .where(eq(workshopTable.id, workshopId))
         .limit(1)
-      return { doc, title: meta[0]?.title ?? 'Workshop' }
+      return { doc, title: meta[0]?.title ?? t('untitled') }
     })
   } catch (error) {
     if (error instanceof NotFoundError || error instanceof ForbiddenError) notFound()
@@ -73,7 +75,7 @@ export default async function PrintPage({
         <p className="tabular mt-1 text-neutral-600">
           {[data.doc.title, data.doc.date].filter(Boolean).join(' · ')}
           {' · '}
-          {formatTime(schedule.dayStartMinute)}–{formatTime(schedule.dayEndMinute)}
+          {formatTime(schedule.dayStartMinute, locale)}–{formatTime(schedule.dayEndMinute, locale)}
         </p>
       </header>
 
@@ -91,7 +93,7 @@ export default async function PrintPage({
               >
                 {row.cluster.title}
                 <span className="tabular ml-2 text-sm font-normal text-neutral-600">
-                  {formatTime(entry.startMinute)} ·{' '}
+                  {formatTime(entry.startMinute, locale)} ·{' '}
                   {formatDuration(entry.durationMinutes, { spaced: true })}
                 </span>
               </h2>
@@ -117,7 +119,7 @@ export default async function PrintPage({
               <div className="tabular w-20 shrink-0">
                 <div className="font-medium">
                   {entry.pinned ? '🔒 ' : ''}
-                  {formatTime(entry.startMinute)}
+                  {formatTime(entry.startMinute, locale)}
                 </div>
                 <div className="text-sm text-neutral-600">
                   {formatDuration(entry.durationMinutes)}
@@ -139,7 +141,9 @@ export default async function PrintPage({
                 {Array.isArray(row.module.desc.materials) &&
                   row.module.desc.materials.length > 0 && (
                     <p className="mt-1 text-[14px] text-neutral-600">
-                      Material: {(row.module.desc.materials as string[]).join(', ')}
+                      {t('materials', {
+                        items: (row.module.desc.materials as string[]).join(', '),
+                      })}
                     </p>
                   )}
               </div>
@@ -149,7 +153,7 @@ export default async function PrintPage({
       </div>
 
       <p className="tabular mt-6 border-t border-neutral-300 pt-3 text-neutral-600">
-        Ende {formatTime(schedule.dayEndMinute)}
+        {t('end', { time: formatTime(schedule.dayEndMinute, locale) })}
       </p>
       <p className="mt-6 text-center text-xs text-neutral-500">
         GoodWorkshop · powered by roleALPHA

@@ -3,6 +3,8 @@ import { and, asc, eq, inArray, ne, sql } from 'drizzle-orm'
 import type { Actor, Tx } from '@/server/db'
 import { withAuth, withTenant } from '@/server/db'
 import { identity, member } from '@/server/db/schema'
+import { DomainError } from '@/domain/errors'
+import type { Locale } from '@/i18n/config'
 
 /**
  * Who belongs to this tenant.
@@ -26,17 +28,12 @@ export type MemberRow = {
   isSelf: boolean
 }
 
-export class MemberError extends Error {
-  constructor(message: string) {
-    super(message)
-    this.name = 'MemberError'
-  }
-}
+export class MemberError extends DomainError {}
 
 /** Tenant administration is not a per-workshop capability; it is this check. */
 export function assertTenantAdmin(actor: Actor): void {
   if (actor.tenantRole !== 'admin') {
-    throw new MemberError('Nur Tenant-Admins dürfen Mitglieder verwalten.')
+    throw new MemberError('member.adminOnly')
   }
 }
 
@@ -118,12 +115,26 @@ export async function inviteMember(
   actor: Actor,
   emailAddress: string,
   role: TenantRole,
+  /**
+   * The language a brand-new identity starts in -- the inviting admin's.
+   *
+   * Seeded at creation rather than applied as a fallback when the mail goes
+   * out, and the difference matters: `identity.locale` is NOT NULL DEFAULT
+   * 'de', so a fresh row reads back as "chose German" and is indistinguishable
+   * from a real preference. A per-send fallback would therefore work for the
+   * invitation and silently revert for the next sign-in link six months later.
+   *
+   * An identity that already exists keeps whatever it chose. Being invited to a
+   * second workspace is not a reason to have your language reset by whoever
+   * invited you.
+   */
+  locale: Locale,
 ): Promise<InviteResult> {
   assertTenantAdmin(actor)
 
   const email = emailAddress.trim().toLowerCase()
   if (!/^[^@\s]+@[^@\s]+\.[^@\s]+$/.test(email)) {
-    throw new MemberError('Das ist keine gültige E-Mail-Adresse.')
+    throw new MemberError('member.invalidEmail')
   }
 
   const identityId = await withAuth(async (tx) => {
@@ -136,7 +147,7 @@ export async function inviteMember(
 
     const created = await tx
       .insert(identity)
-      .values({ id: randomUUID(), email })
+      .values({ id: randomUUID(), email, locale })
       .returning({ id: identity.id })
     return created[0]!.id
   })
@@ -190,7 +201,7 @@ export async function setMemberRole(
       .where(eq(member.id, memberId))
       .returning({ id: member.id })
 
-    if (!updated[0]) throw new MemberError('Dieses Mitglied gibt es nicht.')
+    if (!updated[0]) throw new MemberError('member.gone')
   })
 }
 
@@ -202,7 +213,7 @@ export async function setMemberStatus(
   assertTenantAdmin(actor)
 
   if (memberId === actor.memberId && status === 'disabled') {
-    throw new MemberError('Du kannst dich nicht selbst abschalten.')
+    throw new MemberError('member.cannotDisableSelf')
   }
 
   await withTenant(actor, async (tx) => {
@@ -214,7 +225,7 @@ export async function setMemberStatus(
       .where(eq(member.id, memberId))
       .returning({ id: member.id })
 
-    if (!updated[0]) throw new MemberError('Dieses Mitglied gibt es nicht.')
+    if (!updated[0]) throw new MemberError('member.gone')
   })
 }
 
@@ -227,8 +238,6 @@ async function assertAnotherAdminRemains(tx: Tx, exceptMemberId: string): Promis
     )
 
   if ((others[0]?.count ?? 0) === 0) {
-    throw new MemberError(
-      'Das ist der letzte aktive Admin. Mach zuerst jemand anderen zum Admin — sonst kommt niemand mehr an die Verwaltung.',
-    )
+    throw new MemberError('member.lastAdmin')
   }
 }

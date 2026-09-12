@@ -4,6 +4,7 @@ import Link from 'next/link'
 import { useState, useTransition } from 'react'
 import { FolderIcon, FolderInput, X } from 'lucide-react'
 import { deleteFolderAction, moveFolderAction } from '@/server/actions/workshop'
+import { useTranslations } from 'next-intl'
 
 /**
  * A folder in the sidebar, with a way to remove it.
@@ -28,6 +29,8 @@ export function FolderRow({
   canManage: boolean
   targets: { id: string; name: string; depth: number }[]
 }) {
+  const t = useTranslations('library')
+
   const [pending, startTransition] = useTransition()
   const [failed, setFailed] = useState<string | null>(null)
   const [moving, setMoving] = useState(false)
@@ -68,8 +71,8 @@ export function FolderRow({
           <button
             type="button"
             onClick={() => setMoving((open) => !open)}
-            title="In einen anderen Ordner verschieben"
-            aria-label={`Ordner ${name} verschieben`}
+            title={t('moveFolderHint')}
+            aria-label={t('moveFolderLabel', { name })}
             aria-expanded={moving}
             className="shrink-0 rounded p-1 text-[var(--fg-subtle)] opacity-0 group-hover:opacity-100 hover:bg-[var(--surface-raised)] focus-visible:opacity-100 disabled:opacity-40"
           >
@@ -82,7 +85,7 @@ export function FolderRow({
             type="button"
             onClick={remove}
             disabled={pending}
-            title="Ordner entfernen — der Inhalt rückt eine Ebene hoch"
+            title={t('removeFolder')}
             aria-label={`Ordner ${name} entfernen`}
             className="shrink-0 rounded p-1 text-[var(--fg-subtle)] opacity-0 group-hover:opacity-100 hover:bg-[var(--surface-raised)] focus-visible:opacity-100 disabled:opacity-40"
           >
@@ -93,7 +96,7 @@ export function FolderRow({
       {moving && (
         <div className="mt-1 ml-2">
           <label htmlFor={`move-${id}`} className="text-[12px] text-[var(--fg-subtle)]">
-            Verschieben nach
+            {t('moveTo')}
           </label>
           <select
             id={`move-${id}`}
@@ -102,7 +105,7 @@ export function FolderRow({
             onChange={(event) => move(event.target.value === '' ? null : event.target.value)}
             className="mt-0.5 w-full rounded border border-[var(--border)] bg-[var(--surface)] px-2 py-1 text-[14px]"
           >
-            <option value="">Oberste Ebene</option>
+            <option value="">{t('topLevel')}</option>
             {targets.map((target) => (
               <option key={target.id} value={target.id}>
                 {'\u00a0'.repeat(target.depth * 2)}

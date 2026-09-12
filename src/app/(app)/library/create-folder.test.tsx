@@ -1,6 +1,7 @@
-import { fireEvent, render, screen } from '@testing-library/react'
+import { fireEvent, screen } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
 import { afterEach, describe, expect, it, vi } from 'vitest'
+import { renderWithIntl } from '@/test/intl'
 
 const createFolderAction = vi.fn()
 vi.mock('@/server/actions/workshop', () => ({
@@ -37,7 +38,7 @@ describe('creating a folder', () => {
       }),
     )
 
-    render(<CreateFolder parentId={null} />)
+    renderWithIntl(<CreateFolder parentId={null} />)
     await userEvent.click(screen.getByRole('button', { name: 'Ordner' }))
     const field = screen.getByLabelText('Name des Ordners')
     await userEvent.type(field, 'Neuer Ordner')
@@ -53,7 +54,7 @@ describe('creating a folder', () => {
 
   it('still commits when the field is left without pressing Enter', async () => {
     createFolderAction.mockResolvedValue({ ok: true, data: { id: 'f2' } })
-    render(<CreateFolder parentId="parent-1" />)
+    renderWithIntl(<CreateFolder parentId="parent-1" />)
 
     await userEvent.click(screen.getByRole('button', { name: 'Ordner' }))
     const field = screen.getByLabelText('Name des Unterordners')
@@ -68,7 +69,7 @@ describe('creating a folder', () => {
   })
 
   it('sends nothing for an empty name', async () => {
-    render(<CreateFolder parentId={null} />)
+    renderWithIntl(<CreateFolder parentId={null} />)
 
     await userEvent.click(screen.getByRole('button', { name: 'Ordner' }))
     fireEvent.focusOut(screen.getByLabelText('Name des Ordners'))

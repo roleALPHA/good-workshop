@@ -3,6 +3,7 @@ import type { ScheduleEntry } from '@/domain/schedule/types'
 import { formatDuration, formatTime } from '@/features/agenda/duration'
 import { cn } from '@/lib/cn'
 import { DurationInput } from './inline-inputs'
+import { useLocale, useTranslations } from 'next-intl'
 
 /**
  * Start time above, duration below in bold -- the layout of the reference
@@ -22,6 +23,7 @@ export function TimeCell({
   /** Present only in the editor; the duration then becomes editable in place. */
   editing?: { onDurationChange: (minutes: number) => void }
 }) {
+  const locale = useLocale()
   return (
     <div
       className={cn(
@@ -43,7 +45,7 @@ export function TimeCell({
             <span className="sr-only">Startzeit fixiert:</span>
           </>
         )}
-        {formatTime(entry.startMinute)}
+        {formatTime(entry.startMinute, locale)}
       </span>
       {showDuration &&
         (editing ? (
@@ -63,10 +65,11 @@ export function TimeCell({
  * automatic -- silently shortening a block is the fastest way to lose trust.
  */
 export function OverlapWarning({ minutes }: { minutes: number }) {
+  const t = useTranslations('agenda')
   return (
     <p className="mt-1 inline-flex items-center gap-1 rounded bg-[var(--warn-bg)] px-1.5 py-0.5 text-[13px] text-[var(--warn-fg)]">
       <span aria-hidden>!</span>
-      Überschneidet den vorherigen Block um {formatDuration(minutes)}
+      {t('overlap', { duration: formatDuration(minutes) })}
     </p>
   )
 }

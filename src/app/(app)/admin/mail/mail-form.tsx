@@ -6,26 +6,18 @@ import {
   sendTestMail,
   type MailSettingsView,
 } from '@/server/actions/mail-settings'
+import { useTranslations } from 'next-intl'
 
 const field =
   'mt-1 w-full rounded border border-[var(--border)] bg-[var(--surface)] px-3 py-2 text-[15px] disabled:opacity-60'
 
-const TRANSPORTS = [
-  { value: 'graph', label: 'Microsoft Graph', hint: 'Für Microsoft 365 ohne SMTP AUTH.' },
-  { value: 'smtp', label: 'SMTP', hint: 'Ein klassisches Mailrelay.' },
-  {
-    value: 'console',
-    label: 'In das Server-Log schreiben',
-    hint: 'Kein Versand. Anmeldelinks landen im Log — wer es lesen kann, kommt in jedes Konto.',
-  },
-  {
-    value: 'none',
-    label: 'Kein Versand',
-    hint: 'Anmeldelinks gibt es nur über die Kommandozeile.',
-  },
-] as const
+/** Values only: the label and the hint for each live in the catalog. */
+const TRANSPORTS = ['graph', 'smtp', 'console', 'none'] as const
 
 export function MailForm({ initial }: { initial: MailSettingsView }) {
+  const t = useTranslations('admin.mail')
+  const tc = useTranslations('common')
+  const tTransport = useTranslations('admin.mail.transport')
   const [view, setView] = useState(initial)
   const [transport, setTransport] = useState<string>(initial.transport)
   const [saved, setSaved] = useState(false)
@@ -62,7 +54,7 @@ export function MailForm({ initial }: { initial: MailSettingsView }) {
       const result = await sendTestMail(formData)
       setTest(
         result.ok
-          ? { ok: true, text: `Verschickt an ${result.data}. Wenn nichts ankommt: Spam-Ordner.` }
+          ? { ok: true, text: t('testSent', { email: result.data }) }
           : { ok: false, text: result.message },
       )
     } finally {
@@ -74,29 +66,30 @@ export function MailForm({ initial }: { initial: MailSettingsView }) {
     <>
       {view.fromEnvironment.length > 0 && (
         <p className="mt-4 rounded border border-[var(--border)] bg-[var(--surface)] px-3 py-2 text-[14px] text-[var(--fg-muted)]">
-          Einige Werte kommen aus der Umgebung des Servers und lassen sich hier nicht ändern. Sie
-          stehen in der <code>.env</code> der Installation.
+          {t.rich('fromEnvironmentNotice', { code: (chunks) => <code>{chunks}</code> })}
         </p>
       )}
 
       <form action={save} className="mt-6 space-y-6">
         <fieldset>
-          <legend className="text-[14px] font-medium">Wie sollen Mails verschickt werden?</legend>
+          <legend className="text-[14px] font-medium">{t('transportLegend')}</legend>
           <div className="mt-2 space-y-2">
             {TRANSPORTS.map((option) => (
-              <label key={option.value} className="flex gap-3">
+              <label key={option} className="flex gap-3">
                 <input
                   type="radio"
                   name="transport"
-                  value={option.value}
-                  checked={transport === option.value}
+                  value={option}
+                  checked={transport === option}
                   disabled={fixed('transport')}
                   onChange={(event) => setTransport(event.target.value)}
                   className="mt-1"
                 />
                 <span>
-                  <span className="text-[15px] font-medium">{option.label}</span>
-                  <span className="block text-[13px] text-[var(--fg-subtle)]">{option.hint}</span>
+                  <span className="text-[15px] font-medium">{tTransport(option)}</span>
+                  <span className="block text-[13px] text-[var(--fg-subtle)]">
+                    {tTransport(`${option}Hint`)}
+                  </span>
                 </span>
               </label>
             ))}
@@ -106,31 +99,32 @@ export function MailForm({ initial }: { initial: MailSettingsView }) {
         {transport === 'graph' && (
           <div className="space-y-4 border-l-2 border-[var(--border)] pl-4">
             <p className="text-[13px] text-[var(--fg-subtle)]">
-              Gebraucht wird eine App-Registrierung in Entra ID mit der{' '}
-              <strong>Anwendungsberechtigung</strong> <code>Mail.Send</code> samt
-              Administratorzustimmung.
+              {t.rich('graphIntro', {
+                b: (chunks) => <strong>{chunks}</strong>,
+                code: (chunks) => <code>{chunks}</code>,
+              })}
             </p>
             <Text
               name="graphTenantId"
-              label="Verzeichnis- oder Mandant-ID"
+              label={t('graphTenantId')}
               value={view.graphTenantId}
               disabled={fixed('graphTenantId')}
             />
             <Text
               name="graphClientId"
-              label="Anwendungs-ID"
+              label={t('graphClientId')}
               value={view.graphClientId}
               disabled={fixed('graphClientId')}
             />
             <Secret
               name="graphClientSecret"
-              label="Client Secret"
+              label={t('graphClientSecret')}
               stored={view.hasGraphClientSecret}
               disabled={fixed('graphClientSecret')}
             />
             <Text
               name="graphSender"
-              label="Absenderpostfach"
+              label={t('graphSender')}
               value={view.graphSender}
               disabled={fixed('graphSender')}
             />
@@ -141,14 +135,14 @@ export function MailForm({ initial }: { initial: MailSettingsView }) {
           <div className="space-y-4 border-l-2 border-[var(--border)] pl-4">
             <Secret
               name="smtpUrl"
-              label="SMTP-URL"
-              hint="Etwa smtps://benutzer:passwort@relay.example.com:465"
+              label={t('smtpUrl')}
+              hint={t('smtpUrlHint')}
               stored={view.hasSmtpUrl}
               disabled={fixed('smtpUrl')}
             />
             <Text
               name="smtpFrom"
-              label="Absenderadresse"
+              label={t('smtpFrom')}
               value={view.smtpFrom}
               disabled={fixed('smtpFrom')}
             />
@@ -160,27 +154,24 @@ export function MailForm({ initial }: { initial: MailSettingsView }) {
             {error}
           </p>
         )}
-        {saved && <p className="text-[14px] text-[var(--fg-muted)]">Gespeichert.</p>}
+        {saved && <p className="text-[14px] text-[var(--fg-muted)]">{t('saved')}</p>}
 
         <button
           type="submit"
           disabled={pending}
           className="rounded bg-[var(--brand)] px-4 py-2 text-[15px] font-medium text-[var(--brand-fg)] hover:bg-[var(--brand-hover)] disabled:opacity-60"
         >
-          Speichern
+          {tc('save')}
         </button>
       </form>
 
       <form action={runTest} className="mt-10 border-t border-[var(--border)] pt-6">
-        <h2 className="text-[15px] font-medium">Testnachricht schicken</h2>
-        <p className="mt-1 text-[13px] text-[var(--fg-subtle)]">
-          Ob ein Relay funktioniert, zeigt sich beim Verschicken. Sonst ist der erste Versuch der
-          Anmeldelink von jemandem — und ein Fehler sieht dann aus wie ein kaputtes Konto.
-        </p>
+        <h2 className="text-[15px] font-medium">{t('testTitle')}</h2>
+        <p className="mt-1 text-[13px] text-[var(--fg-subtle)]">{t('testIntro')}</p>
         <div className="mt-3 flex flex-wrap items-end gap-3">
           <div className="min-w-[16rem] flex-1">
             <label htmlFor="test-to" className="text-[14px] font-medium">
-              An
+              {t('testTo')}
             </label>
             <input id="test-to" name="to" type="email" required className={field} />
           </div>
@@ -189,7 +180,7 @@ export function MailForm({ initial }: { initial: MailSettingsView }) {
             disabled={pending}
             className="rounded border border-[var(--border)] px-4 py-2 text-[15px] disabled:opacity-60"
           >
-            Schicken
+            {t('testSend')}
           </button>
         </div>
         {test && (
@@ -242,6 +233,7 @@ function Secret({
   stored: boolean
   disabled: boolean
 }) {
+  const t = useTranslations('admin.mail')
   return (
     <div>
       <label htmlFor={name} className="text-[14px] font-medium">
@@ -254,7 +246,7 @@ function Secret({
         type="password"
         autoComplete="off"
         disabled={disabled}
-        placeholder={stored ? 'gespeichert — leer lassen, um ihn zu behalten' : ''}
+        placeholder={stored ? t('secretStored') : ''}
         className={field}
       />
       {hint && <p className="mt-1 text-[13px] text-[var(--fg-subtle)]">{hint}</p>}
@@ -263,9 +255,10 @@ function Secret({
 }
 
 function Fixed() {
+  const t = useTranslations('admin.mail')
   return (
     <span className="ml-2 rounded bg-[var(--bg)] px-1.5 py-0.5 text-[12px] font-normal text-[var(--fg-subtle)]">
-      aus der Umgebung
+      {t('fromEnvironment')}
     </span>
   )
 }

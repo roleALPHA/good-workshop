@@ -50,7 +50,7 @@ describe('encrypting a configured secret', () => {
     expect(() => decryptSecret(envelope)).toThrow(SecretKeyError)
     // And the message says what actually happened, because the realistic case
     // is a restored backup rather than an attack.
-    expect(() => decryptSecret(envelope)).toThrow(/Sicherung/)
+    expect(() => decryptSecret(envelope)).toThrow(/came from a backup/)
   })
 
   it('refuses a tampered ciphertext instead of decrypting to something else', () => {

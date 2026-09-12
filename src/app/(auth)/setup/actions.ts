@@ -6,6 +6,7 @@ import { rateLimiter } from '@/server/auth/ratelimit'
 import { issueMagicLink } from '@/server/auth/magic-link'
 import { magicLinkMail, mailConfigFor, sendMail, deliversToRecipient } from '@/server/auth/mail'
 import { authConfig } from '@/server/auth/config'
+import { getTranslations } from 'next-intl/server'
 import { claimInstallation, SetupError } from '@/server/settings/setup'
 
 /**
@@ -44,7 +45,10 @@ export async function claim(formData: FormData): Promise<SetupResult> {
     }
 
     try {
-      await sendMail(magicLinkMail(issued.email, issued.link), authConfig.defaultTenantId)
+      await sendMail(
+        magicLinkMail(issued.email, issued.link, issued.locale),
+        authConfig.defaultTenantId,
+      )
       return { ok: true, email }
     } catch (error) {
       console.error('setup: magic link delivery failed', { error })
@@ -53,8 +57,11 @@ export async function claim(formData: FormData): Promise<SetupResult> {
       return { ok: true, email, link: issued.link }
     }
   } catch (error) {
-    if (error instanceof SetupError) return { ok: false, error: error.message }
+    const t = await getTranslations('errors')
+    if (error instanceof SetupError) {
+      return { ok: false, error: t(`domain.${error.messageKey}` as 'domain.setup.wrongKey') }
+    }
     console.error('setup failed', { error })
-    return { ok: false, error: 'Die Einrichtung ist fehlgeschlagen. Details stehen im Log.' }
+    return { ok: false, error: t('setupFailed') }
   }
 }

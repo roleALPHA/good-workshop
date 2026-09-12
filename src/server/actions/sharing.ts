@@ -3,13 +3,12 @@
 import { revalidatePath } from 'next/cache'
 import { z } from 'zod'
 import {
-  SharingError,
   listCollaborators,
   removeCollaborator,
   setCollaborator,
 } from '@/domain/workshop/collaborators'
 import { listDirectory, type MemberRow } from '@/domain/tenant/members'
-import { workshopAction, currentActor, type ActionResult } from './context'
+import { workshopAction, currentActor, fail, toResult, type ActionResult } from './context'
 import { withTenant } from '@/server/db'
 import { assertWorkshopAccess } from '@/domain/agenda/access'
 import { eq } from 'drizzle-orm'
@@ -31,7 +30,7 @@ export type SharingView = {
 
 export async function loadSharing(workshopId: string): Promise<ActionResult<SharingView>> {
   const actor = await currentActor()
-  if (!actor) return { ok: false, error: 'unauthenticated', message: 'Bitte melde dich an.' }
+  if (!actor) return fail('unauthenticated', 'unauthenticated')
 
   try {
     const [members, data] = await Promise.all([
@@ -112,12 +111,4 @@ export async function removeCollaboratorAction(raw: {
 
   if (result.ok) revalidatePath(`/w/${raw.workshopId}/sharing`)
   return result
-}
-
-function toResult<T>(error: unknown): ActionResult<T> {
-  if (error instanceof SharingError) {
-    return { ok: false, error: 'invalid_input', message: error.message }
-  }
-  console.error('sharing action failed', error)
-  return { ok: false, error: 'failed', message: 'Das hat nicht geklappt.' }
 }

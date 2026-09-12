@@ -4,6 +4,7 @@ import { GripVertical } from 'lucide-react'
 import type { DraggableAttributes } from '@dnd-kit/core'
 import type { SyntheticListenerMap } from '@dnd-kit/core/dist/hooks/utilities'
 import { cn } from '@/lib/cn'
+import { useTranslations } from 'next-intl'
 
 /**
  * The only element that starts a drag.
@@ -23,12 +24,13 @@ export function DragHandle({
   label: string
   nested?: boolean
 }) {
+  const t = useTranslations('agenda')
   return (
     <button
       type="button"
       {...attributes}
       {...listeners}
-      aria-label={`${label} verschieben`}
+      aria-label={t('dragHandle', { title: label })}
       className={cn(
         'absolute top-2.5 z-20 grid size-8 place-items-center rounded text-[var(--fg-subtle)] opacity-0 transition-opacity duration-100',
         'group-focus-within:opacity-100 group-hover:opacity-100 focus-visible:opacity-100',

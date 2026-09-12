@@ -32,11 +32,11 @@ jobs:
     permissions:
       contents: read
       packages: write
-      # id-token: write und attestations: write standen hier, ohne dass ein
-      # Schritt sie benutzt -- die Provenance kommt von BuildKit
-      # (provenance: mode=max) und braucht sie nicht. id-token: write ist das
-      # Recht, ein OIDC-Token für beliebige Cloud-Trust-Policies zu prägen: das
-      # weitreichendste der vier, und reine Dekoration.
+      # id-token: write and attestations: write used to be here without any step
+      # using them -- the provenance comes from BuildKit (provenance: mode=max)
+      # and needs neither. id-token: write is the right to mint an OIDC token for
+      # arbitrary cloud trust policies: the furthest-reaching of the four, and
+      # pure decoration.
     strategy:
       fail-fast: false
       matrix:
@@ -150,10 +150,10 @@ jobs:
             $(printf "${REGISTRY}/${IMAGE_NAME}@sha256:%s " *)
 
       - name: Inspect published image
-        # Über env statt als ${{ }} direkt im Skript -- das Muster, das dieser
-        # Workflow sonst überall diszipliniert einhält. Der Wert kommt hier aus
-        # github.ref_name und ist nicht aus einem Fork beeinflussbar, aber eine
-        # Ausnahme im Muster ist genau das, was beim nächsten Mal übersehen wird.
+        # Through env rather than as ${{ }} directly in the script -- the pattern
+        # this workflow keeps to everywhere else. The value here comes from
+        # github.ref_name and cannot be influenced from a fork, but an exception
+        # to the pattern is exactly what gets overlooked next time.
         env:
           VERSION: ${{ steps.meta.outputs.version }}
         run: |

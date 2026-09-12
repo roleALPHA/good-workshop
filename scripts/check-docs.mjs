@@ -153,7 +153,7 @@ const documented = new Set(
  * row. The table is what an operator reads to find out what exists; a variable
  * missing from it is invisible no matter how often the prose says its name.
  */
-const configTable = section(readme, '### Konfiguration')
+const configTable = section(readme, '### Configuration')
 const inReadmeTable = new Set(
   [...configTable.matchAll(/^\|([^|]+)\|/gm)].flatMap((m) =>
     [...m[1].matchAll(/`(GW_[A-Z0-9_]+|SMTP_[A-Z0-9_]+)`/g)].map((c) => c[1]),
@@ -161,8 +161,8 @@ const inReadmeTable = new Set(
 )
 if (inReadmeTable.size === 0) {
   problems.push(
-    'Die README hat keinen Abschnitt `### Konfiguration` mit einer Variablentabelle mehr.',
-    '  Ohne sie prüft dieses Skript die Hälfte seiner Fragen gegen nichts.',
+    'The README no longer has a `### Configuration` section with a variable table.',
+    '  Without it this script checks half of its questions against nothing.',
   )
 }
 
@@ -172,9 +172,9 @@ const readByCode = new Set(
       'git',
       [
         'grep',
-        // --untracked: eine gerade erst geschriebene Datei ist genau die, deren
-        // neue Variable noch niemand entschieden hat. Ohne das sähe dieses
-        // Skript sie erst nach dem Commit -- einen Schritt zu spät.
+        // --untracked: a file just written is exactly the one whose new variable
+        // nobody has decided about yet. Without this the script would only see
+        // it after the commit -- one step too late.
         '--untracked',
         '-hoE',
         'process\\.env\\.[A-Z][A-Z0-9_]+',
@@ -235,7 +235,7 @@ for (const name of documented) {
     // Consumed outside the Node process -- but it must still be consumed.
     if (!fromEnvFile.has(name)) {
       problems.push(
-        `${name}: als Infrastruktur-Wert geführt, kommt in compose.yaml aber nicht vor.`,
+        `${name}: listed as an infrastructure value, but does not appear in compose.yaml.`,
         `  Dann liest ihn niemand, und die .env verspricht eine Wirkung, die es nicht gibt.`,
       )
     }
@@ -243,14 +243,14 @@ for (const name of documented) {
   }
   if (!reachesContainer.has(name)) {
     problems.push(
-      `${name}: steht in .env.example, wird aber von compose an keinen Container übergeben.`,
+      `${name}: is in .env.example, but compose passes it to no container.`,
       `  Genau der Fehler, den GW_OPS_TOKEN und GW_COLLAB_URL hatten: dokumentiert, wirkungslos.`,
     )
   }
   if (!readByCode.has(name)) {
     problems.push(
       `${name}: steht in .env.example, wird aber nirgends im Code gelesen.`,
-      `  Entweder ist der Code weg oder die Zeile ist ein Überbleibsel.`,
+      `  Either the code is gone or the line is a leftover.`,
     )
   }
 }
@@ -265,14 +265,14 @@ for (const name of readByCode) {
   if (!/^(GW_|SMTP_)/.test(name)) continue
   if (documented.has(name) || name in INTERNAL) continue
   problems.push(
-    `${name}: wird im Code gelesen, ist aber weder in .env.example dokumentiert noch in`,
-    `  check-docs.mjs als bewusst intern eingetragen. Eins von beidem entscheiden.`,
+    `${name}: is read in the code, but is neither documented in .env.example nor listed in`,
+    `  check-docs.mjs as deliberately internal. Decide one of the two.`,
   )
 }
 
 for (const name of Object.keys(INTERNAL)) {
   if (!readByCode.has(name)) {
-    problems.push(`${name}: als intern geführt, wird aber nicht mehr gelesen. Eintrag entfernen.`)
+    problems.push(`${name}: listed as internal, but nothing reads it any more. Remove the entry.`)
   }
   if (documented.has(name)) {
     problems.push(
@@ -284,8 +284,8 @@ for (const name of Object.keys(INTERNAL)) {
 for (const name of DB_URLS) {
   if (documented.has(name)) {
     problems.push(
-      `${name}: gehört nicht in .env.example -- die Verbindungen stehen in compose.yaml.`,
-      `  Ein Betreiber, der sie überschreibt, hebelt die Rollentrennung aus.`,
+      `${name}: does not belong in .env.example -- the connections live in compose.yaml.`,
+      `  An operator who overrides them defeats the separation of roles.`,
     )
   }
 }
@@ -371,17 +371,17 @@ for (const line of shellLines) {
 // ── Ergebnis ────────────────────────────────────────────────────────────────
 
 if (problems.length === 0) {
-  console.log('README, .env.example und compose.yaml stimmen mit dem Code überein.')
+  console.log('README, .env.example and compose.yaml agree with the code.')
   process.exit(0)
 }
 
 console.error('')
-console.error('  DIE DOKUMENTATION IST DEM CODE DAVONGELAUFEN')
+console.error('  THE DOCUMENTATION HAS RUN AWAY FROM THE CODE')
 console.error('')
 for (const line of problems) console.error(`  ${line}`)
 console.error('')
-console.error('  Jeder Punkt ist eine Stelle, an der die Anleitung etwas verspricht, das die')
-console.error('  Installation nicht einlöst. Siehe docs/doku-mitziehen.md.')
+console.error('  Every item is a place where the instructions promise something the')
+console.error('  installation does not deliver. See docs/keeping-docs-honest.md.')
 console.error('')
 process.exit(1)
 

@@ -98,11 +98,13 @@ describe('createToken', () => {
   })
 
   it('refuses a scope that does not exist', async () => {
-    await expect(create(as(mine), 'Erfunden', ['members:write'])).rejects.toThrow(/Unbekannte/)
+    await expect(create(as(mine), 'Erfunden', ['members:write'])).rejects.toThrow(
+      'token.unknownScopes',
+    )
   })
 
   it('insists on a name, so it can be recognised later', async () => {
-    await expect(create(as(mine), '   ', ['workshops:read'])).rejects.toThrow(/Namen/)
+    await expect(create(as(mine), '   ', ['workshops:read'])).rejects.toThrow('token.nameRequired')
   })
 })
 

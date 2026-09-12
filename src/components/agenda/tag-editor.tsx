@@ -3,6 +3,7 @@
 import { useState, useTransition } from 'react'
 import { X } from 'lucide-react'
 import { setTagsAction } from '@/server/actions/workshop'
+import { useTranslations } from 'next-intl'
 
 /**
  * Tags on a workshop, edited where the workshop is.
@@ -13,6 +14,7 @@ import { setTagsAction } from '@/server/actions/workshop'
  * nobody wants and a screen nobody maintains.
  */
 export function TagEditor({ workshopId, initial }: { workshopId: string; initial: string[] }) {
+  const t = useTranslations('agenda')
   const [tags, setTags] = useState(initial)
   const [draft, setDraft] = useState('')
   const [error, setError] = useState<string | null>(null)
@@ -54,7 +56,7 @@ export function TagEditor({ workshopId, initial }: { workshopId: string; initial
           <button
             type="button"
             disabled={pending}
-            aria-label={`Tag ${name} entfernen`}
+            aria-label={t('removeTag', { name })}
             onClick={() => save(tags.filter((t) => t !== name))}
             className="rounded p-0.5 hover:bg-[var(--surface)] disabled:opacity-50"
           >
@@ -64,8 +66,8 @@ export function TagEditor({ workshopId, initial }: { workshopId: string; initial
       ))}
 
       <input
-        aria-label="Tag hinzufügen"
-        placeholder="+ Tag"
+        aria-label={t('addTag')}
+        placeholder={t('tagPlaceholder')}
         disabled={pending}
         className="w-24 rounded border border-transparent bg-transparent px-1.5 py-0.5 text-[13px] hover:border-[var(--border)] focus:border-[var(--border-strong)] focus:bg-[var(--surface)]"
         value={draft}

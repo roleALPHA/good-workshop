@@ -5,6 +5,8 @@ import { emailToken, identity, member } from '@/server/db/schema'
 import { authConfig } from './config'
 import { generateSecret, hashSecret } from './tokens'
 import { magicLinkMail, sendMail } from './mail'
+import { DEFAULT_LOCALE, type Locale } from '@/i18n/config'
+import { asLocale } from '@/i18n/resolve'
 
 /**
  * E-mail token login.
@@ -14,7 +16,15 @@ import { magicLinkMail, sendMail } from './mail'
  * that install has no login at all.
  */
 
-export type IssueResult = { link: string; email: string }
+/**
+ * `locale` is the RECIPIENT's, which is why it comes back from here.
+ *
+ * The row is already being read to check the identity exists and is active, so
+ * carrying the language out costs nothing -- and the alternative, looking it up
+ * again at the send site, would be a second query in a different transaction
+ * and a second chance to forget.
+ */
+export type IssueResult = { link: string; email: string; locale: Locale }
 
 /**
  * Issues a link for an existing member.
@@ -43,7 +53,7 @@ export async function issueMagicLink(
 
   return withAuth(async (tx) => {
     const rows = await tx
-      .select({ identityId: identity.id, status: identity.status })
+      .select({ identityId: identity.id, status: identity.status, locale: identity.locale })
       .from(identity)
       .where(eq(identity.email, normalised))
       .limit(1)
@@ -85,6 +95,9 @@ export async function issueMagicLink(
     return {
       email: normalised,
       link: new URL(`/verify?token=${secret}`, authConfig.appUrl).toString(),
+      // Untrusted despite the column being NOT NULL: it is a documented seam
+      // for OIDC/SAML imports and carries no check constraint.
+      locale: asLocale(found.locale) ?? DEFAULT_LOCALE,
     }
   })
 }
@@ -94,7 +107,7 @@ export async function sendMagicLink(emailAddress: string, tenantId?: string): Pr
   const issued = await issueMagicLink(emailAddress, tenant)
   // Nothing to send is not an error the caller may distinguish -- see above.
   if (!issued) return
-  await sendMail(magicLinkMail(issued.email, issued.link), tenant)
+  await sendMail(magicLinkMail(issued.email, issued.link, issued.locale), tenant)
 }
 
 export type ConsumedToken = { identityId: string; tenantId: string; email: string }

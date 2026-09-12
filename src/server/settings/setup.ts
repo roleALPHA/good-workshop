@@ -3,6 +3,7 @@ import { and, count, eq } from 'drizzle-orm'
 import { withAuth, withTenantOnly } from '@/server/db'
 import { identity, member } from '@/server/db/schema'
 import { authConfig } from '@/server/auth/config'
+import { DomainError } from '@/domain/errors'
 import { generateSecret } from '@/server/auth/tokens'
 
 /**
@@ -65,7 +66,7 @@ export async function needsSetup(): Promise<boolean> {
   return (rows[0]?.n ?? 0) === 0
 }
 
-export class SetupError extends Error {}
+export class SetupError extends DomainError {}
 
 /**
  * Creates the first administrator and returns the address to send a link to.
@@ -76,16 +77,16 @@ export class SetupError extends Error {}
  */
 export async function claimInstallation(emailAddress: string, token: string): Promise<string> {
   if (!setupTokenMatches(token)) {
-    throw new SetupError('Der Einrichtungsschlüssel stimmt nicht.')
+    throw new SetupError('setup.wrongKey')
   }
 
   const normalised = emailAddress.trim().toLowerCase()
   if (!/^[^@\s]+@[^@\s]+\.[^@\s]+$/.test(normalised)) {
-    throw new SetupError('Das ist keine gültige E-Mail-Adresse.')
+    throw new SetupError('setup.invalidEmail')
   }
 
   if (!(await needsSetup())) {
-    throw new SetupError('Diese Installation hat bereits eine Administratorin.')
+    throw new SetupError('setup.alreadyClaimed')
   }
 
   const tenantId = authConfig.defaultTenantId
@@ -108,13 +109,13 @@ export async function claimInstallation(emailAddress: string, token: string): Pr
       .returning({ id: identity.id })
 
     const row = created[0]
-    if (!row) throw new SetupError('Die Identität konnte nicht angelegt werden.')
+    if (!row) throw new SetupError('setup.identityFailed')
     return row.id
   })
 
   await withTenantOnly(tenantId, async (tx) => {
     if ((await adminCount(tx, tenantId)) > 0) {
-      throw new SetupError('Diese Installation hat bereits eine Administratorin.')
+      throw new SetupError('setup.alreadyClaimed')
     }
     await tx
       .insert(member)
