@@ -88,6 +88,13 @@ because the digest-merge mechanics look awkward.
 
 - Every action pinned to a **full-length commit SHA**, not to `@v4`. Dependabot keeps them
   current — `.github/dependabot.yml` covers actions, npm and Docker, weekly.
+- **A `pnpm.overrides` block is not a small change.** Adding one re-resolves parts of the graph,
+  and the resolver is free to land somewhere else than the lockfile did. Pinning one transitive
+  package away from an advisory pulled in `@esbuild-kit/core-utils` with an esbuild carrying an
+  advisory of its own — a net loss, caught by the dependency review before it merged. Prefer the
+  Dependabot security update, which resolves the same problem without re-deriving the tree, and
+  reach for an override only when no upstream fix exists.
+
 - **Repository security settings are part of the setup, not a preference.** Secret scanning with
   push protection, Dependabot alerts and security updates, and private vulnerability reporting
   are all on, and all free for a public repository. Push protection is the one with a daily

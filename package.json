@@ -93,7 +93,7 @@
   },
   "pnpm": {
     "overrides": {
-      "postcss": "^8.5.28"
+      "@esbuild-kit/core-utils>esbuild": "^0.25.12"
     }
   }
 }
