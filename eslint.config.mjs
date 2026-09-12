@@ -1,9 +1,15 @@
-import { dirname } from 'node:path'
-import { fileURLToPath } from 'node:url'
-import { FlatCompat } from '@eslint/eslintrc'
+import nextCoreWebVitals from 'eslint-config-next/core-web-vitals'
+import nextTypescript from 'eslint-config-next/typescript'
 import prettier from 'eslint-config-prettier'
 
-const compat = new FlatCompat({ baseDirectory: dirname(fileURLToPath(import.meta.url)) })
+/**
+ * Imported directly, not through `FlatCompat`.
+ *
+ * eslint-config-next ships flat config from v16 on, and the compatibility
+ * bridge chokes on it -- it tries to validate a flat array against the old
+ * schema and dies inside its own error formatter, which is a stack trace rather
+ * than a message. One import each is also simply what the config now is.
+ */
 
 const GERMAN_IN_COMPONENT =
   'German text belongs in src/messages, not in a component. ' +
@@ -39,7 +45,8 @@ const config = [
     ],
   },
 
-  ...compat.extends('next/core-web-vitals', 'next/typescript'),
+  ...nextCoreWebVitals,
+  ...nextTypescript,
   prettier,
 
   {

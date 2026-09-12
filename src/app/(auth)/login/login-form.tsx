@@ -33,6 +33,12 @@ export function LoginForm({
       }).then((r) => r.json())
 
       if (!result.ok) throw new Error(t('passkeyFailed'))
+      // A FULL navigation, deliberately, and not `router.push()`. The session
+      // cookie was set by the response we just read; a client-side navigation
+      // would render from a router cache built while there was no session, and
+      // the first thing the person sees after signing in would be the signed-out
+      // shell.
+      // eslint-disable-next-line @next/next/no-location-assign-relative-destination -- see above
       window.location.href = '/'
     } catch (error) {
       // A cancelled prompt is not a failure worth shouting about.
