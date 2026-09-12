@@ -2,7 +2,14 @@ import type * as Y from 'yjs'
 import { and, eq, inArray, notInArray, sql } from 'drizzle-orm'
 import { readBlocks, readDayFields, type RawBlock } from '@/domain/collab/doc'
 import type { Tx } from '@/server/db'
-import { cluster, moduleType, workshop, workshopDay, workshopModule } from '@/server/db/schema'
+import {
+  auditEvent,
+  cluster,
+  moduleType,
+  workshop,
+  workshopDay,
+  workshopModule,
+} from '@/server/db/schema'
 import { validateModuleDesc } from '@/domain/moduleType/validate'
 import { loadDoc, readState, writeState } from './store'
 
@@ -26,6 +33,13 @@ export type MaterializeResult = {
   blocks?: number
   removed?: number
   contentVersion?: bigint
+  /**
+   * Blocks whose `desc` the schema refused, so the row kept its old value.
+   *
+   * Reported rather than only logged: a caller that says "10 entries written"
+   * while one of them silently did not is telling the person something untrue.
+   */
+  rejected?: number
 }
 
 export async function materializeDay(
@@ -72,12 +86,14 @@ export async function materializeDay(
     .returning({ contentVersion: workshop.contentVersion })
 
   await writeState(tx, dayId, upTo)
+  await recordRejections(tx, workshopId, dayId, written.rejected)
 
   return {
     status: 'written',
     blocks: written.upserted,
     removed: written.removed,
     contentVersion: bumped[0]!.contentVersion,
+    ...(written.rejected.length > 0 ? { rejected: written.rejected.length } : {}),
   }
 }
 
@@ -86,7 +102,7 @@ async function writeBlocks(
   workshopId: string,
   dayId: string,
   blocks: RawBlock[],
-): Promise<{ upserted: number; removed: number }> {
+): Promise<{ upserted: number; removed: number; rejected: Rejection[] }> {
   const clusters = blocks.filter((b) => b.kind === 'cluster')
   const modules = blocks.filter((b) => b.kind === 'module' && b.moduleTypeId !== null)
 
@@ -118,7 +134,7 @@ async function writeBlocks(
   }
 
   const clusterIds = new Set(clusters.map((c) => c.id))
-  const descs = await validatedDescs(tx, modules)
+  const { valid: descs, rejected } = await validatedDescs(tx, modules)
 
   for (const block of modules) {
     // A parent that no longer exists means the cluster was deleted while this
@@ -186,6 +202,7 @@ async function writeBlocks(
   return {
     upserted: clusters.length + modules.length,
     removed: removedModules.length + removedClusters.length,
+    rejected,
   }
 }
 
@@ -224,13 +241,14 @@ export type DocSource = { doc: Y.Doc; upTo: number }
 async function validatedDescs(
   tx: Tx,
   modules: RawBlock[],
-): Promise<Map<string, Record<string, unknown>>> {
+): Promise<{ valid: Map<string, Record<string, unknown>>; rejected: Rejection[] }> {
   const valid = new Map<string, Record<string, unknown>>()
+  const rejected: Rejection[] = []
 
   const typeIds = [
     ...new Set(modules.map((m) => m.moduleTypeId).filter((id): id is string => !!id)),
   ]
-  if (typeIds.length === 0) return valid
+  if (typeIds.length === 0) return { valid, rejected }
 
   const types = await tx
     .select({
@@ -256,16 +274,56 @@ async function validatedDescs(
       continue
     }
 
-    // Read by an operator, not by a user: the person editing already saw the
-    // browser refuse it, and anybody reaching this line got past that.
+    // The key, not a sentence: these go into a log and an audit row, neither of
+    // which has a language, and an operator grepping for `field.required` wants
+    // every instance across all four.
+    const errors = result.errors.map((e) => `${e.path} ${e.messageKey}`)
+
     console.warn('materialize: desc failed validation, keeping the stored value', {
       moduleId: block.id,
       moduleTypeId: block.moduleTypeId,
-      // The key, not a sentence: this is a log, and an operator grepping for
-      // `field.required` finds every instance across four languages.
-      errors: result.errors.map((e) => `${e.path} ${e.messageKey}`),
+      errors,
     })
+
+    rejected.push({ moduleId: block.id, moduleTypeId: block.moduleTypeId, errors })
   }
 
-  return valid
+  return { valid, rejected }
+}
+
+/** One block whose content the schema refused, in the shape the audit row keeps. */
+type Rejection = {
+  moduleId: string
+  moduleTypeId: string | null
+  errors: string[]
+}
+
+/**
+ * Writes down that a block's content did not make it into the record.
+ *
+ * Keeping the previous value is the right call -- one malformed block must not
+ * freeze a day for everybody in it. Keeping it silently is not: the editor
+ * reads the shared document and goes on showing what was typed, while export,
+ * print and MCP serve the older value. Without this row the two part company
+ * and nothing anywhere says so.
+ *
+ * `source: 'system'` because no person asked for this: it is the materialiser
+ * reporting on itself, and attributing it to whoever happened to be in the
+ * room would name the wrong actor.
+ */
+async function recordRejections(
+  tx: Tx,
+  workshopId: string,
+  dayId: string,
+  rejected: Rejection[],
+): Promise<void> {
+  if (rejected.length === 0) return
+
+  await tx.insert(auditEvent).values({
+    source: 'system',
+    entityType: 'workshop',
+    entityId: workshopId,
+    action: 'day.desc_rejected',
+    data: { dayId, blocks: rejected },
+  })
 }

@@ -312,7 +312,7 @@ export class Room {
     }
   }
 
-  private async materialize(): Promise<void> {
+  private async materialize(): Promise<number> {
     // Everything we hold has to be in the log FIRST.
     //
     // Materialising reads the log back out of the database, so one that
@@ -329,11 +329,17 @@ export class Room {
     await this.persist()
 
     try {
-      await withTenant(this.actor, (tx) => materializeDay(tx, this.workshopId, this.dayId))
+      const result = await withTenant(this.actor, (tx) =>
+        materializeDay(tx, this.workshopId, this.dayId),
+      )
+      // Carried back so a caller that is waiting -- an MCP write -- can say
+      // that not everything it sent reached the record. See validatedDescs.
+      return result.rejected ?? 0
     } catch (error) {
       // Never fatal: the log is the durable record, and the tables catch up on
       // the next attempt or when the room closes.
       console.error('collab: materialise failed', { dayId: this.dayId, error })
+      return 0
     }
   }
 
@@ -346,15 +352,15 @@ export class Room {
    * either write it a second time or report to the user that nothing happened.
    * One explicit flush turns that into read-after-write.
    */
-  async flushNow(): Promise<bigint> {
+  async flushNow(): Promise<{ contentVersion: bigint; rejected: number }> {
     if (this.materializeTimer) clearTimeout(this.materializeTimer)
     this.materializeTimer = null
 
     // Persisting is materialisation's own first step, so asking for it twice
     // here would only invite the two to drift apart later.
-    await this.materialize()
+    const rejected = await this.materialize()
 
-    return withTenant(this.actor, async (tx) => {
+    const contentVersion = await withTenant(this.actor, async (tx) => {
       const row = await tx
         .select({ contentVersion: workshop.contentVersion })
         .from(workshop)
@@ -362,6 +368,8 @@ export class Room {
         .limit(1)
       return row[0]?.contentVersion ?? 0n
     })
+
+    return { contentVersion, rejected }
   }
 
   /**

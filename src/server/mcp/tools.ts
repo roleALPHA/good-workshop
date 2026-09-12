@@ -384,7 +384,7 @@ export function registerTools(server: McpServer, ctx: Ctx): void {
         const unknown = [...new Set(wanted)].filter((key) => !types.has(key))
         if (unknown.length > 0) return fail(unknownTypes(unknown, types))
 
-        const { result, contentVersion } = await inRoom(workshopId, dayId, (doc) => {
+        const { result, contentVersion, rejected } = await inRoom(workshopId, dayId, (doc) => {
           let created = 0
           doc.transact(() => {
             if (mode === 'replace') clearBlocks(doc)
@@ -408,11 +408,20 @@ export function registerTools(server: McpServer, ctx: Ctx): void {
           return created
         })
 
-        await record('agenda.apply', workshopId, { dayId, mode, created: result })
-        return ok(`${result} entries written.`, {
-          created: result,
-          contentVersion: contentVersion.toString(),
-        })
+        await record('agenda.apply', workshopId, { dayId, mode, created: result, rejected })
+        // Saying "10 entries written" while one of them did not reach the
+        // record would be telling the caller something untrue. The block keeps
+        // whatever it held before; see validatedDescs in collab/materialize.
+        return ok(
+          rejected > 0
+            ? `${result} entries written, ${rejected} refused by the block type's schema and left unchanged.`
+            : `${result} entries written.`,
+          {
+            created: result,
+            ...(rejected > 0 ? { rejected } : {}),
+            contentVersion: contentVersion.toString(),
+          },
+        )
       } catch (error) {
         return toolError(error)
       }
