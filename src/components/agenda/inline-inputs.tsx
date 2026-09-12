@@ -184,7 +184,7 @@ export function PinControl({
         <input
           type="time"
           aria-label={t('pin.time')}
-          className="tabular w-[5.5rem] rounded-sm border border-transparent bg-transparent px-1 py-0.5 text-[14px] hover:border-[var(--border)] focus:border-[var(--brand-ring)] focus:bg-[var(--surface)] focus:outline-none"
+          className="tabular w-[5.5rem] rounded-sm border border-transparent bg-transparent px-1 py-0.5 text-[14px] hover:border-[var(--border)] focus:border-[var(--brand-ring)] focus:bg-[var(--surface)] focus:outline-none pointer-coarse:text-[16px]"
           value={toTimeValue(pinnedMinute)}
           onChange={(e) => {
             const parsed = fromTimeValue(e.target.value)

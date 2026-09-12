@@ -1,8 +1,11 @@
 import { screen, within } from '@testing-library/react'
 import { renderWithIntl as render } from '@/test/intl'
-import { describe, expect, it, vi } from 'vitest'
+import { describe, expect, it } from 'vitest'
+import { computeSchedule } from '@/domain/schedule/computeSchedule'
 import { createDemoDay } from '@/features/agenda/fixtures/day-fixture'
+import { flattenDay, toScheduleItems, withGapRows } from '@/features/agenda/flatten'
 import { AgendaSurface } from './agenda-surface'
+import { AgendaTable } from './agenda-table'
 
 /**
  * The whole agenda, rendered from the reference fixture.
@@ -19,30 +22,31 @@ import { AgendaSurface } from './agenda-surface'
  * assertions stayed end-to-end, against a real workshop.
  */
 
-/** The surface picks its layout from a media query jsdom does not implement. */
-function renderAt(width: 'desktop' | 'phone') {
-  vi.stubGlobal(
-    'matchMedia',
-    (query: string) =>
-      ({
-        matches: width === 'desktop' && query.includes('min-width: 1024px'),
-        media: query,
-        onchange: null,
-        addEventListener: () => {},
-        removeEventListener: () => {},
-        addListener: () => {},
-        removeListener: () => {},
-        dispatchEvent: () => false,
-      }) as unknown as MediaQueryList,
-  )
-  return render(<AgendaSurface doc={createDemoDay()} />)
+/**
+ * The two renderings of one agenda.
+ *
+ * `renderReading` is the table: what the server sends, what a page shows before
+ * any JavaScript has arrived, and what the print view is built from. It takes
+ * no handlers, so everything in it is necessarily read-only.
+ *
+ * `renderEditor` is the surface once the browser has taken over. It is the same
+ * row components with handlers passed in -- which is the whole point of the
+ * seam, and why a change to one cannot quietly diverge from the other.
+ */
+function renderReading() {
+  const doc = createDemoDay()
+  const rows = flattenDay(doc)
+  const schedule = computeSchedule(doc.startMinute, toScheduleItems(rows))
+  return render(<AgendaTable doc={doc} rows={withGapRows(rows, schedule)} schedule={schedule} />)
 }
+
+const renderEditor = () => render(<AgendaSurface doc={createDemoDay()} />)
 
 const block = (name: string) => screen.getByRole('article', { name })
 
 describe('the agenda as a whole', () => {
   it('derives every start time from the one pinned block', () => {
-    renderAt('phone')
+    renderReading()
 
     // 13:00 is pinned; everything after it follows from durations alone.
     expect(block('Check-in & Start')).toHaveTextContent('13:00')
@@ -52,7 +56,7 @@ describe('the agenda as a whole', () => {
   })
 
   it('keeps the blocks in agenda order', () => {
-    renderAt('phone')
+    renderReading()
 
     // Asserted through document position rather than through a list of names:
     // the accessible name is computed from the contents, which the two layouts
@@ -74,7 +78,7 @@ describe('the agenda as a whole', () => {
   })
 
   it('announces a pinned start instead of signalling it with an icon alone', () => {
-    renderAt('phone')
+    renderReading()
 
     expect(within(block('Check-in & Start')).getByText('Startzeit fixiert:')).toBeInTheDocument()
     expect(
@@ -83,7 +87,7 @@ describe('the agenda as a whole', () => {
   })
 
   it('states an overlap in words rather than silently shortening a block', () => {
-    renderAt('phone')
+    renderReading()
 
     const lunch = block('Mittagessen')
     expect(lunch).toHaveTextContent('14:30')
@@ -95,7 +99,7 @@ describe('the agenda as a whole', () => {
   })
 
   it('derives a cluster duration from its children', () => {
-    renderAt('phone')
+    renderReading()
 
     // 15 + 10 + 10 = 35, starting where its first, pinned child starts.
     const section = screen.getByRole('group', { name: 'Ankommen & Rahmen' })
@@ -104,7 +108,7 @@ describe('the agenda as a whole', () => {
   })
 
   it('shows the running end time and flags going over plan', () => {
-    renderAt('phone')
+    renderReading()
 
     // The day is planned to 17:00 and the blocks add up past it.
     const end = screen.getByText('Ende', { exact: true }).parentElement
@@ -113,7 +117,7 @@ describe('the agenda as a whole', () => {
   })
 
   it('labels the columns on a wide screen', () => {
-    renderAt('desktop')
+    renderEditor()
     expect(screen.getByText('Titel und Beschreibung')).toBeInTheDocument()
   })
 
@@ -123,20 +127,20 @@ describe('the agenda as a whole', () => {
    * amounted to hiding it. It now sits beside the times.
    */
   it('reads the participation format off the row, without opening anything', () => {
-    renderAt('phone')
+    renderReading()
     expect(block('Check-in & Start')).toHaveTextContent('Plenum')
     expect(block('Spannungsfelder sammeln')).toHaveTextContent('Kleingruppen')
   })
 
   it('gives a reader the format as a word and no control to change it', () => {
-    renderAt('phone')
+    renderReading()
     expect(
       within(block('Check-in & Start')).queryByRole('button', { name: /Sozialform/ }),
     ).not.toBeInTheDocument()
   })
 
   it('lets an editor set the format from the row itself', () => {
-    renderAt('desktop')
+    renderEditor()
     expect(
       within(block('Check-in & Start')).getByRole('button', { name: 'Sozialform: Plenum' }),
     ).toBeInTheDocument()
@@ -148,7 +152,7 @@ describe('the agenda as a whole', () => {
    * asks the schema.
    */
   it('shows every field the schema flags for the table, not a list kept here', () => {
-    renderAt('phone')
+    renderReading()
     // materials was the only one the old hardcoded list got right.
     expect(block('Druckpunkte')).toHaveTextContent('Klebepunkte')
     // deliverable and catering_note are flagged `summary` in the schema and
@@ -162,14 +166,14 @@ describe('the agenda as a whole', () => {
   })
 
   it('offers an editor the material of a row where the row is', () => {
-    renderAt('desktop')
+    renderEditor()
     expect(
       within(block('Agenda & Spielregeln')).getByLabelText('Material hinzufügen'),
     ).toBeInTheDocument()
   })
 
   it('offers an editor a lock for the start time of a block and of a section', () => {
-    renderAt('desktop')
+    renderEditor()
 
     expect(
       within(block('Agenda & Spielregeln')).getByRole('button', { name: 'Startzeit fixieren' }),

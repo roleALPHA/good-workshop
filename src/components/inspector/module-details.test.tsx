@@ -11,13 +11,17 @@ import { ModuleDetails } from './module-details'
  *
  * The bug these tests were written for: every widget but one hands its value
  * up on each keystroke, so by the time the panel's blur handler runs, that
- * value is already in state. `tags` -- the widget behind Material -- committed
- * on blur instead, and React's blur bubbles: the panel committed the snapshot
- * from before the tag field spoke, and the round trip through the document
- * then overwrote what had been typed. Material never persisted.
+ * value is already in state. `tags` committed on blur instead, and React's
+ * blur bubbles: the panel committed the snapshot from before the tag field
+ * spoke, and the round trip through the document then overwrote what had been
+ * typed. It was reported on Material, which is a tags field; every other tags
+ * field had it too.
  */
 
-const type = MODULE_TYPES_BY_KEY.admin!
+// A decision block, because its `options` is a `tags` field that stays in this
+// panel. Material is a tags field too and was what the bug below was reported
+// on -- but the row edits it in place now, so the panel no longer offers it.
+const type = MODULE_TYPES_BY_KEY.decision!
 
 const moduleWith = (desc: Record<string, unknown> = {}): ModuleDto => ({
   id: 'm-1',
@@ -53,7 +57,9 @@ describe('a module type whose schema changed while the panel was open', () => {
       type: 'object',
       additionalProperties: false,
       properties: {
-        materials: { type: 'array', items: { type: 'string' }, title: 'Material' },
+        // Deliberately not a field the row edits in place, or this panel would
+        // filter it out and the test would be asserting about nothing.
+        notiz: { type: 'string', title: 'Notiz' },
         ...extra,
       },
     },
@@ -67,7 +73,7 @@ describe('a module type whose schema changed while the panel was open', () => {
     const { unmount } = render(
       <ModuleDetails module={moduleWith()} type={evolving(1, {})} onChange={() => {}} />,
     )
-    await user.type(screen.getByLabelText('Material'), 'Marker')
+    await user.type(screen.getByLabelText('Notiz'), 'Etwas')
     await leaveThePanel(user)
     unmount()
 
@@ -88,36 +94,86 @@ describe('a module type whose schema changed while the panel was open', () => {
 })
 
 describe('the module detail fields', () => {
-  it('keeps a material typed into the tag field when the panel commits', async () => {
+  it('keeps what was typed into a tag field when the panel commits', async () => {
     const user = userEvent.setup()
     const onChange = vi.fn()
     render(<ModuleDetails module={moduleWith()} type={type} onChange={onChange} />)
 
-    await user.type(screen.getByLabelText('Material'), 'Flipchart, Marker')
+    await user.type(screen.getByLabelText('Optionen'), 'Variante A, Variante B')
     await leaveThePanel(user)
 
     expect(onChange).toHaveBeenCalled()
     expect(onChange.mock.calls.at(-1)?.[0]).toMatchObject({
-      materials: ['Flipchart', 'Marker'],
+      options: ['Variante A', 'Variante B'],
     })
   })
 
-  it('does not lose the materials when another field is edited afterwards', async () => {
+  it('does not lose the tags when another field is edited afterwards', async () => {
     const user = userEvent.setup()
     const onChange = vi.fn()
     render(<ModuleDetails module={moduleWith()} type={type} onChange={onChange} />)
 
-    await user.type(screen.getByLabelText('Material'), 'Flipchart')
-    await user.selectOptions(screen.getByLabelText('Sozialform'), 'small_groups')
+    await user.type(screen.getByLabelText('Optionen'), 'Variante A')
+    await user.selectOptions(screen.getByLabelText('Verfahren'), 'consent')
     await leaveThePanel(user)
 
     expect(onChange.mock.calls.at(-1)?.[0]).toMatchObject({
-      materials: ['Flipchart'],
-      participation: 'small_groups',
+      options: ['Variante A'],
+      method: 'consent',
     })
   })
 
-  it('shows a material that arrived from elsewhere in the text field, not just as a chip', () => {
+  it('shows a value that arrived from elsewhere in the text field, not just as a chip', () => {
+    render(
+      <ModuleDetails
+        module={moduleWith({ options: ['Variante A'] })}
+        type={type}
+        onChange={() => {}}
+      />,
+    )
+
+    expect(screen.getByLabelText('Optionen')).toHaveValue('Variante A')
+  })
+
+  it('clears the field when it is emptied', async () => {
+    const user = userEvent.setup()
+    const onChange = vi.fn()
+    render(
+      <ModuleDetails
+        module={moduleWith({ options: ['Variante A'] })}
+        type={type}
+        onChange={onChange}
+      />,
+    )
+
+    await user.clear(screen.getByLabelText('Optionen'))
+    await leaveThePanel(user)
+
+    expect(onChange.mock.calls.at(-1)?.[0]).not.toHaveProperty('options')
+  })
+
+  /**
+   * The row edits the social form and the material in place. Offering them
+   * here as well is not merely redundant: two controls over one value means
+   * whichever one somebody did not touch writes its stale copy over the other
+   * on blur, and the change vanishes with both controls still on screen.
+   */
+  it('leaves out the fields the row already edits in place', () => {
+    render(
+      <ModuleDetails
+        module={moduleWith({ materials: ['Beamer'], participation: 'pairs' })}
+        type={type}
+        onChange={() => {}}
+      />,
+    )
+
+    expect(screen.queryByLabelText('Material')).not.toBeInTheDocument()
+    expect(screen.queryByLabelText('Sozialform')).not.toBeInTheDocument()
+    // Still offered, because the row shows the description but cannot change it.
+    expect(screen.getByLabelText('Beschreibung')).toBeInTheDocument()
+  })
+
+  it('does not mistake a row-edited value for one whose field is gone', () => {
     render(
       <ModuleDetails
         module={moduleWith({ materials: ['Beamer'] })}
@@ -126,23 +182,8 @@ describe('the module detail fields', () => {
       />,
     )
 
-    expect(screen.getByLabelText('Material')).toHaveValue('Beamer')
-  })
-
-  it('clears the materials when the field is emptied', async () => {
-    const user = userEvent.setup()
-    const onChange = vi.fn()
-    render(
-      <ModuleDetails
-        module={moduleWith({ materials: ['Beamer'] })}
-        type={type}
-        onChange={onChange}
-      />,
-    )
-
-    await user.clear(screen.getByLabelText('Material'))
-    await leaveThePanel(user)
-
-    expect(onChange.mock.calls.at(-1)?.[0]).not.toHaveProperty('materials')
+    // The legacy disclosure is for values the schema no longer declares. A
+    // value this panel simply does not render is not one of them.
+    expect(screen.queryByText(/Beamer/)).not.toBeInTheDocument()
   })
 })

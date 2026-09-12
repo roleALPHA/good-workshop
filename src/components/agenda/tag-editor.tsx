@@ -69,7 +69,7 @@ export function TagEditor({ workshopId, initial }: { workshopId: string; initial
         aria-label={t('addTag')}
         placeholder={t('tagPlaceholder')}
         disabled={pending}
-        className="w-24 rounded border border-transparent bg-transparent px-1.5 py-0.5 text-[13px] hover:border-[var(--border)] focus:border-[var(--border-strong)] focus:bg-[var(--surface)]"
+        className="w-24 rounded border border-transparent bg-transparent px-1.5 py-0.5 text-[13px] hover:border-[var(--border)] focus:border-[var(--border-strong)] focus:bg-[var(--surface)] pointer-coarse:text-[16px]"
         value={draft}
         onChange={(e) => setDraft(e.target.value)}
         onBlur={add}
