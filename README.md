@@ -151,6 +151,9 @@ Three guardrails are enforced by ESLint and are not a matter of style:
 
 If you work on the installation, the migrations or the documentation, the details are here:
 
+Found something that looks like a security problem? [SECURITY.md](SECURITY.md) says where it
+goes — privately, not into an issue — and which boundaries are worth attacking.
+
 - [Keeping the docs honest](docs/keeping-docs-honest.md) — what `pnpm check:docs` checks, what
   it cannot, and what to update after which change
 - [Installation and upgrade](docs/installation-and-upgrade.md) — the startup chain, the

@@ -1,0 +1,29 @@
+name: Dependency Review
+
+# Free for public repositories. It answers one question the other jobs cannot:
+# does THIS pull request add a dependency with a known vulnerability, or one
+# whose licence this project cannot accept -- before it is merged, rather than
+# after Dependabot notices it on main.
+on:
+  pull_request:
+    branches: [main]
+
+permissions:
+  contents: read
+
+jobs:
+  review:
+    name: Review dependencies
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+      - uses: actions/dependency-review-action@a1d282b36b6f3519aa1f3fc636f609c47dddb294 # v5.0.0
+        with:
+          # Moderate rather than high: this is a small dependency tree and a
+          # moderate finding here is a decision somebody should make, not a
+          # line in a report nobody opens.
+          fail-on-severity: moderate
+          # AGPL-3.0 is this project's own licence. What it cannot absorb is a
+          # dependency that is more restrictive than that, or one whose terms
+          # are unclear -- both are a problem for whoever self-hosts this.
+          deny-licenses: SSPL-1.0, BUSL-1.1, Elastic-2.0
