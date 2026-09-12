@@ -103,7 +103,7 @@ provisioning path with a bypass role is one that quietly writes into the wrong t
 ## Upgrade
 
 ```bash
-docker compose exec -u postgres db pg_dump goodworkshop > before-upgrade-$(date +%F).sql
+scripts/backup.sh before-upgrade-$(date +%F).sql.gz
 # point GW_VERSION in the .env at the new tag; provide the image
 docker compose --profile tls up -d
 ```

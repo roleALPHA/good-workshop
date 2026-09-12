@@ -81,6 +81,9 @@
     "content": "{duration} de contenido",
     "dayNote": "Nota sobre la jornada",
     "dayNotePlaceholder": "Sala, cómo llegar, quién trae qué …",
+    "delete": "Eliminar",
+    "deleteHint": "Quitar definitivamente",
+    "deleteLabel": "Eliminar {title}",
     "drag": {
       "atDayLevel": "al nivel de la jornada",
       "cancelled": "Movimiento cancelado.",
@@ -204,6 +207,12 @@
       "collab": {
         "unavailable": "El servicio de colaboración no responde. Sin él no se puede escribir, porque habría dos caminos de escritura hacia la misma jornada."
       },
+      "folder": {
+        "gone": "Esa carpeta no existe.",
+        "intoItself": "Una carpeta no puede estar dentro de sí misma.",
+        "targetGone": "La carpeta de destino no existe.",
+        "intoOwnDescendant": "Una carpeta no puede ir dentro de una de sus propias subcarpetas."
+      },
       "logo": {
         "unsupportedType": "Se permiten SVG, PNG y WebP.",
         "empty": "El archivo está vacío.",
@@ -311,30 +320,7 @@
     "no": "no"
   },
   "library": {
-    "title": "Talleres",
-    "folders": "Carpetas",
     "allWorkshops": "Todos los talleres",
-    "tags": "Etiquetas",
-    "navLabel": "Carpetas y etiquetas",
-    "trash": "Papelera",
-    "search": "Buscar",
-    "searchLabel": "Buscar talleres",
-    "newWorkshop": "Nuevo taller",
-    "workshopTitle": "Título del taller",
-    "workshopTitleExample": "p. ej. Retiro de estrategia",
-    "creating": "Creando …",
-    "newFolder": "Carpeta",
-    "folderName": "Nombre de la carpeta",
-    "subfolderName": "Nombre de la subcarpeta",
-    "name": "Nombre",
-    "removeFolder": "Eliminar la carpeta — su contenido sube un nivel",
-    "emptyFiltered": "No se ha encontrado nada.",
-    "emptyFilteredHint": "Otra búsqueda, otra carpeta u otra etiqueta.",
-    "empty": "Todavía no hay ningún taller aquí.",
-    "emptyHint": "Crea uno — la primera jornada viene incluida.",
-    "dayCount": "{count, plural, one {# jornada} many {# jornadas} other {# jornadas}}",
-    "moveToTrash": "Mover a la papelera",
-    "moveToTrashLabel": "Mover {title} a la papelera",
     "bin": {
       "title": "Papelera",
       "back": "Volver a la biblioteca",
@@ -346,7 +332,36 @@
       "purgeWarning": "Esto elimina <b>{title}</b> con todas sus jornadas y bloques. No hay vuelta atrás.",
       "purgeConfirmLabel": "Escribe el título para confirmar:",
       "purgeConfirm": "Eliminar irreversiblemente"
-    }
+    },
+    "creating": "Creando …",
+    "dayCount": "{count, plural, one {# jornada} many {# jornadas} other {# jornadas}}",
+    "empty": "Todavía no hay ningún taller aquí.",
+    "emptyFiltered": "No se ha encontrado nada.",
+    "emptyFilteredHint": "Otra búsqueda, otra carpeta u otra etiqueta.",
+    "emptyHint": "Crea uno — la primera jornada viene incluida.",
+    "folderName": "Nombre de la carpeta",
+    "folders": "Carpetas",
+    "hideFolders": "Ocultar carpetas",
+    "moveFolderHint": "Mover a otra carpeta",
+    "moveFolderLabel": "Mover la carpeta {name}",
+    "moveTo": "Mover a",
+    "moveToTrash": "Mover a la papelera",
+    "moveToTrashLabel": "Mover {title} a la papelera",
+    "name": "Nombre",
+    "navLabel": "Carpetas y etiquetas",
+    "newFolder": "Carpeta",
+    "newWorkshop": "Nuevo taller",
+    "removeFolder": "Eliminar la carpeta — su contenido sube un nivel",
+    "search": "Buscar",
+    "searchLabel": "Buscar talleres",
+    "showFolders": "Mostrar carpetas",
+    "subfolderName": "Nombre de la subcarpeta",
+    "tags": "Etiquetas",
+    "title": "Talleres",
+    "topLevel": "Nivel superior",
+    "trash": "Papelera",
+    "workshopTitle": "Título del taller",
+    "workshopTitleExample": "p. ej. Retiro de estrategia"
   },
   "mail": {
     "magicLink": {

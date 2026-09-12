@@ -81,6 +81,9 @@
     "content": "{duration} content",
     "dayNote": "Note about the day",
     "dayNotePlaceholder": "Room, directions, who brings what …",
+    "delete": "Delete",
+    "deleteHint": "Remove for good",
+    "deleteLabel": "Delete {title}",
     "drag": {
       "atDayLevel": "at day level",
       "cancelled": "Move cancelled.",
@@ -204,6 +207,12 @@
       "collab": {
         "unavailable": "The collaboration service is unreachable. Nothing can be written without it, because that would mean two write paths onto the same day."
       },
+      "folder": {
+        "gone": "There is no such folder.",
+        "intoItself": "A folder cannot sit inside itself.",
+        "targetGone": "There is no such target folder.",
+        "intoOwnDescendant": "A folder cannot go into one of its own subfolders."
+      },
       "logo": {
         "unsupportedType": "SVG, PNG and WebP are allowed.",
         "empty": "The file is empty.",
@@ -311,30 +320,7 @@
     "no": "no"
   },
   "library": {
-    "title": "Workshops",
-    "folders": "Folders",
     "allWorkshops": "All workshops",
-    "tags": "Tags",
-    "navLabel": "Folders and tags",
-    "trash": "Bin",
-    "search": "Search",
-    "searchLabel": "Search workshops",
-    "newWorkshop": "New workshop",
-    "workshopTitle": "Workshop title",
-    "workshopTitleExample": "e.g. Strategy retreat",
-    "creating": "Creating …",
-    "newFolder": "Folder",
-    "folderName": "Folder name",
-    "subfolderName": "Subfolder name",
-    "name": "Name",
-    "removeFolder": "Remove the folder — its contents move up one level",
-    "emptyFiltered": "Nothing found.",
-    "emptyFilteredHint": "Another search, another folder or another tag.",
-    "empty": "No workshop here yet.",
-    "emptyHint": "Create one — the first day comes with it.",
-    "dayCount": "{count, plural, one {# day} other {# days}}",
-    "moveToTrash": "Move to the bin",
-    "moveToTrashLabel": "Move {title} to the bin",
     "bin": {
       "title": "Bin",
       "back": "Back to the library",
@@ -346,7 +332,36 @@
       "purgeWarning": "This removes <b>{title}</b> with all its days and blocks. There is no way back.",
       "purgeConfirmLabel": "Type the title to confirm:",
       "purgeConfirm": "Delete irreversibly"
-    }
+    },
+    "creating": "Creating …",
+    "dayCount": "{count, plural, one {# day} other {# days}}",
+    "empty": "No workshop here yet.",
+    "emptyFiltered": "Nothing found.",
+    "emptyFilteredHint": "Another search, another folder or another tag.",
+    "emptyHint": "Create one — the first day comes with it.",
+    "folderName": "Folder name",
+    "folders": "Folders",
+    "hideFolders": "Hide folders",
+    "moveFolderHint": "Move into another folder",
+    "moveFolderLabel": "Move folder {name}",
+    "moveTo": "Move to",
+    "moveToTrash": "Move to the bin",
+    "moveToTrashLabel": "Move {title} to the bin",
+    "name": "Name",
+    "navLabel": "Folders and tags",
+    "newFolder": "Folder",
+    "newWorkshop": "New workshop",
+    "removeFolder": "Remove the folder — its contents move up one level",
+    "search": "Search",
+    "searchLabel": "Search workshops",
+    "showFolders": "Show folders",
+    "subfolderName": "Subfolder name",
+    "tags": "Tags",
+    "title": "Workshops",
+    "topLevel": "Top level",
+    "trash": "Bin",
+    "workshopTitle": "Workshop title",
+    "workshopTitleExample": "e.g. Strategy retreat"
   },
   "mail": {
     "magicLink": {

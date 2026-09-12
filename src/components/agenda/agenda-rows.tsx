@@ -1,5 +1,5 @@
 import type { CSSProperties, ReactNode } from 'react'
-import { ChevronDown, Inbox } from 'lucide-react'
+import { ChevronDown, Inbox, Trash2 } from 'lucide-react'
 import type { ClusterDto, ModuleDto, ModuleTypeDto } from '@/domain/agenda/types'
 import type { Peer } from '@/features/agenda/document'
 import type { Schedule, ScheduleEntry } from '@/domain/schedule/types'
@@ -53,6 +53,8 @@ export type RowEditing = {
   expanded: boolean
   /** Sets the block aside without deleting it. Absent where parking is not offered. */
   onPark?: () => void
+  /** Removes it for good. Absent for readers. */
+  onRemove?: () => void
   onToggleExpanded: () => void
   details?: ReactNode
 }
@@ -190,16 +192,20 @@ export function ModuleRow({
                   {t('park')}
                 </button>
               )}
-            </div>
 
-            {editing.expanded && (
-              <div
-                id={`details-${mod.id}`}
-                className="mt-3 rounded border border-[var(--border)] bg-[var(--surface-raised)] p-3"
-              >
-                {editing.details}
-              </div>
-            )}
+              {editing.onRemove && (
+                <button
+                  type="button"
+                  onClick={editing.onRemove}
+                  aria-label={t('deleteLabel', { title: mod.title })}
+                  title={t('deleteHint')}
+                  className="mt-1.5 inline-flex items-center gap-1 rounded px-1 py-0.5 text-[13px] text-[var(--fg-muted)] hover:bg-[var(--surface-raised)] hover:text-[var(--danger-fg)]"
+                >
+                  <Trash2 aria-hidden className="size-3.5" />
+                  {t('delete')}
+                </button>
+              )}
+            </div>
           </>
         )}
       </div>
@@ -209,6 +215,27 @@ export function ModuleRow({
       </div>
 
       <span className="hidden md:block" />
+
+      {/*
+        A child of the ROW's grid, spanning all of it, rather than a child of the
+        title cell.
+        Inside that cell the panel was as wide as one column: on a desktop window
+        a full-width text field stopped halfway across while the column beside it
+        stayed empty. The fields lay themselves out on twelve columns, and they
+        can only use them if they are given the width.
+      */}
+      {editing?.expanded && (
+        <div
+          id={`details-${mod.id}`}
+          className={cn(
+            'mb-3 ml-4 rounded border border-[var(--border)] bg-[var(--surface-raised)] p-3',
+            'md:col-span-full md:mr-3 md:ml-3',
+            nested && 'ml-7 md:ml-10',
+          )}
+        >
+          {editing.details}
+        </div>
+      )}
     </article>
   )
 }

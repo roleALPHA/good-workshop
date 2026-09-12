@@ -121,7 +121,7 @@ export function TrashList({ initial }: { initial: Entry[] }) {
                     type="button"
                     onClick={() => purge(entry)}
                     disabled={pending || typed.trim() !== entry.title}
-                    className="rounded bg-[var(--warn-fg)] px-3 py-2 text-[15px] font-medium text-white disabled:opacity-50"
+                    className="rounded bg-[var(--danger-fg)] px-3 py-2 text-[15px] font-medium text-[var(--bg)] disabled:opacity-50"
                   >
                     {t('purgeConfirm')}
                   </button>

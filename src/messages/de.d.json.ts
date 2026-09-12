@@ -84,6 +84,9 @@ declare const messages: {
     "content": "{duration} Inhalt",
     "dayNote": "Notiz zum Tag",
     "dayNotePlaceholder": "Raum, Anfahrt, wer was mitbringt …",
+    "delete": "Löschen",
+    "deleteHint": "Endgültig entfernen",
+    "deleteLabel": "{title} löschen",
     "drag": {
       "atDayLevel": "auf Tagesebene",
       "cancelled": "Verschieben abgebrochen.",
@@ -207,6 +210,12 @@ declare const messages: {
       "collab": {
         "unavailable": "Der Kollaborationsdienst ist nicht erreichbar. Ohne ihn kann nicht geschrieben werden, weil sonst zwei Schreibwege auf denselben Tag zeigen."
       },
+      "folder": {
+        "gone": "Diesen Ordner gibt es nicht.",
+        "intoItself": "Ein Ordner kann nicht in sich selbst liegen.",
+        "targetGone": "Den Zielordner gibt es nicht.",
+        "intoOwnDescendant": "Ein Ordner kann nicht in einen seiner eigenen Unterordner."
+      },
       "logo": {
         "unsupportedType": "Erlaubt sind SVG, PNG und WebP.",
         "empty": "Die Datei ist leer.",
@@ -314,30 +323,7 @@ declare const messages: {
     "no": "nein"
   },
   "library": {
-    "title": "Workshops",
-    "folders": "Ordner",
     "allWorkshops": "Alle Workshops",
-    "tags": "Tags",
-    "navLabel": "Ordner und Tags",
-    "trash": "Papierkorb",
-    "search": "Suchen",
-    "searchLabel": "Workshops durchsuchen",
-    "newWorkshop": "Neuer Workshop",
-    "workshopTitle": "Titel des Workshops",
-    "workshopTitleExample": "z. B. Strategie-Retreat",
-    "creating": "Anlegen …",
-    "newFolder": "Ordner",
-    "folderName": "Name des Ordners",
-    "subfolderName": "Name des Unterordners",
-    "name": "Name",
-    "removeFolder": "Ordner entfernen — der Inhalt rückt eine Ebene hoch",
-    "emptyFiltered": "Nichts gefunden.",
-    "emptyFilteredHint": "Andere Suche, anderer Ordner oder anderes Tag.",
-    "empty": "Noch kein Workshop hier.",
-    "emptyHint": "Leg einen an — der erste Tag ist gleich mit dabei.",
-    "dayCount": "{count, plural, one {# Tag} other {# Tage}}",
-    "moveToTrash": "In den Papierkorb",
-    "moveToTrashLabel": "{title} in den Papierkorb",
     "bin": {
       "title": "Papierkorb",
       "back": "Zurück zur Bibliothek",
@@ -349,7 +335,36 @@ declare const messages: {
       "purgeWarning": "Das entfernt <b>{title}</b> mit allen Tagen und Blöcken. Es gibt keinen Weg zurück.",
       "purgeConfirmLabel": "Zum Bestätigen den Titel eingeben:",
       "purgeConfirm": "Unwiderruflich löschen"
-    }
+    },
+    "creating": "Anlegen …",
+    "dayCount": "{count, plural, one {# Tag} other {# Tage}}",
+    "empty": "Noch kein Workshop hier.",
+    "emptyFiltered": "Nichts gefunden.",
+    "emptyFilteredHint": "Andere Suche, anderer Ordner oder anderes Tag.",
+    "emptyHint": "Leg einen an — der erste Tag ist gleich mit dabei.",
+    "folderName": "Name des Ordners",
+    "folders": "Ordner",
+    "hideFolders": "Ordner ausblenden",
+    "moveFolderHint": "In einen anderen Ordner verschieben",
+    "moveFolderLabel": "Ordner {name} verschieben",
+    "moveTo": "Verschieben nach",
+    "moveToTrash": "In den Papierkorb",
+    "moveToTrashLabel": "{title} in den Papierkorb",
+    "name": "Name",
+    "navLabel": "Ordner und Tags",
+    "newFolder": "Ordner",
+    "newWorkshop": "Neuer Workshop",
+    "removeFolder": "Ordner entfernen — der Inhalt rückt eine Ebene hoch",
+    "search": "Suchen",
+    "searchLabel": "Workshops durchsuchen",
+    "showFolders": "Ordner einblenden",
+    "subfolderName": "Name des Unterordners",
+    "tags": "Tags",
+    "title": "Workshops",
+    "topLevel": "Oberste Ebene",
+    "trash": "Papierkorb",
+    "workshopTitle": "Titel des Workshops",
+    "workshopTitleExample": "z. B. Strategie-Retreat"
   },
   "mail": {
     "magicLink": {

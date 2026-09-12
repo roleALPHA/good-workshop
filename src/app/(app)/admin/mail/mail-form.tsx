@@ -159,7 +159,7 @@ export function MailForm({ initial }: { initial: MailSettingsView }) {
         <button
           type="submit"
           disabled={pending}
-          className="rounded bg-[var(--brand-600)] px-4 py-2 text-[15px] font-medium text-white disabled:opacity-60"
+          className="rounded bg-[var(--brand)] px-4 py-2 text-[15px] font-medium text-[var(--brand-fg)] hover:bg-[var(--brand-hover)] disabled:opacity-60"
         >
           {tc('save')}
         </button>

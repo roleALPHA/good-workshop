@@ -197,7 +197,7 @@ starts do nothing, even if the variable stays.
 
 ```bash
 # 1. Back up. An upgrade without a backup is a bet.
-docker compose exec -u postgres db pg_dump goodworkshop > before-upgrade-$(date +%F).sql
+scripts/backup.sh before-upgrade-$(date +%F).sql.gz
 
 # 2. Provide the new image and point GW_VERSION in the .env at it.
 #    While there is no release, that means building rather than pulling.
@@ -235,11 +235,15 @@ The database is the complete record, logos included — they are rows, not files
 is enough:
 
 ```bash
-docker compose exec -u postgres db pg_dump goodworkshop > goodworkshop-$(date +%F).sql
+scripts/backup.sh goodworkshop-$(date +%F).sql.gz
 ```
 
-The `-u postgres` is necessary: inside the database container the process authenticates over
-the local socket, and there the user name decides.
+The script rather than the line by hand, because the line by hand creates a file even when
+nothing was backed up: `pg_dump` writes its error to stderr and leaves stdout empty, and the
+redirection created the target file long before that. What is left is an empty archive with
+the right name and today's date. The script writes next to it first, checks that the dump ran
+all the way to its closing line, and only then gives it its final name — yesterday's backup
+stays untouched until it does.
 
 The database passwords live in their own Docker volumes (`secret_*`) and are **not** in the
 dump. A restore onto a new server does not need them either: `secrets` generates new ones and
@@ -255,6 +259,35 @@ docker compose exec -T app cat /run/db-secrets/app/secret-key > goodworkshop-key
 
 If it is lost, the dump comes back with **empty** mail credentials. Everything else survives —
 workshops, members, branding — and the credentials get entered once more.
+
+**Backing up nightly.** Three things belong in the archive, and only those three: the dump,
+the application key and the `.env`. Not the database passwords — the stack generates those
+afresh on every start.
+
+```bash
+cd /path/to/the/stack
+./scripts/backup.sh "$TARGET/goodworkshop.sql.gz"
+cp "$(docker volume inspect goodworkshop_secret_app --format '{{.Mountpoint}}')/secret-key" "$TARGET/"
+cp .env "$TARGET/"
+```
+
+The key comes from the volume here rather than through `docker compose exec`: a backup that
+only succeeds while the application is running is missing on exactly the night something was
+broken. The volume name carries the project name in front — that is the stack's directory
+name, unless `COMPOSE_PROJECT_NAME` says otherwise; `docker volume ls` shows it.
+
+If you are extending an existing backup run with GoodWorkshop: with `set -e` the whole run
+stops when the dump fails — for the other services in it too. That is the right choice. A run
+that quietly skips one service and still reports "done" is the road to an archive you trust
+without it holding.
+
+**Check what is in the archive, not whether it exists.** A failed dump produces a valid gzip
+archive of 20 bytes — present, readable, empty. Looking for `pg_dump`'s closing line costs one
+line and actually answers the question:
+
+```bash
+gzip -dc goodworkshop.sql.gz | tail -c 400 | grep -c 'dump complete'
+```
 
 ### Running without HTTPS
 

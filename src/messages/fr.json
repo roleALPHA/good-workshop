@@ -81,6 +81,9 @@
     "content": "{duration} de contenu",
     "dayNote": "Note sur la journée",
     "dayNotePlaceholder": "Salle, accès, qui apporte quoi …",
+    "delete": "Supprimer",
+    "deleteHint": "Retirer définitivement",
+    "deleteLabel": "Supprimer {title}",
     "drag": {
       "atDayLevel": "au niveau de la journée",
       "cancelled": "Déplacement annulé.",
@@ -204,6 +207,12 @@
       "collab": {
         "unavailable": "Le service de collaboration est injoignable. Rien ne peut être écrit sans lui, car cela ferait deux chemins d'écriture vers la même journée."
       },
+      "folder": {
+        "gone": "Ce dossier n'existe pas.",
+        "intoItself": "Un dossier ne peut pas se trouver dans lui-même.",
+        "targetGone": "Le dossier de destination n'existe pas.",
+        "intoOwnDescendant": "Un dossier ne peut pas aller dans un de ses propres sous-dossiers."
+      },
       "logo": {
         "unsupportedType": "Formats autorisés : SVG, PNG et WebP.",
         "empty": "Le fichier est vide.",
@@ -311,30 +320,7 @@
     "no": "non"
   },
   "library": {
-    "title": "Ateliers",
-    "folders": "Dossiers",
     "allWorkshops": "Tous les ateliers",
-    "tags": "Tags",
-    "navLabel": "Dossiers et tags",
-    "trash": "Corbeille",
-    "search": "Rechercher",
-    "searchLabel": "Rechercher des ateliers",
-    "newWorkshop": "Nouvel atelier",
-    "workshopTitle": "Titre de l'atelier",
-    "workshopTitleExample": "p. ex. Séminaire stratégie",
-    "creating": "Création …",
-    "newFolder": "Dossier",
-    "folderName": "Nom du dossier",
-    "subfolderName": "Nom du sous-dossier",
-    "name": "Nom",
-    "removeFolder": "Supprimer le dossier — son contenu remonte d'un niveau",
-    "emptyFiltered": "Rien trouvé.",
-    "emptyFilteredHint": "Une autre recherche, un autre dossier ou un autre tag.",
-    "empty": "Pas encore d'atelier ici.",
-    "emptyHint": "Crées-en un — la première journée vient avec.",
-    "dayCount": "{count, plural, one {# journée} many {# journées} other {# journées}}",
-    "moveToTrash": "Mettre à la corbeille",
-    "moveToTrashLabel": "Mettre {title} à la corbeille",
     "bin": {
       "title": "Corbeille",
       "back": "Retour à la bibliothèque",
@@ -346,7 +332,36 @@
       "purgeWarning": "Cela supprime <b>{title}</b> avec toutes ses journées et tous ses blocs. Il n'y a pas de retour en arrière.",
       "purgeConfirmLabel": "Saisis le titre pour confirmer :",
       "purgeConfirm": "Supprimer irréversiblement"
-    }
+    },
+    "creating": "Création …",
+    "dayCount": "{count, plural, one {# journée} many {# journées} other {# journées}}",
+    "empty": "Pas encore d'atelier ici.",
+    "emptyFiltered": "Rien trouvé.",
+    "emptyFilteredHint": "Une autre recherche, un autre dossier ou un autre tag.",
+    "emptyHint": "Crées-en un — la première journée vient avec.",
+    "folderName": "Nom du dossier",
+    "folders": "Dossiers",
+    "hideFolders": "Masquer les dossiers",
+    "moveFolderHint": "Déplacer dans un autre dossier",
+    "moveFolderLabel": "Déplacer le dossier {name}",
+    "moveTo": "Déplacer vers",
+    "moveToTrash": "Mettre à la corbeille",
+    "moveToTrashLabel": "Mettre {title} à la corbeille",
+    "name": "Nom",
+    "navLabel": "Dossiers et tags",
+    "newFolder": "Dossier",
+    "newWorkshop": "Nouvel atelier",
+    "removeFolder": "Supprimer le dossier — son contenu remonte d'un niveau",
+    "search": "Rechercher",
+    "searchLabel": "Rechercher des ateliers",
+    "showFolders": "Afficher les dossiers",
+    "subfolderName": "Nom du sous-dossier",
+    "tags": "Tags",
+    "title": "Ateliers",
+    "topLevel": "Niveau supérieur",
+    "trash": "Corbeille",
+    "workshopTitle": "Titre de l'atelier",
+    "workshopTitleExample": "p. ex. Séminaire stratégie"
   },
   "mail": {
     "magicLink": {

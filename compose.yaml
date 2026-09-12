@@ -90,8 +90,9 @@ services:
       # initialisiert er die Datenbank gar nicht erst.
       POSTGRES_PASSWORD_FILE: /run/db-secrets/postgres/password
       # `peer` for the local socket INSIDE the container -- that is the route
-      # `docker compose exec -u postgres db pg_dump` takes. Over TCP the default
-      # scram-sha-256 applies, and without a published port the network
+      # `scripts/backup.sh` takes, and the reason for its `-u postgres`: over
+      # this socket the user name decides. Over TCP the default scram-sha-256
+      # applies, and without a published port the network
       # dieses Stacks die einzige Herkunft, aus der jemand es versuchen kann.
       POSTGRES_INITDB_ARGS: '--auth-local=peer'
     volumes:

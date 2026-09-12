@@ -25,6 +25,11 @@ export const DOMAIN_ERROR_KEYS = [
   'workshop.unknownModuleType',
   'workshop.unknownModuleTypeOptions',
   'workshop.descInvalid',
+  // Folders
+  'folder.gone',
+  'folder.intoItself',
+  'folder.targetGone',
+  'folder.intoOwnDescendant',
   // Tags
   'tags.tooMany',
   'tags.tooLong',

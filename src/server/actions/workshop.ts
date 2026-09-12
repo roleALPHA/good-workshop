@@ -15,6 +15,7 @@ import {
   purgeWorkshop,
   listTrashedWorkshops,
   deleteFolder,
+  moveFolder,
 } from '@/domain/workshop/repo'
 import { pruneUnusedTags, setWorkshopTags } from '@/domain/workshop/tags'
 import { assertTenantAdmin } from '@/domain/tenant/members'
@@ -167,6 +168,31 @@ export async function deleteFolderAction(raw: { id: string }): Promise<ActionRes
     await deleteFolder(tx, raw.id)
     return null
   })
+
+  if (result.ok) revalidatePath('/library')
+  return result
+}
+
+/**
+ * Moves a folder into another, or to the top level.
+ *
+ * The refusals -- into itself, into its own descendant -- come back as messages
+ * rather than as a generic failure: both are ordinary mis-aims, and the person
+ * doing it needs to know which one they hit.
+ */
+export async function moveFolderAction(raw: {
+  id: string
+  parentId: string | null
+}): Promise<ActionResult<null>> {
+  const result = await action(
+    z.object({ id: z.string().uuid(), parentId: z.string().uuid().nullable() }),
+    raw,
+    async (tx, actor, input) => {
+      assertTenantAdmin(actor)
+      await moveFolder(tx, input.id, input.parentId)
+      return null
+    },
+  )
 
   if (result.ok) revalidatePath('/library')
   return result

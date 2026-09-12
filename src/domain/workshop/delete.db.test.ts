@@ -7,6 +7,8 @@ import { assertWorkshopAccess } from '@/domain/agenda/access'
 import {
   createFolder,
   deleteFolder,
+  FolderMoveError,
+  moveFolder,
   listFolders,
   listTrashedWorkshops,
   listWorkshops,
@@ -191,6 +193,80 @@ describe('the bin', () => {
     const stranger: Actor = { ...as(colleagueId), tenantId: randomUUID() }
     const trash = await withTenant(stranger, (tx) => listTrashedWorkshops(tx, stranger))
     expect(trash.map((w) => w.id)).not.toContain(id)
+  })
+})
+
+describe('moving a folder', () => {
+  const makeFolder = (name: string, parentId: string | null = null) =>
+    withTenant(as(adminId, 'admin'), (tx) => createFolder(tx, as(adminId, 'admin'), name, parentId))
+
+  const pathOf = async (id: string): Promise<string[]> => {
+    const { rows } = await ops.query('select ancestor_ids from folder where id = $1', [id])
+    return (rows[0]?.ancestor_ids ?? []) as string[]
+  }
+
+  it('takes its whole subtree with it, paths and all', async () => {
+    const a = await makeFolder('A')
+    const b = await makeFolder('B')
+    const child = await makeFolder('A-Kind', a)
+    const grandchild = await makeFolder('A-Enkel', child)
+
+    await withTenant(as(adminId, 'admin'), (tx) => moveFolder(tx, child, b))
+
+    // The moved folder sits under its new parent …
+    expect(await pathOf(child)).toEqual([b])
+    // … and everything below it carries the new prefix while keeping its own
+    // place in the subtree. A path that still named the old parent would draw
+    // the tree in the old shape.
+    expect(await pathOf(grandchild)).toEqual([b, child])
+  })
+
+  it('can move a folder to the top level', async () => {
+    const a = await makeFolder('A2')
+    const child = await makeFolder('A2-Kind', a)
+
+    await withTenant(as(adminId, 'admin'), (tx) => moveFolder(tx, child, null))
+
+    expect(await pathOf(child)).toEqual([])
+    const folders = await withTenant(as(adminId, 'admin'), (tx) => listFolders(tx))
+    expect(folders.find((f) => f.id === child)?.parentId).toBeNull()
+  })
+
+  it('refuses to move a folder into itself', async () => {
+    const a = await makeFolder('A3')
+    await expect(withTenant(as(adminId, 'admin'), (tx) => moveFolder(tx, a, a))).rejects.toThrow(
+      FolderMoveError,
+    )
+  })
+
+  /**
+   * The case a mis-aimed drag produces: the subtree would detach from the root,
+   * invisible in the sidebar and reachable only by id.
+   */
+  it('refuses to move a folder into its own descendant', async () => {
+    const a = await makeFolder('A4')
+    const child = await makeFolder('A4-Kind', a)
+    const grandchild = await makeFolder('A4-Enkel', child)
+
+    await expect(
+      withTenant(as(adminId, 'admin'), (tx) => moveFolder(tx, a, grandchild)),
+    ).rejects.toThrow(/Unterordner/)
+
+    // And nothing moved.
+    expect(await pathOf(child)).toEqual([a])
+  })
+
+  it('keeps the workshops inside where they are', async () => {
+    const a = await makeFolder('A5')
+    const b = await makeFolder('B5')
+    const child = await makeFolder('A5-Kind', a)
+    const inside = await makeWorkshop('Im Unterordner', ownerId, child)
+
+    await withTenant(as(adminId, 'admin'), (tx) => moveFolder(tx, child, b))
+
+    // The workshop travels with its folder rather than being re-filed.
+    const { rows } = await ops.query('select folder_id from workshop where id = $1', [inside])
+    expect(rows[0]?.folder_id).toBe(child)
   })
 })
 

@@ -143,7 +143,7 @@ export function PasskeyList({ initial }: { initial: PasskeyPage }) {
           type="button"
           onClick={enrol}
           disabled={pending || !initial.available}
-          className="rounded bg-[var(--brand-600)] px-4 py-2 text-[15px] font-medium text-white disabled:opacity-60"
+          className="rounded bg-[var(--brand)] px-4 py-2 text-[15px] font-medium text-[var(--brand-fg)] hover:bg-[var(--brand-hover)] disabled:opacity-60"
         >
           {pending ? t('waiting') : t('enrol')}
         </button>
