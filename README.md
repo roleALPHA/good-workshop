@@ -5,13 +5,59 @@ Open-source workshop planning. Self-hosted, MCP-ready.
 Build agendas out of blocks, clusters and workshop days, reorder them by drag and drop,
 export them as Markdown — and the data stays on your own machine.
 
-> **Status: in development.** Milestone 1 (the editor core) is being built. No release yet.
+> **Released and in use.** The current version is on the
+> [releases page](https://github.com/roleALPHA/good-workshop/releases); images are published to
+> `ghcr.io/rolealpha/good-workshop` for amd64 and arm64.
 
 ## What GoodWorkshop does
 
-**Builds agendas.** A workshop is made of days, a day of blocks — exercises, inputs, breaks —
-which can be grouped into clusters. Reordering happens by drag and drop; the times follow. It
-comes with 15 built-in block types, and you can add your own.
+**Builds agendas that do the arithmetic for you.** A workshop is made of days, a day of blocks
+— exercises, inputs, breaks — which can be grouped into clusters. Reorder by dragging; every
+following time moves with it. The header keeps the running totals apart: how much is content,
+how much is breaks, and how far the day runs over the end you set.
+
+**Nails down what must not move.** Lunch at 12:30, the client's slot at 15:00. Pin a start time
+and it stays put while everything around it is rearranged. If a change would run into a pinned
+block, the row says so — _overlaps the previous block by 20m_ — and nothing is silently
+shortened. A day you have to argue with is worse than a day that tells you the truth.
+
+**Takes the pressure off the plan.** Cut an exercise without losing it: **park** it. It stays
+with the day, keeps its description and its material, and stops counting toward the time. Put it
+back when the group is faster than you thought.
+
+**Carries what a facilitator actually needs in the row.** Social form — plenary, small groups,
+pairs, individual — the material to bring, and whatever else the block type declares. All of it
+is edited where it stands: this product has no dialogs on purpose, because a dialog puts a mode
+between you and the agenda you are reading.
+
+**Keeps your own notes out of what you hand over.** Facilitation notes belong to the block and
+stay with you — neither the print view nor the Markdown export carries them by default. What the
+group receives and what you work from are the same agenda, minus the half that was never meant
+for the room.
+
+**Understands how people type durations.** `45`, `45m`, `1h`, `1:30`, `1h30`, `90` — and
+`1 Stunde`, `1 heure`, `1 hora` in the language the person is working in. Something it cannot
+read is handed back rather than guessed at.
+
+**Reads on a phone, in the room, and stays editable there.** The day collapses into cards, body
+text never drops below 16px, every tap target is 44px, and the section you are in stays pinned to
+the top while you scroll through it. Dragging needs a long press, so a swipe still scrolls the
+page. The three things you change while standing in front of a group — the social form, the
+material, the clock — are one tap away, not behind an expander.
+
+**Survives a bad room.** Lost the wifi? The agenda says so and keeps taking your changes; they go
+across when the connection comes back.
+
+**Leaves the room with you.** A print view that fits on paper, and a Markdown export you can
+paste into a protocol, a wiki or a mail — in the language of whoever asked for it.
+
+**Comes with the blocks a workshop is made of.** Fifteen built-in types — check-in, impulse,
+group work, exercise, discussion, decision, energizer, reflection, break, lunch, buffer, next
+steps, check-out and the rest — each carrying the fields that type actually needs rather than one
+shape for everything. Search the picker by typing; the list narrows as you go.
+
+**Forgives.** A workshop goes to the bin, not away. It stays there with the date it was
+discarded, comes back with one click, and is only really gone when somebody says so by name.
 
 **Lets two people work on the same day.** Several people can edit the same workshop day at
 once. Whoever is there is listed in the presence bar; changes appear immediately for
@@ -39,6 +85,10 @@ address: whoever opens it types the address it was sent to, and then sees the da
 agenda. No account, no library, no folders, and nothing else from the installation. The link is
 valid until the last day of the agenda, and can be withdrawn at any time.
 
+**Signs in without a password.** A magic link by e-mail, or a passkey — Face ID, Touch ID, a
+hardware key — registered under **Settings**. There is no password to forget, to reuse, or to
+leak.
+
 **Looks like you.** Under **Branding** you can set a logo and an accent colour; the server
 derives the light and dark steps itself. The footer stays `GoodWorkshop · powered by
 roleALPHA · AGPL-3.0`, with the name pointing at [rolealpha.com](https://rolealpha.com) and
@@ -48,9 +98,8 @@ the licence at the source.
 any other MCP client can read and write workshops. You create a token under **Tokens** in
 your settings; the page then prints the finished command or configuration for Claude Code,
 Claude Desktop, the Gemini CLI, Codex and Langdock, with this host and that token already in
-it. A
-token acts as the person who created it — it can never do more than that person can, and it
-cannot touch user administration at all.
+it. A token acts as the person who created it — it can never do more than that person can, and
+it cannot touch user administration at all.
 
 How this is built on the inside, and why, is in [docs/architecture.md](docs/architecture.md).
 
@@ -73,6 +122,11 @@ pnpm dev
 | `pnpm format`        | Prettier                                                                 |
 | `pnpm build`         | production build (`output: 'standalone'`)                                |
 | `pnpm check:docs`    | checks that README, `.env.example` and `compose.yaml` still fit the code |
+
+The conventions below are also published as agent skills in
+[`.agents/skills/`](.agents/skills/), so a coding assistant picks up the same rules a person
+does. The skills carry no content of their own — each one points at the document, because two
+copies of a rule are one copy that drifts.
 
 Three binding conventions, for every contribution:
 
@@ -146,7 +200,10 @@ GW_MAIL_TRANSPORT=smtp                    # smtp | graph | console | none
 GW_VERSION=v0.2.2                         # the release to run, never a moving tag
 ```
 
-With `GW_MAIL_TRANSPORT=smtp` you also need `SMTP_URL` and `SMTP_FROM`. If the `SMTP_URL`
+With `GW_MAIL_TRANSPORT=smtp` you also need `SMTP_URL` and `SMTP_FROM` — **or you leave them
+empty and enter them in the interface** afterwards, under **Mail**. The environment wins per
+field where it is set, and the screen says which fields it has already claimed; the transport
+itself comes from the `.env`, because `compose.yaml` refuses to start without it. If the `SMTP_URL`
 contains a password, it belongs in a file instead: `SMTP_URL_FILE=/run/secrets/smtp_url`. An
 environment variable shows up in `docker inspect`, in `/proc/<pid>/environ` and in every core
 dump.
@@ -192,22 +249,47 @@ curl -fsS https://workshop.example.com/api/health
 A `503` is not a crash but the honest answer "this container cannot serve" — `checks` says
 whether it is the database or the migration state.
 
-### 5. Create the first admin
+### 5. Set it up in the browser
 
-Without an admin there is no way into the interface. Two routes:
+A fresh installation announces itself in the log on every start, until somebody claims it:
 
-**Through the CLI** — always works, even without mail delivery:
+```
+  This installation has no administrator yet.
+
+    https://workshop.example.com/setup
+    Setup key: 7Qb3…
+
+  The key is valid until this process restarts.
+```
+
+Open that address, enter your e-mail address and the key, and the installation is yours.
+Everything after that — mail delivery, further people, branding — happens in the interface.
+
+**The key is the whole access control on that screen**, and it is deliberate: a first-run page
+that hands out the administrator account to whoever loads it is a takeover waiting for the gap
+between `docker compose up` and you opening your browser. Whoever can read
+`docker compose logs app` is the operator. The key lives in memory, so a restart issues a new
+one, and **the route disappears** once an admin exists — an installation cannot be talked into a
+second first run.
+
+If mail is not configured yet, the sign-in link is shown on the page instead of being sent. That
+is the ordinary case at this point, and the reason this screen does not need mail to work.
+
+<details>
+<summary>Two older routes, for automation and for a broken first run</summary>
+
+**Through the CLI**, which needs a shell on the server:
 
 ```bash
 docker compose exec app node scripts/cli.mjs admin create --email you@example.com
 ```
 
-The command prints a one-time sign-in link. Everything else then happens in the interface.
+**Or on the very first start:** put `GW_BOOTSTRAP_ADMIN_EMAIL=you@example.com` into the `.env`
+before the stack comes up. The link is then in `docker compose logs migrate`, is valid for an
+hour and is printed exactly once — later starts do nothing, even if the variable stays. Useful
+when an installation is provisioned by a script rather than by a person.
 
-**Or automatically on the very first start:** put `GW_BOOTSTRAP_ADMIN_EMAIL=you@example.com`
-into the `.env` before the stack comes up for the first time. The link is then in
-`docker compose logs migrate`, is valid for an hour and is printed exactly once — later
-starts do nothing, even if the variable stays.
+</details>
 
 ### Updating
 
