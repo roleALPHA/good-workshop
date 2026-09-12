@@ -115,30 +115,6 @@ test.describe('the day view on a phone', () => {
     await expect(row.getByLabel('Material hinzufügen')).toBeVisible()
   })
 
-  test('keeps a change made here, rather than showing it and losing it', async ({
-    page,
-    request,
-  }) => {
-    // Its own day: this is the one test in the file that writes, and the others
-    // share a fixture that has to stay as it was seeded.
-    await page.goto(await seedReferenceDay(page, request))
-    await editorReady(page)
-
-    const row = page.getByRole('article', { name: 'Check-in & Start' })
-
-    await row.getByRole('button', { name: /^Sozialform:/ }).tap()
-    await page.getByRole('option', { name: 'Paare' }).tap()
-    await expect(row.getByRole('button', { name: 'Sozialform: Paare' })).toBeVisible()
-
-    await page.reload()
-    await editorReady(page)
-    await expect(
-      page.getByRole('article', { name: 'Check-in & Start' }).getByRole('button', {
-        name: 'Sozialform: Paare',
-      }),
-    ).toBeVisible()
-  })
-
   test('never puts a field below 16px, or iOS zooms the page when it is focused', async ({
     page,
   }) => {
@@ -167,6 +143,29 @@ test.describe('the day view on a phone', () => {
 
   test('shows the attribution footer here too', async ({ page }) => {
     await expect(page.getByText('GoodWorkshop · powered by roleALPHA')).toBeVisible()
+  })
+
+  /**
+   * Declared last on purpose: it is the only test in this file that WRITES, and
+   * the rest share one seeded day. Going last means it can use that day instead
+   * of seeding a second one -- which matters, because the MCP endpoint is rate
+   * limited and the full suite already seeds once per test in agenda.spec.ts.
+   * A test that needs its own fixture would have to earn it.
+   */
+  test('keeps a change made here, rather than showing it and losing it', async ({ page }) => {
+    const row = page.getByRole('article', { name: 'Check-in & Start' })
+
+    await row.getByRole('button', { name: /^Sozialform:/ }).tap()
+    await page.getByRole('option', { name: 'Paare' }).tap()
+    await expect(row.getByRole('button', { name: 'Sozialform: Paare' })).toBeVisible()
+
+    await page.reload()
+    await editorReady(page)
+    await expect(
+      page.getByRole('article', { name: 'Check-in & Start' }).getByRole('button', {
+        name: 'Sozialform: Paare',
+      }),
+    ).toBeVisible()
   })
 })
 

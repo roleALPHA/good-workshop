@@ -1,6 +1,6 @@
 'use client'
 
-import { useMemo, useState } from 'react'
+import { useMemo, useRef, useState } from 'react'
 import {
   DndContext,
   DragOverlay,
@@ -93,6 +93,10 @@ export function AgendaEditor({ document: agenda }: { document: AgendaDocument })
   const doc = agenda.doc
   const [activeId, setActiveId] = useState<string | null>(null)
   const [offsetX, setOffsetX] = useState(0)
+  /** Whether this drag has moved at all yet. See handleDragOver. */
+  const movedRef = useRef(false)
+  /** The delta this drag opened with; see handleDragMove. */
+  const startDeltaRef = useRef<{ x: number; y: number } | null>(null)
   const [overId, setOverId] = useState<string | null>(null)
 
   const rows = useMemo(() => flattenDay(doc), [doc])
@@ -136,9 +140,23 @@ export function AgendaEditor({ document: agenda }: { document: AgendaDocument })
     setActiveId(String(event.active.id))
     setOffsetX(0)
     setOverId(String(event.active.id))
+    movedRef.current = false
+    startDeltaRef.current = null
   }
 
   function handleDragMove(event: DragMoveEvent) {
+    // The first delta of a drag is where it STARTED, not a movement.
+    //
+    // dnd-kit measures from the activator, and a keyboard drag opens with a
+    // vertical delta of its own before anybody has pressed anything -- the
+    // handle does not sit in the middle of its row, and focusing it scrolls
+    // the page. Comparing against zero would work only while that offset
+    // stays small enough not to matter, which is a fact about row height and
+    // not about dragging.
+    const start = startDeltaRef.current
+    if (start === null) startDeltaRef.current = { x: event.delta.x, y: event.delta.y }
+    else if (event.delta.x !== start.x || event.delta.y !== start.y) movedRef.current = true
+
     setOffsetX(event.delta.x)
   }
 
@@ -152,6 +170,22 @@ export function AgendaEditor({ document: agenda }: { document: AgendaDocument })
    * permanently one press behind and the row never actually goes anywhere.
    */
   function handleDragOver(event: DragOverEvent) {
+    // ... except for the one that arrives before anything has moved.
+    //
+    // dnd-kit runs collision detection once at pickup, and the overlay is then
+    // sitting where the drag HANDLE is rather than over the row's own box. So
+    // that first collision reports whichever neighbour the offset rectangle
+    // happens to touch -- for a day-level block below a section, the section's
+    // last child. Taking it as the projection nests the block before a key has
+    // been pressed, and the depth is then already at its maximum, so the
+    // ArrowRight this whole feature exists for has nothing left to do.
+    //
+    // It surfaced when the rows grew by fifteen pixels, which is the tell: a
+    // correctness that depends on a row height is not one.
+    //
+    // handleDragStart has already set the only right answer for that moment:
+    // the row is over itself.
+    if (!movedRef.current) return
     if (event.over) setOverId(String(event.over.id))
   }
 
@@ -159,6 +193,8 @@ export function AgendaEditor({ document: agenda }: { document: AgendaDocument })
     setActiveId(null)
     setOverId(null)
     setOffsetX(0)
+    movedRef.current = false
+    startDeltaRef.current = null
   }
 
   function handleDragEnd() {

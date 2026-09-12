@@ -20,6 +20,10 @@ const block = (page: Page, name: string) => page.getByRole('article', { name })
 const section_ = (page: Page, name: string) => page.getByRole('group', { name })
 const agenda = (page: Page) => page.getByRole('region', { name: /^Agenda/ })
 
+/** The block titles in document order, read from the fields that hold them. */
+const titlesInOrder = (page: Page) =>
+  page.getByLabel('Titel').evaluateAll((els) => els.map((el) => (el as HTMLInputElement).value))
+
 test.beforeEach(async ({ page, request }) => {
   await seedReferenceDay(page, request)
 })
@@ -125,7 +129,11 @@ test.describe('drag & drop', () => {
     await expect(section).toContainText('2 Blöcke · 25m')
     // Nothing stores a time, so the whole day after the block is re-derived.
     await expect(block(page, 'Energizer: Zwei Wahrheiten')).toContainText('14:10')
-    expect((await page.getByRole('heading', { level: 3 }).allInnerTexts()).slice(0, 4)).toEqual([
+    // Read off the title INPUTS, not the headings around them: in the editor
+    // an h3 holds a text field, and innerText of a field is the empty string.
+    // The article's accessible name works because the name calculation reads
+    // an embedded control's value -- innerText does not.
+    expect((await titlesInOrder(page)).slice(0, 4)).toEqual([
       'Check-in & Start',
       'Agenda & Spielregeln',
       'Druckpunkte',
@@ -155,7 +163,7 @@ test.describe('drag & drop', () => {
 
   test('cancels a keyboard drag and leaves the agenda untouched', async ({ page }) => {
     const section = section_(page, 'Ankommen & Rahmen')
-    const before = await page.getByRole('heading', { level: 3 }).allInnerTexts()
+    const before = await titlesInOrder(page)
 
     await page.getByRole('button', { name: 'Energizer: Zwei Wahrheiten verschieben' }).focus()
     await page.keyboard.press('Space')
@@ -169,7 +177,7 @@ test.describe('drag & drop', () => {
 
     await expect(section).toContainText('3 Blöcke · 35m')
     await expect(block(page, 'Energizer: Zwei Wahrheiten')).toContainText('13:25')
-    expect(await page.getByRole('heading', { level: 3 }).allInnerTexts()).toEqual(before)
+    expect(await titlesInOrder(page)).toEqual(before)
   })
 })
 
