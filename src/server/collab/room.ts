@@ -94,6 +94,15 @@ export class Room {
   private persistTimer: NodeJS.Timeout | null = null
   private materializeTimer: NodeJS.Timeout | null = null
   private teardownTimer: NodeJS.Timeout | null = null
+  /**
+   * Bumped on every join, and captured by a teardown before it starts writing.
+   *
+   * A teardown that has already begun cannot be called back -- `flush()` is in
+   * flight against Postgres -- but it can be disowned. Comparing the captured
+   * generation against the current one at the end is what tells it whether the
+   * room it was closing is still the room that exists.
+   */
+  private generation = 0
   private loaded = false
 
   constructor(
@@ -163,6 +172,10 @@ export class Room {
       clearTimeout(this.teardownTimer)
       this.teardownTimer = null
     }
+    // Cancelling the timer is not enough on its own: if it has already fired,
+    // a flush is running and will otherwise destroy the document under this
+    // connection. See `generation`.
+    this.generation += 1
     this.connections.add(connection)
   }
 
@@ -179,9 +192,32 @@ export class Room {
 
     // A grace period rather than immediate teardown: a reload disconnects and
     // reconnects within a second, and replaying the whole log for that is waste.
-    this.teardownTimer = setTimeout(() => {
-      void this.flush().finally(this.onEmpty)
-    }, this.timings.emptyGraceMs)
+    this.teardownTimer = setTimeout(() => this.teardown(), this.timings.emptyGraceMs)
+  }
+
+  /**
+   * Write everything out, then close the room -- unless somebody arrived.
+   *
+   * The gap between the two is not small. `flush()` ends in `materializeDay`,
+   * which takes the same `FOR UPDATE` on the workshop row that every
+   * structural edit takes, so under a handful of concurrently closing rooms it
+   * waits on the other ones. The room stays in the registry for that whole
+   * time and a connection landing in it is served normally -- so destroying
+   * the document afterwards left that client on an open socket to a dead
+   * document while the next arrival built a second room. The two never saw
+   * each other again, and nothing in the protocol or the UI said so.
+   */
+  private teardown(): void {
+    this.teardownTimer = null
+    const generation = this.generation
+
+    void this.flush().finally(() => {
+      // Somebody joined while we were writing. The write was still right; the
+      // closing is not, and the registry entry has to stay too.
+      if (generation !== this.generation) return
+      this.doc.destroy()
+      this.onEmpty()
+    })
   }
 
   broadcast(message: Uint8Array, except?: Connection): void {
@@ -328,10 +364,16 @@ export class Room {
     })
   }
 
-  /** Writes everything out. Called when the last editor leaves. */
+  /**
+   * Writes everything out.
+   *
+   * Deliberately does NOT destroy the document: whether this room is finished
+   * is decided after the write, by `teardown()`, because the write is long
+   * enough for a new editor to arrive in the middle of it. Shutdown calls this
+   * too, and there the process is about to exit anyway.
+   */
   async flush(): Promise<void> {
     await this.flushNow()
-    this.doc.destroy()
   }
 }
 

@@ -8,6 +8,8 @@ import pg from 'pg'
 import { uuidv7 } from 'uuidv7'
 import { afterAll, beforeAll, describe, expect, it } from 'vitest'
 import { blocksOf } from '@/domain/collab/doc'
+import type { Actor } from '@/server/db'
+import { Room, type Connection } from './room'
 import { startCollabServer } from './ws'
 
 /**
@@ -401,5 +403,96 @@ describe('the collaboration socket', () => {
 
     expect(blocksOf(again.doc).get(blockId)?.get('title')).toBe('Vor dem Abriss')
     again.close()
+  })
+  it('does not destroy a room that somebody joined while it was being torn down', async () => {
+    // Where e2e/collaboration.workshop.spec.ts flakes.
+    //
+    // `remove()` schedules a teardown, and `add()` cancels the TIMER -- but
+    // once that timer has fired there is nothing left to cancel. `flush()` is
+    // already in flight, and it ends in `doc.destroy()` and `onEmpty()`
+    // unconditionally, while the room is still in the registry for anyone who
+    // connects meanwhile. That client keeps an open socket to a destroyed
+    // document, and the next one to arrive builds a second room. Neither ever
+    // hears the other again, and nothing says so: the page reads
+    // `data-save-state="live"` throughout.
+    //
+    // Driven against `Room` rather than through two sockets on purpose. The
+    // window is opened here by holding the row lock that `materializeDay`
+    // takes -- but `authenticate()` asks for `workshop.content.write`, and
+    // `assertWorkshopAccess` locks the same row for a write, so a second
+    // SOCKET could not be established while the window is open. Racing the
+    // flush without a lock would mean proving a race with a racy test, which
+    // docs/konventionen-tests.md rules out for good reason.
+    const ownWorkshopId = uuidv7()
+    const ownDayId = uuidv7()
+    await ops.query(
+      `insert into workshop (id, tenant_id, title, owner_id, position) values ($1, $2, 'Abriss', $3, 'a9')`,
+      [ownWorkshopId, TENANT, memberId],
+    )
+    await ops.query(
+      `insert into workshop_day (id, tenant_id, workshop_id, position) values ($1, $2, $3, 'a0')`,
+      [ownDayId, TENANT, ownWorkshopId],
+    )
+
+    const actor: Actor = {
+      tenantId: TENANT,
+      memberId,
+      tenantRole: 'member',
+      displayName: 'Abriss',
+      source: 'web',
+    }
+
+    let emptied = 0
+    const room = new Room(ownWorkshopId, ownDayId, actor, () => (emptied += 1), {
+      persistDebounceMs: 50,
+      // Long on purpose, so nothing materialises on the debounce and the
+      // teardown's own flush is the first to do it. `materializeDay` returns
+      // "unchanged" before it ever reaches the row lock when the tables are
+      // already current -- which would close the window this test needs.
+      materializeDebounceMs: 30_000,
+      emptyGraceMs: 200,
+    })
+    await room.load()
+
+    const socket = (): Connection => ({ send: () => {}, close: () => {} })
+    const first = socket()
+    room.add(first)
+
+    // Something worth writing out, so the teardown reaches materialisation
+    // instead of returning early with nothing to do.
+    addBlock(room.doc, uuidv7(), 'Vor dem Abriss', 'a0')
+    await settle()
+
+    const blocker = new pg.Client({ connectionString: process.env.OPS_DATABASE_URL })
+    await blocker.connect()
+
+    try {
+      // Holds the flush open for as long as this transaction lives. In the e2e
+      // suite the same lock is contended by every other worker's room doing
+      // the same thing, which is what widens this window on a loaded machine
+      // and leaves it invisible on a quiet one.
+      await blocker.query('begin')
+      await blocker.query('select id from workshop where id = $1 for update', [ownWorkshopId])
+
+      room.remove(first)
+      await settle(600) // grace elapses, teardown fires, flush blocks
+
+      // Somebody opens the day again. Through the socket this is the
+      // `rooms.get(key)` in attach() finding a room on its way out.
+      room.add(socket())
+
+      await blocker.query('commit')
+      await settle(800) // the flush completes -- and must not take the room with it
+
+      expect(room.doc.isDestroyed).toBe(false)
+      expect(emptied).toBe(0)
+    } finally {
+      await blocker.query('rollback').catch(() => {})
+      await blocker.end()
+    }
+
+    // Leave nothing holding the day: the room is still occupied by the joiner.
+    for (const connection of [...room.connections]) room.remove(connection)
+    await settle(800)
   })
 })
