@@ -1,4 +1,5 @@
 import { SCOPES } from '@/domain/tenant/tokens'
+import { authConfig } from '@/server/auth/config'
 import { getTranslations } from 'next-intl/server'
 import { loadTokens } from '@/server/actions/tokens'
 import { TokenList } from './token-list'
@@ -21,7 +22,7 @@ export default async function TokensPage() {
       <p className="mb-6 text-[15px] text-[var(--fg-muted)]">{t('intro')}</p>
 
       {result.ok ? (
-        <TokenList initial={result.data} scopes={[...SCOPES]} />
+        <TokenList initial={result.data} scopes={[...SCOPES]} origin={authConfig.origin} />
       ) : (
         <p role="alert" className="text-[15px] text-[var(--danger-fg)]">
           {result.message}

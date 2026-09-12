@@ -192,7 +192,8 @@
     "loadMore": "Charger plus",
     "saving": "Enregistrement …",
     "back": "Retour",
-    "readOnly": "Lecture seule"
+    "readOnly": "Lecture seule",
+    "copied": "Copié"
   },
   "enums": {
     "memberRole": {
@@ -474,9 +475,9 @@
     "title": "Paramètres",
     "tokens": {
       "title": "Jetons d'accès",
-      "intro": "Pour les clients MCP comme Claude Desktop ou Claude Code. Un jeton agit en tant que toi — il ne peut jamais faire plus que toi.",
+      "intro": "Pour les clients MCP comme Claude Code, Claude Desktop, Gemini CLI ou Langdock. Un jeton agit en tant que toi — il ne peut jamais faire plus que toi.",
       "freshLabel": "Ton nouveau jeton",
-      "freshHint": "Il n'est affiché qu'une fois — seul son hachage est conservé. Saisis-le dans le client comme <code>Authorization: Bearer …</code> vers <code>/api/mcp</code>.",
+      "freshHint": "Il n'est affiché qu'une fois — seul son hachage est conservé.",
       "hide": "Compris, masquer",
       "lastUsed": "dernière fois le {date}",
       "neverUsed": "jamais utilisé",
@@ -487,7 +488,30 @@
       "scopesLabel": "Que peut-il faire ?",
       "noUserAdmin": "La gestion des utilisateurs n'est délibérément pas proposée : un client MCP ne doit jamais inviter quelqu'un ni nommer un admin.",
       "creating": "Création …",
-      "create": "Créer un jeton"
+      "create": "Créer un jeton",
+      "connect": {
+        "title": "Connecter un client",
+        "freshNote": "Tout est déjà rempli ici — déplie, copie, colle.",
+        "placeholderNote": "Remplace gwp_… par ton jeton. Il n'apparaît en entier qu'au moment de sa création.",
+        "claudeCode": "Claude Code",
+        "claudeCodeStep": "Une fois, dans le terminal. Ensuite chaque projet connaît le serveur.",
+        "claudeDesktop": "Claude Desktop",
+        "claudeDesktopStep": "À ajouter dans le fichier de configuration, puis redémarre Claude Desktop. Si « mcpServers » existe déjà, seule la partie intérieure est nouvelle.",
+        "claudeDesktopPath": "macOS: ~/Library/Application Support/Claude/claude_desktop_config.json · Windows: %APPDATA%\\Claude\\claude_desktop_config.json",
+        "gemini": "Gemini CLI",
+        "geminiStep": "Une fois, dans le terminal. L'entrée atterrit dans ~/.gemini/settings.json.",
+        "langdock": "Langdock",
+        "langdockStep1": "Paramètres → Intégrations → MCP → ajouter une connexion.",
+        "langdockStep2": "Colle l'URL du serveur :",
+        "langdockStep3": "Authentification : « API Key », type d'en-tête : « Authorization: Bearer ».",
+        "langdockStep4": "Colle le jeton nu comme clé — sans le mot « Bearer », Langdock l'ajoute lui-même :",
+        "langdockStep5": "« Test connection », choisis les outils, enregistre.",
+        "copyCommand": "Copier la commande Claude Code",
+        "copyGemini": "Copier la commande Gemini CLI",
+        "copyConfig": "Copier la configuration Claude Desktop",
+        "copyEndpoint": "Copier l'URL du serveur",
+        "copyToken": "Copier le jeton"
+      }
     }
   },
   "workshop": {

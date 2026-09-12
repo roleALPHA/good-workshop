@@ -192,7 +192,8 @@
     "loadMore": "Load more",
     "saving": "Saving …",
     "back": "Back",
-    "readOnly": "Read only"
+    "readOnly": "Read only",
+    "copied": "Copied"
   },
   "enums": {
     "memberRole": {
@@ -474,9 +475,9 @@
     "title": "Settings",
     "tokens": {
       "title": "Access tokens",
-      "intro": "For MCP clients such as Claude Desktop or Claude Code. A token acts as you — it can never do more than you can.",
+      "intro": "For MCP clients such as Claude Code, Claude Desktop, Gemini CLI or Langdock. A token acts as you — it can never do more than you can.",
       "freshLabel": "Your new token",
-      "freshHint": "It is shown once only — what is stored is its hash. Enter it in the client as <code>Authorization: Bearer …</code> against <code>/api/mcp</code>.",
+      "freshHint": "It is shown once only — what is stored is its hash.",
       "hide": "Got it, hide this",
       "lastUsed": "last used {date}",
       "neverUsed": "never used",
@@ -487,7 +488,30 @@
       "scopesLabel": "What may it do?",
       "noUserAdmin": "User administration is deliberately not on offer: an MCP client must never invite anybody or make anybody an admin.",
       "creating": "Creating …",
-      "create": "Create a token"
+      "create": "Create a token",
+      "connect": {
+        "title": "Connect a client",
+        "freshNote": "Everything here is already filled in — open it, copy, paste.",
+        "placeholderNote": "Put your own token where gwp_… is. It is shown in full only right after you create it.",
+        "claudeCode": "Claude Code",
+        "claudeCodeStep": "Once, in the terminal. Every project knows the server after that.",
+        "claudeDesktop": "Claude Desktop",
+        "claudeDesktopStep": "Add this to the configuration file and restart Claude Desktop. If \"mcpServers\" is already there, only the inner part is new.",
+        "claudeDesktopPath": "macOS: ~/Library/Application Support/Claude/claude_desktop_config.json · Windows: %APPDATA%\\Claude\\claude_desktop_config.json",
+        "gemini": "Gemini CLI",
+        "geminiStep": "Once, in the terminal. The entry lands in ~/.gemini/settings.json.",
+        "langdock": "Langdock",
+        "langdockStep1": "Settings → Integrations → MCP → add a connection.",
+        "langdockStep2": "Paste the server URL:",
+        "langdockStep3": "Authentication: “API Key”, header type: “Authorization: Bearer”.",
+        "langdockStep4": "Paste the bare token as the key — without the word “Bearer”, Langdock adds that itself:",
+        "langdockStep5": "“Test connection”, pick the tools, save.",
+        "copyCommand": "Copy the Claude Code command",
+        "copyGemini": "Copy the Gemini CLI command",
+        "copyConfig": "Copy the Claude Desktop configuration",
+        "copyEndpoint": "Copy the server URL",
+        "copyToken": "Copy the token"
+      }
     }
   },
   "workshop": {
