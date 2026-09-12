@@ -116,14 +116,18 @@ cp .env.example .env
 
 ### 2. Provide the image
 
-**There is no published release yet.** Until the first `v*` tag exists, the image is built
-locally and gets the tag `compose.yaml` expects:
+The releases are published to the GitHub Container Registry, and `compose.yaml` pulls the one
+`GW_VERSION` names when the stack first comes up. The current release is `v0.2.0`; there is
+nothing to build.
+
+To run a state that carries no tag of its own, build it and give it the name `compose.yaml`
+expects:
 
 ```bash
 docker build -t ghcr.io/rolealpha/good-workshop:local .
 ```
 
-Then set `GW_VERSION=local` in the `.env`. Once there are releases, this step goes away.
+Then set `GW_VERSION=local` in the `.env`.
 
 ### 3. Fill in the `.env`
 
@@ -134,7 +138,7 @@ missing:
 GW_APP_URL=https://workshop.example.com   # the address the app is reachable at
 GW_HOSTNAME=workshop.example.com          # the name in the certificate (profile `tls`)
 GW_MAIL_TRANSPORT=smtp                    # smtp | graph | console | none
-GW_VERSION=local                          # or the release tag
+GW_VERSION=v0.2.0                         # the release to run, never a moving tag
 ```
 
 With `GW_MAIL_TRANSPORT=smtp` you also need `SMTP_URL` and `SMTP_FROM`. If the `SMTP_URL`
@@ -206,16 +210,14 @@ starts do nothing, even if the variable stays.
 # 1. Back up. An upgrade without a backup is a bet.
 scripts/backup.sh before-upgrade-$(date +%F).sql.gz
 
-# 2. Provide the new image and point GW_VERSION in the .env at it.
-#    While there is no release, that means building rather than pulling.
-git pull
-docker build -t ghcr.io/rolealpha/good-workshop:local .
+# 2. Point GW_VERSION in the .env at the new tag, then fetch that image.
+docker compose pull
 
 # 3. Bring it up.
 docker compose --profile tls up -d
 ```
 
-Once there are releases, `docker compose pull` takes the place of the build in step 2.
+Which tags exist is on the [releases page](https://github.com/roleALPHA/good-workshop/releases).
 
 `migrate` runs on every start and `app` waits for it — a container that would serve against a
 schema it does not understand never comes up in the first place.
