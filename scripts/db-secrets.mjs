@@ -35,7 +35,7 @@
  * matters: a secret nobody has to type is a secret nobody pastes into a ticket.
  */
 import { randomBytes } from 'node:crypto'
-import { chmodSync, existsSync, mkdirSync, readFileSync, writeFileSync } from 'node:fs'
+import { chmodSync, mkdirSync, readFileSync, writeFileSync } from 'node:fs'
 import { join } from 'node:path'
 
 const dir = process.env.GW_DB_SECRETS_DIR ?? '/run/db-secrets'
@@ -74,7 +74,25 @@ for (const role of [...ROLES, APP_KEY]) {
   const file = join(dir, role, role === APP_KEY ? 'secret-key' : 'password')
   mkdirSync(join(dir, role), { recursive: true })
 
-  if (!existsSync(file) || readFileSync(file, 'utf8').trim().length < 32) {
+  /**
+   * Read first, and never ask whether the file is there.
+   *
+   * `existsSync` followed by a write is a check somebody else can invalidate
+   * between the two lines -- and the somebody is a second run of this script,
+   * overwriting a password Postgres may already have been initialised with. A
+   * read that treats "missing" as a value has no such gap, and the two cases
+   * below are then genuinely different operations rather than one guarded by a
+   * guess. CodeQL calls the shape js/file-system-race; the fix is to have no
+   * check rather than a better one.
+   */
+  let current = null
+  try {
+    current = readFileSync(file, 'utf8')
+  } catch (error) {
+    if (error.code !== 'ENOENT') throw error
+  }
+
+  if (current === null || current.trim().length < 32) {
     // base64url: no characters that need escaping inside a connection URL, and
     // none that a shell would interpret if somebody echoes the file.
     //
@@ -83,8 +101,26 @@ for (const role of [...ROLES, APP_KEY]) {
     // role passwords have no such constraint; 33 bytes only avoids the `=`
     // padding that 32 would produce.
     const bytes = role === APP_KEY ? 32 : 33
-    writeFileSync(file, randomBytes(bytes).toString('base64url'), { mode: 0o644 })
-    created += 1
+    const secret = randomBytes(bytes).toString('base64url')
+
+    if (current === null) {
+      try {
+        // Exclusive: the kernel decides who wins a race, and the loser keeps
+        // what the winner wrote rather than replacing it.
+        writeFileSync(file, secret, { mode: 0o644, flag: 'wx' })
+        created += 1
+      } catch (error) {
+        // EEXIST is the outcome we wanted -- somebody else created it. Any
+        // other error is real: a read-only volume, a full disk.
+        if (error.code !== 'EEXIST') throw error
+      }
+    } else {
+      // Present but too short to be a secret: truncated by a failed write, or
+      // written by an older version of this script. Replaced deliberately,
+      // because leaving it fails later and less clearly.
+      writeFileSync(file, secret, { mode: 0o644 })
+      created += 1
+    }
   }
 
   // Re-applied even for a file that already existed: a volume restored from a
