@@ -68,7 +68,7 @@ export async function GET(
             {
               locale,
               flavor,
-              includeFacilitatorNotes: notes,
+              includePrivateFields: notes,
             },
           ),
         }

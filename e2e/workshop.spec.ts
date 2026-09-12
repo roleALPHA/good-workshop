@@ -231,6 +231,32 @@ test('keeps a note about the day itself, and survives a reload with it', async (
   })
 })
 
+/**
+ * The switch that decides who a copy is for.
+ *
+ * Both the export and the print view have understood `?notes=1` since they were
+ * built, and nothing offered it -- the only way through was to type the
+ * parameter into the address bar. What is asserted here is the wiring: the
+ * checkbox has to reach BOTH links, because the question it answers ("is this
+ * copy for the group or for me") does not depend on where the copy ends up.
+ */
+test('carries facilitation notes into a handover only when asked', async ({ page }) => {
+  const markdown = page.getByRole('link', { name: 'Markdown' })
+  const print = page.getByRole('link', { name: 'Drucken' })
+
+  // Off by default: the common case is handing the agenda to the group.
+  await expect(markdown).toHaveAttribute('href', /\/export$/)
+  await expect(print).not.toHaveAttribute('href', /notes=1/)
+
+  await page.getByLabel('Mit Moderationsnotizen').check()
+
+  await expect(markdown).toHaveAttribute('href', /notes=1/)
+  await expect(print).toHaveAttribute('href', /notes=1/)
+
+  await page.getByLabel('Mit Moderationsnotizen').uncheck()
+  await expect(markdown).not.toHaveAttribute('href', /notes=1/)
+})
+
 test('exports the day as Markdown', async ({ page }) => {
   await addBlock(page, 'Gruppenarbeit')
 

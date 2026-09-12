@@ -19,12 +19,42 @@ describe('renderDayMarkdown', () => {
     expect(renderDayMarkdown(meta, createDemoDay(), { flavor: 'outline' })).toMatchSnapshot()
   })
 
+  /**
+   * The filter used to name ONE field: `key === 'facilitator_notes'`.
+   *
+   * That was right for as long as `facilitator_notes` was the only field
+   * carrying `x-gw.private`, and wrong the moment a second one appeared --
+   * which is a schema edit, not a code change, so nothing would have failed.
+   * A block type declaring a private field in this installation's own schema
+   * would have gone out to participants in the handover.
+   */
+  it('keeps ANY private field out, not only the one it was named after', () => {
+    const day = createDemoDay()
+    const [typeId, type] = Object.entries(day.moduleTypes)[0]!
+    const schema = JSON.parse(JSON.stringify(type.jsonSchema)) as {
+      properties: Record<string, unknown>
+    }
+    schema.properties.client_budget = {
+      type: 'string',
+      title: 'Budget',
+      'x-gw': { group: 'Moderation', order: 9, cols: 12, private: true },
+    }
+    day.moduleTypes[typeId] = { ...type, jsonSchema: schema }
+
+    const target = Object.values(day.modules).find((m) => m.moduleTypeId === typeId)!
+    target.desc.client_budget = 'Geheim 12.000'
+
+    expect(renderDayMarkdown(meta, day, { includeDescriptions: true })).not.toContain(
+      'Geheim 12.000',
+    )
+  })
+
   it('keeps facilitator notes out by default', () => {
     const output = renderDayMarkdown(meta, createDemoDay())
     // The common case for an export is handing it to participants, and notes
     // are explicitly the facilitator's own.
     expect(output).not.toContain('Auftraggeberin')
-    expect(renderDayMarkdown(meta, createDemoDay(), { includeFacilitatorNotes: true })).toContain(
+    expect(renderDayMarkdown(meta, createDemoDay(), { includePrivateFields: true })).toContain(
       'Auftraggeberin',
     )
   })
