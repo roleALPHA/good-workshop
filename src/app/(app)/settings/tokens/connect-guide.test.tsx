@@ -35,6 +35,18 @@ describe('the connection instructions', () => {
     )
   })
 
+  it('hands Codex the token through the environment, not through its config file', () => {
+    render(<ConnectGuide origin={ORIGIN} token={TOKEN} />)
+    const codex = open('Codex').getByText(/^export GW_TOKEN=/).textContent ?? ''
+
+    expect(codex).toContain(`export GW_TOKEN=${TOKEN}`)
+    expect(codex).toContain(`--url ${ORIGIN}/api/mcp`)
+    expect(codex).toContain('--bearer-token-env-var GW_TOKEN')
+    // The point of the environment variable is that the secret does NOT end up
+    // in ~/.codex/config.toml, which is a file people paste into issues.
+    expect(codex).not.toContain(`--bearer-token ${TOKEN}`)
+  })
+
   it('keeps the Claude Desktop header out of the argument list', () => {
     render(<ConnectGuide origin={ORIGIN} token={TOKEN} />)
     const config =

@@ -478,7 +478,7 @@ declare const messages: {
     "title": "Einstellungen",
     "tokens": {
       "title": "Zugangstoken",
-      "intro": "Für MCP-Clients wie Claude Code, Claude Desktop, Gemini CLI oder Langdock. Ein Token handelt als du — es kann nie mehr, als du selbst darfst.",
+      "intro": "Für MCP-Clients wie Claude Code, Claude Desktop, Gemini CLI, Codex oder Langdock. Ein Token handelt als du — es kann nie mehr, als du selbst darfst.",
       "freshLabel": "Dein neues Token",
       "freshHint": "Es wird nur einmal angezeigt — gespeichert ist nur sein Hash.",
       "hide": "Verstanden, ausblenden",
@@ -503,6 +503,9 @@ declare const messages: {
         "claudeDesktopPath": "macOS: ~/Library/Application Support/Claude/claude_desktop_config.json · Windows: %APPDATA%\\Claude\\claude_desktop_config.json",
         "gemini": "Gemini CLI",
         "geminiStep": "Einmal im Terminal. Der Eintrag landet in ~/.gemini/settings.json.",
+        "codex": "Codex",
+        "codexStep": "Zwei Zeilen im Terminal. Codex hält den Token bewusst aus der Konfigurationsdatei heraus — der Eintrag nennt nur den Namen der Umgebungsvariablen.",
+        "codexEnvNote": "Damit es dauerhaft gilt, gehört die erste Zeile in deine Shell-Konfiguration (~/.zshrc oder ~/.bashrc). Sonst kennt Codex den Token nur in diesem einen Terminal.",
         "langdock": "Langdock",
         "langdockStep1": "Einstellungen → Integrationen → MCP → Verbindung hinzufügen.",
         "langdockStep2": "Server-URL einfügen:",
@@ -513,7 +516,8 @@ declare const messages: {
         "copyGemini": "Befehl für Gemini CLI kopieren",
         "copyConfig": "Konfiguration für Claude Desktop kopieren",
         "copyEndpoint": "Server-URL kopieren",
-        "copyToken": "Token kopieren"
+        "copyToken": "Token kopieren",
+        "copyCodex": "Befehle für Codex kopieren"
       }
     }
   },

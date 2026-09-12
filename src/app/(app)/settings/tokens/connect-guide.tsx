@@ -32,6 +32,15 @@ export function ConnectGuide({ origin, token }: { origin: string; token: string 
 
   const gemini = `gemini mcp add --transport http --header "Authorization: Bearer ${secret}" goodworkshop ${endpoint}`
 
+  // Two lines, because Codex keeps the secret OUT of its config file: the
+  // entry names an environment variable and the value is read at connect time.
+  // Worth following rather than working around -- ~/.codex/config.toml is a
+  // file people paste into issues.
+  const codex = [
+    `export GW_TOKEN=${secret}`,
+    `codex mcp add goodworkshop --url ${endpoint} --bearer-token-env-var GW_TOKEN`,
+  ].join('\n')
+
   // The header goes in through `env` and the argument carries no space after
   // the colon. Claude Desktop splits `args` on whitespace, so the readable
   // `"Authorization: Bearer …"` arrives at mcp-remote as two arguments and the
@@ -74,6 +83,12 @@ export function ConnectGuide({ origin, token }: { origin: string; token: string 
         <Client name={t('gemini')}>
           <p className="text-[14px] text-[var(--fg-muted)]">{t('geminiStep')}</p>
           <CopyBlock value={gemini} label={t('copyGemini')} />
+        </Client>
+
+        <Client name={t('codex')}>
+          <p className="text-[14px] text-[var(--fg-muted)]">{t('codexStep')}</p>
+          <CopyBlock value={codex} label={t('copyCodex')} />
+          <p className="mt-2 text-[13px] text-[var(--fg-subtle)]">{t('codexEnvNote')}</p>
         </Client>
 
         <Client name={t('langdock')}>
