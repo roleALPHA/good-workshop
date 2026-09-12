@@ -37,6 +37,13 @@ What the gate protected is now protected where it belongs:
 **Still no broken mini version of the editor.** If something cannot be made to work under a
 thumb, it does not get a cramped variant; it waits for a bigger screen and says so.
 
+The 1024 px line is the **editor's**. The library draws its own at 768 px, because that is where
+its two columns appear and the folder tree stands beside the list instead of behind a
+disclosure — and you cannot drag onto a target you cannot see. Below it, filing a workshop or a
+folder goes through the "Verschieben nach …" control in the row. That control exists at every
+width and is the mechanism; the drag is an accelerator on top of it. Any new drag surface owes
+the same answer: **a pointer gesture is never the only way to perform an operation.**
+
 ### The agenda collapses into cards, not horizontal scroll
 
 `--gw-cols` applies from `md` upwards. Below that every row becomes a card:

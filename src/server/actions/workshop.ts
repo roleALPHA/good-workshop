@@ -16,6 +16,7 @@ import {
   listTrashedWorkshops,
   deleteFolder,
   moveFolder,
+  moveWorkshopToFolder,
 } from '@/domain/workshop/repo'
 import { pruneUnusedTags, setWorkshopTags } from '@/domain/workshop/tags'
 import { assertTenantAdmin } from '@/domain/tenant/members'
@@ -115,6 +116,35 @@ export async function restoreWorkshopAction(raw: {
 }
 
 /**
+ * Files a workshop in a folder, or takes it out of all of them.
+ *
+ * `workshop.update` rather than the tenant admin check the FOLDER actions use:
+ * a folder belongs to the tenant, but where one's own workshop sits is one's
+ * own business. A viewer has no update capability and is turned away before a
+ * row is read.
+ *
+ * `folderId` is nullable and not optional -- "no folder" is something the caller
+ * says, never something they leave out.
+ */
+export async function moveWorkshopAction(raw: {
+  workshopId: string
+  folderId: string | null
+}): Promise<ActionResult<null>> {
+  const result = await workshopAction(
+    z.object({ workshopId: z.string().uuid(), folderId: z.string().uuid().nullable() }),
+    raw,
+    'workshop.update',
+    async (tx, access, input) => {
+      await moveWorkshopToFolder(tx, access, input.folderId)
+      return null
+    },
+  )
+
+  if (result.ok) revalidatePath('/library')
+  return result
+}
+
+/**
  * Irreversible, and only from the bin.
  *
  * purgeWorkshop refuses a row whose deleted_at is null, so "delete" and "delete
@@ -174,22 +204,32 @@ export async function deleteFolderAction(raw: { id: string }): Promise<ActionRes
 }
 
 /**
- * Moves a folder into another, or to the top level.
+ * Moves a folder into another, or to the top level, and says where among its
+ * new siblings it lands.
  *
- * The refusals -- into itself, into its own descendant -- come back as messages
- * rather than as a generic failure: both are ordinary mis-aims, and the person
- * doing it needs to know which one they hit.
+ * The refusals -- into itself, into its own descendant, onto a name that is
+ * taken -- come back as messages rather than as a generic failure: all three
+ * are ordinary mis-aims, and the person doing it needs to know which one they
+ * hit.
+ *
+ * `afterId` is the sibling the folder lands behind, null for first, and absent
+ * when the caller does not care (the select control does not).
  */
 export async function moveFolderAction(raw: {
   id: string
   parentId: string | null
+  afterId?: string | null
 }): Promise<ActionResult<null>> {
   const result = await action(
-    z.object({ id: z.string().uuid(), parentId: z.string().uuid().nullable() }),
+    z.object({
+      id: z.string().uuid(),
+      parentId: z.string().uuid().nullable(),
+      afterId: z.string().uuid().nullable().optional(),
+    }),
     raw,
     async (tx, actor, input) => {
       assertTenantAdmin(actor)
-      await moveFolder(tx, input.id, input.parentId)
+      await moveFolder(tx, input.id, input.parentId, input.afterId ?? null)
       return null
     },
   )
