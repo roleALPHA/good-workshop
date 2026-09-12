@@ -188,8 +188,13 @@ test.describe('inline editing in the day view', () => {
     // And NOT a second copy of what the row already edits. Two controls over
     // one value means whichever one was not touched writes its stale copy over
     // the other on blur.
-    await expect(row.getByLabel('Material')).toHaveCount(0)
-    await expect(row.getByLabel('Sozialform')).toHaveCount(0)
+    //
+    // `exact` matters here and nowhere else in this file: getByLabel matches a
+    // substring by default, so a bare 'Material' also finds the row's own
+    // 'Material hinzufügen' -- and the assertion would contradict the one two
+    // lines below it.
+    await expect(row.getByLabel('Material', { exact: true })).toHaveCount(0)
+    await expect(row.getByLabel('Sozialform', { exact: true })).toHaveCount(0)
     await expect(row.getByLabel('Material hinzufügen')).toBeVisible()
     await expect(row.getByRole('button', { name: /^Sozialform:/ })).toBeVisible()
   })
