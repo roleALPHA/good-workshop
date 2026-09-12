@@ -29,7 +29,16 @@ test.beforeEach(async ({ page, request }) => {
 })
 
 test('carries the attribution footer on every view', async ({ page }) => {
-  await expect(page.getByText('GoodWorkshop · powered by roleALPHA')).toBeVisible()
+  const footer = page.getByRole('contentinfo')
+  await expect(footer).toContainText('GoodWorkshop · powered by roleALPHA')
+  await expect(footer.getByRole('link', { name: 'roleALPHA' })).toHaveAttribute(
+    'href',
+    'https://rolealpha.com',
+  )
+  await expect(footer.getByRole('link', { name: 'AGPL-3.0' })).toHaveAttribute(
+    'href',
+    'https://github.com/roleALPHA/good-workshop',
+  )
 })
 
 test('never scrolls horizontally', async ({ page }) => {

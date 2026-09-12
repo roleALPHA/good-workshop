@@ -5,6 +5,7 @@ import { authConfig } from './config'
 import type { Locale } from '@/i18n/config'
 import { translator } from '@/i18n/translator'
 import { DomainError } from '@/domain/errors'
+import { ATTRIBUTION_TEXT } from '@/lib/attribution'
 
 /**
  * Mail delivery, with `console` as a first-class transport rather than a
@@ -260,11 +261,9 @@ export function magicLinkMail(to: string, link: string, locale: Locale): Mail {
   return {
     to,
     subject: t('subject'),
-    text: [
-      t('body', { link, minutes: authConfig.magicLinkTtlMinutes }),
-      '',
-      'GoodWorkshop · powered by roleALPHA',
-    ].join('\n'),
+    text: [t('body', { link, minutes: authConfig.magicLinkTtlMinutes }), '', ATTRIBUTION_TEXT].join(
+      '\n',
+    ),
   }
 }
 
@@ -289,10 +288,8 @@ export function shareInviteMail(
   return {
     to,
     subject: t('subject', { workshop: workshopTitle }),
-    text: [
-      t('body', { workshop: workshopTitle, link, email: to }),
-      '',
-      'GoodWorkshop · powered by roleALPHA',
-    ].join('\n'),
+    text: [t('body', { workshop: workshopTitle, link, email: to }), '', ATTRIBUTION_TEXT].join(
+      '\n',
+    ),
   }
 }

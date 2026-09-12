@@ -142,7 +142,16 @@ test.describe('the day view on a phone', () => {
   })
 
   test('shows the attribution footer here too', async ({ page }) => {
-    await expect(page.getByText('GoodWorkshop · powered by roleALPHA')).toBeVisible()
+    const footer = page.getByRole('contentinfo')
+    await expect(footer).toContainText('GoodWorkshop · powered by roleALPHA')
+    await expect(footer.getByRole('link', { name: 'roleALPHA' })).toHaveAttribute(
+      'href',
+      'https://rolealpha.com',
+    )
+    await expect(footer.getByRole('link', { name: 'AGPL-3.0' })).toHaveAttribute(
+      'href',
+      'https://github.com/roleALPHA/good-workshop',
+    )
   })
 
   /**

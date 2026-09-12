@@ -1,6 +1,7 @@
 import { describe, expect, it } from 'vitest'
 import { createDemoDay } from '@/features/agenda/fixtures/day-fixture'
 import { renderDayMarkdown } from './markdown'
+import { ATTRIBUTION_MARKDOWN } from '@/lib/attribution'
 
 /**
  * Snapshots against the demo fixture, which is also what the perf budget and
@@ -57,9 +58,12 @@ describe('renderDayMarkdown', () => {
     expect(renderDayMarkdown(meta, createDemoDay())).toMatch(/\d+h \d+m Inhalt, .* Pausen/)
   })
 
-  it('carries the attribution', () => {
-    expect(renderDayMarkdown(meta, createDemoDay())).toContain(
-      'GoodWorkshop · powered by roleALPHA',
-    )
+  it('carries the attribution, and here the two addresses are links', () => {
+    const out = renderDayMarkdown(meta, createDemoDay())
+    expect(out).toContain(ATTRIBUTION_MARKDOWN)
+    // A Markdown export is a document somebody pastes somewhere, so the
+    // addresses go in as links rather than as bare text the way a mail needs.
+    expect(out).toContain('[roleALPHA](https://rolealpha.com)')
+    expect(out).toContain('[AGPL-3.0](https://github.com/roleALPHA/good-workshop)')
   })
 })

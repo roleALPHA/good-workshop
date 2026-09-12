@@ -38,7 +38,8 @@ valid until the last day of the agenda, and can be withdrawn at any time.
 
 **Looks like you.** Under **Branding** you can set a logo and an accent colour; the server
 derives the light and dark steps itself. The footer stays `GoodWorkshop · powered by
-roleALPHA`.
+roleALPHA · AGPL-3.0`, with the name pointing at [rolealpha.com](https://rolealpha.com) and
+the licence at the source.
 
 **Connects to an AI client.** GoodWorkshop is an MCP server: Claude Desktop, Claude Code or
 any other MCP client can read and write workshops. You create a token under **Tokens** in

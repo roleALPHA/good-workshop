@@ -3,6 +3,7 @@
 import { revalidatePath } from 'next/cache'
 import { assertTenantAdmin } from '@/domain/tenant/members'
 import { withTenant } from '@/server/db'
+import { ATTRIBUTION_TEXT } from '@/lib/attribution'
 import {
   applyMailSettings,
   describeMailSettings,
@@ -108,7 +109,7 @@ export async function sendTestMail(formData: FormData): Promise<ActionResult<str
       {
         to,
         subject: t('subject'),
-        text: [t('body'), '', 'GoodWorkshop · powered by roleALPHA'].join('\n'),
+        text: [t('body'), '', ATTRIBUTION_TEXT].join('\n'),
       },
       actor.tenantId,
     )
