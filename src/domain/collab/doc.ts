@@ -113,6 +113,7 @@ export function seedFromDayDoc(doc: Y.Doc, source: DayDoc): void {
           parentId: null,
           title: cluster.title,
           color: cluster.color,
+          pinnedStartMinute: cluster.pinnedStartMinute,
         }),
       )
     }

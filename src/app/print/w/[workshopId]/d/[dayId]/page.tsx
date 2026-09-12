@@ -5,6 +5,8 @@ import { loadDay } from '@/domain/agenda/repo'
 import { computeSchedule } from '@/domain/schedule/computeSchedule'
 import { formatDuration, formatTime } from '@/features/agenda/duration'
 import { flattenDay, toScheduleItems } from '@/features/agenda/flatten'
+import { findField, parseSchema } from '@/domain/moduleType/profile'
+import { ParticipationBadge } from '@/components/agenda/participation-control'
 import { catClass } from '@/lib/category-colors'
 import { RichText } from '@/lib/richtext/render'
 import { isRichTextValue } from '@/lib/richtext/schema'
@@ -109,6 +111,10 @@ export default async function PrintPage({
             showNotes && isRichTextValue(row.module.desc.facilitator_notes)
               ? row.module.desc.facilitator_notes
               : null
+          // Beside the time, as on screen: the paper copy is what a facilitator
+          // holds while running the room, and "plenary or small groups" is what
+          // they look up there.
+          const participation = findField(parseSchema(type?.jsonSchema), 'participation')
 
           return (
             <article
@@ -124,6 +130,17 @@ export default async function PrintPage({
                 <div className="text-sm text-neutral-600">
                   {formatDuration(entry.durationMinutes)}
                 </div>
+                {participation && (
+                  <ParticipationBadge
+                    field={participation}
+                    value={
+                      typeof row.module.desc.participation === 'string'
+                        ? row.module.desc.participation
+                        : undefined
+                    }
+                    className="mt-0.5 text-[13px] text-neutral-600"
+                  />
+                )}
               </div>
               <div className="min-w-0 flex-1">
                 <h3 className="font-semibold">

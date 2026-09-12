@@ -72,6 +72,7 @@
     "addTag": "Ajouter un tag",
     "blockCount": "{count, plural, one {# bloc} many {# blocs} other {# blocs}}",
     "breaks": "{duration} de pauses",
+    "buffer": "Marge",
     "columns": {
       "time": "Heure",
       "titleAndDescription": "Titre et description",
@@ -106,8 +107,15 @@
       "unset": "— non renseigné —"
     },
     "filterPlaceholder": "Tape pour filtrer …",
+    "materials": {
+      "add": "Ajouter du matériel",
+      "remove": "Retirer le matériel {name}",
+      "placeholder": "+ matériel"
+    },
     "moreFields": "Plus de champs",
+    "noFields": "Ce type de bloc n’a pas d’autres champs.",
     "noTypeMatches": "Aucun type de bloc ne correspond.",
+    "notes": "Contient des notes d’animation",
     "offline": "Pas de connexion. Tes modifications seront transmises dès qu'elle revient.",
     "overPlan": "{duration} de dépassement",
     "overlap": "Chevauche le bloc précédent de {duration}",
@@ -116,6 +124,16 @@
     "parkLabel": "Mettre {title} de côté",
     "parkedHeading": "De côté ({count, number})",
     "parkedHint": "Fait partie de la journée, ne compte pas dans le temps.",
+    "participation": {
+      "choose": "Choisir la forme de participation",
+      "unset": "non renseigné"
+    },
+    "pin": {
+      "set": "Fixer l’heure de début",
+      "clear": "Libérer l’heure fixée",
+      "time": "Heure de début fixée"
+    },
+    "pinnedStart": "Heure de début fixée :",
     "presence": "Autres personnes sur cette journée",
     "regionLabel": "Programme {title}",
     "removeTag": "Supprimer le tag {name}",

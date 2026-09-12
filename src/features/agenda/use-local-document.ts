@@ -2,7 +2,7 @@
 
 import { useCallback, useMemo, useState } from 'react'
 import type { DayDoc } from '@/domain/agenda/types'
-import type { AgendaDocument, ModulePatch, NewBlock, Peer } from './document'
+import type { AgendaDocument, ClusterPatch, ModulePatch, NewBlock, Peer } from './document'
 import { applyMove } from './move'
 import type { Projection } from './projection'
 
@@ -31,6 +31,20 @@ export function useLocalDocument(initial: DayDoc): AgendaDocument {
     setDoc((current) => ({
       ...current,
       modules: current.modules.map((m) => (m.id === moduleId ? { ...m, ...changes } : m)),
+    }))
+  }, [])
+
+  // The same undefined-means-untouched rule as patchModule, on the other kind
+  // of block. Without it the demo would quietly drop a section's pin while the
+  // signed-in editor kept it, which is exactly the drift document.ts warns of.
+  const patchCluster = useCallback((clusterId: string, patch: ClusterPatch) => {
+    const changes = Object.fromEntries(
+      Object.entries(patch).filter(([, value]) => value !== undefined),
+    )
+
+    setDoc((current) => ({
+      ...current,
+      clusters: current.clusters.map((c) => (c.id === clusterId ? { ...c, ...changes } : c)),
     }))
   }, [])
 
@@ -69,6 +83,7 @@ export function useLocalDocument(initial: DayDoc): AgendaDocument {
     () => ({
       doc,
       patchModule,
+      patchCluster,
       patchDay,
       move,
       addModule,
@@ -78,7 +93,7 @@ export function useLocalDocument(initial: DayDoc): AgendaDocument {
       peers: NOBODY,
       setFocus: () => {},
     }),
-    [doc, patchModule, patchDay, move, addModule, removeModule],
+    [doc, patchModule, patchCluster, patchDay, move, addModule, removeModule],
   )
 }
 

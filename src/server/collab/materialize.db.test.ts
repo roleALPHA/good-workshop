@@ -196,6 +196,64 @@ describe('what the document is allowed to write into json_desc', () => {
     const { rows } = await ops.query('select json_desc from module where id = $1', [firstId])
     expect(rows[0]?.json_desc).toEqual({})
   })
+
+  /**
+   * Keeping the old value is right. Keeping it QUIETLY is not.
+   *
+   * The editor reads the shared document, so it goes on showing what was
+   * typed, while export, print and MCP serve the value from before. Nobody is
+   * told the two have parted company, and a console line on a server is not
+   * telling anybody.
+   */
+  it('leaves a durable record of a block whose content was refused', async () => {
+    const doc = await seedLog()
+    patchBlock(doc, firstId, { desc: { erfundenesFeld: 'ungültig' } })
+    await withTenant(actor(), (tx) => appendUpdate(tx, dayId, Y.encodeStateAsUpdate(doc)))
+    await materialize()
+
+    const { rows } = await ops.query(
+      `select entity_id, action, data from audit_event
+       where action = 'day.desc_rejected' and entity_id = $1
+       order by id desc limit 1`,
+      [workshopId],
+    )
+
+    expect(rows[0], 'kein Audit-Eintrag für die abgelehnte Änderung').toBeDefined()
+    expect(rows[0].data.dayId).toBe(dayId)
+    expect(rows[0].data.blocks).toHaveLength(1)
+    expect(rows[0].data.blocks[0].moduleId).toBe(firstId)
+    // The error key, not a sentence: the record has no language, so an
+    // operator greps one string rather than four translations of it.
+    expect(String(rows[0].data.blocks[0].errors)).toContain('field.unexpected')
+    expect(String(rows[0].data.blocks[0].errors)).toContain('erfundenesFeld')
+  })
+
+  it('says how many blocks it refused, so a caller can report it honestly', async () => {
+    const doc = await seedLog()
+    patchBlock(doc, firstId, { desc: { erfundenesFeld: 'ungültig' } })
+    patchBlock(doc, secondId, { desc: { materials: ['Gültig'] } })
+    await withTenant(actor(), (tx) => appendUpdate(tx, dayId, Y.encodeStateAsUpdate(doc)))
+
+    const result = await materialize()
+
+    expect(result.rejected).toBe(1)
+  })
+
+  it('says nothing at all when every block validated', async () => {
+    const doc = await seedLog()
+    patchBlock(doc, firstId, { desc: { materials: ['Gültig'] } })
+    await withTenant(actor(), (tx) => appendUpdate(tx, dayId, Y.encodeStateAsUpdate(doc)))
+
+    const result = await materialize()
+
+    expect(result.rejected ?? 0).toBe(0)
+    const { rows } = await ops.query(
+      `select count(*)::int as n from audit_event
+       where action = 'day.desc_rejected' and entity_id = $1`,
+      [workshopId],
+    )
+    expect(rows[0].n).toBe(0)
+  })
 })
 
 describe('a parked block', () => {

@@ -20,6 +20,11 @@ export type ModulePatch = {
   parked?: boolean
 }
 
+/** A section header. Only its start time is editable from the agenda today. */
+export type ClusterPatch = {
+  pinnedStartMinute?: number | null
+}
+
 export type NewBlock = {
   moduleTypeId: string
   title: string
@@ -50,6 +55,7 @@ export type AgendaDocument = {
   /** The current day, derived. Never mutated in place. */
   doc: DayDoc
   patchModule: (moduleId: string, patch: ModulePatch) => void
+  patchCluster: (clusterId: string, patch: ClusterPatch) => void
   /** Fields that belong to the day itself rather than to a block. */
   patchDay: (patch: { desc?: Record<string, unknown> }) => void
   /** Applies a finished drag. */

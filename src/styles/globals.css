@@ -10,7 +10,7 @@
   /* The agenda grid contract. Every row -- header, module, cluster -- uses this
      one custom property so columns stay aligned across nesting depths. It is
      applied only from `md` up; below that the table collapses to cards. */
-  --gw-cols: 32px 92px 40px minmax(280px, 1fr) minmax(200px, 0.6fr) 44px;
+  --gw-cols: 32px 116px 40px minmax(280px, 1fr) minmax(200px, 0.6fr) 44px;
   --gw-indent: 28px;
 }
 

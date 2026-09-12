@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest'
 import { BUILTIN_BY_KEY, BUILTIN_MODULE_TYPES } from './builtins'
-import { isVisible, parseSchema, summaryFields } from './profile'
+import { findField, isVisible, parseSchema, summaryChips, summaryFields } from './profile'
 
 const wrap = (properties: Record<string, unknown>, required: string[] = []) => ({
   type: 'object',
@@ -139,5 +139,70 @@ describe('against the shipped built-ins', () => {
         .map((f) => f.key)
         .sort(),
     ).toEqual(['deliverable', 'materials'])
+  })
+})
+
+/**
+ * The chips the agenda table renders. The table used to carry its own list of
+ * keys, which is why two fields flagged for it never appeared -- these say the
+ * schema is what decides.
+ */
+describe('summary chips', () => {
+  const chips = (key: string, desc: Record<string, unknown>, skip?: string[]) =>
+    summaryChips(parseSchema(BUILTIN_BY_KEY[key]!.jsonSchema), desc, skip)
+
+  it('makes one chip per entry of an array field', () => {
+    expect(chips('admin', { materials: ['Flipchart', 'Marker'] }).map((c) => c.text)).toEqual([
+      'Flipchart',
+      'Marker',
+    ])
+  })
+
+  it('renders an enum through its label, so no export or column reads a raw key', () => {
+    expect(chips('decision', { method: 'dot_voting' })[0]?.text).not.toBe('dot_voting')
+  })
+
+  it('surfaces a field the table used to have no way of knowing about', () => {
+    expect(chips('presentation', { presenter: 'Mira' }).map((c) => c.text)).toEqual(['Mira'])
+  })
+
+  it('leaves out a field the caller renders itself', () => {
+    expect(chips('admin', { materials: ['Flipchart'] }, ['materials'])).toEqual([])
+  })
+
+  it('skips a value that has no one-line form rather than printing an object', () => {
+    expect(chips('admin', { materials: [{ nope: true }, ''] })).toEqual([])
+  })
+
+  it('says nothing when the block has nothing to say', () => {
+    expect(chips('admin', {})).toEqual([])
+  })
+})
+
+describe('finding a single field', () => {
+  it('reaches a field whatever group it was put in', () => {
+    const groups = parseSchema(BUILTIN_BY_KEY.admin!.jsonSchema)
+    expect(findField(groups, 'participation')?.label).toBe('Sozialform')
+    expect(findField(groups, 'nonexistent')).toBeUndefined()
+  })
+
+  it('offers the localised options the picker needs', () => {
+    const groups = parseSchema(BUILTIN_BY_KEY.admin!.jsonSchema)
+    const options = findField(groups, 'participation')?.options ?? []
+    expect(options.map((o) => o.value)).toEqual([
+      'plenary',
+      'small_groups',
+      'pairs',
+      'individual',
+      'none',
+    ])
+    expect(options.every((o) => o.label !== o.value)).toBe(true)
+  })
+})
+
+describe('parsing the same schema twice', () => {
+  it('hands back the same groups, because the row components cannot memoise', () => {
+    const schema = BUILTIN_BY_KEY.admin!.jsonSchema
+    expect(parseSchema(schema)).toBe(parseSchema(schema))
   })
 })

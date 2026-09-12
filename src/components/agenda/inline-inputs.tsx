@@ -1,6 +1,8 @@
 'use client'
 
 import { useEffect, useRef, useState } from 'react'
+import { Lock, LockOpen } from 'lucide-react'
+import { useTranslations } from 'next-intl'
 import { formatDuration, parseDuration } from '@/features/agenda/duration'
 import { cn } from '@/lib/cn'
 
@@ -129,8 +131,16 @@ export function DurationInput({
 /**
  * Pinning a block to a wall-clock time.
  *
- * Pinned state is never conveyed by colour alone -- the lock icon lives in the
- * time cell and this control names the state in words.
+ * A start time is derived from everything above it, which is right until the
+ * room is booked for 14:00. Then it is a fact, and the schedule has to bend
+ * around it rather than the other way round: the pin holds, and an overrun
+ * above it is reported instead of being silently absorbed.
+ *
+ * Switching it on adopts the time the block currently starts at, so pinning
+ * changes nothing by itself -- it only stops the next edit from moving it.
+ *
+ * Pinned state is never conveyed by colour alone: the lock icon has a label,
+ * `aria-pressed` says which way it is, and the time cell repeats it in words.
  */
 export function PinControl({
   pinnedMinute,
@@ -141,32 +151,50 @@ export function PinControl({
   derivedMinute: number
   onCommit: (minute: number | null) => void
 }) {
-  const value = toTimeValue(pinnedMinute ?? derivedMinute)
+  const t = useTranslations('agenda')
+  const pinned = pinnedMinute !== null
 
   return (
-    <div className="flex items-center gap-2">
-      <label className="flex items-center gap-1.5 text-[13px]">
-        <input
-          type="checkbox"
-          checked={pinnedMinute !== null}
-          onChange={(e) => onCommit(e.target.checked ? derivedMinute : null)}
-        />
-        Startzeit fixieren
-      </label>
+    <span className="inline-flex items-center gap-1">
+      <button
+        type="button"
+        aria-pressed={pinned}
+        aria-label={pinned ? t('pin.clear') : t('pin.set')}
+        title={pinned ? t('pin.clear') : t('pin.set')}
+        onClick={() => onCommit(pinned ? null : derivedMinute)}
+        className={cn(
+          'inline-flex size-6 shrink-0 items-center justify-center rounded-sm border border-transparent',
+          'hover:border-[var(--border)] focus-visible:border-[var(--brand-ring)] focus-visible:outline-none',
+          // A pin is a state, so it stays visible. An unpinned block offers the
+          // lock only once the row is touched -- with a focus-within
+          // counterpart, because a phone has no hover.
+          pinned
+            ? 'text-[var(--fg)]'
+            : 'text-[var(--fg-subtle)] opacity-0 group-focus-within:opacity-100 group-hover:opacity-100 focus-visible:opacity-100',
+        )}
+      >
+        {pinned ? (
+          <Lock aria-hidden className="size-3.5" />
+        ) : (
+          <LockOpen aria-hidden className="size-3.5" />
+        )}
+      </button>
 
-      {pinnedMinute !== null && (
+      {pinned && (
         <input
           type="time"
-          aria-label="Fixierte Startzeit"
-          className="tabular rounded border border-[var(--border-strong)] bg-[var(--surface)] px-1.5 py-0.5 text-[14px]"
-          value={value}
+          aria-label={t('pin.time')}
+          className="tabular w-[5.5rem] rounded-sm border border-transparent bg-transparent px-1 py-0.5 text-[14px] hover:border-[var(--border)] focus:border-[var(--brand-ring)] focus:bg-[var(--surface)] focus:outline-none"
+          value={toTimeValue(pinnedMinute)}
           onChange={(e) => {
             const parsed = fromTimeValue(e.target.value)
+            // A half-typed time is not a new start time. Clearing the box is
+            // the lock button's job, not a silent unpin.
             if (parsed !== null) onCommit(parsed)
           }}
         />
       )}
-    </div>
+    </span>
   )
 }
 

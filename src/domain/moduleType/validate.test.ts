@@ -8,6 +8,34 @@ const typeFor = (key: string, id = key) => ({
   jsonSchema: BUILTIN_BY_KEY[key]!.jsonSchema,
 })
 
+/**
+ * Compiled validators are cached by (module type, version). The browser used
+ * to pass a hardcoded 1 while the server passed the real number, so an
+ * administrator who changed a type's schema left every open tab validating
+ * against the old one -- and against the wrong shape, silently.
+ */
+describe('the compiled-validator cache', () => {
+  const evolving = (schemaVersion: number, extra: Record<string, unknown>) => ({
+    id: 'mt-evolving',
+    schemaVersion,
+    jsonSchema: {
+      type: 'object',
+      additionalProperties: false,
+      properties: { title: { type: 'string' }, ...extra },
+    },
+  })
+
+  it("does not answer for a new schema version with the old version's rules", () => {
+    // v1 knows nothing about `room`.
+    expect(validateModuleDesc(evolving(1, {}), { room: 'Raum 2.14' }).ok).toBe(false)
+
+    // v2 adds it. Same type id, so a cache keyed on the id alone answers wrong.
+    expect(
+      validateModuleDesc(evolving(2, { room: { type: 'string' } }), { room: 'Raum 2.14' }).ok,
+    ).toBe(true)
+  })
+})
+
 describe('validateModuleDesc', () => {
   it('accepts an empty document', () => {
     expect(validateModuleDesc(typeFor('check_in'), {}).ok).toBe(true)

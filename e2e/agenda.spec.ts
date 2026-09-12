@@ -182,11 +182,62 @@ test.describe('inline editing in the day view', () => {
     await expect(page.getByRole('dialog')).toHaveCount(0)
   })
 
-  test('keeps the collapsed table calm — four fields, not the whole schema', async ({ page }) => {
+  test('keeps the collapsed table calm — the row essentials, not the whole schema', async ({
+    page,
+  }) => {
     // The guardrail against the agenda turning into a wall of forms.
+    //
+    // What a closed row carries is a decision, not an accident, so it is named
+    // here in full: time, duration, title, the participation format, the
+    // material, and the lock. Everything else the type declares waits behind
+    // "Mehr Felder" -- the long-form task among it.
     const row = block(page, 'Spannungsfelder sammeln')
-    await expect(row.getByLabel('Arbeitsauftrag')).toHaveCount(0)
+
     await expect(row.getByLabel('Titel')).toBeVisible()
     await expect(row.getByLabel('Dauer')).toBeVisible()
+    await expect(row.getByRole('button', { name: /^Sozialform:/ })).toBeVisible()
+    await expect(row.getByLabel('Material hinzufügen')).toBeVisible()
+    await expect(row.getByRole('button', { name: 'Startzeit fixieren' })).toBeAttached()
+
+    await expect(row.getByLabel('Arbeitsauftrag')).toHaveCount(0)
+    await expect(row.getByLabel('Gruppengröße')).toHaveCount(0)
+  })
+
+  test('sets a start time and holds it while the day above it changes', async ({ page }) => {
+    const row = block(page, 'Spannungsfelder sammeln')
+
+    await row.getByRole('button', { name: 'Startzeit fixieren' }).click()
+    await row.getByLabel('Fixierte Startzeit').fill('15:45')
+    await expect(row.getByText('Startzeit fixiert:')).toBeAttached()
+
+    // Read off the field, not off the row's text: a pinned row being edited
+    // carries its start time ONCE, in the input that sets it. Printing it
+    // beside the input as well would read as two separate facts.
+    await expect(row.getByLabel('Fixierte Startzeit')).toHaveValue('15:45')
+
+    // Stretching a block above it must not move it. The conflict is reported
+    // instead -- silently absorbing an overrun is how a plan stops being true.
+    const earlier = block(page, 'Druckpunkte').getByLabel('Dauer')
+    await earlier.fill('3h')
+    await earlier.blur()
+
+    await expect(row.getByLabel('Fixierte Startzeit')).toHaveValue('15:45')
+    await expect(row).toContainText('Überschneidet den vorherigen Block')
+
+    await page.reload()
+    await expect(
+      block(page, 'Spannungsfelder sammeln').getByLabel('Fixierte Startzeit'),
+    ).toHaveValue('15:45')
+  })
+
+  test('keeps a material that was typed into the row', async ({ page }) => {
+    const row = block(page, 'Spannungsfelder sammeln')
+
+    await row.getByLabel('Material hinzufügen').fill('Moderationskoffer')
+    await row.getByLabel('Material hinzufügen').press('Enter')
+    await expect(row).toContainText('Moderationskoffer')
+
+    await page.reload()
+    await expect(block(page, 'Spannungsfelder sammeln')).toContainText('Moderationskoffer')
   })
 })

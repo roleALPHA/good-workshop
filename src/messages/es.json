@@ -72,6 +72,7 @@
     "addTag": "Añadir una etiqueta",
     "blockCount": "{count, plural, one {# bloque} many {# bloques} other {# bloques}}",
     "breaks": "{duration} de pausas",
+    "buffer": "Margen",
     "columns": {
       "time": "Hora",
       "titleAndDescription": "Título y descripción",
@@ -106,8 +107,15 @@
       "unset": "— sin indicar —"
     },
     "filterPlaceholder": "Escribe para filtrar …",
+    "materials": {
+      "add": "Añadir material",
+      "remove": "Quitar el material {name}",
+      "placeholder": "+ material"
+    },
     "moreFields": "Más campos",
+    "noFields": "Este tipo de bloque no tiene más campos.",
     "noTypeMatches": "Ningún tipo de bloque coincide.",
+    "notes": "Tiene notas de facilitación",
     "offline": "Sin conexión. Tus cambios se enviarán en cuanto vuelva.",
     "overPlan": "{duration} de más",
     "overlap": "Se solapa con el bloque anterior en {duration}",
@@ -116,6 +124,16 @@
     "parkLabel": "Apartar {title}",
     "parkedHeading": "Apartados ({count, number})",
     "parkedHint": "Pertenece a la jornada, no cuenta para el tiempo.",
+    "participation": {
+      "choose": "Elegir la forma de participación",
+      "unset": "sin indicar"
+    },
+    "pin": {
+      "set": "Fijar la hora de inicio",
+      "clear": "Quitar la hora fijada",
+      "time": "Hora de inicio fijada"
+    },
+    "pinnedStart": "Hora de inicio fijada:",
     "presence": "Otras personas en esta jornada",
     "regionLabel": "Agenda {title}",
     "removeTag": "Eliminar la etiqueta {name}",

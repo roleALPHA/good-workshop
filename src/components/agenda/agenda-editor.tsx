@@ -320,6 +320,10 @@ export function AgendaEditor({ document: agenda }: { document: AgendaDocument })
                           isDropTarget: projectedParent === row.id,
                           presence: presenceByBlock.get(row.id),
                         }}
+                        editing={{
+                          onPinChange: (pinnedStartMinute) =>
+                            agenda.patchCluster(row.id, { pinnedStartMinute }),
+                        }}
                       />
                     ) : (
                       <ModuleRow
@@ -336,6 +340,8 @@ export function AgendaEditor({ document: agenda }: { document: AgendaDocument })
                           onDurationChange: (durationMinutes) =>
                             patchModule(row.id, { durationMinutes }),
                           onDescChange: (desc) => patchModule(row.id, { desc }),
+                          onPinChange: (pinnedStartMinute) =>
+                            patchModule(row.id, { pinnedStartMinute }),
                           onPark: () => patchModule(row.id, { parked: true }),
                           onRemove: () => agenda.removeModule(row.id),
                           details: (

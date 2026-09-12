@@ -69,7 +69,7 @@ export type RoomTarget = {
 export async function editInRoom<T>(
   target: RoomTarget,
   edit: (doc: Y.Doc) => T,
-): Promise<{ result: T; contentVersion: bigint }> {
+): Promise<{ result: T; contentVersion: bigint; rejected: number }> {
   const timeoutMs = target.timeoutMs ?? 15_000
   const socket = new WebSocket(collabUrl(target), {
     headers: { authorization: target.authorization },
@@ -148,14 +148,14 @@ export async function editInRoom<T>(
       // The reply proves the edit was applied AND written out: the room
       // handles messages in order, so a flush that comes back necessarily
       // came after everything sent before it.
-      const contentVersion = await Promise.race([flush(send, pending), closed])
+      const flushed = await Promise.race([flush(send, pending), closed])
 
       if (target.presence) {
         removeAwarenessStates(awareness, [doc.clientID], 'leaving')
         send(frame(MESSAGE_AWARENESS, encodeAwarenessUpdate(awareness, [doc.clientID])))
       }
 
-      return { result, contentVersion }
+      return { result, ...flushed }
     })
   } finally {
     doc.off('update', onUpdate)
@@ -168,13 +168,17 @@ export async function editInRoom<T>(
 async function flush(
   send: (data: Uint8Array) => void,
   pending: Map<string, (payload: Record<string, unknown>) => void>,
-): Promise<bigint> {
+): Promise<{ contentVersion: bigint; rejected: number }> {
   const id = Math.random().toString(36).slice(2)
   const answered = new Promise<Record<string, unknown>>((resolve) => pending.set(id, resolve))
   send(frame(MESSAGE_CONTROL, new TextEncoder().encode(JSON.stringify({ op: 'flush', id }))))
   const payload = await answered
   pending.delete(id)
-  return BigInt(String(payload.contentVersion ?? '0'))
+  return {
+    contentVersion: BigInt(String(payload.contentVersion ?? '0')),
+    // Absent from an older server, which is the same thing as none.
+    rejected: Number(payload.rejected ?? 0),
+  }
 }
 
 function collabUrl(target: RoomTarget): string {

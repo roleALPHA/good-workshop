@@ -27,6 +27,14 @@ export type ModuleTypeDto = {
    * separately -- see the inline-editing rule in docs/ui-conventions.md.
    */
   jsonSchema?: unknown
+  /**
+   * Which revision of that schema this is.
+   *
+   * Travels with it because compiled validators are cached by (type, version):
+   * a browser that guesses the number keeps validating against the schema it
+   * first saw, and refuses a field an administrator has since added.
+   */
+  schemaVersion?: number
 }
 
 export type ClusterDto = {

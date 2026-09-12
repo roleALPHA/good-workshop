@@ -359,9 +359,15 @@ async function handleMessage(
     // Messages are handled in order, so a flush reply also proves that
     // whatever the caller sent before it has been applied. One round trip
     // answers both "did you get it" and "is it in the tables".
-    const contentVersion = await room.flushNow()
+    const { contentVersion, rejected } = await room.flushNow()
     connection.send(
-      controlMessage({ op: 'flushed', id: request.id, contentVersion: contentVersion.toString() }),
+      controlMessage({
+        op: 'flushed',
+        id: request.id,
+        contentVersion: contentVersion.toString(),
+        // Additive: a client that does not read it is no worse off than before.
+        rejected,
+      }),
     )
   }
 }

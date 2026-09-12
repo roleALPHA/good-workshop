@@ -7,13 +7,14 @@ import { toDayDoc } from '@/domain/collab/doc'
 import type { DayDoc } from '@/domain/agenda/types'
 import type {
   AgendaDocument,
+  ClusterPatch,
   DocumentStatus,
   ModulePatch,
   NewBlock,
 } from '@/features/agenda/document'
 import type { Projection } from '@/features/agenda/projection'
 import { CollabProvider, type ConnectionState, type PeerPresence } from './provider'
-import { addModule, applyProjection, patchModule, removeModule } from './y-ops'
+import { addModule, applyProjection, patchCluster, patchModule, removeModule } from './y-ops'
 import { setDayFields } from '@/domain/collab/ops'
 
 /**
@@ -125,6 +126,8 @@ export function useCollabDocument(initial: DayDoc, target: CollabTarget): Agenda
       setFocus: (blockId: string | null) => providerRef.current?.setFocus(blockId),
       patchModule: (moduleId: string, patch: ModulePatch) =>
         withDoc((d) => patchModule(d, moduleId, patch)),
+      patchCluster: (clusterId: string, patch: ClusterPatch) =>
+        withDoc((d) => patchCluster(d, clusterId, patch)),
       // Straight onto the day map: everybody with the day open sees the note
       // arrive, and the materialiser carries it to workshop_day.json_desc.
       patchDay: (patch: { desc?: Record<string, unknown> }) =>
