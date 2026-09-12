@@ -54,7 +54,9 @@ test('follows the system colour scheme through the token system', async ({ page 
 })
 
 test.describe('drag & drop', () => {
-  test.skip(({ isMobile }) => isMobile === true, 'The editor only mounts from 1024px up')
+  // Editable on a phone too; what these assert -- a drag across a grid, a
+  // twelve-column field panel -- is about the wide layout.
+  test.skip(({ isMobile }) => isMobile === true, 'Wide layout only')
 
   // The live region doubles as the synchronisation point: asserting on it is
   // how we know dnd-kit has processed the previous input. Pressing keys back to
@@ -172,7 +174,9 @@ test.describe('drag & drop', () => {
 })
 
 test.describe('inline editing in the day view', () => {
-  test.skip(({ isMobile }) => isMobile === true, 'The editor only mounts from 1024px up')
+  // Editable on a phone too; what these assert -- a drag across a grid, a
+  // twelve-column field panel -- is about the wide layout.
+  test.skip(({ isMobile }) => isMobile === true, 'Wide layout only')
 
   test('changes a duration in the row and moves every following block', async ({ page }) => {
     const row = block(page, 'Spannungsfelder sammeln')
@@ -239,6 +243,19 @@ test.describe('inline editing in the day view', () => {
     await expect(row.getByLabel('Gruppengröße')).toBeVisible()
     // Inside the row, not in a panel beside it.
     await expect(page.getByRole('dialog')).toHaveCount(0)
+
+    // And NOT a second copy of what the row already edits. Two controls over
+    // one value means whichever one was not touched writes its stale copy over
+    // the other on blur.
+    //
+    // `exact` matters here and nowhere else in this file: getByLabel matches a
+    // substring by default, so a bare 'Material' also finds the row's own
+    // 'Material hinzufügen' -- and the assertion would contradict the one two
+    // lines below it.
+    await expect(row.getByLabel('Material', { exact: true })).toHaveCount(0)
+    await expect(row.getByLabel('Sozialform', { exact: true })).toHaveCount(0)
+    await expect(row.getByLabel('Material hinzufügen')).toBeVisible()
+    await expect(row.getByRole('button', { name: /^Sozialform:/ })).toBeVisible()
   })
 
   test('keeps the collapsed table calm — the row essentials, not the whole schema', async ({

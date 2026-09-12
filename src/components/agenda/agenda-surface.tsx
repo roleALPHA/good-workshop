@@ -6,33 +6,41 @@ import { computeSchedule } from '@/domain/schedule/computeSchedule'
 import { flattenDay, toScheduleItems, withGapRows } from '@/features/agenda/flatten'
 import { useLocalDocument } from '@/features/agenda/use-local-document'
 import { useCollabDocument, type CollabTarget } from '@/features/collab/use-collab-document'
-import { useMediaQuery } from '@/hooks/use-media-query'
+import { useHydrated } from '@/hooks/use-media-query'
 import { AgendaEditor } from './agenda-editor'
 import { AgendaTable } from './agenda-table'
 import { ParkingArea } from './parking'
 import { DayHeader } from './day-header'
 
 /**
- * Picks the reading view or the editor.
+ * The reading view first, then the editor.
  *
- * Everything below 1024px gets the static table: nested drag & drop plus rich
- * text on a 375px screen is a trap, and the reading view is what a facilitator
- * actually uses on the day, standing in a room. The editor is not a feature
- * withheld from phones -- it is the wrong tool for that screen.
+ * The editor used to mount only from 1024px up, on the grounds that nested drag
+ * & drop plus rich text on a 375px screen is the wrong tool for the screen.
+ * That held for as long as the row was a wall of text -- but a facilitator
+ * standing in a room changes the social form, adds a material and nails a block
+ * to a clock time, and all three are now a tap. Being handed a screen that
+ * shows those three values and refuses every one of them is worse than a
+ * cramped control.
  *
- * The first render is always the reading view, on both server and client, so
- * the phone never downloads or boots the editor and the desktop swap happens
- * after hydration rather than as a mismatch.
+ * So the gate is gone, and what it protected is protected where it belongs:
+ * dragging needs a long press rather than a swipe, so the page still scrolls
+ * under a finger.
+ *
+ * The first render is still the reading view, on both server and client. Not a
+ * hydration workaround -- it is what makes the agenda readable before any
+ * JavaScript has arrived, which matters most on the screen where it arrives
+ * last.
  */
 export function AgendaSurface({
   doc,
   collab,
 }: {
   doc: DayDoc
-  /** Absent for the public demo and for viewers: edits then stay in the browser. */
+  /** Absent for viewers: edits then stay in the browser and go nowhere. */
   collab?: CollabTarget
 }) {
-  const isDesktop = useMediaQuery('(min-width: 1024px)')
+  const hydrated = useHydrated()
 
   const readOnly = useMemo(() => {
     const rows = flattenDay(doc)
@@ -40,7 +48,7 @@ export function AgendaSurface({
     return { rows: withGapRows(rows, schedule), schedule }
   }, [doc])
 
-  if (!isDesktop) {
+  if (!hydrated) {
     return (
       <>
         <DayHeader doc={doc} schedule={readOnly.schedule} />

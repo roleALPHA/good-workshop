@@ -200,6 +200,22 @@ export function summaryFields(groups: FieldGroup[]): FieldSpec[] {
   return groups.flatMap((group) => group.fields.filter((field) => field.summary))
 }
 
+/**
+ * The fields the agenda row edits in place, and which the expanded panel
+ * therefore leaves out.
+ *
+ * One list read by both surfaces, not two that happen to agree. Two would
+ * drift, and the shape that drift takes here is a field offered twice with two
+ * different controls: whichever one somebody did not touch writes its stale
+ * value over the other on blur, and the change disappears while both controls
+ * are visibly present.
+ *
+ * A field only belongs here once the row can actually EDIT it. Showing a value
+ * is not editing it -- the description is rendered in the row and still belongs
+ * in the panel, because the row offers no way to change it.
+ */
+export const ROW_FIELDS: readonly string[] = ['participation', 'materials']
+
 /** One field by key, wherever its group put it. */
 export function findField(groups: FieldGroup[], key: string): FieldSpec | undefined {
   for (const group of groups) {

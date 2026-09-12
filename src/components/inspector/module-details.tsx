@@ -3,7 +3,7 @@
 import { useEffect, useMemo, useRef, useState } from 'react'
 import { useTranslations } from 'next-intl'
 import type { ModuleDto, ModuleTypeDto } from '@/domain/agenda/types'
-import { isVisible, parseSchema } from '@/domain/moduleType/profile'
+import { ROW_FIELDS, isVisible, parseSchema } from '@/domain/moduleType/profile'
 import { validateModuleDesc, type FieldError } from '@/domain/moduleType/validate'
 import type { Translate } from '@/i18n/translator'
 import { Field } from './fields'
@@ -49,7 +49,22 @@ export function ModuleDetails({ module: mod, type, onChange }: ModuleDetailsProp
   /** True while this panel holds an edit the document has not been told about. */
   const dirtyRef = useRef(false)
 
-  const groups = useMemo(() => parseSchema(type?.jsonSchema), [type?.jsonSchema])
+  // The whole schema, for working out which stored values no longer have a
+  // field -- a value the row edits is not an orphan just because this panel
+  // does not show it.
+  const schema = useMemo(() => parseSchema(type?.jsonSchema), [type?.jsonSchema])
+
+  // What this panel renders: everything the row does not already edit in place.
+  const groups = useMemo(
+    () =>
+      schema
+        .map((group) => ({
+          ...group,
+          fields: group.fields.filter((field) => !ROW_FIELDS.includes(field.key)),
+        }))
+        .filter((group) => group.fields.length > 0),
+    [schema],
+  )
 
   // Adopt changes that arrived from elsewhere -- another tab, a collaborator,
   // an undo -- without discarding what is being typed here. `mod.desc` is a
@@ -140,9 +155,9 @@ export function ModuleDetails({ module: mod, type, onChange }: ModuleDetailsProp
   }
 
   const orphans = useMemo(() => {
-    const known = new Set(groups.flatMap((g) => g.fields.map((f) => f.key)))
+    const known = new Set(schema.flatMap((g) => g.fields.map((f) => f.key)))
     return Object.entries(values).filter(([key]) => !known.has(key))
-  }, [groups, values])
+  }, [schema, values])
 
   if (groups.length === 0 && orphans.length === 0) {
     return <p className="text-[15px] text-[var(--fg-muted)]">{tAgenda('noFields')}</p>

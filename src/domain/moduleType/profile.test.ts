@@ -1,6 +1,13 @@
 import { describe, expect, it } from 'vitest'
 import { BUILTIN_BY_KEY, BUILTIN_MODULE_TYPES } from './builtins'
-import { findField, isVisible, parseSchema, summaryChips, summaryFields } from './profile'
+import {
+  ROW_FIELDS,
+  findField,
+  isVisible,
+  parseSchema,
+  summaryChips,
+  summaryFields,
+} from './profile'
 
 const wrap = (properties: Record<string, unknown>, required: string[] = []) => ({
   type: 'object',
@@ -204,5 +211,22 @@ describe('parsing the same schema twice', () => {
   it('hands back the same groups, because the row components cannot memoise', () => {
     const schema = BUILTIN_BY_KEY.admin!.jsonSchema
     expect(parseSchema(schema)).toBe(parseSchema(schema))
+  })
+})
+
+describe('the fields the row edits in place', () => {
+  it('names only fields the built-ins actually declare', () => {
+    // A key nobody declares would silently do nothing: the panel would hide a
+    // field that was never there, and the row would offer a control for it.
+    for (const key of ROW_FIELDS) {
+      const declaring = BUILTIN_MODULE_TYPES.filter(
+        (type) => findField(parseSchema(type.jsonSchema), key) !== undefined,
+      )
+      expect(declaring.length, `${key} wird von keinem Typ deklariert`).toBeGreaterThan(0)
+    }
+  })
+
+  it('leaves the description alone, because the row shows it without editing it', () => {
+    expect(ROW_FIELDS).not.toContain('description')
   })
 })
