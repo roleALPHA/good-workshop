@@ -37,12 +37,16 @@ What the gate protected is now protected where it belongs:
 **Still no broken mini version of the editor.** If something cannot be made to work under a
 thumb, it does not get a cramped variant; it waits for a bigger screen and says so.
 
-The 1024 px line is the **editor's**. The library draws its own at 768 px, because that is where
-its two columns appear and the folder tree stands beside the list instead of behind a
-disclosure — and you cannot drag onto a target you cannot see. Below it, filing a workshop or a
-folder goes through the "Verschieben nach …" control in the row. That control exists at every
-width and is the mechanism; the drag is an accelerator on top of it. Any new drag surface owes
-the same answer: **a pointer gesture is never the only way to perform an operation.**
+The library draws one more line, at 768 px, and it is about **reach rather than capability**.
+Dragging a workshop into a folder needs the folder to be on screen, and below `md` the tree is
+folded away behind a disclosure above the list. You cannot aim at what you cannot see, so below
+that width filing goes through the "Verschieben nach …" control in each row instead.
+
+That control is not the fallback. It is the mechanism — it works at every width, under a thumb,
+from the keyboard and through a screen reader — and the drag is an accelerator laid on top of
+it. Which is also why the library has no keyboard drag: a second keyboard path over one
+operation is a second thing that has to stay true. Any new drag surface owes the same answer:
+**a pointer gesture is never the only way to perform an operation.**
 
 ### The agenda collapses into cards, not horizontal scroll
 

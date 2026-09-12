@@ -163,14 +163,16 @@ export function FolderRow({
 }
 
 /**
- * Visible on hover, on focus anywhere in the row, and 44px square.
+ * Visible on hover, on focus anywhere in the row, and always under a thumb.
  *
- * `size-11` rather than the `p-1` these had: 22px is half the floor for
- * something meant to be tapped, and on touch there is no hover to reveal it
- * with either -- which is why the row shows them outright below `md`.
+ * These were `p-1` around a 3.5 icon -- about 22px, half the floor for
+ * something meant to be tapped. The 44px goes on coarse pointers only, where it
+ * is a touch target rather than wasted height, and so does the visibility:
+ * there is no hover to reveal them with on a touch screen.
  */
 const iconButtonClass = cn(
-  'grid size-11 shrink-0 place-items-center rounded text-[var(--fg-subtle)]',
-  'opacity-100 md:opacity-0 md:group-hover:opacity-100 md:group-focus-within:opacity-100',
+  'grid size-8 shrink-0 place-items-center rounded text-[var(--fg-subtle)]',
+  'pointer-coarse:size-11 pointer-coarse:opacity-100',
+  'opacity-0 group-hover:opacity-100 group-focus-within:opacity-100',
   'hover:bg-[var(--surface-raised)] focus-visible:opacity-100 disabled:opacity-40',
 )

@@ -267,13 +267,17 @@ export function WorkshopList({
 }
 
 /**
- * 44px tall whatever is inside it, and icon-only until there is room for words.
+ * Icon-only until there is room for words, and 44px only under a thumb.
  *
  * Two labelled buttons side by side do not fit across 375px, and wrapping them
  * turned every row into three lines of chrome under one title. The name does
  * not go missing: it is on the button as its accessible name either way.
+ *
+ * `pointer-coarse:` rather than always: a 44px box around one line of 13px text
+ * is not a touch target under a mouse, it is wasted row height.
  */
 const actionClass = cn(
-  'inline-flex min-h-11 min-w-11 shrink-0 items-center justify-center gap-1.5 rounded px-2 text-[13px]',
+  'inline-flex shrink-0 items-center justify-center gap-1.5 rounded px-2 py-1.5 text-[13px]',
+  'pointer-coarse:min-h-11 pointer-coarse:min-w-11',
   'text-[var(--fg-muted)] hover:bg-[var(--surface-raised)] disabled:opacity-60',
 )
