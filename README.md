@@ -44,7 +44,8 @@ the licence at the source.
 **Connects to an AI client.** GoodWorkshop is an MCP server: Claude Desktop, Claude Code or
 any other MCP client can read and write workshops. You create a token under **Tokens** in
 your settings; the page then prints the finished command or configuration for Claude Code,
-Claude Desktop, the Gemini CLI and Langdock, with this host and that token already in it. A
+Claude Desktop, the Gemini CLI, Codex and Langdock, with this host and that token already in
+it. A
 token acts as the person who created it — it can never do more than that person can, and it
 cannot touch user administration at all.
 

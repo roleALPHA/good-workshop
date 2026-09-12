@@ -475,7 +475,7 @@
     "title": "Paramètres",
     "tokens": {
       "title": "Jetons d'accès",
-      "intro": "Pour les clients MCP comme Claude Code, Claude Desktop, Gemini CLI ou Langdock. Un jeton agit en tant que toi — il ne peut jamais faire plus que toi.",
+      "intro": "Pour les clients MCP comme Claude Code, Claude Desktop, Gemini CLI, Codex ou Langdock. Un jeton agit en tant que toi — il ne peut jamais faire plus que toi.",
       "freshLabel": "Ton nouveau jeton",
       "freshHint": "Il n'est affiché qu'une fois — seul son hachage est conservé.",
       "hide": "Compris, masquer",
@@ -500,6 +500,9 @@
         "claudeDesktopPath": "macOS: ~/Library/Application Support/Claude/claude_desktop_config.json · Windows: %APPDATA%\\Claude\\claude_desktop_config.json",
         "gemini": "Gemini CLI",
         "geminiStep": "Une fois, dans le terminal. L'entrée atterrit dans ~/.gemini/settings.json.",
+        "codex": "Codex",
+        "codexStep": "Deux lignes dans le terminal. Codex garde délibérément le jeton hors de son fichier de configuration — l'entrée ne nomme que la variable d'environnement.",
+        "codexEnvNote": "Pour que cela dure, la première ligne va dans la configuration de ton shell (~/.zshrc ou ~/.bashrc). Sinon Codex ne connaît le jeton que dans ce terminal.",
         "langdock": "Langdock",
         "langdockStep1": "Paramètres → Intégrations → MCP → ajouter une connexion.",
         "langdockStep2": "Colle l'URL du serveur :",
@@ -510,7 +513,8 @@
         "copyGemini": "Copier la commande Gemini CLI",
         "copyConfig": "Copier la configuration Claude Desktop",
         "copyEndpoint": "Copier l'URL du serveur",
-        "copyToken": "Copier le jeton"
+        "copyToken": "Copier le jeton",
+        "copyCodex": "Copier les commandes Codex"
       }
     }
   },
