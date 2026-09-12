@@ -55,37 +55,44 @@ export function TimeCell({
       )}
     >
       {/*
-        A pinned block being edited shows its start time ONCE, in the field
-        that sets it. Printing the derived time beside an input holding the
-        same value reads as two different facts and invites the question of
+        The lock belongs BESIDE the time, not under it. The cell is a column
+        from md up, so a sibling here would be a line of its own -- and a line
+        of its own costs every row in the day 26px, which is how an agenda
+        stops fitting on a screen.
+
+        A pinned block being edited also shows its start time ONCE, in the
+        field that sets it. Printing the derived time next to an input holding
+        the same value reads as two different facts and invites the question of
         which one is real.
       */}
-      {!editable || !entry.pinned ? (
-        <span
-          className={cn(
-            'inline-flex items-center gap-1 text-[15px]',
-            entry.pinned ? 'font-medium text-[var(--fg)]' : 'text-[var(--fg-muted)]',
-          )}
-        >
-          {entry.pinned && (
-            <>
-              <Lock aria-hidden className="size-3 shrink-0" />
-              <span className="sr-only">{t('pinnedStart')}</span>
-            </>
-          )}
-          {formatTime(entry.startMinute, locale)}
-        </span>
-      ) : (
-        <span className="sr-only">{t('pinnedStart')}</span>
-      )}
+      <span className="inline-flex items-center gap-1">
+        {!editable || !entry.pinned ? (
+          <span
+            className={cn(
+              'inline-flex items-center gap-1 text-[15px]',
+              entry.pinned ? 'font-medium text-[var(--fg)]' : 'text-[var(--fg-muted)]',
+            )}
+          >
+            {entry.pinned && (
+              <>
+                <Lock aria-hidden className="size-3 shrink-0" />
+                <span className="sr-only">{t('pinnedStart')}</span>
+              </>
+            )}
+            {formatTime(entry.startMinute, locale)}
+          </span>
+        ) : (
+          <span className="sr-only">{t('pinnedStart')}</span>
+        )}
 
-      {editable?.onPinChange && (
-        <PinControl
-          pinnedMinute={editable.pinnedStartMinute ?? null}
-          derivedMinute={entry.startMinute}
-          onCommit={editable.onPinChange}
-        />
-      )}
+        {editable?.onPinChange && (
+          <PinControl
+            pinnedMinute={editable.pinnedStartMinute ?? null}
+            derivedMinute={entry.startMinute}
+            onCommit={editable.onPinChange}
+          />
+        )}
+      </span>
       {showDuration &&
         (editing?.onDurationChange ? (
           <DurationInput minutes={entry.durationMinutes} onCommit={editing.onDurationChange} />

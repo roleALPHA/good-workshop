@@ -114,7 +114,12 @@ export function ParticipationControl({
           }
         }}
         className={cn(
-          'inline-flex min-h-11 w-full items-center gap-1 rounded-sm border border-transparent px-1 py-0.5 text-left text-[13px]',
+          // 44px where there are fingers, and only there. The editor mounts
+          // from 1024px up, so this control almost always sits under a mouse --
+          // and a 44px box for one line of 13px text turned an 86px row into a
+          // 144px one. A day that no longer fits on a screen is not a calmer
+          // table, it is a longer one.
+          'inline-flex w-full items-center gap-1 rounded-sm border border-transparent px-1 py-0.5 text-left text-[13px] pointer-coarse:min-h-11',
           'hover:border-[var(--border)] focus-visible:border-[var(--brand-ring)] focus-visible:outline-none',
           // Set: always legible. Unset: out of the way until the row is
           // touched, with a focus-within counterpart because there is no hover
@@ -157,6 +162,8 @@ export function ParticipationControl({
                   onClick={() => choose(option.value)}
                   onKeyDown={(e) => move(e, index, options.length)}
                   className={cn(
+                    // The open list is free to be generous: it costs the row
+                    // nothing, and this is where a mis-tap is expensive.
                     'flex min-h-11 w-full items-center gap-2 rounded px-2 py-1 text-left text-[14px]',
                     'hover:bg-[var(--surface)] focus-visible:bg-[var(--surface)] focus-visible:outline-none',
                     option.value === value
