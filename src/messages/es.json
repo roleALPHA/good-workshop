@@ -303,6 +303,12 @@
         "unknownModuleType": "Ese tipo de bloque no existe.",
         "unknownModuleTypeOptions": "Tipo de bloque desconocido «{key}». Disponibles: {available}",
         "descInvalid": "Valores inválidos: {issues}"
+      },
+      "oauth": {
+        "noRedirectUri": "Este cliente no indicó una dirección de retorno válida.",
+        "unknownClient": "Esta instalación no conoce a ese cliente.",
+        "badRedirect": "Esa dirección de retorno no pertenece a este cliente.",
+        "badResource": "Este acceso se pidió para otro servidor."
       }
     },
     "failed": "No ha funcionado. Inténtalo de nuevo.",
@@ -570,5 +576,23 @@
     "untitledDay": "Jornada",
     "you": "tú",
     "withNotes": "Con notas de moderación"
+  },
+  "oauth": {
+    "title": "¿Permitir el acceso?",
+    "intro": "<client>Este cliente</client> quiere acceder a tus talleres.",
+    "willBeAbleTo": "El cliente podrá:",
+    "noScopes": "Nada: el cliente no pidió ningún ámbito que este servidor conozca.",
+    "actsAsYou": "Actúa como tú ({email}) y nunca puede hacer más de lo que puedes tú. La gestión de usuarios queda excluida.",
+    "offline": "Sigue conectado hasta que retires el acceso.",
+    "approve": "Permitir el acceso",
+    "approving": "Un momento …",
+    "deny": "Rechazar",
+    "revokeHint": "Puedes retirarlo cuando quieras en los ajustes, en Tokens de acceso.",
+    "unknownClient": "Esta instalación no conoce a ese cliente.",
+    "badRedirect": "Esa dirección de retorno no pertenece a este cliente.",
+    "badResponseType": "Esta petición nombra un tipo de respuesta que este servidor no ofrece.",
+    "badChallenge": "Esta petición llega sin un PKCE válido. Este servidor lo exige.",
+    "badResource": "Este acceso se pidió para otro servidor.",
+    "problemHint": "No se concedió nada. Empieza de nuevo desde el cliente; si vuelve a fallar, el problema está en su configuración."
   }
 }

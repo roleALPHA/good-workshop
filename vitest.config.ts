@@ -52,6 +52,17 @@ export default defineConfig({
         'src/domain/agenda/repo.ts',
         'src/domain/workshop/repo.ts',
         'src/domain/workshop/collaborators.ts',
+        // Folder-level collaboration: the same shape one level up. Its pure
+        // half -- who holds what, who may hand on what -- is in
+        // folder-access.ts precisely so that it stays counted here, which is
+        // where a wrong answer silently grants or denies access.
+        'src/domain/workshop/folder-collaborators.ts',
+        // The OAuth flow's rows. What makes it safe is not in this file: the
+        // single-use code is a `where used_at is null` inside an UPDATE and the
+        // rotation is one too, so what is worth asserting is what Postgres does
+        // under a race -- which needs Postgres. The decisions live in
+        // oauth/rules.ts and are counted here.
+        'src/domain/oauth/repo.ts',
         // The same, for guests. Its pure half -- when a link expires, what counts
         // as an address -- was split into share-rules.ts precisely so that it
         // stays counted here: a wrong answer from validUntil silently grants or

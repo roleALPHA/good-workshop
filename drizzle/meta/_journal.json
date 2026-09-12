@@ -50,6 +50,13 @@
       "when": 1789230381212,
       "tag": "0006_familiar_rage",
       "breakpoints": true
+    },
+    {
+      "idx": 7,
+      "version": "7",
+      "when": 1789234485179,
+      "tag": "0007_talented_princess_powerful",
+      "breakpoints": true
     }
   ]
 }

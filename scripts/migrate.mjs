@@ -74,7 +74,13 @@ try {
  * can replace it itself, so falling back is correct rather than lenient.
  */
 async function applyPatResolver() {
-  const source = await readFile(join(root, 'drizzle/sql/900_pat_resolver.sql'), 'utf8')
+  // Both resolvers, in one connection: they have the same owner, the same
+  // grant and the same reason to exist, and applying one without the other
+  // leaves the MCP endpoint able to authenticate half its callers.
+  const files = ['drizzle/sql/900_pat_resolver.sql', 'drizzle/sql/901_oauth_resolver.sql']
+  const source = (await Promise.all(files.map((file) => readFile(join(root, file), 'utf8')))).join(
+    '\n',
+  )
   const adminUrl = process.env.ADMIN_DATABASE_URL
 
   if (!adminUrl) {

@@ -303,6 +303,12 @@
         "unknownModuleType": "There is no such block type.",
         "unknownModuleTypeOptions": "Unknown block type “{key}”. Available: {available}",
         "descInvalid": "Invalid values: {issues}"
+      },
+      "oauth": {
+        "noRedirectUri": "This client named no usable redirect address.",
+        "unknownClient": "This installation does not know that client.",
+        "badRedirect": "That redirect address does not belong to this client.",
+        "badResource": "This access was requested for a different server."
       }
     },
     "failed": "That did not work. Try again.",
@@ -570,5 +576,23 @@
     "untitledDay": "Day",
     "you": "you",
     "withNotes": "With facilitation notes"
+  },
+  "oauth": {
+    "title": "Allow access?",
+    "intro": "<client>This client</client> would like to reach your workshops.",
+    "willBeAbleTo": "It will be able to:",
+    "noScopes": "Nothing — the client asked for no scope this server has.",
+    "actsAsYou": "It acts as you ({email}) and can never do more than you can. User administration is excluded.",
+    "offline": "It stays signed in until you take the access back.",
+    "approve": "Allow access",
+    "approving": "One moment …",
+    "deny": "Refuse",
+    "revokeHint": "You can take this back at any time under Access tokens in your settings.",
+    "unknownClient": "This installation does not know that client.",
+    "badRedirect": "That redirect address does not belong to this client.",
+    "badResponseType": "This request names a response type this server does not offer.",
+    "badChallenge": "This request arrives without valid PKCE. This server requires it.",
+    "badResource": "This access was requested for a different server.",
+    "problemHint": "Nothing was granted. Start again from the client — if it fails again, the fault is in its configuration."
   }
 }

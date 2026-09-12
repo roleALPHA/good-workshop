@@ -101,6 +101,11 @@ Claude Desktop, the Gemini CLI, Codex and Langdock, with this host and that toke
 it. A token acts as the person who created it — it can never do more than that person can, and
 it cannot touch user administration at all.
 
+Clients that cannot hold a fixed token — ChatGPT's connectors, the connector UI in claude.ai —
+connect over **OAuth** instead: they discover this installation, register themselves, and you
+approve them once on a consent screen that says which client is asking and exactly what it will
+be able to do. Nothing is configured for that; it is there.
+
 How this is built on the inside, and why, is in [docs/architecture.md](docs/architecture.md).
 
 ## Contributing

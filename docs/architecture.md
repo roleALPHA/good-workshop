@@ -89,6 +89,53 @@ without a prefix query.
 Tags appear as you type. A management screen you have to visit first is a step nobody wants
 and a screen nobody maintains; a tag nothing points at any more disappears by itself.
 
+## OAuth for MCP clients
+
+A personal access token is the right credential for a client somebody configures by hand.
+It is the wrong one for a client that has to onboard a stranger: ChatGPT's developer-mode
+connectors accept only OAuth or no authentication at all, and the claude.ai connector UI is in
+the same place. So `/api/mcp` is now a proper OAuth 2.1 resource server, and this installation
+is its own authorization server.
+
+**Both credentials resolve through the same door.** `resolveBearer` reads the prefix — `gwp_` is
+a personal access token, `gwo_` an OAuth access token, `gwr_` a refresh token and therefore
+refused here — and everything downstream only ever asks the two questions it always asked: who
+is this, and what may it do.
+
+Four decisions worth knowing, because each has a tempting alternative:
+
+- **Registration is open**, as RFC 7591 describes it, because the specification expects a client
+  the operator has never heard of to be able to start. What makes that acceptable is that a
+  registration grants _nothing_: it is a name and a redirect target, and every permission still
+  comes from a person at the consent screen. It is rate limited per address, which is the only
+  defence available to an endpoint that must stay reachable by strangers.
+- **PKCE is S256 or nothing.** OAuth 2.1 keeps `plain` for clients that cannot compute a hash; a
+  service reachable over HTTPS is not one, and accepting it would mean accepting a challenge
+  that protects nothing.
+- **Redirect targets match exactly.** Prefix matching is how an open redirector is built by
+  accident — "the registered URI plus anything" includes paths the client never asked for. A
+  broken request is therefore shown ON the consent screen rather than bounced to an address we
+  have not validated, and a refusal is validated the same way an approval is.
+- **Tokens carry their audience.** The MCP specification requires a server to accept only tokens
+  issued for itself; `resource` is stored on the row and compared on every call. Without it a
+  client could carry a token minted here to somebody else's server, which is where a confused
+  deputy starts.
+
+The authorization code is spent inside the `UPDATE` that reads it (`used_at is null` is part of
+the `WHERE`), so two requests racing on one code cannot both win — the loser of a read-then-write
+race is somebody replaying a code they intercepted. Refresh tokens rotate for the same reason: a
+stolen one works at most once, and the theft surfaces as the real client being logged out.
+
+There is a second SECURITY DEFINER function, `app.resolve_oauth_token`, beside the one that
+resolves personal access tokens. Two functions rather than one widened one: a PAT has no
+audience and an OAuth token does, and folding them together would mean a null that means "skip a
+security check".
+
+**What is deliberately not built yet:** Client ID Metadata Documents, which the specification
+prefers over dynamic registration; and a sign-in that returns to the consent screen afterwards —
+somebody who is not logged in when a client sends them here signs in, lands in the library, and
+starts the flow again from the client.
+
 ## Access and invitations
 
 A membership starts as "invited"; only opening the sign-in link activates it. An admin cannot
