@@ -1,0 +1,8 @@
+blank_issues_enabled: false
+contact_links:
+  - name: A security problem
+    url: https://github.com/roleALPHA/good-workshop/security/advisories/new
+    about: Report it privately, never in a public issue. See SECURITY.md.
+  - name: A question, or an idea that is not a request yet
+    url: https://github.com/roleALPHA/good-workshop/discussions
+    about: Discussions are the place for those.

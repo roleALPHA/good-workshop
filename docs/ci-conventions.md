@@ -138,5 +138,15 @@ Every job that uses the name directly normalises it first:
 
 ## Branch protection on `main`
 
-`lint`, `unit`, `db`, `e2e` and `build` are required checks. **No exceptions**, not even for
-"just a typo".
+Every CI job is a required check, and so are CodeQL and the dependency review. **No
+exceptions**, not even for "just a typo".
+
+This is a **ruleset**, not the old branch-protection API, and it is worth saying out loud that
+for a long time this paragraph described something that did not exist: `main` had no protection
+at all. A convention that lives only in a document is a convention that holds until the first
+hurried evening. The ruleset also blocks deletion and force pushes, requires a pull request, and
+allows only squash merges — which is what the history here already looked like.
+
+Approvals are deliberately **not** required. A single maintainer cannot approve their own pull
+request, so requiring one would mean either a second account or a rule everybody learns to
+bypass. The checks are the gate; the review is a habit.
