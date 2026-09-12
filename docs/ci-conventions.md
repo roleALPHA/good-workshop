@@ -88,6 +88,13 @@ because the digest-merge mechanics look awkward.
 
 - Every action pinned to a **full-length commit SHA**, not to `@v4`. Dependabot keeps them
   current — `.github/dependabot.yml` covers actions, npm and Docker, weekly.
+- **A `pnpm.overrides` block is not a small change.** Adding one re-resolves parts of the graph,
+  and the resolver is free to land somewhere else than the lockfile did. Pinning one transitive
+  package away from an advisory pulled in `@esbuild-kit/core-utils` with an esbuild carrying an
+  advisory of its own — a net loss, caught by the dependency review before it merged. Prefer the
+  Dependabot security update, which resolves the same problem without re-deriving the tree, and
+  reach for an override only when no upstream fix exists.
+
 - **Repository security settings are part of the setup, not a preference.** Secret scanning with
   push protection, Dependabot alerts and security updates, and private vulnerability reporting
   are all on, and all free for a public repository. Push protection is the one with a daily
@@ -138,5 +145,15 @@ Every job that uses the name directly normalises it first:
 
 ## Branch protection on `main`
 
-`lint`, `unit`, `db`, `e2e` and `build` are required checks. **No exceptions**, not even for
-"just a typo".
+Every CI job is a required check, and so are CodeQL and the dependency review. **No
+exceptions**, not even for "just a typo".
+
+This is a **ruleset**, not the old branch-protection API, and it is worth saying out loud that
+for a long time this paragraph described something that did not exist: `main` had no protection
+at all. A convention that lives only in a document is a convention that holds until the first
+hurried evening. The ruleset also blocks deletion and force pushes, requires a pull request, and
+allows only squash merges — which is what the history here already looked like.
+
+Approvals are deliberately **not** required. A single maintainer cannot approve their own pull
+request, so requiring one would mean either a second account or a rule everybody learns to
+bypass. The checks are the gate; the review is a habit.

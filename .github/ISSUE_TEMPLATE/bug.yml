@@ -1,0 +1,52 @@
+name: Something is broken
+description: A bug in the application, the installation or the documentation
+labels: [bug]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        **A security problem does not belong here.** Use
+        [private reporting](https://github.com/roleALPHA/good-workshop/security/advisories/new)
+        instead — see [SECURITY.md](https://github.com/roleALPHA/good-workshop/blob/main/SECURITY.md).
+
+  - type: textarea
+    id: what
+    attributes:
+      label: What happened
+      description: What you did, what you expected, and what you got instead.
+    validations:
+      required: true
+
+  - type: input
+    id: version
+    attributes:
+      label: Version
+      description: The tag you run, or the output of `/api/health`. "latest" is not a version.
+      placeholder: v0.3.0
+    validations:
+      required: true
+
+  - type: dropdown
+    id: surface
+    attributes:
+      label: Where
+      options:
+        - The agenda editor
+        - The reading view on a phone
+        - The library, folders or tags
+        - Sharing, access or guests
+        - An MCP client
+        - Installation or upgrade
+        - Somewhere else
+    validations:
+      required: true
+
+  - type: input
+    id: browser
+    attributes:
+      label: Browser and device
+      description: >
+        Only if it is a thing you see on screen. Be specific about the phone —
+        Safari on iOS behaves differently from Chrome, and two bugs have reached
+        a real phone through a green pipeline because of it.
+      placeholder: Safari, iPhone 15, iOS 26

@@ -1,0 +1,20 @@
+name: Something is missing
+description: An idea for the product
+labels: [enhancement]
+body:
+  - type: textarea
+    id: situation
+    attributes:
+      label: The situation
+      description: >
+        What you were doing when you wanted this — the workshop, the room, the
+        moment. A described situation survives a redesign; a described solution
+        does not.
+    validations:
+      required: true
+
+  - type: textarea
+    id: today
+    attributes:
+      label: What you do today instead
+      description: Even if the answer is "nothing, I gave up". That is useful.
