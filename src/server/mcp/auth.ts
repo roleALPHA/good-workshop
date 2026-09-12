@@ -3,7 +3,9 @@ import type { Actor } from '@/server/db'
 import { withoutTenant, withTenant } from '@/server/db'
 import { personalAccessToken } from '@/server/db/schema'
 import { eq, lt, or, isNull } from 'drizzle-orm'
-import { hashSecret, parsePersonalAccessToken } from '@/server/auth/tokens'
+import { hashSecret, parseOAuthToken, parsePersonalAccessToken } from '@/server/auth/tokens'
+import { audienceMatches } from '@/domain/oauth/rules'
+import { mcpResource } from '@/server/oauth/metadata'
 
 /**
  * Turns a bearer token into an Actor.
@@ -18,7 +20,15 @@ import { hashSecret, parsePersonalAccessToken } from '@/server/auth/tokens'
  * runs through the same withTenant as the web app.
  */
 
-export type PatActor = Actor & { patId: string; scopes: string[] }
+/**
+ * `patId` is null for an OAuth token: it did not come from the token screen.
+ *
+ * Both kinds end up here because everything downstream only ever asks two
+ * questions -- who is this, and what may it do. The difference between a
+ * personal access token and an OAuth grant is how the answer was obtained, and
+ * that difference belongs in this file and nowhere else.
+ */
+export type PatActor = Actor & { patId: string | null; scopes: string[] }
 
 export type McpScope =
   'workshops:read' | 'workshops:write' | 'module_types:read' | 'module_types:write' | 'tenant:read'
@@ -26,6 +36,11 @@ export type McpScope =
 export async function resolveBearer(header: string | null): Promise<PatActor | null> {
   const token = /^Bearer\s+(.+)$/i.exec(header ?? '')?.[1]
   if (!token) return null
+
+  const oauth = parseOAuthToken(token)
+  // A refresh token presented as a bearer is refused by its prefix, before
+  // anything is looked up.
+  if (oauth) return oauth.kind === 'access' ? resolveOAuthToken(oauth) : null
 
   const parsed = parsePersonalAccessToken(token)
   if (!parsed) return null
@@ -112,3 +127,47 @@ export function requireScope(actor: PatActor, scope: McpScope): void {
 
 // Referenced so the eq import stays honest if the query shape changes.
 void eq
+
+/**
+ * An OAuth access token, checked against the audience it was issued for.
+ *
+ * The MCP specification is explicit: a server MUST only accept tokens issued
+ * for itself. Without that check a token this installation minted for some
+ * other resource -- or one a client carried here from elsewhere -- would work,
+ * which is the confused-deputy shape the requirement exists to prevent.
+ *
+ * Resolved through the same SECURITY DEFINER door the PAT path uses: reading
+ * the row needs a tenant, and the tenant comes from the row.
+ */
+async function resolveOAuthToken(parsed: {
+  tokenKey: string
+  secret: string
+}): Promise<PatActor | null> {
+  const rows = await withoutTenant((tx) =>
+    tx.execute(sql`
+      select tenant_id, member_id, scopes, resource, member_role
+      from app.resolve_oauth_token(${parsed.tokenKey}, ${hashSecret(parsed.secret)})
+    `),
+  )
+
+  const row = rows.rows[0] as
+    | {
+        tenant_id: string
+        member_id: string
+        scopes: string[]
+        resource: string
+        member_role: string
+      }
+    | undefined
+  if (!row) return null
+  if (!audienceMatches(row.resource, mcpResource())) return null
+
+  return {
+    tenantId: row.tenant_id,
+    memberId: row.member_id,
+    tenantRole: row.member_role === 'admin' ? 'admin' : 'member',
+    source: 'mcp',
+    patId: null,
+    scopes: row.scopes,
+  }
+}

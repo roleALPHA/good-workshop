@@ -303,6 +303,12 @@
         "unknownModuleType": "Diesen Modultyp gibt es nicht.",
         "unknownModuleTypeOptions": "Unbekannter Modultyp „{key}“. Verfügbar: {available}",
         "descInvalid": "Ungültige Angaben: {issues}"
+      },
+      "oauth": {
+        "noRedirectUri": "Dieser Client hat keine gültige Rücksprungadresse angegeben.",
+        "unknownClient": "Diesen Client kennt diese Installation nicht.",
+        "badRedirect": "Die Rücksprungadresse gehört nicht zu diesem Client.",
+        "badResource": "Dieser Zugriff wurde für einen anderen Server angefragt."
       }
     },
     "failed": "Das hat nicht geklappt. Versuch es noch einmal.",
@@ -570,5 +576,23 @@
     "untitledDay": "Tag",
     "you": "du",
     "withNotes": "Mit Moderationsnotizen"
+  },
+  "oauth": {
+    "title": "Zugriff erlauben?",
+    "intro": "<client>Dieser Client</client> möchte auf deine Workshops zugreifen.",
+    "willBeAbleTo": "Damit kann der Client:",
+    "noScopes": "Nichts — der Client hat keinen gültigen Bereich angefragt.",
+    "actsAsYou": "Es handelt als du ({email}) und kann nie mehr, als du selbst darfst. Nutzerverwaltung ist ausgeschlossen.",
+    "offline": "Es bleibt angemeldet, bis du den Zugriff zurückziehst.",
+    "approve": "Zugriff erlauben",
+    "approving": "Einen Moment …",
+    "deny": "Ablehnen",
+    "revokeHint": "Du kannst den Zugriff jederzeit in den Einstellungen unter Zugangstoken zurückziehen.",
+    "unknownClient": "Diesen Client kennt diese Installation nicht.",
+    "badRedirect": "Die Rücksprungadresse gehört nicht zu diesem Client.",
+    "badResponseType": "Diese Anfrage hat einen Antworttyp, den dieser Server nicht anbietet.",
+    "badChallenge": "Diese Anfrage kommt ohne gültiges PKCE. Dieser Server verlangt es.",
+    "badResource": "Dieser Zugriff wurde für einen anderen Server angefragt.",
+    "problemHint": "Nichts wurde freigegeben. Starte den Vorgang im Client noch einmal — wenn es wieder scheitert, liegt es an dessen Konfiguration."
   }
 }

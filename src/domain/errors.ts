@@ -75,6 +75,13 @@ export const DOMAIN_ERROR_KEYS = [
   // hold, and granting to somebody who made the folder.
   'folder.grantTooWide',
   'folder.creatorHasAccess',
+  // OAuth. Most failures here go back to a machine as RFC-shaped JSON, not as
+  // a sentence -- these are the few a PERSON sees, on the consent screen,
+  // because the client sent them somewhere with a broken request.
+  'oauth.noRedirectUri',
+  'oauth.unknownClient',
+  'oauth.badRedirect',
+  'oauth.badResource',
   // Guest access by share link. A separate address error from
   // member.invalidEmail, even though the expression checking it is the same one:
   // the two screens fail for different reasons and one day one of them will say

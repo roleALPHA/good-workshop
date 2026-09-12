@@ -25,7 +25,14 @@ export type Actor = {
   displayName?: string
   /** Present for MCP requests; intersected with the member's capabilities. */
   scopes?: string[]
-  patId?: string
+  /**
+   * The personal access token this request arrived on, when it did.
+   *
+   * Null rather than absent for an OAuth request: that one HAS a token and it
+   * is not a PAT, and the difference matters to anything that reports which
+   * credential acted. Absent still means "no token was involved at all".
+   */
+  patId?: string | null
   source: 'web' | 'mcp' | 'api' | 'system' | 'guest'
   /**
    * The grant a share-link guest arrived with. Set in exactly one place --

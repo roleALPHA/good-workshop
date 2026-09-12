@@ -303,6 +303,12 @@
         "unknownModuleType": "Ce type de bloc n'existe pas.",
         "unknownModuleTypeOptions": "Type de bloc inconnu « {key} ». Disponibles : {available}",
         "descInvalid": "Valeurs invalides : {issues}"
+      },
+      "oauth": {
+        "noRedirectUri": "Ce client n'a indiqué aucune adresse de retour utilisable.",
+        "unknownClient": "Cette installation ne connaît pas ce client.",
+        "badRedirect": "Cette adresse de retour n'appartient pas à ce client.",
+        "badResource": "Cet accès a été demandé pour un autre serveur."
       }
     },
     "failed": "Ça n'a pas marché. Réessaie.",
@@ -570,5 +576,23 @@
     "untitledDay": "Journée",
     "you": "toi",
     "withNotes": "Avec les notes de modération"
+  },
+  "oauth": {
+    "title": "Autoriser l'accès ?",
+    "intro": "<client>Ce client</client> souhaite accéder à tes ateliers.",
+    "willBeAbleTo": "Le client pourra :",
+    "noScopes": "Rien — le client n'a demandé aucun périmètre que ce serveur connaisse.",
+    "actsAsYou": "Il agit en tant que toi ({email}) et ne peut jamais faire plus que toi. La gestion des utilisateurs est exclue.",
+    "offline": "Il reste connecté jusqu'à ce que tu retires l'accès.",
+    "approve": "Autoriser l'accès",
+    "approving": "Un instant …",
+    "deny": "Refuser",
+    "revokeHint": "Tu peux retirer cet accès à tout moment dans les réglages, sous Jetons d'accès.",
+    "unknownClient": "Cette installation ne connaît pas ce client.",
+    "badRedirect": "Cette adresse de retour n'appartient pas à ce client.",
+    "badResponseType": "Cette requête nomme un type de réponse que ce serveur n'offre pas.",
+    "badChallenge": "Cette requête arrive sans PKCE valide. Ce serveur en exige un.",
+    "badResource": "Cet accès a été demandé pour un autre serveur.",
+    "problemHint": "Rien n'a été accordé. Recommence depuis le client — si cela échoue encore, le défaut est dans sa configuration."
   }
 }

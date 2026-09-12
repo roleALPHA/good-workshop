@@ -586,6 +586,152 @@ export const workshopCollaborator = pgTable(
 ).enableRLS()
 
 // ═══════════════════════════════════════════════════════════════════════════
+// OAuth 2.1, for MCP clients that cannot hold a static token
+// ═══════════════════════════════════════════════════════════════════════════
+
+/**
+ * A client that registered itself, per RFC 7591.
+ *
+ * Registration is open, because the MCP specification says it is: a client the
+ * operator has never heard of has to be able to start the flow. What keeps
+ * that from being a hole is that registration grants NOTHING -- a row here is
+ * a name and a redirect target, and every actual permission still comes from a
+ * person sitting at the consent screen.
+ *
+ * `tenant_id` carries `app.current_tenant()` like every other table, so the
+ * registration endpoint runs inside a tenant context rather than beside it.
+ */
+export const oauthClient = pgTable(
+  'oauth_client',
+  {
+    id: uuid('id').notNull(),
+    tenantId: tenantId().references(() => tenant.id, { onDelete: 'cascade' }),
+    /** The public `client_id`. Opaque, and not a secret. */
+    clientKey: text('client_key').notNull(),
+    /** Null for a public client -- the common case: a CLI cannot keep a secret. */
+    secretHash: text('secret_hash'),
+    name: text('name').notNull(),
+    redirectUris: text('redirect_uris').array().notNull(),
+    ...timestamps,
+  },
+  (t) => [
+    primaryKey({ columns: [t.id] }),
+    unique('oauth_client_tenant_id_uq').on(t.tenantId, t.id),
+    unique('oauth_client_key_uq').on(t.tenantId, t.clientKey),
+    check('oauth_client_redirects', sql`cardinality(${t.redirectUris}) between 1 and 10`),
+    pgPolicy('oauth_client_tenant_isolation', {
+      for: 'all',
+      to: 'gw_app',
+      using: TENANT_POLICY_USING,
+      withCheck: TENANT_POLICY_USING,
+    }),
+  ],
+).enableRLS()
+
+/**
+ * One authorization code, in flight.
+ *
+ * Single use and short lived, and both are enforced here rather than trusted:
+ * `used_at` is set in the same statement that reads the row, so two token
+ * requests racing on one code cannot both win.
+ *
+ * `code_challenge` is mandatory -- OAuth 2.1 removed the option of doing
+ * without PKCE, and so does the column.
+ */
+export const oauthGrant = pgTable(
+  'oauth_grant',
+  {
+    id: uuid('id').notNull(),
+    tenantId: tenantId().references(() => tenant.id, { onDelete: 'cascade' }),
+    codeHash: text('code_hash').notNull(),
+    clientId: uuid('client_id').notNull(),
+    memberId: uuid('member_id').notNull(),
+    scopes: text('scopes').array().notNull(),
+    /** RFC 8707. The token minted from this code is bound to it. */
+    resource: text('resource').notNull(),
+    redirectUri: text('redirect_uri').notNull(),
+    codeChallenge: text('code_challenge').notNull(),
+    expiresAt: timestamp('expires_at', { withTimezone: true }).notNull(),
+    usedAt: timestamp('used_at', { withTimezone: true }),
+    createdAt: timestamp('created_at', { withTimezone: true }).notNull().defaultNow(),
+  },
+  (t) => [
+    primaryKey({ columns: [t.id] }),
+    unique('oauth_grant_code_uq').on(t.codeHash),
+    foreignKey({
+      columns: [t.tenantId, t.clientId],
+      foreignColumns: [oauthClient.tenantId, oauthClient.id],
+    }).onDelete('cascade'),
+    foreignKey({
+      columns: [t.tenantId, t.memberId],
+      foreignColumns: [member.tenantId, member.id],
+    }).onDelete('cascade'),
+    // S256 only. OAuth 2.1 keeps `plain` for constrained clients; an HTTPS
+    // service reachable from the internet is not one.
+    check('oauth_grant_challenge', sql`length(${t.codeChallenge}) between 43 and 128`),
+    index('oauth_grant_expiry_idx').on(t.expiresAt),
+    pgPolicy('oauth_grant_tenant_isolation', {
+      for: 'all',
+      to: 'gw_app',
+      using: TENANT_POLICY_USING,
+      withCheck: TENANT_POLICY_USING,
+    }),
+  ],
+).enableRLS()
+
+/**
+ * An issued access or refresh token.
+ *
+ * Hashed like every other secret here, and looked up by an indexed public id
+ * rather than by scanning hashes -- the same shape `personal_access_token`
+ * uses, for the same reason.
+ *
+ * `resource` is the audience. The MCP specification is explicit that a server
+ * must only accept tokens issued for itself, so it is stored and compared
+ * rather than assumed.
+ */
+export const oauthToken = pgTable(
+  'oauth_token',
+  {
+    id: uuid('id').notNull(),
+    tenantId: tenantId().references(() => tenant.id, { onDelete: 'cascade' }),
+    /** The indexed half of the token, as in `gwo_<tokenKey>_<secret>`. */
+    tokenKey: text('token_key').notNull(),
+    secretHash: text('secret_hash').notNull(),
+    kind: text('kind').notNull(),
+    clientId: uuid('client_id').notNull(),
+    memberId: uuid('member_id').notNull(),
+    scopes: text('scopes').array().notNull(),
+    resource: text('resource').notNull(),
+    expiresAt: timestamp('expires_at', { withTimezone: true }).notNull(),
+    revokedAt: timestamp('revoked_at', { withTimezone: true }),
+    lastUsedAt: timestamp('last_used_at', { withTimezone: true }),
+    createdAt: timestamp('created_at', { withTimezone: true }).notNull().defaultNow(),
+  },
+  (t) => [
+    primaryKey({ columns: [t.id] }),
+    unique('oauth_token_key_uq').on(t.tokenKey),
+    foreignKey({
+      columns: [t.tenantId, t.clientId],
+      foreignColumns: [oauthClient.tenantId, oauthClient.id],
+    }).onDelete('cascade'),
+    foreignKey({
+      columns: [t.tenantId, t.memberId],
+      foreignColumns: [member.tenantId, member.id],
+    }).onDelete('cascade'),
+    check('oauth_token_kind', sql`${t.kind} in ('access','refresh')`),
+    index('oauth_token_member_idx').on(t.tenantId, t.memberId),
+    index('oauth_token_expiry_idx').on(t.expiresAt),
+    pgPolicy('oauth_token_tenant_isolation', {
+      for: 'all',
+      to: 'gw_app',
+      using: TENANT_POLICY_USING,
+      withCheck: TENANT_POLICY_USING,
+    }),
+  ],
+).enableRLS()
+
+// ═══════════════════════════════════════════════════════════════════════════
 // Agenda: day / cluster / module
 // ═══════════════════════════════════════════════════════════════════════════
 
