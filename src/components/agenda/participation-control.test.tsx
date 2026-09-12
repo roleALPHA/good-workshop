@@ -1,4 +1,4 @@
-import { screen } from '@testing-library/react'
+import { fireEvent, screen } from '@testing-library/react'
 import { renderWithIntl as render } from '@/test/intl'
 import userEvent from '@testing-library/user-event'
 import { describe, expect, it, vi } from 'vitest'
@@ -121,6 +121,72 @@ describe('the participation control', () => {
 
     expect(screen.queryByRole('listbox')).not.toBeInTheDocument()
     expect(screen.getByRole('button', { name: /Sozialform/ })).toHaveFocus()
+  })
+
+  /**
+   * iOS Safari does not give a `<button>` focus when it is tapped -- only form
+   * fields get focus that way. So tapping an option makes the option that HAD
+   * focus (the first one, from `autoFocus`) lose it with `relatedTarget: null`,
+   * and that focus-out arrives BEFORE the click.
+   *
+   * A wrapper that closes on any focus-out it cannot attribute therefore
+   * unmounts the list while the tap is still in flight, and the click lands on
+   * nothing. Reported from a real phone: the list opened, and no choice stuck.
+   *
+   * Chromium's touch emulation focuses buttons on tap, so `relatedTarget` is
+   * the tapped option, `contains()` is true, and the Playwright test that taps
+   * this very control stayed green. That test is not wrong -- it is running in
+   * an engine that does not have the behaviour.
+   */
+  it('keeps the choice when a focus-out with no relatedTarget arrives first', async () => {
+    const user = userEvent.setup()
+    const onChange = vi.fn()
+    render(<ParticipationControl field={field} value={undefined} onChange={onChange} />)
+
+    await open(user)
+    const option = screen.getByRole('option', { name: 'Paare' })
+
+    // What WebKit sends on the way to the click, and nothing else.
+    fireEvent.focusOut(option, { relatedTarget: null })
+    fireEvent.click(option)
+
+    expect(onChange).toHaveBeenCalledWith('pairs')
+  })
+
+  it('still closes when focus really does leave the control', async () => {
+    const user = userEvent.setup()
+    render(
+      <>
+        <ParticipationControl field={field} value={undefined} onChange={() => {}} />
+        <button type="button">somewhere else</button>
+      </>,
+    )
+
+    await open(user)
+    // A focus-out that NAMES an element outside the control is the keyboard
+    // case, and it is the naming that tells it apart from the tap above.
+    // Tabbing would not do it here: there are five options, so the first Tab
+    // only moves to the second one.
+    fireEvent.focusOut(screen.getByRole('option', { name: 'Paare' }), {
+      relatedTarget: screen.getByRole('button', { name: 'somewhere else' }),
+    })
+
+    expect(screen.queryByRole('listbox')).not.toBeInTheDocument()
+  })
+
+  it('closes when a pointer goes down outside it', async () => {
+    const user = userEvent.setup()
+    render(
+      <>
+        <ParticipationControl field={field} value={undefined} onChange={() => {}} />
+        <p>elsewhere</p>
+      </>,
+    )
+
+    await open(user)
+    fireEvent.pointerDown(screen.getByText('elsewhere'))
+
+    expect(screen.queryByRole('listbox')).not.toBeInTheDocument()
   })
 
   it('opens from the keyboard alone', async () => {
