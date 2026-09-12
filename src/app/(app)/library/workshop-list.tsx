@@ -4,6 +4,7 @@ import Link from 'next/link'
 import { useCallback, useEffect, useState, useTransition } from 'react'
 import type { WorkshopSummary } from '@/domain/workshop/repo'
 import { FolderInput, Trash2 } from 'lucide-react'
+import { ReadOnlyBadge } from '@/components/read-only-badge'
 import { loadLibrary, moveWorkshopAction, trashWorkshopAction } from '@/server/actions/workshop'
 import { useTranslations } from 'next-intl'
 import { cn } from '@/lib/cn'
@@ -137,9 +138,11 @@ export function WorkshopList({
     <>
       <ul className="divide-y divide-[var(--border)] rounded border border-[var(--border)]">
         {workshops.map((workshop) => {
-          // A viewer has no workshop.update, so the server would refuse this
-          // anyway -- and a control that always fails is worse than none.
-          const canMove = workshop.role !== 'viewer'
+          // A viewer has neither workshop.update nor workshop.delete, so the
+          // server would refuse either of these anyway -- and a control that
+          // always fails is worse than none. Next to a badge that says "read
+          // only" it is a contradiction on one line.
+          const canManage = workshop.role !== 'viewer'
           const folderName = folders.find((node) => node.id === workshop.folderId)?.name
 
           return (
@@ -165,6 +168,7 @@ export function WorkshopList({
                 <span className="shrink-0 rounded bg-[var(--surface-raised)] px-1.5 py-0.5 text-[13px] text-[var(--fg-muted)]">
                   {tStatus(workshop.status)}
                 </span>
+                {!canManage && <ReadOnlyBadge />}
               </Link>
 
               {/* Outside the Link, not inside it: a button nested in an anchor is
@@ -179,7 +183,7 @@ export function WorkshopList({
                   <span className="truncate">{folderName ?? t('noFolder')}</span>
                 </span>
 
-                {canMove && (
+                {canManage && (
                   <MoveControl
                     drag={{
                       kind: 'workshop',
@@ -201,17 +205,19 @@ export function WorkshopList({
                   </MoveControl>
                 )}
 
-                <button
-                  type="button"
-                  onClick={() => trash(workshop.id, workshop.title)}
-                  disabled={pending}
-                  title={t('moveToTrash')}
-                  aria-label={t('moveToTrashLabel', { title: workshop.title })}
-                  className={actionClass}
-                >
-                  <Trash2 aria-hidden className="size-4" />
-                  <span className="hidden sm:inline">{t('moveToTrash')}</span>
-                </button>
+                {canManage && (
+                  <button
+                    type="button"
+                    onClick={() => trash(workshop.id, workshop.title)}
+                    disabled={pending}
+                    title={t('moveToTrash')}
+                    aria-label={t('moveToTrashLabel', { title: workshop.title })}
+                    className={actionClass}
+                  >
+                    <Trash2 aria-hidden className="size-4" />
+                    <span className="hidden sm:inline">{t('moveToTrash')}</span>
+                  </button>
+                )}
               </div>
 
               {moving === workshop.id && (

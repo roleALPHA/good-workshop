@@ -180,7 +180,8 @@
     "loading": "Cargando …",
     "loadMore": "Cargar más",
     "saving": "Guardando …",
-    "back": "Volver"
+    "back": "Volver",
+    "readOnly": "Solo lectura"
   },
   "enums": {
     "memberRole": {

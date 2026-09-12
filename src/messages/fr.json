@@ -180,7 +180,8 @@
     "loading": "Chargement …",
     "loadMore": "Charger plus",
     "saving": "Enregistrement …",
-    "back": "Retour"
+    "back": "Retour",
+    "readOnly": "Lecture seule"
   },
   "enums": {
     "memberRole": {

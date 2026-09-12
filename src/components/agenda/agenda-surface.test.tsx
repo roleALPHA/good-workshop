@@ -32,6 +32,11 @@ import { AgendaTable } from './agenda-table'
  * `renderEditor` is the surface once the browser has taken over. It is the same
  * row components with handlers passed in -- which is the whole point of the
  * seam, and why a change to one cannot quietly diverge from the other.
+ *
+ * `renderReader` is the third: the surface as somebody with read access gets
+ * it. Hydration happens, and it still resolves to the table -- that is the
+ * claim, and it is not the same claim as `renderReading`, which never involves
+ * the surface at all.
  */
 function renderReading() {
   const doc = createDemoDay()
@@ -40,7 +45,9 @@ function renderReading() {
   return render(<AgendaTable doc={doc} rows={withGapRows(rows, schedule)} schedule={schedule} />)
 }
 
-const renderEditor = () => render(<AgendaSurface doc={createDemoDay()} />)
+const renderEditor = () => render(<AgendaSurface doc={createDemoDay()} canEdit />)
+
+const renderReader = () => render(<AgendaSurface doc={createDemoDay()} canEdit={false} />)
 
 const block = (name: string) => screen.getByRole('article', { name })
 
@@ -190,4 +197,40 @@ describe('the agenda as a whole', () => {
   // Its counterpart -- that the phone layout HIDES those headers -- stayed
   // end-to-end. They are in the document either way and only CSS takes them off
   // screen, which jsdom neither applies nor can be asked about.
+
+  /**
+   * Read access used to mean the full editor with its saving quietly removed:
+   * every control answered, every change went into a local document and died
+   * there on the next load. The three assertions above -- format, material,
+   * pinned start -- are exactly what a reader was being offered and could not
+   * keep, so they are what gets asserted away again here.
+   */
+  describe('with read access only', () => {
+    it('offers none of the controls an editor gets', () => {
+      renderReader()
+
+      expect(
+        within(block('Check-in & Start')).queryByRole('button', { name: 'Sozialform: Plenum' }),
+      ).not.toBeInTheDocument()
+      expect(
+        within(block('Agenda & Spielregeln')).queryByLabelText('Material hinzufügen'),
+      ).not.toBeInTheDocument()
+      expect(
+        within(block('Agenda & Spielregeln')).queryByRole('button', { name: 'Startzeit fixieren' }),
+      ).not.toBeInTheDocument()
+      expect(screen.queryByRole('button', { name: 'Block hinzufügen' })).not.toBeInTheDocument()
+    })
+
+    it('still shows the whole day, derived times and all', () => {
+      renderReader()
+
+      // Withholding the controls must not withhold the agenda: this is the
+      // screen a facilitator reads in the room.
+      const checkIn = block('Check-in & Start')
+      expect(checkIn).toHaveTextContent('13:00')
+      expect(checkIn).toHaveTextContent('Plenum')
+      expect(block('Druckpunkte')).toHaveTextContent('13:35')
+      expect(block('Mittagessen')).toHaveTextContent('Überschneidet den vorherigen Block um 30m')
+    })
+  })
 })

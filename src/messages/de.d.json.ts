@@ -183,7 +183,8 @@ declare const messages: {
     "loading": "Lädt …",
     "loadMore": "Mehr laden",
     "saving": "Speichert …",
-    "back": "Zurück"
+    "back": "Zurück",
+    "readOnly": "Nur Lesen"
   },
   "enums": {
     "memberRole": {
