@@ -1,0 +1,95 @@
+'use client'
+
+import { useState } from 'react'
+import { useTranslations } from 'next-intl'
+import { claim, type SetupResult } from './actions'
+
+const field =
+  'mt-1 w-full rounded border border-[var(--border)] bg-[var(--surface)] px-3 py-2 text-[15px]'
+
+export function SetupForm() {
+  const t = useTranslations('auth.setup')
+  const [result, setResult] = useState<SetupResult | null>(null)
+  const [pending, setPending] = useState(false)
+
+  async function submit(formData: FormData) {
+    setPending(true)
+    try {
+      setResult(await claim(formData))
+    } finally {
+      setPending(false)
+    }
+  }
+
+  if (result?.ok) {
+    return (
+      <div className="mt-6 rounded border border-[var(--border)] bg-[var(--surface)] p-4">
+        <p className="font-medium">{t('claimed', { email: result.email })}</p>
+        {result.link ? (
+          <>
+            <p className="mt-2 text-[15px] text-[var(--fg-muted)]">{t('linkHere')}</p>
+            <p className="mt-3 rounded bg-[var(--bg)] p-3 font-mono text-[13px] break-all">
+              <a href={result.link}>{result.link}</a>
+            </p>
+          </>
+        ) : (
+          <p className="mt-2 text-[15px] text-[var(--fg-muted)]">{t('linkSent')}</p>
+        )}
+      </div>
+    )
+  }
+
+  return (
+    <form action={submit} className="mt-6 space-y-4">
+      {result && !result.ok && (
+        <p
+          role="alert"
+          className="rounded border border-[var(--border)] bg-[var(--warn-bg)] px-3 py-2 text-[14px] text-[var(--warn-fg)]"
+        >
+          {result.error}
+        </p>
+      )}
+
+      <div>
+        <label htmlFor="setup-email" className="text-[14px] font-medium">
+          {t('email')}
+        </label>
+        <input
+          id="setup-email"
+          name="email"
+          type="email"
+          required
+          autoComplete="email"
+          className={field}
+          placeholder="du@example.com"
+        />
+        <p className="mt-1 text-[13px] text-[var(--fg-subtle)]">{t('emailHint')}</p>
+      </div>
+
+      <div>
+        <label htmlFor="setup-token" className="text-[14px] font-medium">
+          {t('key')}
+        </label>
+        <input
+          id="setup-token"
+          name="token"
+          required
+          autoComplete="off"
+          spellCheck={false}
+          className={`${field} font-mono`}
+        />
+        <p className="mt-1 text-[13px] text-[var(--fg-subtle)]">
+          {t('keyHint')} <code>docker compose logs app</code>
+        </p>
+      </div>
+
+      <button
+        type="submit"
+        disabled={pending}
+        className="rounded bg-[var(--brand)] px-4 py-2 text-[15px] font-medium text-[var(--brand-fg)] hover:bg-[var(--brand-hover)] disabled:opacity-60"
+      >
+        {pending ? t('submitting') : t('submit')}
+      </button>
+    </form>
+  )
+}

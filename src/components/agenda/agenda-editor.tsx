@@ -25,6 +25,8 @@ import { computeSchedule } from '@/domain/schedule/computeSchedule'
 import { formatDuration, formatTime } from '@/features/agenda/duration'
 import { flattenDay, toScheduleItems, withGapRows } from '@/features/agenda/flatten'
 import { ImmediateKeyboardSensor, treeKeyboardCoordinateGetter } from '@/features/agenda/keyboard'
+import type { AgendaDocument, DocumentStatus, Peer } from '@/features/agenda/document'
+// Used only to preview a move for the announcement -- it mutates nothing.
 import { applyMove } from '@/features/agenda/move'
 import {
   getProjection,
@@ -34,8 +36,15 @@ import {
 } from '@/features/agenda/projection'
 import { catClass } from '@/lib/category-colors'
 import { cn } from '@/lib/cn'
+import { ModuleDetails } from '@/components/inspector/module-details'
 import { ClusterRow, EndOfDay, GapRow, HeaderRow, ModuleRow, type RowChrome } from './agenda-rows'
+import { BlockPicker } from './block-picker'
+import { DayHeader } from './day-header'
+import { ParkingArea } from './parking'
+import { PresenceBar } from './presence'
 import { DragHandle } from './drag-handle'
+import { useLocale, useTranslations } from 'next-intl'
+import type { Locale } from '@/i18n/config'
 
 const INDENT_PX = 28
 
@@ -70,15 +79,18 @@ const SILENT_ANNOUNCEMENTS: Announcements = {
  *
  * State lives here and nowhere else for now: there is no server yet, so a drag
  * is applied straight to a local DayDoc. When persistence lands this becomes an
- * optimistic update over the same `applyMove`, and the server applies the very
- * same operation -- which is why applyMove is a pure function over the document
- * rather than something that reaches into React state.
+ * Where those changes go is not this component's business: the public demo
+ * keeps them in React state, a signed-in editor writes them into a shared
+ * document other people are watching. Both arrive here as the same
+ * AgendaDocument.
  *
  * Times are never stored, so nothing has to be recomputed after a move: the
  * schedule is derived from the new document on the next render, for free.
  */
-export function AgendaEditor({ initialDoc }: { initialDoc: DayDoc }) {
-  const [doc, setDoc] = useState(initialDoc)
+export function AgendaEditor({ document: agenda }: { document: AgendaDocument }) {
+  const t = useTranslations('agenda')
+  const locale = useLocale()
+  const doc = agenda.doc
   const [activeId, setActiveId] = useState<string | null>(null)
   const [offsetX, setOffsetX] = useState(0)
   const [overId, setOverId] = useState<string | null>(null)
@@ -105,8 +117,13 @@ export function AgendaEditor({ initialDoc }: { initialDoc: DayDoc }) {
   const sortableIds = useMemo(() => dragRows.map((r) => r.id), [dragRows])
 
   const [dropMessage, setDropMessage] = useState('')
+  // Which row has its type-specific fields open. One at a time: several
+  // expanded rows turn the agenda back into a wall of forms.
+  const [expandedId, setExpandedId] = useState<string | null>(null)
 
-  const liveMessage = activeId ? describeProjection(doc, rows, activeId, projection) : dropMessage
+  const liveMessage = activeId
+    ? describeProjection(doc, rows, activeId, projection, t, locale)
+    : dropMessage
 
   const sensors = useSensors(
     useSensor(MouseSensor, MOUSE_OPTIONS),
@@ -146,21 +163,77 @@ export function AgendaEditor({ initialDoc }: { initialDoc: DayDoc }) {
 
   function handleDragEnd() {
     if (activeId && projection?.valid) {
-      setDropMessage(
-        describeProjection(doc, rows, activeId, projection).replace('landet', 'abgelegt'),
-      )
-      setDoc((current) => applyMove(current, activeId, projection))
+      // Its own message rather than a word swapped out of the previous one.
+      // `.replace('landet', 'abgelegt')` worked only in German, and only until
+      // somebody rephrased the sentence it was reaching into.
+      setDropMessage(describeProjection(doc, rows, activeId, projection, t, locale, 'dropped'))
+      agenda.move(activeId, projection)
     }
     reset()
   }
 
   function handleDragCancel() {
-    if (activeId) setDropMessage('Verschieben abgebrochen.')
+    if (activeId) setDropMessage(t('drag.cancelled'))
     reset()
+  }
+
+  /**
+   * Edits land straight on the document.
+   *
+   * No dialog, no save button, no edit mode -- the agenda has to stay readable
+   * while it is being changed. Persistence will replace this local update with
+   * an optimistic one over the same shape; the component does not learn about
+   * it either way.
+   */
+  function patchModule(moduleId: string, patch: Partial<(typeof doc)['modules'][number]>) {
+    // Listed field by field rather than spread: undefined means "not part of
+    // this change", and passing the whole object through would let a caller's
+    // missing key clear a field it never mentioned.
+    agenda.patchModule(moduleId, {
+      title: patch.title,
+      durationMinutes: patch.durationMinutes,
+      pinnedStartMinute: patch.pinnedStartMinute,
+      desc: patch.desc,
+      parked: patch.parked,
+    })
   }
 
   const activeRow = rows.find((r) => r.id === activeId)
   const projectedParent = projection?.parentId ?? null
+
+  // Grouped once per render rather than filtered per row: a day is tens of
+  // rows and a room is a handful of people, but the nested scan is the kind of
+  // thing that quietly becomes the reason a drag stutters.
+  const presenceByBlock = useMemo(() => {
+    const out = new Map<string, Peer[]>()
+    for (const peer of agenda.peers) {
+      if (!peer.focusedBlockId) continue
+      const bucket = out.get(peer.focusedBlockId)
+      if (bucket) bucket.push(peer)
+      else out.set(peer.focusedBlockId, [peer])
+    }
+    return out
+  }, [agenda.peers])
+
+  /**
+   * One handler for the whole table instead of props on every input.
+   *
+   * Focus is reported from where it actually happens -- the field somebody is
+   * typing in -- and the row is read off the DOM. Threading a callback through
+   * every input would mean each new field has to remember to opt in, and the
+   * one that forgot would be invisible to everyone else.
+   */
+  const reportFocus = (event: React.FocusEvent<HTMLElement>) => {
+    const row = (event.target as HTMLElement).closest('[data-block-id]')
+    agenda.setFocus(row?.getAttribute('data-block-id') ?? null)
+  }
+
+  const clearFocus = (event: React.FocusEvent<HTMLElement>) => {
+    // Only when focus left the table altogether: moving between two fields of
+    // the same row would otherwise blink the mark off and on.
+    if (event.currentTarget.contains(event.relatedTarget)) return
+    agenda.setFocus(null)
+  }
 
   return (
     <DndContext
@@ -180,7 +253,22 @@ export function AgendaEditor({ initialDoc }: { initialDoc: DayDoc }) {
       onDragEnd={handleDragEnd}
       onDragCancel={handleDragCancel}
     >
-      <section aria-label={`Agenda ${doc.title}`} className="gw-agenda">
+      <section
+        aria-label={t('regionLabel', { title: doc.title })}
+        className="gw-agenda"
+        // Always present, so anything waiting on a write -- a test, or a person
+        // watching the corner of the screen -- has one honest signal instead of
+        // guessing from a message that only appears when something is wrong.
+        data-save-state={agenda.status.kind}
+        onFocusCapture={reportFocus}
+        onBlurCapture={clearFocus}
+      >
+        <DayHeader
+          doc={doc}
+          schedule={schedule}
+          onDescChange={(desc) => agenda.patchDay({ desc })}
+        />
+        <PresenceBar peers={agenda.peers} />
         <HeaderRow />
 
         <SortableContext items={sortableIds} strategy={verticalListSortingStrategy}>
@@ -208,7 +296,15 @@ export function AgendaEditor({ initialDoc }: { initialDoc: DayDoc }) {
                         cluster={row.cluster}
                         entry={entry}
                         childCount={row.childCount}
-                        chrome={{ ...chrome, isDropTarget: projectedParent === row.id }}
+                        chrome={{
+                          ...chrome,
+                          isDropTarget: projectedParent === row.id,
+                          presence: presenceByBlock.get(row.id),
+                        }}
+                        editing={{
+                          onPinChange: (pinnedStartMinute) =>
+                            agenda.patchCluster(row.id, { pinnedStartMinute }),
+                        }}
                       />
                     ) : (
                       <ModuleRow
@@ -216,7 +312,27 @@ export function AgendaEditor({ initialDoc }: { initialDoc: DayDoc }) {
                         type={doc.moduleTypes[row.module.moduleTypeId]}
                         entry={entry}
                         nested={row.depth === 1}
-                        chrome={chrome}
+                        chrome={{ ...chrome, presence: presenceByBlock.get(row.id) }}
+                        editing={{
+                          expanded: expandedId === row.id,
+                          onToggleExpanded: () =>
+                            setExpandedId((current) => (current === row.id ? null : row.id)),
+                          onTitleChange: (title) => patchModule(row.id, { title }),
+                          onDurationChange: (durationMinutes) =>
+                            patchModule(row.id, { durationMinutes }),
+                          onDescChange: (desc) => patchModule(row.id, { desc }),
+                          onPinChange: (pinnedStartMinute) =>
+                            patchModule(row.id, { pinnedStartMinute }),
+                          onPark: () => patchModule(row.id, { parked: true }),
+                          onRemove: () => agenda.removeModule(row.id),
+                          details: (
+                            <ModuleDetails
+                              module={row.module}
+                              type={doc.moduleTypes[row.module.moduleTypeId]}
+                              onChange={(desc) => patchModule(row.id, { desc })}
+                            />
+                          ),
+                        }}
                       />
                     )
                   }
@@ -226,7 +342,21 @@ export function AgendaEditor({ initialDoc }: { initialDoc: DayDoc }) {
           </div>
         </SortableContext>
 
+        <BlockPicker
+          types={Object.values(doc.moduleTypes)}
+          onAdd={(typeKey) => {
+            const type = Object.values(doc.moduleTypes).find((t) => t.key === typeKey)
+            if (!type) return
+            agenda.addModule({
+              moduleTypeId: type.id,
+              title: type.name,
+              durationMinutes: type.defaultDurationMinutes,
+            })
+          }}
+        />
+
         <EndOfDay schedule={schedule} targetEndMinute={doc.targetEndMinute} />
+        <StatusLine status={agenda.status} />
         <LiveRegion message={liveMessage} />
       </section>
 
@@ -259,13 +389,17 @@ export function AgendaEditor({ initialDoc }: { initialDoc: DayDoc }) {
               </span>
               <span className="tabular text-[13px] text-[var(--fg-muted)]">
                 {activeRow.kind === 'cluster'
-                  ? `${activeRow.childCount} ${activeRow.childCount === 1 ? 'Block' : 'Blöcke'}`
+                  ? t('blockCount', { count: activeRow.childCount })
                   : formatDuration(activeRow.module.durationMinutes)}
               </span>
             </div>
           </div>
         ) : null}
       </DragOverlay>
+
+      {/* Below the agenda, outside the sortable tree: parked blocks have no
+          place in the running order, which is the whole point of them. */}
+      <ParkingArea doc={doc} onUnpark={(id) => agenda.patchModule(id, { parked: false })} />
     </DndContext>
   )
 }
@@ -346,6 +480,39 @@ const agendaCollisionDetection: CollisionDetection = (args) => {
  * a block from the keyboard.
  */
 /**
+ * Says nothing while things are fine.
+ *
+ * A permanent "saved" badge trains people to ignore the one place that would
+ * tell them something went wrong. Only trouble is worth interrupting for.
+ */
+function StatusLine({ status }: { status: DocumentStatus }) {
+  const t = useTranslations('agenda')
+  if (status.kind === 'local' || status.kind === 'saved') return null
+
+  // Nothing to say while a connection is healthy. Who else is here is named in
+  // the presence bar, by name -- a second, vaguer count of the same people
+  // underneath was both redundant and, as it happened, ungrammatical.
+  if (status.kind === 'live') return null
+
+  if (status.kind === 'connecting' || status.kind === 'saving') {
+    return (
+      <p className="px-4 py-1 text-[13px] text-[var(--fg-subtle)] md:px-2">
+        {status.kind === 'connecting' ? t('connecting') : t('saving')}
+      </p>
+    )
+  }
+
+  return (
+    <p
+      role="alert"
+      className="mx-4 my-2 rounded border border-[var(--border)] bg-[var(--warn-bg)] px-3 py-2 text-[14px] text-[var(--warn-fg)] md:mx-2"
+    >
+      {status.kind === 'offline' ? t('offline') : status.message}
+    </p>
+  )
+}
+
+/**
  * Our own live region instead of dnd-kit's announcements.
  *
  * dnd-kit hands announcement callbacks an `over` but no drag delta, so
@@ -365,12 +532,24 @@ function LiveRegion({ message }: { message: string }) {
   )
 }
 
-/** Describes where the active row would land, in domain terms. */
+/**
+ * Describes where the active row would land, in domain terms.
+ *
+ * Takes a translator rather than reaching for a hook: this is a plain function
+ * called from inside a drag callback, and the sentence it builds is read aloud
+ * by a screen reader in the facilitator's own language. docs/ui-conventions.md
+ * is explicit that these announcements name the domain -- "Icebreaker on
+ * position 3 in section Warm-up" -- and not coordinates, which is why the
+ * pieces are separate messages rather than one string with a slot.
+ */
 function describeProjection(
   doc: DayDoc,
   rows: ReturnType<typeof flattenDay>,
   activeId: string,
   projection: Projection | null,
+  t: ReturnType<typeof useTranslations<'agenda'>>,
+  locale: Locale,
+  tense: 'landing' | 'dropped' = 'landing',
 ): string {
   const titleOf = (id: string) => {
     const row = rows.find((r) => r.id === id)
@@ -380,17 +559,37 @@ function describeProjection(
     return id
   }
 
-  if (!projection?.valid) return `${titleOf(activeId)} aufgenommen.`
+  if (!projection?.valid) return t('drag.picked', { title: titleOf(activeId) })
 
   const next = applyMove(doc, activeId, projection)
   const nextRows = flattenDay(next)
   const entry = computeSchedule(next.startMinute, toScheduleItems(nextRows)).entries.get(activeId)
 
   const where =
-    projection.parentId !== null ? `in Abschnitt ${titleOf(projection.parentId)}` : 'auf Tagesebene'
+    projection.parentId !== null
+      ? t('drag.inSection', { title: titleOf(projection.parentId) })
+      : t('drag.atDayLevel')
   const position = nextRows.findIndex((r) => r.id === activeId) + 1
 
-  return `${titleOf(activeId)} landet ${where}, Position ${position}${
-    entry ? `, neue Startzeit ${formatTime(entry.startMinute)}` : ''
-  }.`
+  const title = titleOf(activeId)
+
+  if (tense === 'dropped') {
+    return entry
+      ? t('drag.droppedWithTime', {
+          title,
+          where,
+          position,
+          time: formatTime(entry.startMinute, locale),
+        })
+      : t('drag.dropped', { title, where, position })
+  }
+
+  return entry
+    ? t('drag.landedWithTime', {
+        title,
+        where,
+        position,
+        time: formatTime(entry.startMinute, locale),
+      })
+    : t('drag.landed', { title, where, position })
 }

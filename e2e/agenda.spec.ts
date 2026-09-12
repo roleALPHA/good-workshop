@@ -1,74 +1,27 @@
 import { expect, test, type Page } from '@playwright/test'
+import { seedReferenceDay } from './fixtures/seed-day'
 
 /**
- * What this file adds over the unit tests: proof that the whole pipeline
- * survives a real browser. flattenDay -> computeSchedule -> withGapRows ->
- * AgendaTable is exercised in Vitest; here we check that the server-rendered
- * result is actually readable, that the OKLCH token system resolves, and that
- * state conveyed visually is also in the accessibility tree.
+ * What this file adds over the component tests: proof that the whole thing
+ * survives a real browser on a real workshop.
+ *
+ * The derivations -- computed start times, the overlap stated in words, a
+ * cluster duration summed from its children -- moved to
+ * components/agenda/agenda-surface.test.tsx when the public demo page they used
+ * to load was removed. What stayed is everything jsdom cannot answer: layout,
+ * the OKLCH token system, and dragging.
  *
  * Blocks are queried as `article` named by their title and sections as `group`
  * named by theirs -- not by test ids, and not as generic list items, which
  * would collide with the bullet lists inside descriptions.
- *
- * Flows still to be added as their features land (see
- * .claude/skills/goodworkshop-testing/SKILL.md): magic-link login, creating a
- * workshop, setting a pin in the UI, Markdown export, and the 409 conflict
- * banner across two browser contexts.
  */
 
 const block = (page: Page, name: string) => page.getByRole('article', { name })
 const section_ = (page: Page, name: string) => page.getByRole('group', { name })
 const agenda = (page: Page) => page.getByRole('region', { name: /^Agenda/ })
 
-test.beforeEach(async ({ page }) => {
-  await page.goto('/')
-})
-
-test('renders the day in agenda order with computed start times', async ({ page }) => {
-  // 13:00 is pinned; everything after it is derived from durations alone.
-  await expect(block(page, 'Check-in & Start')).toContainText('13:00')
-  await expect(block(page, 'Agenda & Spielregeln')).toContainText('13:15')
-  await expect(block(page, 'Energizer: Zwei Wahrheiten')).toContainText('13:25')
-  await expect(block(page, 'Druckpunkte')).toContainText('13:35')
-
-  const titles = await page.getByRole('heading', { level: 3 }).allInnerTexts()
-  expect(titles.slice(0, 4)).toEqual([
-    'Check-in & Start',
-    'Agenda & Spielregeln',
-    'Energizer: Zwei Wahrheiten',
-    'Druckpunkte',
-  ])
-})
-
-test('announces a pinned start time instead of signalling it with an icon alone', async ({
-  page,
-}) => {
-  await expect(block(page, 'Check-in & Start').getByText('Startzeit fixiert:')).toBeAttached()
-  await expect(block(page, 'Agenda & Spielregeln').getByText('Startzeit fixiert:')).toHaveCount(0)
-})
-
-test('states an overlap in words rather than silently shortening a block', async ({ page }) => {
-  const lunch = block(page, 'Mittagessen')
-
-  await expect(lunch).toContainText('14:30')
-  await expect(lunch).toContainText('Überschneidet den vorherigen Block um 30m')
-
-  // The block above keeps its full duration -- the conflict is surfaced, not resolved.
-  await expect(block(page, 'Einwandintegration')).toContainText('10m')
-})
-
-test('derives a cluster duration from its children', async ({ page }) => {
-  // 15 + 10 + 10 = 35, and it starts where its first (pinned) child starts.
-  await expect(section_(page, 'Ankommen & Rahmen')).toContainText('3 Blöcke · 35m')
-  await expect(section_(page, 'Ankommen & Rahmen')).toContainText('13:00')
-})
-
-test('shows the running end time and flags going over plan', async ({ page }) => {
-  // Scoped to the agenda: 17:30 also appears in the header summary above it.
-  await expect(agenda(page).getByText('17:30')).toBeVisible()
-  await expect(agenda(page).getByText('Ende', { exact: true })).toBeVisible()
-  await expect(agenda(page).getByText('30m über Plan')).toBeVisible()
+test.beforeEach(async ({ page, request }) => {
+  await seedReferenceDay(page, request)
 })
 
 test('carries the attribution footer on every view', async ({ page }) => {
@@ -215,5 +168,135 @@ test.describe('drag & drop', () => {
     await expect(section).toContainText('3 Blöcke · 35m')
     await expect(block(page, 'Energizer: Zwei Wahrheiten')).toContainText('13:25')
     expect(await page.getByRole('heading', { level: 3 }).allInnerTexts()).toEqual(before)
+  })
+})
+
+test.describe('inline editing in the day view', () => {
+  test.skip(({ isMobile }) => isMobile === true, 'The editor only mounts from 1024px up')
+
+  test('changes a duration in the row and moves every following block', async ({ page }) => {
+    const row = block(page, 'Spannungsfelder sammeln')
+    await expect(block(page, 'Einwandintegration')).toContainText('14:50')
+
+    const duration = row.getByLabel('Dauer')
+    await duration.fill('45m')
+    await duration.press('Tab')
+
+    // The whole point of deriving times: one edit, and everything after it
+    // moves without a save, a reload or a recalculation step.
+    await expect(block(page, 'Einwandintegration')).toContainText('15:05')
+    await expect(section_(page, 'Zielbild erarbeiten')).toContainText('55m')
+  })
+
+  test('keeps the running totals in step with the table', async ({ page }) => {
+    // The summary used to be rendered from the server's copy of the day and
+    // never updated, so after the first edit it announced totals for an agenda
+    // nobody could see -- most starkly on a fresh workshop, where it said
+    // "0 Blöcke" above three of them -- German, because the suite is pinned to it.
+    const summary = page.getByRole('main')
+    const before = (await summary.textContent()) ?? ''
+    const total = /·\s([0-9hm ]+)\sInhalt/.exec(before)?.[1]?.trim()
+    expect(total, 'the summary states a content total').toBeTruthy()
+
+    const duration = block(page, 'Spannungsfelder sammeln').getByLabel('Dauer')
+    await duration.fill('45m')
+    await duration.press('Tab')
+
+    await expect(page.getByText(/Inhalt/).first()).not.toContainText(`${total} Inhalt`)
+  })
+
+  test('reverts a duration it cannot read instead of guessing', async ({ page }) => {
+    const duration = block(page, 'Spannungsfelder sammeln').getByLabel('Dauer')
+    await duration.fill('völliger unsinn')
+    await duration.press('Tab')
+
+    // A silently wrong duration shifts every following block and is easy to miss.
+    await expect(duration).toHaveValue('30m')
+    await expect(block(page, 'Einwandintegration')).toContainText('14:50')
+  })
+
+  test('renames a block in place, with no dialog anywhere', async ({ page }) => {
+    const title = block(page, 'Spannungsfelder sammeln').getByLabel('Titel')
+    await title.fill('Spannungsfelder clustern')
+    // Tab from the keyboard, not through the locator: the row's accessible name
+    // is derived from this very input, so the locator stops matching its own
+    // row the moment the value changes. That is correct behaviour -- the name
+    // follows the title -- but it means the handle cannot be re-resolved.
+    await page.keyboard.press('Tab')
+
+    await expect(block(page, 'Spannungsfelder clustern')).toBeVisible()
+    await expect(page.getByRole('dialog')).toHaveCount(0)
+  })
+
+  test('opens the type’s own fields inside the same row', async ({ page }) => {
+    const row = block(page, 'Spannungsfelder sammeln')
+    const toggle = row.getByRole('button', { name: /Mehr Felder/ })
+
+    await expect(toggle).toHaveAttribute('aria-expanded', 'false')
+    await toggle.click()
+
+    await expect(row.getByLabel('Arbeitsauftrag')).toBeVisible()
+    await expect(row.getByLabel('Gruppengröße')).toBeVisible()
+    // Inside the row, not in a panel beside it.
+    await expect(page.getByRole('dialog')).toHaveCount(0)
+  })
+
+  test('keeps the collapsed table calm — the row essentials, not the whole schema', async ({
+    page,
+  }) => {
+    // The guardrail against the agenda turning into a wall of forms.
+    //
+    // What a closed row carries is a decision, not an accident, so it is named
+    // here in full: time, duration, title, the participation format, the
+    // material, and the lock. Everything else the type declares waits behind
+    // "Mehr Felder" -- the long-form task among it.
+    const row = block(page, 'Spannungsfelder sammeln')
+
+    await expect(row.getByLabel('Titel')).toBeVisible()
+    await expect(row.getByLabel('Dauer')).toBeVisible()
+    await expect(row.getByRole('button', { name: /^Sozialform:/ })).toBeVisible()
+    await expect(row.getByLabel('Material hinzufügen')).toBeVisible()
+    await expect(row.getByRole('button', { name: 'Startzeit fixieren' })).toBeAttached()
+
+    await expect(row.getByLabel('Arbeitsauftrag')).toHaveCount(0)
+    await expect(row.getByLabel('Gruppengröße')).toHaveCount(0)
+  })
+
+  test('sets a start time and holds it while the day above it changes', async ({ page }) => {
+    const row = block(page, 'Spannungsfelder sammeln')
+
+    await row.getByRole('button', { name: 'Startzeit fixieren' }).click()
+    await row.getByLabel('Fixierte Startzeit').fill('15:45')
+    await expect(row.getByText('Startzeit fixiert:')).toBeAttached()
+
+    // Read off the field, not off the row's text: a pinned row being edited
+    // carries its start time ONCE, in the input that sets it. Printing it
+    // beside the input as well would read as two separate facts.
+    await expect(row.getByLabel('Fixierte Startzeit')).toHaveValue('15:45')
+
+    // Stretching a block above it must not move it. The conflict is reported
+    // instead -- silently absorbing an overrun is how a plan stops being true.
+    const earlier = block(page, 'Druckpunkte').getByLabel('Dauer')
+    await earlier.fill('3h')
+    await earlier.blur()
+
+    await expect(row.getByLabel('Fixierte Startzeit')).toHaveValue('15:45')
+    await expect(row).toContainText('Überschneidet den vorherigen Block')
+
+    await page.reload()
+    await expect(
+      block(page, 'Spannungsfelder sammeln').getByLabel('Fixierte Startzeit'),
+    ).toHaveValue('15:45')
+  })
+
+  test('keeps a material that was typed into the row', async ({ page }) => {
+    const row = block(page, 'Spannungsfelder sammeln')
+
+    await row.getByLabel('Material hinzufügen').fill('Moderationskoffer')
+    await row.getByLabel('Material hinzufügen').press('Enter')
+    await expect(row).toContainText('Moderationskoffer')
+
+    await page.reload()
+    await expect(block(page, 'Spannungsfelder sammeln')).toContainText('Moderationskoffer')
   })
 })

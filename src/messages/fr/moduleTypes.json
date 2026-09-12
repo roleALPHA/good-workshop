@@ -1,0 +1,195 @@
+{
+  "groups": {
+    "Ablauf": "Déroulé",
+    "Inhalt": "Contenu",
+    "Moderation": "Animation",
+    "Vorbereitung": "Préparation",
+    "_default": "Autres informations"
+  },
+  "fields": {
+    "activity": {
+      "title": "Activité"
+    },
+    "agenda_overview": {
+      "title": "Aperçu du programme"
+    },
+    "catering_note": {
+      "title": "Restauration"
+    },
+    "deadline_field": {
+      "title": "Noter les échéances"
+    },
+    "debrief": {
+      "title": "Débriefing"
+    },
+    "deliverable": {
+      "title": "Livrable"
+    },
+    "description": {
+      "title": "Description"
+    },
+    "facilitator_notes": {
+      "title": "Notes d'animation",
+      "description": "Visible pour toi seulement, pas dans l'export participants."
+    },
+    "format": {
+      "title": "Format",
+      "enum": {
+        "round": "Tour de table",
+        "popcorn": "Popcorn",
+        "written": "Par écrit",
+        "temperature": "Météo du groupe",
+        "pairs": "En binôme"
+      }
+    },
+    "group_size": {
+      "title": "Taille des groupes"
+    },
+    "individual_first": {
+      "title": "D'abord seul, puis en commun"
+    },
+    "instructions": {
+      "title": "Consignes"
+    },
+    "key_points": {
+      "title": "Messages clés"
+    },
+    "materials": {
+      "title": "Matériel",
+      "help": "Tout ce qui doit être sur la table"
+    },
+    "method": {
+      "title": "Méthode",
+      "enum": {
+        "dot_voting": "Vote par gommettes",
+        "fist_of_five": "Fist of Five",
+        "consent": "Consentement",
+        "majority": "Majorité"
+      }
+    },
+    "method_url": {
+      "title": "Description de la méthode"
+    },
+    "number_of_groups": {
+      "title": "Nombre de groupes"
+    },
+    "options": {
+      "title": "Options"
+    },
+    "owner_field": {
+      "title": "Noter les responsables"
+    },
+    "participation": {
+      "title": "Format",
+      "enum": {
+        "plenary": "Plénière",
+        "small_groups": "Petits groupes",
+        "pairs": "Binômes",
+        "individual": "Individuel",
+        "none": "aucun"
+      }
+    },
+    "presenter": {
+      "title": "Intervenant·e"
+    },
+    "prompt": {
+      "title": "Question d'ouverture"
+    },
+    "question": {
+      "title": "Question directrice"
+    },
+    "room_setup": {
+      "title": "Disposition de la salle"
+    },
+    "slides_url": {
+      "title": "Diapositives"
+    },
+    "space_needed": {
+      "title": "Espace nécessaire",
+      "enum": {
+        "seated": "Assis",
+        "standing": "Debout",
+        "room": "Toute la salle",
+        "outdoor": "Dehors"
+      }
+    },
+    "task": {
+      "title": "Consigne de travail"
+    },
+    "timebox_per_person_seconds": {
+      "title": "Temps par personne (sec.)"
+    }
+  },
+  "types": {
+    "admin": {
+      "name": "Accueil & organisation",
+      "description": "Arrivée, déroulé, règles du jeu."
+    },
+    "break": {
+      "name": "Pause",
+      "description": ""
+    },
+    "buffer": {
+      "name": "Marge",
+      "description": ""
+    },
+    "check_in": {
+      "name": "Check-in",
+      "description": "Chacun·e prend la parole une fois."
+    },
+    "check_out": {
+      "name": "Check-out",
+      "description": "",
+      "fields": {
+        "prompt": {
+          "title": "Question de clôture"
+        }
+      }
+    },
+    "decision": {
+      "name": "Décision / vote",
+      "description": ""
+    },
+    "discussion": {
+      "name": "Discussion en plénière",
+      "description": ""
+    },
+    "energizer": {
+      "name": "Energizer",
+      "description": ""
+    },
+    "exercise": {
+      "name": "Exercice",
+      "description": ""
+    },
+    "group_work": {
+      "name": "Travail en groupe",
+      "description": ""
+    },
+    "lunch": {
+      "name": "Déjeuner",
+      "description": ""
+    },
+    "next_steps": {
+      "name": "Prochaines étapes",
+      "description": ""
+    },
+    "note": {
+      "name": "Note",
+      "description": ""
+    },
+    "presentation": {
+      "name": "Apport / présentation",
+      "description": ""
+    },
+    "reflection": {
+      "name": "Réflexion",
+      "description": "",
+      "fields": {
+        "prompt": {
+          "title": "Question de réflexion"
+        }
+      }
+    }
+  }
+}

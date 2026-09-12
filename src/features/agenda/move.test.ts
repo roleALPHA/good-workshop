@@ -15,6 +15,7 @@ function doc(clusters: [string, number][], modules: [string, number, string | nu
     date: null,
     startMinute: 540,
     targetEndMinute: null,
+    desc: {},
     clusters: clusters.map(([id, order]) => ({
       id,
       title: id,
@@ -32,6 +33,7 @@ function doc(clusters: [string, number][], modules: [string, number, string | nu
       durationMinutes: 15,
       pinnedStartMinute: null,
       desc: {},
+      parked: false,
       order,
     })),
     moduleTypes: MODULE_TYPES_BY_ID,
@@ -140,7 +142,9 @@ describe('applyMove', () => {
         ['b', 1, null],
       ],
     )
-    expect(applyMove(d, 'a', { depth: 0, parentId: null, index: -1, valid: false })).toBe(d)
+    expect(
+      applyMove(d, 'a', { depth: 0, parentId: null, index: -1, afterId: null, valid: false }),
+    ).toBe(d)
   })
 
   it('produces gapless orders per parent so repeated moves cannot drift', () => {

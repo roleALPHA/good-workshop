@@ -1,0 +1,1 @@
+ALTER TABLE "module" ADD COLUMN "parked" boolean DEFAULT false NOT NULL;

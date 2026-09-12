@@ -20,9 +20,9 @@ jobs:
     name: Lint & Typecheck
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@fbc6f3992d24b796d5a048ff273f7fcc4a7b6c09 # v5
-      - uses: pnpm/action-setup@b906affcce14559ad1aafd4ab0e942779e9f58b1 # v4
-      - uses: actions/setup-node@a0853c24544627f65ddf259abe73b1d18a591444 # v5
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+      - uses: pnpm/action-setup@ea17c68df8912ef543352723c149a84f56e3d413 # v6.1.0
+      - uses: actions/setup-node@820762786026740c76f36085b0efc47a31fe5020 # v7.0.0
         with:
           node-version: ${{ env.NODE_VERSION }}
           cache: pnpm
@@ -30,35 +30,97 @@ jobs:
       - run: pnpm lint
       - run: pnpm format:check
       - run: pnpm typecheck
+      # The README is part of the product: it is the only channel through which
+      # an operator learns what to set. This step does not check whether its
+      # sentences are true, but the couplings along which it has quietly gone
+      # wrong before -- a documented variable that reaches no container, a
+      # command that no longer exists.
+      - name: Documentation and code agree
+        run: pnpm check:docs
 
   unit:
     name: Unit & Component Tests
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@fbc6f3992d24b796d5a048ff273f7fcc4a7b6c09 # v5
-      - uses: pnpm/action-setup@b906affcce14559ad1aafd4ab0e942779e9f58b1 # v4
-      - uses: actions/setup-node@a0853c24544627f65ddf259abe73b1d18a591444 # v5
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+      - uses: pnpm/action-setup@ea17c68df8912ef543352723c149a84f56e3d413 # v6.1.0
+      - uses: actions/setup-node@820762786026740c76f36085b0efc47a31fe5020 # v7.0.0
         with:
           node-version: ${{ env.NODE_VERSION }}
           cache: pnpm
       - run: pnpm install --frozen-lockfile
       - run: pnpm test:coverage
-      - uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4
+      - uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
         if: always()
         with:
           name: coverage
           path: coverage/
           retention-days: 7
 
+  db:
+    name: Schema & Tenant Isolation
+    runs-on: ubuntu-latest
+    services:
+      postgres:
+        image: postgres:17-alpine
+        env:
+          POSTGRES_DB: goodworkshop
+          POSTGRES_USER: postgres
+          # No password anywhere, on purpose: the port is only reachable from
+          # this job's network namespace, and a secret that does not exist
+          # cannot leak into a log or an artifact.
+          POSTGRES_HOST_AUTH_METHOD: trust
+        ports: ['5433:5432']
+        options: >-
+          --health-cmd "pg_isready -U postgres -d goodworkshop"
+          --health-interval 3s --health-timeout 3s --health-retries 20
+    env:
+      ADMIN_DATABASE_URL: postgres://postgres@127.0.0.1:5433/goodworkshop
+      MIGRATION_DATABASE_URL: postgres://gw_owner@127.0.0.1:5433/goodworkshop
+      DATABASE_URL: postgres://gw_app@127.0.0.1:5433/goodworkshop
+      OPS_DATABASE_URL: postgres://gw_ops@127.0.0.1:5433/goodworkshop
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+      - uses: pnpm/action-setup@ea17c68df8912ef543352723c149a84f56e3d413 # v6.1.0
+      - uses: actions/setup-node@820762786026740c76f36085b0efc47a31fe5020 # v7.0.0
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+          cache: pnpm
+      - run: pnpm install --frozen-lockfile
+
+      - name: Bootstrap roles
+        run: pnpm db:bootstrap
+      # The same order as in compose.yaml: read and stop first, then write.
+      # Having the step here keeps it exercised even when nobody builds the
+      # image.
+      - name: Preflight
+        run: pnpm db:preflight
+      - name: Apply migrations
+        run: pnpm db:migrate
+      - name: Provision built-in module types
+        run: pnpm db:provision
+      # Provisioning runs on every boot in production, so "runs twice without
+      # changing anything" is a property worth checking, not assuming.
+      - name: Provisioning is idempotent
+        run: pnpm db:provision
+
+      # The most important job in this workflow. A table shipped without RLS is
+      # a silent, total data leak with no symptom -- no feature breaks, and
+      # every tenant can read every other tenant's rows.
+      - name: Tenant isolation and auth
+        run: pnpm test:db
+        env:
+          GW_APP_URL: http://localhost:3000
+
   build:
     name: Docker Build
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@fbc6f3992d24b796d5a048ff273f7fcc4a7b6c09 # v5
-      - uses: docker/setup-buildx-action@8d2750c68a42422c14e847fe6c8ac0403b4cbd6f # v3
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+      - uses: docker/setup-buildx-action@37fe631027851001ddb9b187196cc803df7f5f0e # v4.3.0
       # Deliberately --load without a push: a broken Dockerfile has to surface
       # in the PR that broke it, not weeks later when someone cuts a tag.
-      - uses: docker/build-push-action@10e90e3645eae34f1e60eeb005ba3a3d33f178e8 # v6
+      - uses: docker/build-push-action@53b7df96c91f9c12dcc8a07bcb9ccacbed38856a # v7.3.0
         with:
           context: .
           load: true
@@ -66,21 +128,172 @@ jobs:
           tags: goodworkshop:ci
           cache-from: type=gha
           cache-to: type=gha,mode=max
+      # Deliberately WITHOUT a database. This step is about the image -- does
+      # the standalone bundle boot with every file it needs -- and the schema
+      # is proven against a real Postgres by the `db` job. Two things are
+      # asserted, and the second is the interesting one: the health endpoint
+      # must fail CLOSED rather than crash or, worse, cheerfully answer 200
+      # while it cannot reach anything.
       - name: Smoke test the image
         run: |
-          docker run -d --name gw-ci -p 3000:3000 goodworkshop:ci
-          for i in $(seq 1 30); do
-            if [ "$(curl -s -o /dev/null -w '%{http_code}' http://localhost:3000/api/health)" = "200" ]; then
-              echo "healthy after ${i}s"
-              curl -s http://localhost:3000/api/health
-              docker rm -f gw-ci
-              exit 0
+          docker run -d --name gw-ci -p 3000:3000 \
+            -e GW_APP_URL=http://localhost:3000 goodworkshop:ci
+
+          # Gewartet wird auf /api/health, und zwar auf IRGENDEINE Antwort.
+          # Ohne Datenbank rendert keine Seite dieser Anwendung mehr -- die
+          # Startseite leitet auf die Bibliothek, und die braucht eine. Der
+          # Endpunkt antwortet trotzdem, und genau das ist die Frage dieses
+          # Jobs: bootet das Standalone-Bundle mit allen Dateien, die es
+          # braucht, und liefert es aus.
+          ready=
+          for i in $(seq 1 40); do
+            if curl -s -o /dev/null http://localhost:3000/api/health; then
+              echo "serving after ${i}s"
+              ready=1
+              break
             fi
             sleep 1
           done
-          echo "::error::Container never became healthy"
-          docker logs gw-ci
-          exit 1
+
+          if [ -z "$ready" ]; then
+            echo "::error::Der Container antwortet nicht auf /api/health"
+            docker logs gw-ci
+            docker rm -f gw-ci
+            exit 1
+          fi
+
+          status=$(curl -s -o /tmp/health.json -w '%{http_code}' http://localhost:3000/api/health)
+          cat /tmp/health.json
+          docker rm -f gw-ci
+
+          if [ "$status" != "503" ]; then
+            echo "::error::Ohne Datenbank muss der Healthcheck 503 melden, war: $status"
+            exit 1
+          fi
+          grep -q '"name":"database","ok":false' /tmp/health.json || {
+            echo "::error::Der Healthcheck nennt die Datenbank nicht als Ursache"
+            exit 1
+          }
+
+  # THE ROUTE AN OPERATOR ACTUALLY TAKES.
+  #
+  # Every other job talks to a database the runner started, with `trust` and
+  # over TCP. Which left compose.yaml untested -- and that is exactly where two
+  # faults sat that made every fresh installation unusable: the Postgres
+  # entrypoint does not initialise at all without a password or `trust`, and
+  # peer authentication across the container boundary can never match, because
+  # the app container's uid belongs to nobody in the database container.
+  #
+  # This job would have reported both on the day it was written.
+  compose:
+    name: On-prem stack
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+      - uses: docker/setup-buildx-action@37fe631027851001ddb9b187196cc803df7f5f0e # v4.3.0
+      - uses: docker/build-push-action@53b7df96c91f9c12dcc8a07bcb9ccacbed38856a # v7.3.0
+        with:
+          context: .
+          load: true
+          push: false
+          tags: ghcr.io/rolealpha/good-workshop:ci
+          cache-from: type=gha
+          cache-to: type=gha,mode=max
+
+      - name: .env wie in der Anleitung
+        run: |
+          cat > .env <<'ENV'
+          GW_VERSION=ci
+          GW_APP_URL=http://127.0.0.1:3000
+          GW_MAIL_TRANSPORT=console
+          GW_OPS_TOKEN=ci-token
+          GW_BOOTSTRAP_ADMIN_EMAIL=ci@example.test
+          ENV
+
+      # Without --profile tls, and that is deliberate: the proxy needs a publicly
+      # resolving hostname, which a runner does not have. It therefore also
+      # checks that an `up` without the profile does not fail on a value only the
+      # proxy needs -- which it once did.
+      - name: Bring the stack up
+        run: docker compose up -d --wait --wait-timeout 180
+
+      - name: The startup chain did what it promises
+        run: |
+          docker compose logs migrate
+          for expected in "Bootstrap complete" "Preflight" "Migrations applied" "Provisioned"; do
+            docker compose logs migrate | grep -q "$expected" || {
+              echo "::error::The startup chain is missing: $expected"
+              exit 1
+            }
+          done
+
+      - name: Healthcheck
+        run: |
+          curl -fsS --retry 10 --retry-delay 2 --retry-all-errors             http://127.0.0.1:3000/api/health > /tmp/health.json
+          cat /tmp/health.json
+          grep -q '"status":"ok"' /tmp/health.json || {
+            echo "::error::The stack does not report healthy"
+            exit 1
+          }
+          # GW_OPS_TOKEN and GW_VERSION have to reach the container. Both were
+          # once in the instructions without being passed through.
+          curl -fsS -H 'x-ops-token: ci-token' http://127.0.0.1:3000/api/health > /tmp/ops.json
+          grep -q '"version":"ci"' /tmp/ops.json || {
+            echo "::error::The verbose healthcheck does not report the version from the .env"
+            cat /tmp/ops.json
+            exit 1
+          }
+
+      # Of the DATABASE ROLES the web container may know gw_app and nothing
+      # else. Were the superuser password in there too, the separation of roles
+      # that RLS and NOINHERIT build on would be worth one line.
+      #
+      # `app` belongs there and is not a role: that is the key with which the
+      # application decrypts the credentials entered in the interface. Which is
+      # why the exact list is checked here rather than "only one" -- a further
+      # entry should stand out.
+      - name: The app container knows only its own role
+        run: |
+          # `xargs` with no arguments: trims and joins with single spaces, so the
+          # comparison does not fail on a \r or a trailing space.
+          secrets=$(docker compose exec -T app ls /run/db-secrets | tr -d '\r' | sort | xargs)
+          echo "app sieht: $secrets"
+          [ "$secrets" = "app gw_app" ] || {
+            echo "::error::Der App-Container sieht etwas anderes als 'app gw_app': $secrets"
+            exit 1
+          }
+          if docker compose exec -T app node -e "
+            const pg = require('pg')
+            new pg.Client({ connectionString: 'postgres://postgres@db:5432/goodworkshop' })
+              .connect().then(() => process.exit(0)).catch(() => process.exit(1))"; then
+            echo "::error::Der App-Container konnte sich als postgres verbinden"
+            exit 1
+          fi
+
+      # The regression that lost an installation on the SECOND start: the first
+      # `up` succeeded, the second did not.
+      - name: A second up changes nothing
+        run: |
+          docker compose up -d --wait --wait-timeout 180
+          docker compose logs migrate | grep -q "Migrations applied" || {
+            echo "::error::The second start did not come through cleanly"
+            docker compose logs migrate
+            exit 1
+          }
+          curl -fsS http://127.0.0.1:3000/api/health | grep -q '"status":"ok"'
+
+      - name: The documented backup works
+        run: |
+          docker compose exec -T -u postgres db pg_dump goodworkshop > /tmp/dump.sql
+          grep -q 'CREATE TABLE' /tmp/dump.sql || {
+            echo "::error::The dump contains no schema"
+            exit 1
+          }
+
+      - if: ${{ failure() }}
+        run: docker compose logs
+      - if: ${{ always() }}
+        run: docker compose down -v
 
   e2e:
     name: E2E (shard ${{ matrix.shard }}/2)
@@ -89,10 +302,30 @@ jobs:
       fail-fast: false
       matrix:
         shard: [1, 2]
+    # The authenticated half of the suite is the only thing that can prove the
+    # editor persists anything -- everything else happens in memory. Without a
+    # database those tests skip themselves, which would be a quiet way to stop
+    # testing the feature the product exists for.
+    services:
+      postgres:
+        image: postgres:17-alpine
+        env:
+          POSTGRES_DB: goodworkshop
+          POSTGRES_USER: postgres
+          POSTGRES_HOST_AUTH_METHOD: trust
+        ports: ['5433:5432']
+        options: >-
+          --health-cmd "pg_isready -U postgres -d goodworkshop"
+          --health-interval 3s --health-timeout 3s --health-retries 20
+    env:
+      ADMIN_DATABASE_URL: postgres://postgres@127.0.0.1:5433/goodworkshop
+      MIGRATION_DATABASE_URL: postgres://gw_owner@127.0.0.1:5433/goodworkshop
+      DATABASE_URL: postgres://gw_app@127.0.0.1:5433/goodworkshop
+      GW_APP_URL: http://127.0.0.1:3210
     steps:
-      - uses: actions/checkout@fbc6f3992d24b796d5a048ff273f7fcc4a7b6c09 # v5
-      - uses: pnpm/action-setup@b906affcce14559ad1aafd4ab0e942779e9f58b1 # v4
-      - uses: actions/setup-node@a0853c24544627f65ddf259abe73b1d18a591444 # v5
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+      - uses: pnpm/action-setup@ea17c68df8912ef543352723c149a84f56e3d413 # v6.1.0
+      - uses: actions/setup-node@820762786026740c76f36085b0efc47a31fe5020 # v7.0.0
         with:
           node-version: ${{ env.NODE_VERSION }}
           cache: pnpm
@@ -100,13 +333,16 @@ jobs:
 
       - name: Cache Playwright browsers
         id: pw-cache
-        uses: actions/cache@0057852bfaa89a56745cba8c7296529d2fc39830 # v4
+        uses: actions/cache@55cc8345863c7cc4c66a329aec7e433d2d1c52a9 # v6.1.0
         with:
           path: ~/.cache/ms-playwright
           key: playwright-${{ runner.os }}-${{ hashFiles('pnpm-lock.yaml') }}
 
       - name: Install Playwright browsers
         run: pnpm exec playwright install --with-deps chromium
+
+      - name: Prepare the database
+        run: pnpm db:bootstrap && pnpm db:preflight && pnpm db:migrate && pnpm db:provision
 
       # Built as its own step so a compile error is reported as one, and so the
       # suite runs against the standalone output the Docker image ships.
@@ -115,8 +351,14 @@ jobs:
       - run: pnpm exec playwright test --shard=${{ matrix.shard }}/2
         env:
           E2E_SKIP_BUILD: '1'
+          # The collaboration server runs alongside the app; without it a
+          # signed-in editor has nowhere to write.
+          GW_COLLAB_PORT: '3211'
+          # Each shard signs in as its own account, so two runners cannot fight
+          # over one session.
+          E2E_EMAIL: e2e-shard-${{ matrix.shard }}@example.test
 
-      - uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4
+      - uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
         if: ${{ !cancelled() }}
         with:
           name: playwright-report-shard-${{ matrix.shard }}

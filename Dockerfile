@@ -6,10 +6,15 @@
 # Run:    docker run -p 3000:3000 goodworkshop
 #
 # No secret ever enters an ARG or a layer. Everything the app needs at runtime
-# (DATABASE_URL, AUTH_SECRET, GW_APP_URL, ...) arrives as an environment
-# variable when the container starts.
+# (DATABASE_URL, GW_APP_URL, SMTP_URL, ...) arrives as an environment variable
+# when the container starts.
+#
+# There is no AUTH_SECRET, despite what this comment used to say. Sessions are
+# rows in Postgres with a per-session random secret, not signed tokens, so
+# there is no signing key -- and naming one told operators they had taken a
+# precaution that does not exist.
 
-ARG NODE_VERSION=22-alpine
+ARG NODE_VERSION=22-alpine@sha256:c610fcdfb1d5b4740dd70c284ed3cb16bb857e0f7166196e36a5501df7a3aa32
 
 # --- deps -------------------------------------------------------------------
 FROM node:${NODE_VERSION} AS deps
@@ -48,12 +53,32 @@ COPY --from=builder --chown=node:node /app/.next/standalone ./
 COPY --from=builder --chown=node:node /app/.next/static ./.next/static
 COPY --from=builder --chown=node:node /app/public ./public
 
+# The operational half of the image: migrations, provisioning and the CLI that
+# gets an operator in when there is neither HTTPS nor SMTP. Without these the
+# container serves pages but cannot set up or repair its own database.
+COPY --from=builder --chown=node:node /app/scripts ./scripts
+COPY --from=builder --chown=node:node /app/drizzle ./drizzle
+COPY --from=builder --chown=node:node /app/src/domain/moduleType/builtins.json ./src/domain/moduleType/builtins.json
+
+# `output: standalone` traces only what the SERVER imports. The scripts pull in
+# the migrator, which no route touches, so it would be traced away.
+COPY --from=deps --chown=node:node /app/node_modules/drizzle-orm ./node_modules/drizzle-orm
+
+# The collaboration server. Bundled separately because nothing a route imports
+# reaches it, so Next's output tracing would leave it out entirely -- and it
+# runs in THIS image rather than a second one, so an on-prem install stays
+# "one image plus Postgres".
+COPY --from=builder --chown=node:node /app/dist ./dist
+COPY --from=deps --chown=node:node /app/node_modules/ws ./node_modules/ws
+
 USER node
-EXPOSE 3000
+EXPOSE 3000 3001
 
 # Fail-closed: a non-2xx or an unreachable server marks the container unhealthy
 # instead of letting a load balancer keep sending traffic to it.
 HEALTHCHECK --interval=30s --timeout=5s --start-period=20s --retries=3 \
   CMD node -e "fetch('http://127.0.0.1:'+(process.env.PORT||3000)+'/api/health').then(r=>process.exit(r.ok?0:1)).catch(()=>process.exit(1))"
 
-CMD ["node", "server.js"]
+# Both processes, one container. See scripts/start-container.mjs for why there
+# is no supervisor.
+CMD ["node", "scripts/start-container.mjs"]

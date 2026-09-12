@@ -57,6 +57,14 @@ export function flattenDay(doc: DayDoc, ui: FlattenUiState = {}): FlatRow[] {
   const dayLevel: DayLevelEntry[] = []
 
   for (const mod of doc.modules) {
+    // Parked blocks are in the day but not in its schedule: they keep their
+    // type and duration and simply stop counting towards the clock. Excluded
+    // HERE rather than in each caller, because every consumer of these rows --
+    // the table, the export, the running totals, the print view -- wants the
+    // same answer, and one that forgot would silently show a plan that does not
+    // add up.
+    if (mod.parked) continue
+
     if (mod.clusterId === null) {
       dayLevel.push({ kind: 'module', order: mod.order, module: mod })
     } else {

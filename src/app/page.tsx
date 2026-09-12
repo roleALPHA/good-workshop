@@ -1,43 +1,21 @@
-import { AgendaSummary } from '@/components/agenda/agenda-summary'
-import { AgendaSurface } from '@/components/agenda/agenda-surface'
-import { CategoryLegend } from '@/components/agenda/category-legend'
-import { AppFooter } from '@/components/layout/app-footer'
-import { computeSchedule } from '@/domain/schedule/computeSchedule'
-import { createDemoDay } from '@/features/agenda/fixtures/day-fixture'
-import { flattenDay, toScheduleItems } from '@/features/agenda/flatten'
+import { redirect } from 'next/navigation'
+import { needsSetup } from '@/server/settings/setup'
 
 /**
- * Preview of the agenda while persistence is being built. Renders the demo
- * fixture through exactly the pipeline the real editor uses:
- *   DayDoc -> flattenDay -> computeSchedule -> withGapRows -> rows
+ * The address somebody types is the one they expect to get in through.
  *
- * Edits live in client state only -- there is no database yet, so a reload
- * brings the fixture back.
+ * Three destinations, in the order they become true: an installation nobody has
+ * claimed yet goes to /setup, everything else to /library -- which sends a
+ * visitor without a session on to /login itself, so there is no second session
+ * check here that could drift from the first.
  */
-export default function HomePage() {
-  const doc = createDemoDay()
-  const rows = flattenDay(doc)
-  const schedule = computeSchedule(doc.startMinute, toScheduleItems(rows))
+export const dynamic = 'force-dynamic'
 
-  return (
-    <div className="flex min-h-dvh flex-col">
-      <main className="mx-auto w-full max-w-5xl flex-1 px-0 py-8 md:px-6">
-        <header className="mb-6 px-4 md:px-2">
-          <p className="text-[13px] tracking-wide text-[var(--fg-subtle)] uppercase">
-            Design Sprint Kickoff · {doc.date}
-          </p>
-          <h1 className="mt-1 text-2xl font-semibold tracking-tight">{doc.title}</h1>
-          <div className="mt-2">
-            <AgendaSummary doc={doc} schedule={schedule} />
-          </div>
-          <div className="mt-4">
-            <CategoryLegend doc={doc} />
-          </div>
-        </header>
-
-        <AgendaSurface doc={doc} />
-      </main>
-      <AppFooter />
-    </div>
-  )
+export default async function HomePage() {
+  // A database that is not reachable must not turn the front page into a stack
+  // trace: /library and the health endpoint both report that far better.
+  // Two calls rather than a ternary inside redirect(): typedRoutes checks the
+  // literal, and a union of two routes is not one it can verify.
+  if (await needsSetup().catch(() => false)) redirect('/setup')
+  redirect('/library')
 }

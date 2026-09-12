@@ -1,0 +1,38 @@
+# Postgres for local development and tests.
+#
+# No password, anywhere: `trust` on a port bound exclusively to 127.0.0.1. So
+# locally there is no secret that could end up in a .env, slip into a log or
+# travel into a backup.
+#
+# In production the Unix socket with peer authentication is used instead (see
+# compose.yaml) -- `trust` over TCP would be negligent there.
+services:
+  db:
+    image: postgres:17-alpine
+    container_name: goodworkshop-dev-db
+    environment:
+      POSTGRES_DB: goodworkshop
+      POSTGRES_USER: postgres
+      POSTGRES_HOST_AUTH_METHOD: trust
+    ports:
+      - '127.0.0.1:5433:5432'
+    volumes:
+      - dev-pgdata:/var/lib/postgresql/data
+    healthcheck:
+      test: ['CMD-SHELL', 'pg_isready -U postgres -d goodworkshop']
+      interval: 3s
+      timeout: 3s
+      retries: 20
+
+  # Catches sign-in links while no real mail delivery is configured. Here rather
+  # than in compose.yaml: a web interface with no authentication at all that
+  # shows every sign-in link has no business in the file for production use --
+  # not even behind a profile somebody passes by accident one day.
+  mailpit:
+    image: axllent/mailpit
+    restart: unless-stopped
+    ports:
+      - '127.0.0.1:8025:8025'
+
+volumes:
+  dev-pgdata:

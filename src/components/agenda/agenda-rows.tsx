@@ -1,12 +1,23 @@
 import type { CSSProperties, ReactNode } from 'react'
+import { ChevronDown, Inbox, NotebookPen, Trash2 } from 'lucide-react'
 import type { ClusterDto, ModuleDto, ModuleTypeDto } from '@/domain/agenda/types'
+import type { Peer } from '@/features/agenda/document'
 import type { Schedule, ScheduleEntry } from '@/domain/schedule/types'
+import { setDescField, stringList } from '@/domain/moduleType/desc'
+import { findField, parseSchema, summaryChips } from '@/domain/moduleType/profile'
+import type { SummaryChip } from '@/domain/moduleType/profile'
 import { formatDuration, formatTime } from '@/features/agenda/duration'
 import { catClass } from '@/lib/category-colors'
 import { cn } from '@/lib/cn'
 import { isRichTextValue } from '@/lib/richtext/schema'
+import { toPlainText } from '@/lib/richtext/plain'
 import { RichText } from '@/lib/richtext/render'
+import { ChipsInput } from './chips-input'
+import { ParticipationBadge, ParticipationControl } from './participation-control'
+import { PeerMarks } from './presence'
+import { TitleInput } from './inline-inputs'
 import { OverlapWarning, TimeCell } from './time-cell'
+import { useLocale, useTranslations } from 'next-intl'
 
 /**
  * The agenda, rendered from a flat row list.
@@ -18,7 +29,7 @@ import { OverlapWarning, TimeCell } from './time-cell'
  * (`break-inside: avoid`).
  *
  * Below `md` the grid is dropped entirely and rows become cards -- see
- * .claude/skills/goodworkshop-ui: the reading view on a phone is the most-used
+ * docs/ui-conventions.md: the reading view on a phone is the most-used
  * screen of this product per workshop, and a horizontally scrolling table is
  * not a reading view.
  */
@@ -34,6 +45,28 @@ export const GRID = 'md:grid md:grid-cols-[var(--gw-cols)] md:items-stretch'
  * pile of buttons. They belong on the handle, which is a button anyway. That
  * also stops every click inside a description from starting a drag.
  */
+/**
+ * Turns a row from a rendering into a place you can work.
+ *
+ * Passed only by the editor; the print view and the phone reading view leave it
+ * out and get the same markup, read-only. See the inline-editing rule in
+ * docs/ui-conventions.md.
+ */
+export type RowEditing = {
+  onTitleChange: (title: string) => void
+  onDurationChange: (minutes: number) => void
+  onDescChange: (desc: Record<string, unknown>) => void
+  /** Nails the block to a wall-clock time, or lets it float again. */
+  onPinChange: (minute: number | null) => void
+  expanded: boolean
+  /** Sets the block aside without deleting it. Absent where parking is not offered. */
+  onPark?: () => void
+  /** Removes it for good. Absent for readers. */
+  onRemove?: () => void
+  onToggleExpanded: () => void
+  details?: ReactNode
+}
+
 export type RowChrome = {
   rootRef?: (el: HTMLElement | null) => void
   style?: CSSProperties
@@ -42,10 +75,13 @@ export type RowChrome = {
   isDragging?: boolean
   /** Set while a drag would land inside this cluster. */
   isDropTarget?: boolean
+  /** Who else has this row focused right now. */
+  presence?: Peer[]
 }
 
 /** Hidden on phones: the card layout carries its own labels. */
 export function HeaderRow() {
+  const t = useTranslations('agenda')
   return (
     <div
       className={cn(
@@ -54,10 +90,10 @@ export function HeaderRow() {
       )}
     >
       <span />
-      <span className="px-2">Zeit</span>
+      <span className="px-2">{t('columns.time')}</span>
       <span />
-      <span className="px-3">Titel und Beschreibung</span>
-      <span className="px-3">Zusatzinfo</span>
+      <span className="px-3">{t('columns.titleAndDescription')}</span>
+      <span className="px-3">{t('columns.info')}</span>
       <span />
     </div>
   )
@@ -69,15 +105,28 @@ export function ModuleRow({
   entry,
   nested,
   chrome,
+  editing,
 }: {
   module: ModuleDto
   type: ModuleTypeDto | undefined
   entry: ScheduleEntry
   nested: boolean
   chrome?: RowChrome
+  editing?: RowEditing
 }) {
+  const t = useTranslations('agenda')
   const description = isRichTextValue(mod.desc.description) ? mod.desc.description : null
-  const info = additionalInfo(mod)
+
+  const groups = parseSchema(type?.jsonSchema)
+  const participation = findField(groups, 'participation')
+  const materials = stringList(mod.desc.materials)
+  // Material has its own control in the editor, so it must not also arrive as
+  // a read-only chip beside it.
+  const info = summaryChips(groups, mod.desc, editing ? ['materials'] : [])
+  const hasNotes = hasFacilitatorNotes(mod)
+
+  const writeDesc = (key: string, value: unknown) =>
+    editing?.onDescChange(setDescField(mod.desc, key, value))
 
   const titleId = `module-title-${mod.id}`
 
@@ -86,6 +135,7 @@ export function ModuleRow({
       ref={chrome?.rootRef}
       style={chrome?.style}
       aria-labelledby={titleId}
+      data-block-id={mod.id}
       className={cn(
         catClass(type?.color),
         'group relative break-inside-avoid border-b border-[var(--border)]',
@@ -94,6 +144,7 @@ export function ModuleRow({
       )}
     >
       {chrome?.handle}
+      {chrome?.presence ? <PeerMarks peers={chrome.presence} /> : null}
       {/* Phone: the category bar is the card's left edge. */}
       <span
         aria-hidden
@@ -104,7 +155,28 @@ export function ModuleRow({
       <span className="hidden md:block" />
 
       <div className={cn('pt-3 pb-3 pl-4 md:px-2 md:pl-2', nested && 'pl-7 md:pl-2')}>
-        <TimeCell entry={entry} />
+        <TimeCell
+          entry={entry}
+          editing={editing && { ...editing, pinnedStartMinute: mod.pinnedStartMinute }}
+        >
+          {participation &&
+            (editing ? (
+              <ParticipationControl
+                field={participation}
+                value={
+                  typeof mod.desc.participation === 'string' ? mod.desc.participation : undefined
+                }
+                onChange={(value) => writeDesc('participation', value)}
+              />
+            ) : (
+              <ParticipationBadge
+                field={participation}
+                value={
+                  typeof mod.desc.participation === 'string' ? mod.desc.participation : undefined
+                }
+              />
+            ))}
+        </TimeCell>
       </div>
 
       <span className="hidden md:block" />
@@ -115,23 +187,135 @@ export function ModuleRow({
           nested && 'pl-7 md:ml-7 md:pl-3',
         )}
       >
-        <h3 id={titleId} className="font-semibold text-[var(--fg)]">
-          {mod.title}
-        </h3>
+        {editing ? (
+          <h3 id={titleId}>
+            <TitleInput value={mod.title} onCommit={editing.onTitleChange} />
+          </h3>
+        ) : (
+          <h3 id={titleId} className="font-semibold text-[var(--fg)]">
+            {mod.title}
+          </h3>
+        )}
         {type && <p className="mt-0.5 text-[13px] text-[var(--cat-fg)] md:hidden">{type.name}</p>}
         {description && (
           <RichText value={description} className="mt-1 text-[15px] text-[var(--fg-muted)]" />
         )}
         {entry.conflict?.kind === 'overlap' && <OverlapWarning minutes={entry.conflict.minutes} />}
+
+        {editing && (
+          <>
+            <div className="flex flex-wrap items-center gap-1">
+              <button
+                type="button"
+                onClick={editing.onToggleExpanded}
+                aria-expanded={editing.expanded}
+                aria-controls={`details-${mod.id}`}
+                className="mt-1.5 -ml-1 inline-flex items-center gap-1 rounded px-1 py-0.5 text-[13px] text-[var(--fg-muted)] hover:bg-[var(--surface-raised)]"
+              >
+                <ChevronDown
+                  aria-hidden
+                  className={cn('size-3.5 transition-transform', editing.expanded && 'rotate-180')}
+                />
+                {editing.expanded ? t('fewerFields') : t('moreFields')}
+              </button>
+
+              {/*
+                Editor only. The field is the facilitator's own ("nur für
+                dich"), and AgendaTable is the surface a participant is handed
+                -- a marker there would announce that private notes exist.
+              */}
+              {hasNotes && !editing.expanded && (
+                <button
+                  type="button"
+                  onClick={editing.onToggleExpanded}
+                  aria-controls={`details-${mod.id}`}
+                  aria-expanded={editing.expanded}
+                  title={t('notes')}
+                  aria-label={t('notes')}
+                  className="mt-1.5 inline-flex items-center rounded px-1 py-0.5 text-[var(--fg-subtle)] hover:bg-[var(--surface-raised)] hover:text-[var(--fg-muted)]"
+                >
+                  <NotebookPen aria-hidden className="size-3.5" />
+                </button>
+              )}
+
+              {editing.onPark && (
+                <button
+                  type="button"
+                  onClick={editing.onPark}
+                  aria-label={t('parkLabel', { title: mod.title })}
+                  title={t('parkHint')}
+                  className="mt-1.5 inline-flex items-center gap-1 rounded px-1 py-0.5 text-[13px] text-[var(--fg-muted)] hover:bg-[var(--surface-raised)]"
+                >
+                  <Inbox aria-hidden className="size-3.5" />
+                  {t('park')}
+                </button>
+              )}
+
+              {editing.onRemove && (
+                <button
+                  type="button"
+                  onClick={editing.onRemove}
+                  aria-label={t('deleteLabel', { title: mod.title })}
+                  title={t('deleteHint')}
+                  className="mt-1.5 inline-flex items-center gap-1 rounded px-1 py-0.5 text-[13px] text-[var(--fg-muted)] hover:bg-[var(--surface-raised)] hover:text-[var(--danger-fg)]"
+                >
+                  <Trash2 aria-hidden className="size-3.5" />
+                  {t('delete')}
+                </button>
+              )}
+            </div>
+          </>
+        )}
       </div>
 
-      <div className={cn('pb-3 pl-4 md:px-3 md:pt-3 md:pl-3', nested && 'pl-7 md:pl-3')}>
+      <div className={cn('space-y-1 pb-3 pl-4 md:px-3 md:pt-3 md:pl-3', nested && 'pl-7 md:pl-3')}>
         {info.length > 0 && <InfoChips items={info} />}
+        {editing && (
+          <ChipsInput
+            values={materials}
+            onChange={(next) => writeDesc('materials', next.length > 0 ? next : undefined)}
+            addLabel={t('materials.add')}
+            removeLabel={(name) => t('materials.remove', { name })}
+            placeholder={t('materials.placeholder')}
+          />
+        )}
       </div>
 
       <span className="hidden md:block" />
+
+      {/*
+        A child of the ROW's grid, spanning all of it, rather than a child of the
+        title cell.
+        Inside that cell the panel was as wide as one column: on a desktop window
+        a full-width text field stopped halfway across while the column beside it
+        stayed empty. The fields lay themselves out on twelve columns, and they
+        can only use them if they are given the width.
+      */}
+      {editing?.expanded && (
+        <div
+          id={`details-${mod.id}`}
+          className={cn(
+            'mb-3 ml-4 rounded border border-[var(--border)] bg-[var(--surface-raised)] p-3',
+            'md:col-span-full md:mr-3 md:ml-3',
+            nested && 'ml-7 md:ml-10',
+          )}
+        >
+          {editing.details}
+        </div>
+      )}
     </article>
   )
+}
+
+/**
+ * What an editor may change about a section header.
+ *
+ * The pin, and nothing else. A section's title and colour are a separate
+ * feature with their own questions; bundling them here is how "the minimal
+ * shape" stops being minimal.
+ */
+export type ClusterEditing = {
+  onPinChange: (minute: number | null) => void
 }
 
 export function ClusterRow({
@@ -139,12 +323,15 @@ export function ClusterRow({
   entry,
   childCount,
   chrome,
+  editing,
 }: {
   cluster: ClusterDto
   entry: ScheduleEntry
   childCount: number
   chrome?: RowChrome
+  editing?: ClusterEditing
 }) {
+  const t = useTranslations('agenda')
   const titleId = `cluster-title-${cluster.id}`
 
   return (
@@ -153,22 +340,37 @@ export function ClusterRow({
       style={chrome?.style}
       role="group"
       aria-labelledby={titleId}
+      // Read by the table's one focus handler to work out which row somebody
+      // is in, so a new field never has to remember to report itself.
+      data-block-id={cluster.id}
       // aria-expanded belongs on the disclosure BUTTON, not on the group it
       // controls -- role="group" does not support it. It moves onto the chevron
       // when that lands, together with aria-controls.
       className={cn(
         catClass(cluster.color ?? 'slate'),
         // Sticky on phones so you always know which section you are reading.
-        'group sticky top-0 z-10 break-inside-avoid border-b border-[var(--border)] bg-[var(--cat-bg)] md:static',
+        // md:relative rather than md:static: unsticky on desktop, but still a
+        // positioning context for the presence mark.
+        'group sticky top-0 z-10 break-inside-avoid border-b border-[var(--border)] bg-[var(--cat-bg)] md:relative',
         chrome?.isDragging && 'opacity-40',
         chrome?.isDropTarget && 'ring-2 ring-[var(--cat-bar)] ring-inset',
       )}
     >
       {chrome?.handle}
+      {chrome?.presence ? <PeerMarks peers={chrome.presence} /> : null}
       <div className={cn('items-center', GRID)}>
         <span className="hidden md:block" />
         <div className="hidden py-2 md:block md:px-2">
-          <TimeCell entry={entry} showDuration={false} />
+          <TimeCell
+            entry={entry}
+            showDuration={false}
+            editing={
+              editing && {
+                onPinChange: editing.onPinChange,
+                pinnedStartMinute: cluster.pinnedStartMinute,
+              }
+            }
+          />
         </div>
         <span className="hidden md:block" />
         <div className="flex items-baseline gap-2 border-l-4 border-[var(--cat-bar)] py-2 pl-3 md:px-3">
@@ -176,9 +378,16 @@ export function ClusterRow({
             {cluster.title}
           </h2>
           <span className="tabular text-[13px] text-[var(--cat-fg)] opacity-80">
-            {childCount} {childCount === 1 ? 'Block' : 'Blöcke'} ·{' '}
+            {t('blockCount', { count: childCount })} ·{' '}
             {formatDuration(entry.durationMinutes, { spaced: true })}
           </span>
+          {/*
+            A section can be pinned too, so it can overrun too. Without this the
+            conflict was computed and then never said out loud.
+          */}
+          {entry.conflict?.kind === 'overlap' && (
+            <OverlapWarning minutes={entry.conflict.minutes} />
+          )}
         </div>
         <span className="hidden md:block" />
         <span className="hidden md:block" />
@@ -192,6 +401,7 @@ export function ClusterRow({
  * would otherwise read as an unexplained jump in the time column.
  */
 export function GapRow({ minutes }: { minutes: number }) {
+  const t = useTranslations('agenda')
   return (
     <div aria-hidden className={cn('items-center', GRID)}>
       <span className="hidden md:block" />
@@ -199,7 +409,7 @@ export function GapRow({ minutes }: { minutes: number }) {
       <span className="hidden md:block" />
       <div className="flex items-center gap-2 py-1.5 pl-4 md:col-span-3 md:pl-3">
         <span className="tabular text-[13px] text-[var(--fg-subtle)]">
-          {formatDuration(minutes, { spaced: true })} Puffer
+          {formatDuration(minutes, { spaced: true })} {t('buffer')}
         </span>
         <span className="h-px flex-1 border-t border-dashed border-[var(--border-strong)]" />
       </div>
@@ -214,30 +424,38 @@ export function EndOfDay({
   schedule: Schedule
   targetEndMinute: number | null
 }) {
+  const locale = useLocale()
+  const t = useTranslations('agenda')
   const over = targetEndMinute !== null ? schedule.dayEndMinute - targetEndMinute : 0
 
   return (
     <p className="tabular flex flex-wrap items-baseline gap-2 px-4 py-3 text-[15px] text-[var(--fg-muted)] md:px-2">
-      <span className="font-medium text-[var(--fg)]">{formatTime(schedule.dayEndMinute)}</span>
-      <span>Ende</span>
+      <span className="font-medium text-[var(--fg)]">
+        {formatTime(schedule.dayEndMinute, locale)}
+      </span>
+      <span>{t('end')}</span>
       {over > 0 && (
         <span className="rounded bg-[var(--warn-bg)] px-1.5 py-0.5 text-[13px] text-[var(--warn-fg)]">
-          {formatDuration(over, { spaced: true })} über Plan
+          {t('overPlan', { duration: formatDuration(over, { spaced: true }) })}
         </span>
       )}
     </p>
   )
 }
 
-function InfoChips({ items }: { items: string[] }) {
+function InfoChips({ items }: { items: SummaryChip[] }) {
   return (
     <ul className="flex flex-wrap gap-1">
       {items.map((item) => (
         <li
-          key={item}
+          key={`${item.key}:${item.text}`}
+          // The field's own name, so a chip reading "Mira" is not a riddle for
+          // anyone using a screen reader.
+          title={item.label}
           className="rounded border border-[var(--border)] bg-[var(--surface)] px-1.5 py-0.5 text-[13px] text-[var(--fg-muted)]"
         >
-          {item}
+          <span className="sr-only">{item.label}: </span>
+          {item.text}
         </li>
       ))}
     </ul>
@@ -245,17 +463,12 @@ function InfoChips({ items }: { items: string[] }) {
 }
 
 /**
- * Only a handful of `desc` fields ever reach the table: the ones a module type
- * flags with `x-gw.summary`. Everything else lives in the inspector. The moment
- * arbitrary schema fields render inline, the product becomes a database admin
- * panel.
+ * Whether there is a facilitator note worth pointing at.
+ *
+ * An empty rich-text document is still a document, so the text has to be
+ * looked at rather than the key.
  */
-function additionalInfo(mod: ModuleDto): string[] {
-  const out: string[] = []
-  const materials = mod.desc.materials
-  if (Array.isArray(materials))
-    out.push(...materials.filter((m): m is string => typeof m === 'string'))
-  if (typeof mod.desc.catering_note === 'string') out.push(mod.desc.catering_note)
-  if (typeof mod.desc.deliverable === 'string') out.push(mod.desc.deliverable)
-  return out
+function hasFacilitatorNotes(mod: ModuleDto): boolean {
+  const notes = mod.desc.facilitator_notes
+  return isRichTextValue(notes) && toPlainText(notes).trim() !== ''
 }

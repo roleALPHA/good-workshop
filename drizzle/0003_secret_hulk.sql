@@ -1,0 +1,2 @@
+ALTER TABLE "tenant" ENABLE ROW LEVEL SECURITY;--> statement-breakpoint
+CREATE POLICY "tenant_self_isolation" ON "tenant" AS PERMISSIVE FOR ALL TO "gw_app" USING (id = (select app.current_tenant())) WITH CHECK (id = (select app.current_tenant()));

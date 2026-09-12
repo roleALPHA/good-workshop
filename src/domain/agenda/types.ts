@@ -21,6 +21,20 @@ export type ModuleTypeDto = {
   defaultDurationMinutes: number
   /** false for break / lunch / buffer -- drives the "5h30 content, 1h15 breaks" split. */
   countsAsContent: boolean
+  /**
+   * The type's own field definitions. Carried on the day document because the
+   * fields are edited in the row itself, not in a panel that could fetch them
+   * separately -- see the inline-editing rule in docs/ui-conventions.md.
+   */
+  jsonSchema?: unknown
+  /**
+   * Which revision of that schema this is.
+   *
+   * Travels with it because compiled validators are cached by (type, version):
+   * a browser that guesses the number keeps validating against the schema it
+   * first saw, and refuses a field an administrator has since added.
+   */
+  schemaVersion?: number
 }
 
 export type ClusterDto = {
@@ -45,6 +59,14 @@ export type ModuleDto = {
   pinnedStartMinute: number | null
   /** Type-specific attributes, validated against the module type's JSON Schema. */
   desc: Record<string, unknown>
+  /**
+   * Set aside: kept with the day, left out of its schedule.
+   *
+   * For the block you prepared and did not use, the one that got cut for time,
+   * the alternative you want to keep within reach. Deleting it is the only
+   * thing that used to be on offer.
+   */
+  parked: boolean
   order: number
 }
 
@@ -56,6 +78,15 @@ export type DayDoc = {
   date: string | null
   startMinute: number
   targetEndMinute: number | null
+  /**
+   * Notes about the day itself: room, travel, who brings what.
+   *
+   * Shaped like a block's description so the two can converge later -- today it
+   * carries `text` and nothing else, which is the field a rich-text document
+   * also keeps alongside its structure. Somewhere to put what belongs to the
+   * day rather than to any one block.
+   */
+  desc: Record<string, unknown>
   clusters: ClusterDto[]
   modules: ModuleDto[]
   moduleTypes: Record<string, ModuleTypeDto>
