@@ -173,7 +173,9 @@ const withSchema = (type: ModuleTypeDto): ModuleTypeDto => {
     DEFAULT_LOCALE,
   )
 
-  return { ...type, jsonSchema: localised.jsonSchema }
+  // Version 1 because that is what the seed writes; carried so the fixture
+  // exercises the same validator cache key the application does.
+  return { ...type, jsonSchema: localised.jsonSchema, schemaVersion: 1 }
 }
 
 export const MODULE_TYPES_BY_ID: Record<string, ModuleTypeDto> = Object.fromEntries(

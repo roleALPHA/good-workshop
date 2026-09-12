@@ -169,6 +169,7 @@ export async function loadDay(
               defaultDurationMinutes: t.defaultDurationMinutes,
               countsAsContent: t.countsAsContent,
               jsonSchema: t.jsonSchema,
+              schemaVersion: t.schemaVersion,
             },
           ]
         }),

@@ -1,6 +1,6 @@
 'use client'
 
-import { useEffect, useMemo, useState } from 'react'
+import { useEffect, useMemo, useRef, useState } from 'react'
 import { useTranslations } from 'next-intl'
 import type { ModuleDto, ModuleTypeDto } from '@/domain/agenda/types'
 import { isVisible, parseSchema } from '@/domain/moduleType/profile'
@@ -16,8 +16,9 @@ import { Field } from './fields'
  * mode between the facilitator and the agenda they are reading, and the whole
  * point of this editor is that the document stays visible while you work on it.
  *
- * The calm of the collapsed table is what makes that affordable. Only four
- * fields show while a row is closed -- time, duration, title, description --
+ * The calm of the collapsed table is what makes that affordable. A closed row
+ * shows only what is consulted while the workshop runs -- time, duration,
+ * title, description, participation format, material, the start-time lock --
  * plus any field the type flags as `summary`. Everything else appears when
  * asked for and folds away again.
  */
@@ -30,26 +31,53 @@ export type ModuleDetailsProps = {
 
 export function ModuleDetails({ module: mod, type, onChange }: ModuleDetailsProps) {
   const t = useTranslations('errors.field')
+  const tAgenda = useTranslations('agenda')
   const [values, setValues] = useState<Record<string, unknown>>(mod.desc)
   const [errors, setErrors] = useState<Record<string, string>>({})
+
+  /**
+   * What `commit` reads, written synchronously by `update`.
+   *
+   * `commit` hangs off the wrapper's blur, and a field that commits on its own
+   * blur -- the tag field does -- speaks during the same bubbling focusout.
+   * State queued by that field has not been applied yet, so a `commit` reading
+   * the render snapshot would write the values from before it spoke and the
+   * document would echo the old value straight back. A ref is the only thing
+   * both handlers can see within one dispatch.
+   */
+  const valuesRef = useRef(mod.desc)
+  /** True while this panel holds an edit the document has not been told about. */
+  const dirtyRef = useRef(false)
 
   const groups = useMemo(() => parseSchema(type?.jsonSchema), [type?.jsonSchema])
 
   // Adopt changes that arrived from elsewhere -- another tab, a collaborator,
-  // an undo -- without discarding what is being typed here.
+  // an undo -- without discarding what is being typed here. `mod.desc` is a
+  // fresh object on every document revision even when nothing in it changed,
+  // so the dirty flag rather than the dependency list is what protects an
+  // edit in progress.
   useEffect(() => {
+    if (dirtyRef.current) return
+    valuesRef.current = mod.desc
     setValues(mod.desc)
   }, [mod.id, mod.desc])
 
+  // A different module in the same panel starts clean, whatever the last one
+  // left behind.
+  useEffect(() => {
+    dirtyRef.current = false
+  }, [mod.id])
+
   function update(key: string, value: unknown) {
-    setValues((current) => {
-      const next = { ...current }
-      // Undefined means "not set". Leaving the key in place with an undefined
-      // value fails `additionalProperties: false` on the way out.
-      if (value === undefined) delete next[key]
-      else next[key] = value
-      return next
-    })
+    const next = { ...valuesRef.current }
+    // Undefined means "not set". Leaving the key in place with an undefined
+    // value fails `additionalProperties: false` on the way out.
+    if (value === undefined) delete next[key]
+    else next[key] = value
+
+    valuesRef.current = next
+    dirtyRef.current = true
+    setValues(next)
 
     setErrors((current) => {
       if (!current[key]) return current
@@ -67,12 +95,18 @@ export function ModuleDetails({ module: mod, type, onChange }: ModuleDetailsProp
    */
   function commit() {
     if (!type) return
+    if (!dirtyRef.current) return
+
+    const pending = valuesRef.current
 
     let result: ReturnType<typeof validateModuleDesc>
     try {
       result = validateModuleDesc(
-        { id: type.id, schemaVersion: 1, jsonSchema: type.jsonSchema },
-        values,
+        // The real version, not a guess: it is half the validator cache's key,
+        // and a wrong one silently validates against a schema that has since
+        // been replaced.
+        { id: type.id, schemaVersion: type.schemaVersion ?? 1, jsonSchema: type.jsonSchema },
+        pending,
       )
     } catch {
       // The validator itself failed -- a schema it cannot compile, or an
@@ -80,7 +114,8 @@ export function ModuleDetails({ module: mod, type, onChange }: ModuleDetailsProp
       // typed something and pressed on; dropping their input on the floor is
       // the one response that is certainly wrong, and it is silent.
       setErrors({})
-      onChange(values)
+      dirtyRef.current = false
+      onChange(pending)
       return
     }
 
@@ -89,11 +124,18 @@ export function ModuleDetails({ module: mod, type, onChange }: ModuleDetailsProp
       // FieldErrorKey, and next-intl's typed signature wants the union of every
       // message's arguments at once. src/i18n/catalogs.test.ts is what checks
       // these keys exist -- in all four languages, which the type cannot.
+      //
+      // Stays dirty on purpose: the value was not handed up, so the document
+      // still holds the old one and must not be allowed to overwrite the text
+      // the person is about to correct.
       setErrors(firstErrorPerField(result.errors, t as unknown as Translate))
       return
     }
 
     setErrors({})
+    // Ajv fills defaults, so what was validated is not always what goes out.
+    valuesRef.current = result.value
+    dirtyRef.current = false
     onChange(result.value)
   }
 
@@ -103,11 +145,7 @@ export function ModuleDetails({ module: mod, type, onChange }: ModuleDetailsProp
   }, [groups, values])
 
   if (groups.length === 0 && orphans.length === 0) {
-    return (
-      <p className="text-[15px] text-[var(--fg-muted)]">
-        Dieser Modultyp hat keine weiteren Felder.
-      </p>
-    )
+    return <p className="text-[15px] text-[var(--fg-muted)]">{tAgenda('noFields')}</p>
   }
 
   return (

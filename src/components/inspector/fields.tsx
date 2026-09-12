@@ -1,5 +1,6 @@
 'use client'
 
+import { useEffect, useMemo, useState } from 'react'
 import type { FieldSpec } from '@/domain/moduleType/profile'
 import { cn } from '@/lib/cn'
 import { RichText } from '@/lib/richtext/render'
@@ -204,7 +205,16 @@ function RichTextField({
   )
 }
 
-/** Comma- or newline-separated entry; chips on the way out. */
+/**
+ * Comma- or newline-separated entry; chips on the way out.
+ *
+ * Controlled, with a local draft, for the same reason TitleInput is: an
+ * uncontrolled box never hears a value that arrives from a collaborator or an
+ * undo. And it commits the draft it is holding rather than leaving the panel's
+ * blur handler to read it out of state later -- React's blur bubbles, so the
+ * panel would commit the snapshot from before this field spoke, and Material
+ * would round-trip back to what it was.
+ */
 function TagsField({
   id,
   value,
@@ -217,7 +227,19 @@ function TagsField({
   className: string
 }) {
   const t = useTranslations('agenda')
-  const items = Array.isArray(value) ? value.filter((v): v is string => typeof v === 'string') : []
+  const items = useMemo(
+    () => (Array.isArray(value) ? value.filter((v): v is string => typeof v === 'string') : []),
+    [value],
+  )
+  const text = items.join(', ')
+  const [draft, setDraft] = useState(text)
+
+  // Adopt a value that changed elsewhere. Keyed on the joined text rather than
+  // on the array, which is a fresh identity on every document revision and
+  // would wipe out half-typed input on every keystroke of a collaborator.
+  useEffect(() => {
+    setDraft(text)
+  }, [text])
 
   return (
     <div>
@@ -226,10 +248,11 @@ function TagsField({
         type="text"
         className={className}
         placeholder={t('field.commaSeparated')}
-        defaultValue={items.join(', ')}
-        onBlur={(e) => {
-          const next = e.target.value
-            .split(',')
+        value={draft}
+        onChange={(e) => setDraft(e.target.value)}
+        onBlur={() => {
+          const next = draft
+            .split(/[,\n]/)
             .map((part) => part.trim())
             .filter(Boolean)
           onChange(next.length > 0 ? next : undefined)
