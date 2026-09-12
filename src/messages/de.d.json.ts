@@ -571,7 +571,8 @@ declare const messages: {
     "someone": "Jemand",
     "untitled": "Workshop",
     "untitledDay": "Tag",
-    "you": "du"
+    "you": "du",
+    "withNotes": "Mit Moderationsnotizen"
   }
 };
 export default messages;

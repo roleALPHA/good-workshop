@@ -35,7 +35,12 @@ export type ExportOptions = {
   locale?: Locale
   flavor?: 'agenda' | 'outline'
   includeDescriptions?: boolean
-  includeFacilitatorNotes?: boolean
+  /**
+   * Fields the schema marks `x-gw.private` -- facilitation notes today, and
+   * whatever a block type declares tomorrow. Named after the rule rather than
+   * after the one field it started with.
+   */
+  includePrivateFields?: boolean
   includeFrontmatter?: boolean
 }
 
@@ -53,7 +58,7 @@ const DEFAULTS: Required<ExportOptions> = {
   includeDescriptions: true,
   // Off by default: notes are explicitly the facilitator's own, and the common
   // case for an export is handing it to participants.
-  includeFacilitatorNotes: false,
+  includePrivateFields: false,
   includeFrontmatter: true,
 }
 
@@ -252,7 +257,20 @@ function describeModule(
     fields.get(key)?.options?.find((option) => option.value === raw)?.label ?? raw
 
   const push = (key: string, raw: unknown) => {
-    if (key === 'facilitator_notes' && !opts.includeFacilitatorNotes) return
+    /**
+     * Withheld by the field's OWN declaration, not by its name.
+     *
+     * This used to read `key === 'facilitator_notes'`, which was right for
+     * exactly as long as that was the only field carrying `x-gw.private`. A
+     * second one is a schema edit rather than a code change, so nothing would
+     * have failed -- it would simply have gone out in the handover.
+     *
+     * A field the schema no longer describes is NOT withheld: those are the
+     * "legacy fields" the inspector still shows, read-only, to everybody who
+     * can open the day. Dropping them here would quietly remove from the
+     * handover something the application displays.
+     */
+    if (fields.get(key)?.private && !opts.includePrivateFields) return
     if (key === 'description' && !opts.includeDescriptions) return
 
     if (isRichTextValue(raw)) {

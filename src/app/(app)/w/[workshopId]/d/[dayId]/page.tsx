@@ -1,7 +1,8 @@
 import Link from 'next/link'
 import { notFound } from 'next/navigation'
+import { HandoverLinks } from './handover-links'
 import { eq } from 'drizzle-orm'
-import { Download, Printer, Users } from 'lucide-react'
+import { Users } from 'lucide-react'
 import { AgendaSurface } from '@/components/agenda/agenda-surface'
 import { TagEditor } from '@/components/agenda/tag-editor'
 import { ReadOnlyBadge } from '@/components/read-only-badge'
@@ -90,7 +91,11 @@ export default async function DayPage({
             )}
           </div>
 
-          <div className="flex items-center gap-2">
+          {/* Wraps, because this row gained a fourth item and 375px does not
+              stretch. The outer row already wraps; this one has to as well, or
+              the page scrolls sideways -- which docs/ui-conventions.md treats
+              as a bug rather than a compromise. */}
+          <div className="flex flex-wrap items-center gap-2">
             {data.canShare && (
               <Link
                 href={`/w/${workshopId}/sharing`}
@@ -100,21 +105,7 @@ export default async function DayPage({
                 {t('access')}
               </Link>
             )}
-            <Link
-              href={`/api/w/${workshopId}/d/${dayId}/export`}
-              className="inline-flex items-center gap-1.5 rounded border border-[var(--border-strong)] px-2.5 py-1.5 text-[14px] hover:bg-[var(--surface-raised)]"
-            >
-              <Download aria-hidden className="size-4" />
-              Markdown
-            </Link>
-            <Link
-              href={`/print/w/${workshopId}/d/${dayId}`}
-              target="_blank"
-              className="inline-flex items-center gap-1.5 rounded border border-[var(--border-strong)] px-2.5 py-1.5 text-[14px] hover:bg-[var(--surface-raised)]"
-            >
-              <Printer aria-hidden className="size-4" />
-              {t('print')}
-            </Link>
+            <HandoverLinks workshopId={workshopId} dayId={dayId} />
           </div>
         </div>
 
