@@ -71,6 +71,17 @@ Clusters become `position: sticky` section headers with a running clock time.
   inside a dense row, spend the 44 px on coarse pointers only — a 44 px box around one line of
   13 px text is not a touch target under a mouse, it is what turns an 86 px row into a 144 px
   one and pushes the day off the screen.
+- **A popover closes on a pointer going down outside it, never on focus leaving it.** iOS Safari
+  does not give a `<button>` focus when it is tapped — only form fields get focus that way — so
+  tapping an option makes whatever had focus lose it with `relatedTarget: null`, and that
+  focus-out arrives _before_ the click. A wrapper that closes on any focus-out it cannot
+  attribute unmounts the list mid-tap and the choice never lands. Act on a focus-out only when
+  it **names** an element outside the control; that is the keyboard's way out, and the naming is
+  what tells the two apart.
+
+  `ParticipationControl` is the only hand-rolled popover here; every other dropdown is a native
+  `<select>`, which iOS operates itself. Think twice before adding a second one.
+
 - **Nothing is revealed by hover alone.** A control that appears on `group-hover` is invisible
   for the whole life of a touch session, so every one of them carries
   `pointer-coarse:opacity-100` alongside — see `drag-handle.tsx`, `participation-control.tsx`,

@@ -75,6 +75,24 @@ Docker image serves. `next start` does not work with `output: 'standalone'` at a
 and serves something else). Anybody changing the copy steps in `start-standalone.mjs` has to
 carry them into the `Dockerfile`: a divergence there means green tests with a broken image.
 
+### The E2E suite runs Chromium, and Chromium is not a phone
+
+`devices['Pixel 5']` gives a viewport, touch events and `pointer: coarse`. It does **not** give
+WebKit's behaviour, and two bugs have now reached a real phone through a green pipeline:
+
+- a control hidden behind `group-hover` — Playwright counts an `opacity: 0` element as visible
+  and taps it happily;
+- a popover that closed on an unattributable focus-out — Chromium focuses a button when it is
+  tapped, so `relatedTarget` was the option and the list stayed open. iOS Safari does not focus
+  buttons on tap, so the same tap closed the list before the click.
+
+Both were found by a person holding a phone, not by the suite. So: **a touch interaction whose
+correctness depends on focus or on what is visible belongs in a component test that states the
+engine behaviour outright** — `fireEvent.focusOut(option, { relatedTarget: null })` is a claim
+about WebKit that a Chromium run can neither confirm nor refute. Playwright's own WebKit is not
+the answer either: it is an engine, not a device, and on macOS it currently cannot even load the
+app's assets.
+
 ### The E2E suite is pinned to German
 
 `playwright.config.ts` sets `locale: 'de-DE'`, and that is load-bearing rather than tidy.

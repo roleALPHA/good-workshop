@@ -1,6 +1,6 @@
 'use client'
 
-import { useRef, useState } from 'react'
+import { useEffect, useRef, useState } from 'react'
 import { Handshake, Minus, Presentation, User, Users } from 'lucide-react'
 import type { LucideIcon } from 'lucide-react'
 import { useTranslations } from 'next-intl'
@@ -71,7 +71,34 @@ export function ParticipationControl({
   const t = useTranslations('agenda')
   const [open, setOpen] = useState(false)
   const triggerRef = useRef<HTMLButtonElement>(null)
+  const wrapperRef = useRef<HTMLDivElement>(null)
   const options = field.options ?? []
+
+  /**
+   * What closes the list when the next thing happens elsewhere.
+   *
+   * A pointer going down outside it, and NOT focus leaving it. iOS Safari does
+   * not give a button focus when it is tapped -- only form fields get focus
+   * that way -- so tapping an option makes the option that had focus lose it
+   * with `relatedTarget: null`, and that focus-out arrives before the click. A
+   * wrapper that closed on any focus-out it could not attribute unmounted the
+   * list while the tap was still in flight, and the choice never landed.
+   *
+   * Reported from a real phone. Chromium's touch emulation focuses buttons on
+   * tap, which is why the Playwright test that taps this control was green
+   * throughout -- an engine without the behaviour cannot show the bug.
+   *
+   * `capture`, so this runs before React's click: the decision must be made
+   * from where the pointer went down, not from what survived the re-render.
+   */
+  useEffect(() => {
+    if (!open) return
+    const onPointerDown = (e: PointerEvent) => {
+      if (!wrapperRef.current?.contains(e.target as Node | null)) setOpen(false)
+    }
+    document.addEventListener('pointerdown', onPointerDown, true)
+    return () => document.removeEventListener('pointerdown', onPointerDown, true)
+  }, [open])
 
   const selected = options.find((o) => o.value === value)
   const Icon = iconFor(value)
@@ -92,11 +119,15 @@ export function ParticipationControl({
 
   return (
     <div
+      ref={wrapperRef}
       className="relative"
-      // Closes when focus leaves the whole control, the same way the table
-      // works out that nobody is in a row any more.
+      // The keyboard's way out: a focus-out that NAMES where focus went, and
+      // names somewhere outside. A focus-out with no `relatedTarget` is not
+      // that -- see the note above; it is what a tap looks like in WebKit, and
+      // acting on it is what swallowed the choice.
       onBlur={(e) => {
-        if (!e.currentTarget.contains(e.relatedTarget as Node | null)) setOpen(false)
+        const next = e.relatedTarget as Node | null
+        if (next !== null && !e.currentTarget.contains(next)) setOpen(false)
       }}
     >
       <button
