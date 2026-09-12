@@ -417,7 +417,15 @@
     "topLevel": "Nivel superior",
     "trash": "Papelera",
     "workshopTitle": "Título del taller",
-    "workshopTitleExample": "p. ej. Retiro de estrategia"
+    "workshopTitleExample": "p. ej. Retiro de estrategia",
+    "folderAccess": "Acceso a {name}",
+    "folderAccessIntro": "Vale para todo lo que hay en esta carpeta, subcarpetas incluidas, y para talleres que son de otras personas. Un taller que muevas aquí queda compartido por ese solo gesto.",
+    "folderAccessReadOnly": "Puedes ver quién tiene acceso, pero no cambiarlo.",
+    "folderAccessOf": "Acceso de {email} a esta carpeta",
+    "folderCreator": "La creó",
+    "folderShare": "Acceso",
+    "folderShareOf": "Acceso a la carpeta {name}",
+    "you": "tú"
   },
   "mail": {
     "magicLink": {

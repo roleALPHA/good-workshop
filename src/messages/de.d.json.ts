@@ -246,7 +246,9 @@ declare const messages: {
         "intoItself": "Ein Ordner kann nicht in sich selbst liegen.",
         "targetGone": "Den Zielordner gibt es nicht.",
         "intoOwnDescendant": "Ein Ordner kann nicht in einen seiner eigenen Unterordner.",
-        "nameTaken": "In diesem Ordner gibt es schon einen Ordner mit diesem Namen."
+        "nameTaken": "In diesem Ordner gibt es schon einen Ordner mit diesem Namen.",
+        "grantTooWide": "Du kannst nur weitergeben, was du selbst hast.",
+        "creatorHasAccess": "Wer den Ordner angelegt hat, hat ohnehin Zugriff."
       },
       "logo": {
         "unsupportedType": "Erlaubt sind SVG, PNG und WebP.",
@@ -418,7 +420,15 @@ declare const messages: {
     "topLevel": "Oberste Ebene",
     "trash": "Papierkorb",
     "workshopTitle": "Titel des Workshops",
-    "workshopTitleExample": "z. B. Strategie-Retreat"
+    "workshopTitleExample": "z. B. Strategie-Retreat",
+    "folderAccess": "Zugriff auf {name}",
+    "folderAccessIntro": "Gilt für alles in diesem Ordner, auch für Unterordner und für Workshops, die anderen gehören. Ein Workshop, den du hierher verschiebst, ist damit geteilt.",
+    "folderAccessReadOnly": "Du kannst hier sehen, wer Zugriff hat, aber nichts ändern.",
+    "folderAccessOf": "Zugriff von {email} auf diesen Ordner",
+    "folderCreator": "Angelegt",
+    "folderShare": "Zugriff",
+    "folderShareOf": "Zugriff auf Ordner {name}",
+    "you": "du"
   },
   "mail": {
     "magicLink": {

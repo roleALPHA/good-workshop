@@ -417,7 +417,15 @@
     "topLevel": "Top level",
     "trash": "Bin",
     "workshopTitle": "Workshop title",
-    "workshopTitleExample": "e.g. Strategy retreat"
+    "workshopTitleExample": "e.g. Strategy retreat",
+    "folderAccess": "Access to {name}",
+    "folderAccessIntro": "Applies to everything in this folder, including subfolders and workshops other people own. A workshop you move in here is shared by that move.",
+    "folderAccessReadOnly": "You can see who has access here, but not change it.",
+    "folderAccessOf": "{email}'s access to this folder",
+    "folderCreator": "Created it",
+    "folderShare": "Access",
+    "folderShareOf": "Access to folder {name}",
+    "you": "you"
   },
   "mail": {
     "magicLink": {

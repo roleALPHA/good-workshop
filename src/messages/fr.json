@@ -417,7 +417,15 @@
     "topLevel": "Niveau supérieur",
     "trash": "Corbeille",
     "workshopTitle": "Titre de l'atelier",
-    "workshopTitleExample": "p. ex. Séminaire stratégie"
+    "workshopTitleExample": "p. ex. Séminaire stratégie",
+    "folderAccess": "Accès à {name}",
+    "folderAccessIntro": "Vaut pour tout ce que contient ce dossier, sous-dossiers compris, et pour les ateliers qui appartiennent à d'autres. Un atelier que tu déplaces ici est partagé par ce seul geste.",
+    "folderAccessReadOnly": "Tu peux voir qui a accès, mais rien changer.",
+    "folderAccessOf": "Accès de {email} à ce dossier",
+    "folderCreator": "Créé par",
+    "folderShare": "Accès",
+    "folderShareOf": "Accès au dossier {name}",
+    "you": "toi"
   },
   "mail": {
     "magicLink": {
