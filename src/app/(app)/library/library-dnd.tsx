@@ -295,8 +295,21 @@ export function LibraryDnd({ folders, children }: { folders: FolderNode[]; child
 
         {/* A compact chip, never a clone of the row: the list is the full width
             of the page and the target is a 200px sidebar, so a ghost in row
-            width would cover exactly what you are aiming at. */}
-        <DragOverlay dropAnimation={reducedMotion ? null : undefined}>
+            width would cover exactly what you are aiming at.
+
+            `pointerEvents: 'none'` because the ghost is a picture of what you
+            are carrying and must never be a target. dnd-kit does not set it,
+            and the wrapper is `position: fixed` -- so for the length of the drop
+            animation, a quarter of a second during which the pointer is free
+            again, the chip floats over the page and swallows whatever it covers.
+            Drop a workshop and immediately reach for the control underneath and
+            nothing happens: the press lands on the ghost of the thing you just
+            let go of. The agenda never showed it only because its overlay has no
+            drop animation to outlive the drag. */}
+        <DragOverlay
+          dropAnimation={reducedMotion ? null : undefined}
+          style={{ pointerEvents: 'none' }}
+        >
           {active && (
             <span className="inline-flex max-w-[240px] items-center gap-1.5 rounded border border-[var(--border-strong)] bg-[var(--surface)] px-3 py-2 text-[14px] shadow-lg">
               {active.kind === 'folder' ? (
