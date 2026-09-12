@@ -12,17 +12,30 @@ const GERMAN_IN_COMPONENT =
 const config = [
   {
     ignores: [
-      '.next/**',
-      'node_modules/**',
-      'coverage/**',
+      // A git worktree is a checkout of its own, at its own commit, with its own
+      // lint run -- and this project puts them INSIDE the repository, under
+      // .claude/worktrees/. Linting one from here reports findings about code
+      // that is not on this branch and cannot be fixed from this directory.
+      //
+      // The symptom was the build output rather than the source: once a worktree
+      // had been built, `pnpm lint` in the main checkout drowned in hundreds of
+      // no-require-imports errors from minified vendor chunks -- exactly what
+      // the patterns below exist to prevent, walked around by one directory
+      // level. CI never saw it, because CI has no worktrees.
+      '.claude/worktrees/**',
+      // Prefixed with **/ rather than anchored at the root: an artefact
+      // directory one level down is the same artefact directory.
+      '**/.next/**',
+      '**/node_modules/**',
+      '**/coverage/**',
       'next-env.d.ts',
       // Test and build artefacts: minified vendor bundles that would otherwise
       // drown the report in thousands of irrelevant findings.
-      'playwright-report/**',
-      'blob-report/**',
-      'test-results/**',
+      '**/playwright-report/**',
+      '**/blob-report/**',
+      '**/test-results/**',
       // The bundled collaboration server: generated output, not source.
-      'dist/**',
+      '**/dist/**',
     ],
   },
 
