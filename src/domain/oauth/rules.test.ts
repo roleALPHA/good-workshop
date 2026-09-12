@@ -72,6 +72,19 @@ describe('redirect targets', () => {
       false,
     ],
     ['javascript:, which is not a redirect but an injection', 'javascript:alert(1)', false],
+    // A denylist that named `javascript:` and stopped there. CodeQL found it
+    // (js/incomplete-url-scheme-check) before anybody registered one.
+    [
+      'data:, which is the same injection wearing a different hat',
+      'data:text/html,<script>1</script>',
+      false,
+    ],
+    ['vbscript:', 'vbscript:msgbox(1)', false],
+    ['blob:', 'blob:https://evil.example/x', false],
+    ['file:, which would point a code at the local disk', 'file:///etc/passwd', false],
+    // A private-use scheme is reverse-DNS by RFC 7595, and that dot is what
+    // tells one apart from a scheme the browser already means something by.
+    ['a single-word scheme nobody registered', 'myapp:/callback', false],
     ['a fragment, which RFC 6749 forbids on a redirect URI', 'https://client.example/cb#x', false],
     ['nonsense', 'not a url', false],
   ])('registration: %s', (_why, uri, expected) => {

@@ -47,9 +47,20 @@ export function redirectUriAllowed(candidate: string, registered: readonly strin
 /**
  * Whether a redirect target may be registered at all.
  *
- * Loopback and a custom scheme are how a CLI receives a code, so both are in.
- * What is out is plain `http://` to anywhere else -- a code travelling in the
- * clear across a network is the thing PKCE cannot save.
+ * Loopback and a private-use scheme are how a CLI or a native app receives a
+ * code, so both are in. What is out is plain `http://` to anywhere else -- a
+ * code travelling in the clear across a network is the thing PKCE cannot save.
+ *
+ * The third branch used to be a DENYLIST: any scheme at all, minus
+ * `javascript:`. CodeQL found it (`js/incomplete-url-scheme-check`) before
+ * anybody registered one, and it was right -- `data:`, `vbscript:`, `blob:` and
+ * `file:` would all have passed, and each of them turns "we send the user
+ * somewhere" into something else entirely.
+ *
+ * It is an allowlist now, and the rule is RFC 7595's: a private-use scheme is
+ * reverse-DNS, `com.example.app`. The dot is what separates a scheme somebody
+ * owns a domain for from one the browser already means something by -- there is
+ * no `data.something:` and no `javascript.something:`.
  */
 export function registrableRedirectUri(raw: string): boolean {
   let url: URL
@@ -61,8 +72,7 @@ export function registrableRedirectUri(raw: string): boolean {
   if (url.hash) return false
   if (url.protocol === 'https:') return true
   if (url.protocol === 'http:') return url.hostname === 'localhost' || url.hostname === '127.0.0.1'
-  // A private-use scheme, as a native client registers: `com.example.app:/cb`.
-  return /^[a-z][a-z0-9+.-]*:$/.test(url.protocol) && url.protocol !== 'javascript:'
+  return /^[a-z][a-z0-9+-]*(\.[a-z0-9+-]+)+:$/.test(url.protocol)
 }
 
 /**

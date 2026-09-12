@@ -74,7 +74,9 @@ for (const role of [...ROLES, APP_KEY]) {
   const file = join(dir, role, role === APP_KEY ? 'secret-key' : 'password')
   mkdirSync(join(dir, role), { recursive: true })
 
-  if (!existsSync(file) || readFileSync(file, 'utf8').trim().length < 32) {
+  const usable = existsSync(file) && readFileSync(file, 'utf8').trim().length >= 32
+
+  if (!usable) {
     // base64url: no characters that need escaping inside a connection URL, and
     // none that a shell would interpret if somebody echoes the file.
     //
@@ -83,8 +85,32 @@ for (const role of [...ROLES, APP_KEY]) {
     // role passwords have no such constraint; 33 bytes only avoids the `=`
     // padding that 32 would produce.
     const bytes = role === APP_KEY ? 32 : 33
-    writeFileSync(file, randomBytes(bytes).toString('base64url'), { mode: 0o644 })
-    created += 1
+    const secret = randomBytes(bytes).toString('base64url')
+
+    try {
+      // `wx` rather than a plain write: between the check above and this line
+      // a second run of this script can create the same file, and overwriting
+      // it would hand out a password the database was already initialised
+      // with -- a stack that then cannot log into its own Postgres. Exclusive
+      // creation makes the kernel decide who wins, and the loser keeps what
+      // the winner wrote. Found by CodeQL as js/file-system-race.
+      writeFileSync(file, secret, { mode: 0o644, flag: 'wx' })
+      created += 1
+    } catch (error) {
+      // EEXIST means somebody else got there first, which is the outcome we
+      // wanted. Anything else is a real failure -- a read-only volume, a full
+      // disk -- and must not be swallowed.
+      if (error.code !== 'EEXIST') throw error
+
+      // The other branch: a file that EXISTS but is too short to be a secret.
+      // Truncated by a failed write, or written by a version of this script
+      // that used fewer bytes. That one is repaired deliberately, because
+      // leaving it would fail later and less clearly.
+      if (existsSync(file) && readFileSync(file, 'utf8').trim().length < 32) {
+        writeFileSync(file, secret, { mode: 0o644 })
+        created += 1
+      }
+    }
   }
 
   // Re-applied even for a file that already existed: a volume restored from a
