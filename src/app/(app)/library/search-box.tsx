@@ -22,7 +22,16 @@ export function SearchBox() {
 
   // Follows the URL when it changes from elsewhere -- the browser's back
   // button, or a click on a folder that drops the query.
-  useEffect(() => setValue(current), [current])
+  //
+  // Adjusted DURING render rather than in an effect. React documents this shape
+  // for exactly this case: the effect version renders once with the stale value
+  // and then again with the new one, and the rule that flags it
+  // (react-hooks/set-state-in-effect) is pointing at that wasted pass.
+  const [seen, setSeen] = useState(current)
+  if (current !== seen) {
+    setSeen(current)
+    setValue(current)
+  }
 
   useEffect(() => {
     if (value === current) return

@@ -1,6 +1,6 @@
 'use client'
 
-import { useEffect, useRef, useState } from 'react'
+import { useRef, useState } from 'react'
 import { Lock, LockOpen } from 'lucide-react'
 import { useTranslations } from 'next-intl'
 import { formatDuration, parseDuration } from '@/features/agenda/duration'
@@ -28,7 +28,12 @@ export function TitleInput({
   placeholder?: string
 }) {
   const [draft, setDraft] = useState(value)
-  useEffect(() => setDraft(value), [value])
+  // Adopted during render, not in an effect -- see the note in search-box.tsx.
+  const [seen, setSeen] = useState(value)
+  if (value !== seen) {
+    setSeen(value)
+    setDraft(value)
+  }
 
   return (
     <input
@@ -69,10 +74,14 @@ export function DurationInput({
   const [invalid, setInvalid] = useState(false)
   const ref = useRef<HTMLInputElement>(null)
 
-  useEffect(() => {
+  const [seenMinutes, setSeenMinutes] = useState(minutes)
+  if (minutes !== seenMinutes) {
+    setSeenMinutes(minutes)
     setDraft(formatDuration(minutes))
+    // A value that arrived from elsewhere is by definition not the one the
+    // person mistyped, so the warning goes with it.
     setInvalid(false)
-  }, [minutes])
+  }
 
   function commit() {
     const parsed = parseDuration(draft)

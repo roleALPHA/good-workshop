@@ -1,5 +1,13 @@
 'use client'
 
+/* eslint-disable react-hooks/static-components --
+   `iconFor` is a lookup, not a factory: everything it returns is one of the
+   five module-level constants in ICONS below, so the identity is stable across
+   renders and nothing remounts. The rule reads the signature rather than the
+   body and cannot see that. A file-level directive rather than line-level ones
+   because the rule points at the JSX that USES the constant, not at the line
+   that names it. */
+
 import { useEffect, useRef, useState } from 'react'
 import { Handshake, Minus, Presentation, User, Users } from 'lucide-react'
 import type { LucideIcon } from 'lucide-react'
@@ -32,6 +40,15 @@ const ICONS: Record<string, LucideIcon> = {
   none: Minus,
 }
 
+/**
+ * A lookup, not a factory.
+ *
+ * `react-hooks/static-components` flags both call sites as "cannot create
+ * components during render", and it is reading the signature rather than the
+ * body: everything this returns is one of the five module-level constants in
+ * ICONS above. Nothing is created, so nothing remounts -- the identity is
+ * stable across renders, which is the property the rule exists to protect.
+ */
 const iconFor = (value: string | undefined): LucideIcon => (value && ICONS[value]) || ICONS.none!
 
 /** What the reading and print views show: the value, or nothing at all. */

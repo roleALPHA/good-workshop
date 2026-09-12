@@ -1,6 +1,6 @@
 'use client'
 
-import { useEffect, useMemo, useState } from 'react'
+import { useMemo, useState } from 'react'
 import type { FieldSpec } from '@/domain/moduleType/profile'
 import { cn } from '@/lib/cn'
 import { RichText } from '@/lib/richtext/render'
@@ -237,9 +237,15 @@ function TagsField({
   // Adopt a value that changed elsewhere. Keyed on the joined text rather than
   // on the array, which is a fresh identity on every document revision and
   // would wipe out half-typed input on every keystroke of a collaborator.
-  useEffect(() => {
+  //
+  // During render rather than in an effect -- see the note in search-box.tsx.
+  // The comparison above is what makes that safe: it is a string, not an
+  // identity.
+  const [seen, setSeen] = useState(text)
+  if (text !== seen) {
+    setSeen(text)
     setDraft(text)
-  }, [text])
+  }
 
   return (
     <div>

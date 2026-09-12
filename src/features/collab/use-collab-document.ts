@@ -1,5 +1,14 @@
 'use client'
 
+/* eslint-disable react-hooks/set-state-in-effect --
+   This file subscribes to an external store: a Yjs document that changes
+   because somebody else typed. The rule is right about the shape and points at
+   the modern answer, `useSyncExternalStore` -- but moving the collaboration
+   layer onto it is a refactor of the riskiest code in this product, not
+   something to slip into a framework upgrade. The four OTHER instances this
+   rule found were the draft-sync pattern and are gone; this one is left
+   deliberately. */
+
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import { uuidv7 } from 'uuidv7'
 import type * as Y from 'yjs'
