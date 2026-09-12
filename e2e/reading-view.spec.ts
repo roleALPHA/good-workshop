@@ -1,4 +1,4 @@
-import { expect, test } from '@playwright/test'
+import { expect, test, type Page } from '@playwright/test'
 import { seedReferenceDay } from './fixtures/seed-day'
 import { STORAGE_STATE } from './paths'
 
@@ -17,6 +17,20 @@ import { STORAGE_STATE } from './paths'
  * it belongs -- dragging takes a long press, so the page still scrolls under a
  * finger, and every field is 16px so iOS does not zoom when one is focused.
  */
+
+/**
+ * The read-only table paints first -- that is the point of it, the agenda is
+ * legible before any JavaScript has arrived -- and the editor replaces it once
+ * the browser has taken over.
+ *
+ * So every assertion below has to wait for that swap, and two kinds of call in
+ * Playwright do NOT wait on their own: `page.evaluate`, and `boundingBox()` on
+ * a locator that does not match yet. Both answered about the table on CI and
+ * about the editor on a fast laptop, which is exactly the sort of test that
+ * passes locally and fails in the pipeline.
+ */
+const editorReady = (page: Page) =>
+  expect(page.getByRole('article', { name: 'Check-in & Start' }).getByLabel('Titel')).toBeVisible()
 
 test.describe('the day view on a phone', () => {
   test.skip(({ isMobile }) => !isMobile, 'Phone layout only')
@@ -38,6 +52,7 @@ test.describe('the day view on a phone', () => {
 
   test.beforeEach(async ({ page }) => {
     await page.goto(dayUrl)
+    await editorReady(page)
   })
 
   test('never scrolls horizontally', async ({ page }) => {
@@ -107,6 +122,7 @@ test.describe('the day view on a phone', () => {
     // Its own day: this is the one test in the file that writes, and the others
     // share a fixture that has to stay as it was seeded.
     await page.goto(await seedReferenceDay(page, request))
+    await editorReady(page)
 
     const row = page.getByRole('article', { name: 'Check-in & Start' })
 
@@ -115,6 +131,7 @@ test.describe('the day view on a phone', () => {
     await expect(row.getByRole('button', { name: 'Sozialform: Paare' })).toBeVisible()
 
     await page.reload()
+    await editorReady(page)
     await expect(
       page.getByRole('article', { name: 'Check-in & Start' }).getByRole('button', {
         name: 'Sozialform: Paare',
