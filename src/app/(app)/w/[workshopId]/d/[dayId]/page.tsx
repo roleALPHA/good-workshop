@@ -4,6 +4,7 @@ import { eq } from 'drizzle-orm'
 import { Download, Printer, Users } from 'lucide-react'
 import { AgendaSurface } from '@/components/agenda/agenda-surface'
 import { TagEditor } from '@/components/agenda/tag-editor'
+import { ReadOnlyBadge } from '@/components/read-only-badge'
 import { assertWorkshopAccess } from '@/domain/agenda/access'
 import { presenceHue } from '@/domain/collab/presence'
 import { loadDay } from '@/domain/agenda/repo'
@@ -73,7 +74,11 @@ export default async function DayPage({
             <Link href="/library" className="text-[13px] text-[var(--fg-muted)] hover:underline">
               {t('backToLibrary')}
             </Link>
-            <h1 className="mt-0.5 text-2xl font-semibold tracking-tight">{data.title}</h1>
+            <div className="mt-0.5 flex flex-wrap items-baseline gap-2">
+              <h1 className="text-2xl font-semibold tracking-tight">{data.title}</h1>
+              {/* Where the editor would have been, saying why it is not. */}
+              {!data.canEdit && <ReadOnlyBadge />}
+            </div>
             {data.canUpdate ? (
               <div className="mt-1.5">
                 <TagEditor workshopId={workshopId} initial={data.tags} />
@@ -135,7 +140,7 @@ export default async function DayPage({
 
       <AgendaSurface
         doc={data.doc}
-        readOnly={!data.canEdit}
+        canEdit={data.canEdit}
         collab={
           data.canEdit
             ? {

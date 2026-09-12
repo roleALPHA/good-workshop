@@ -3,6 +3,7 @@ import { notFound } from 'next/navigation'
 import { eq } from 'drizzle-orm'
 import { getLocale, getTranslations } from 'next-intl/server'
 import { AgendaSurface } from '@/components/agenda/agenda-surface'
+import { ReadOnlyBadge } from '@/components/read-only-badge'
 import { assertWorkshopAccess } from '@/domain/agenda/access'
 import { loadDay } from '@/domain/agenda/repo'
 import { presenceHue } from '@/domain/collab/presence'
@@ -78,7 +79,14 @@ export default async function GuestDayPage({ params }: { params: Promise<{ dayId
       <header className="mb-5">
         <div className="flex flex-wrap items-baseline justify-between gap-3">
           <div className="min-w-0">
-            <h1 className="text-2xl font-semibold tracking-tight">{data.title}</h1>
+            <div className="flex flex-wrap items-center gap-2">
+              <h1 className="text-2xl font-semibold tracking-tight">{data.title}</h1>
+              {/* The same badge a member with read access gets, for the same
+                  reason: an agenda that stops responding owes an explanation.
+                  The line below says WHO they are here; this says what they may
+                  do, and a guest needs both. */}
+              {!data.canEdit && <ReadOnlyBadge />}
+            </div>
             <p className="mt-1 text-[13px] text-[var(--fg-muted)]">
               {data.canEdit ? g('bannerEditor') : g('banner')}
             </p>
@@ -108,7 +116,7 @@ export default async function GuestDayPage({ params }: { params: Promise<{ dayId
 
       <AgendaSurface
         doc={data.doc}
-        readOnly={!data.canEdit}
+        canEdit={data.canEdit}
         collab={
           data.canEdit
             ? {

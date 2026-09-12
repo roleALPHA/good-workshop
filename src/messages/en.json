@@ -191,7 +191,8 @@
     "loading": "Loading …",
     "loadMore": "Load more",
     "saving": "Saving …",
-    "back": "Back"
+    "back": "Back",
+    "readOnly": "Read only"
   },
   "enums": {
     "memberRole": {

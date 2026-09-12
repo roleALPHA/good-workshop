@@ -31,44 +31,41 @@ import { DayHeader } from './day-header'
  * hydration workaround -- it is what makes the agenda readable before any
  * JavaScript has arrived, which matters most on the screen where it arrives
  * last.
+ *
+ * For a reader it is not the first render but the only one. That view was
+ * already here, already complete and already what the print page is built from;
+ * it just used to be replaced a moment later by an editor the reader was not
+ * allowed to save from. Every control answered and every change was discarded
+ * on the next load, which is a worse answer than "no" -- so the reading view
+ * now simply stays.
  */
 export function AgendaSurface({
   doc,
+  canEdit,
   collab,
-  readOnly = false,
 }: {
   doc: DayDoc
-  collab?: CollabTarget
   /**
-   * Renders the reading view and stops there.
-   *
-   * Without this, "read-only" was the absence of `collab` -- and the editor
-   * mounted anyway, wrote into a local document and threw the changes away on
-   * navigation. Somebody was shown fields they could type in, a drag handle that
-   * worked, and no hint that none of it was being saved.
-   *
-   * That was survivable for a colleague who could see the agenda in the library
-   * either way. It is not survivable for an invited guest, whose entire view of
-   * the workshop is this page. So the reading view -- which already exists for
-   * the first paint and for print -- becomes the whole answer when there is no
-   * write permission.
+   * Required rather than defaulted: a permission flag that says yes when
+   * nobody set it is the wrong way round, and this is the one place that
+   * decides whether an editor exists at all.
    */
-  readOnly?: boolean
+  canEdit: boolean
+  /** Absent for viewers, who never reach the editor that would use it. */
+  collab?: CollabTarget
 }) {
   const hydrated = useHydrated()
 
-  // Renamed from `readOnly`, which is now the prop above: the same word for a
-  // permission and for a bag of precomputed rows is one shadowing away from a
-  // bug that renders an editable page.
   const reading = useMemo(() => {
     const rows = flattenDay(doc)
     const schedule = computeSchedule(doc.startMinute, toScheduleItems(rows))
     return { rows: withGapRows(rows, schedule), schedule }
   }, [doc])
 
-  // The same branch for both reasons: before hydration because no JavaScript has
-  // arrived yet, and for a reader because none is going to help them.
-  if (!hydrated || readOnly) {
+  // Two different reasons for the same view: nothing has hydrated yet, or
+  // nothing ever will because this person may only read. Both hooks above ran
+  // either way, so the branch is safe.
+  if (!hydrated || !canEdit) {
     return (
       <>
         <DayHeader doc={doc} schedule={reading.schedule} />
@@ -85,8 +82,9 @@ export function AgendaSurface({
  * Picks how changes are shared.
  *
  * Both hooks are called unconditionally -- React allows nothing else -- and the
- * collaboration one connects only when it has a target. Branching on a hook
- * would break the moment a viewer's permissions changed while the page was open.
+ * collaboration one connects only when it has a target. Reached only by someone
+ * who may edit; the local document is what keeps the editor usable where no
+ * collaboration server exists, which in practice means the tests.
  */
 function EditorSurface({ doc, collab }: { doc: DayDoc; collab?: CollabTarget }) {
   const local = useLocalDocument(doc)
