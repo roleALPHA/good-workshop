@@ -210,17 +210,24 @@ test.describe('inline editing in the day view', () => {
     await row.getByLabel('Fixierte Startzeit').fill('15:45')
     await expect(row.getByText('Startzeit fixiert:')).toBeAttached()
 
+    // Read off the field, not off the row's text: a pinned row being edited
+    // carries its start time ONCE, in the input that sets it. Printing it
+    // beside the input as well would read as two separate facts.
+    await expect(row.getByLabel('Fixierte Startzeit')).toHaveValue('15:45')
+
     // Stretching a block above it must not move it. The conflict is reported
     // instead -- silently absorbing an overrun is how a plan stops being true.
     const earlier = block(page, 'Druckpunkte').getByLabel('Dauer')
     await earlier.fill('3h')
     await earlier.blur()
 
-    await expect(row).toContainText('15:45')
+    await expect(row.getByLabel('Fixierte Startzeit')).toHaveValue('15:45')
     await expect(row).toContainText('Überschneidet den vorherigen Block')
 
     await page.reload()
-    await expect(block(page, 'Spannungsfelder sammeln')).toContainText('15:45')
+    await expect(
+      block(page, 'Spannungsfelder sammeln').getByLabel('Fixierte Startzeit'),
+    ).toHaveValue('15:45')
   })
 
   test('keeps a material that was typed into the row', async ({ page }) => {
