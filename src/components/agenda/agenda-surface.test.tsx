@@ -117,6 +117,72 @@ describe('the agenda as a whole', () => {
     expect(screen.getByText('Titel und Beschreibung')).toBeInTheDocument()
   })
 
+  /**
+   * Sozialform is declared by every block type and used to be reachable only
+   * by expanding a row, which for the field a facilitator consults most often
+   * amounted to hiding it. It now sits beside the times.
+   */
+  it('reads the participation format off the row, without opening anything', () => {
+    renderAt('phone')
+    expect(block('Check-in & Start')).toHaveTextContent('Plenum')
+    expect(block('Spannungsfelder sammeln')).toHaveTextContent('Kleingruppen')
+  })
+
+  it('gives a reader the format as a word and no control to change it', () => {
+    renderAt('phone')
+    expect(
+      within(block('Check-in & Start')).queryByRole('button', { name: /Sozialform/ }),
+    ).not.toBeInTheDocument()
+  })
+
+  it('lets an editor set the format from the row itself', () => {
+    renderAt('desktop')
+    expect(
+      within(block('Check-in & Start')).getByRole('button', { name: 'Sozialform: Plenum' }),
+    ).toBeInTheDocument()
+  })
+
+  /**
+   * The additional-info column used to carry its own list of field keys, which
+   * is why two fields flagged for it in the schema never showed up. It now
+   * asks the schema.
+   */
+  it('shows every field the schema flags for the table, not a list kept here', () => {
+    renderAt('phone')
+    // materials was the only one the old hardcoded list got right.
+    expect(block('Druckpunkte')).toHaveTextContent('Klebepunkte')
+    // deliverable and catering_note are flagged `summary` in the schema and
+    // used to reach the column only because the list happened to name them.
+    expect(block('Spannungsfelder sammeln')).toHaveTextContent('Ein Flipchart je Gruppe')
+    expect(block('Mittagessen')).toHaveTextContent('Vegetarische Option ist bestellt.')
+    // `method` is flagged too and never appeared at all before -- and it
+    // arrives as its label, not as the `consent` the schema stores.
+    expect(block('Einwandintegration')).toHaveTextContent('Konsent')
+    expect(block('Einwandintegration')).not.toHaveTextContent('consent')
+  })
+
+  it('offers an editor the material of a row where the row is', () => {
+    renderAt('desktop')
+    expect(
+      within(block('Agenda & Spielregeln')).getByLabelText('Material hinzufügen'),
+    ).toBeInTheDocument()
+  })
+
+  it('offers an editor a lock for the start time of a block and of a section', () => {
+    renderAt('desktop')
+
+    expect(
+      within(block('Agenda & Spielregeln')).getByRole('button', { name: 'Startzeit fixieren' }),
+    ).toBeInTheDocument()
+    // The section itself carries no pin in the fixture -- its start is derived
+    // from the pinned block inside it -- so what it offers is the way to set one.
+    expect(
+      within(screen.getByRole('group', { name: 'Ankommen & Rahmen' })).getByRole('button', {
+        name: 'Startzeit fixieren',
+      }),
+    ).toBeInTheDocument()
+  })
+
   // Its counterpart -- that the phone layout HIDES those headers -- stayed
   // end-to-end. They are in the document either way and only CSS takes them off
   // screen, which jsdom neither applies nor can be asked about.

@@ -44,7 +44,31 @@ const DEFAULT_GROUP = 'Weitere Angaben'
 
 type SchemaNode = Record<string, unknown>
 
+/**
+ * Parsed schemas, keyed by the schema object itself.
+ *
+ * Not an optimisation that can be skipped: the agenda row components are
+ * deliberately hook-free, because the very same components render the editor,
+ * the print view and the phone reading view. Without this they would re-parse
+ * a type's schema once per row per render.
+ *
+ * The returned groups are shared, so nobody may mutate them. Every caller
+ * reads.
+ */
+const PARSED = new WeakMap<object, FieldGroup[]>()
+
 export function parseSchema(schema: unknown): FieldGroup[] {
+  if (typeof schema !== 'object' || schema === null) return []
+
+  const cached = PARSED.get(schema)
+  if (cached) return cached
+
+  const parsed = parseSchemaUncached(schema)
+  PARSED.set(schema, parsed)
+  return parsed
+}
+
+function parseSchemaUncached(schema: unknown): FieldGroup[] {
   if (typeof schema !== 'object' || schema === null) return []
   const properties = (schema as SchemaNode).properties
   if (typeof properties !== 'object' || properties === null) return []
@@ -175,3 +199,49 @@ function humanise(key: string): string {
 export function summaryFields(groups: FieldGroup[]): FieldSpec[] {
   return groups.flatMap((group) => group.fields.filter((field) => field.summary))
 }
+
+/** One field by key, wherever its group put it. */
+export function findField(groups: FieldGroup[], key: string): FieldSpec | undefined {
+  for (const group of groups) {
+    const found = group.fields.find((field) => field.key === key)
+    if (found) return found
+  }
+  return undefined
+}
+
+export type SummaryChip = { key: string; label: string; text: string }
+
+/**
+ * What the agenda's additional-info column shows for one block.
+ *
+ * Driven by the schema's own `x-gw.summary` flag rather than by a list kept in
+ * the table: a type that declares a field worth seeing at a glance gets it,
+ * and the table does not have to be edited to agree.
+ *
+ * An enum is rendered through its label. A column reading "Sozialform:
+ * plenary" would be the schema leaking into the room.
+ */
+export function summaryChips(
+  groups: FieldGroup[],
+  desc: Record<string, unknown>,
+  skip: readonly string[] = [],
+): SummaryChip[] {
+  const out: SummaryChip[] = []
+
+  for (const field of summaryFields(groups)) {
+    if (skip.includes(field.key)) continue
+    const raw = desc[field.key]
+
+    for (const item of Array.isArray(raw) ? raw : [raw]) {
+      // Rich text, objects and booleans have no one-line form that reads as a
+      // chip; a field flagged `summary` that holds one is simply not shown.
+      if (typeof item !== 'string' || item === '') continue
+      out.push({ key: field.key, label: field.label, text: labelFor(field, item) })
+    }
+  }
+
+  return out
+}
+
+const labelFor = (field: FieldSpec, raw: string) =>
+  field.options?.find((option) => option.value === raw)?.label ?? raw

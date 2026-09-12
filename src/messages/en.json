@@ -72,6 +72,7 @@
     "addTag": "Add a tag",
     "blockCount": "{count, plural, one {# block} other {# blocks}}",
     "breaks": "{duration} breaks",
+    "buffer": "Buffer",
     "columns": {
       "time": "Time",
       "titleAndDescription": "Title and description",
@@ -106,8 +107,15 @@
       "unset": "— not set —"
     },
     "filterPlaceholder": "Type to filter …",
+    "materials": {
+      "add": "Add material",
+      "remove": "Remove material {name}",
+      "placeholder": "+ material"
+    },
     "moreFields": "More fields",
+    "noFields": "This block type has no further fields.",
     "noTypeMatches": "No block type matches that.",
+    "notes": "Has facilitator notes",
     "offline": "No connection. Your changes will be sent as soon as it is back.",
     "overPlan": "{duration} over plan",
     "overlap": "Overlaps the previous block by {duration}",
@@ -116,6 +124,16 @@
     "parkLabel": "Park {title}",
     "parkedHeading": "Parked ({count, number})",
     "parkedHint": "Belongs to the day, does not count towards the time.",
+    "participation": {
+      "choose": "Choose a participation format",
+      "unset": "not set"
+    },
+    "pin": {
+      "set": "Fix start time",
+      "clear": "Release fixed start",
+      "time": "Fixed start time"
+    },
+    "pinnedStart": "Start time fixed:",
     "presence": "Other people on this day",
     "regionLabel": "Agenda {title}",
     "removeTag": "Remove tag {name}",

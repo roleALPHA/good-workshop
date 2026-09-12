@@ -116,8 +116,14 @@ Concretely:
 - **Invalid input returns rather than guessing.** A silently mis-guessed duration moves every
   following block and nobody notices.
 - **Extra fields open in the same row**, not in a side panel. The calm of the collapsed table is
-  what makes that affordable: closed, a row shows four fields; everything else appears on
-  request and folds away again.
+  what makes that affordable: closed, a row shows the handful a facilitator reads while running
+  the day — time, duration, title, description, the participation format, the material, and the
+  lock on the start time — plus whatever the type flags `x-gw.summary`. Everything else appears
+  on request and folds away again.
+- **What a closed row carries is a decision, not a default.** A field earns its place there by
+  being consulted mid-workshop, and the list is named in `e2e/agenda.spec.ts` so that adding to
+  it has to be deliberate. The schema decides which extras become chips; the table does not keep
+  its own list of keys.
 
 If a change cannot sensibly be fitted inline, the row is usually too full — the dialog is not
 what is due.

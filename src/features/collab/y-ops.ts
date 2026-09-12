@@ -2,7 +2,14 @@ import type * as Y from 'yjs'
 import { moveBlock } from '@/domain/collab/ops'
 import type { Projection } from '@/features/agenda/projection'
 
-export { patchBlock as patchModule, removeBlock as removeModule } from '@/domain/collab/ops'
+// Clusters and modules are the same blocks in the document, so one patch
+// function serves both. Named twice because the editor's two call sites mean
+// different things by it.
+export {
+  patchBlock as patchModule,
+  patchBlock as patchCluster,
+  removeBlock as removeModule,
+} from '@/domain/collab/ops'
 export { addModuleBlock as addModule } from '@/domain/collab/ops'
 
 /**

@@ -1,13 +1,19 @@
 import type { CSSProperties, ReactNode } from 'react'
-import { ChevronDown, Inbox, Trash2 } from 'lucide-react'
+import { ChevronDown, Inbox, NotebookPen, Trash2 } from 'lucide-react'
 import type { ClusterDto, ModuleDto, ModuleTypeDto } from '@/domain/agenda/types'
 import type { Peer } from '@/features/agenda/document'
 import type { Schedule, ScheduleEntry } from '@/domain/schedule/types'
+import { setDescField, stringList } from '@/domain/moduleType/desc'
+import { findField, parseSchema, summaryChips } from '@/domain/moduleType/profile'
+import type { SummaryChip } from '@/domain/moduleType/profile'
 import { formatDuration, formatTime } from '@/features/agenda/duration'
 import { catClass } from '@/lib/category-colors'
 import { cn } from '@/lib/cn'
 import { isRichTextValue } from '@/lib/richtext/schema'
+import { toPlainText } from '@/lib/richtext/plain'
 import { RichText } from '@/lib/richtext/render'
+import { ChipsInput } from './chips-input'
+import { ParticipationBadge, ParticipationControl } from './participation-control'
 import { PeerMarks } from './presence'
 import { TitleInput } from './inline-inputs'
 import { OverlapWarning, TimeCell } from './time-cell'
@@ -50,6 +56,8 @@ export type RowEditing = {
   onTitleChange: (title: string) => void
   onDurationChange: (minutes: number) => void
   onDescChange: (desc: Record<string, unknown>) => void
+  /** Nails the block to a wall-clock time, or lets it float again. */
+  onPinChange: (minute: number | null) => void
   expanded: boolean
   /** Sets the block aside without deleting it. Absent where parking is not offered. */
   onPark?: () => void
@@ -108,7 +116,17 @@ export function ModuleRow({
 }) {
   const t = useTranslations('agenda')
   const description = isRichTextValue(mod.desc.description) ? mod.desc.description : null
-  const info = additionalInfo(mod)
+
+  const groups = parseSchema(type?.jsonSchema)
+  const participation = findField(groups, 'participation')
+  const materials = stringList(mod.desc.materials)
+  // Material has its own control in the editor, so it must not also arrive as
+  // a read-only chip beside it.
+  const info = summaryChips(groups, mod.desc, editing ? ['materials'] : [])
+  const hasNotes = hasFacilitatorNotes(mod)
+
+  const writeDesc = (key: string, value: unknown) =>
+    editing?.onDescChange(setDescField(mod.desc, key, value))
 
   const titleId = `module-title-${mod.id}`
 
@@ -137,7 +155,28 @@ export function ModuleRow({
       <span className="hidden md:block" />
 
       <div className={cn('pt-3 pb-3 pl-4 md:px-2 md:pl-2', nested && 'pl-7 md:pl-2')}>
-        <TimeCell entry={entry} editing={editing} />
+        <TimeCell
+          entry={entry}
+          editing={editing && { ...editing, pinnedStartMinute: mod.pinnedStartMinute }}
+        >
+          {participation &&
+            (editing ? (
+              <ParticipationControl
+                field={participation}
+                value={
+                  typeof mod.desc.participation === 'string' ? mod.desc.participation : undefined
+                }
+                onChange={(value) => writeDesc('participation', value)}
+              />
+            ) : (
+              <ParticipationBadge
+                field={participation}
+                value={
+                  typeof mod.desc.participation === 'string' ? mod.desc.participation : undefined
+                }
+              />
+            ))}
+        </TimeCell>
       </div>
 
       <span className="hidden md:block" />
@@ -180,6 +219,25 @@ export function ModuleRow({
                 {editing.expanded ? t('fewerFields') : t('moreFields')}
               </button>
 
+              {/*
+                Editor only. The field is the facilitator's own ("nur für
+                dich"), and AgendaTable is the surface a participant is handed
+                -- a marker there would announce that private notes exist.
+              */}
+              {hasNotes && !editing.expanded && (
+                <button
+                  type="button"
+                  onClick={editing.onToggleExpanded}
+                  aria-controls={`details-${mod.id}`}
+                  aria-expanded={editing.expanded}
+                  title={t('notes')}
+                  aria-label={t('notes')}
+                  className="mt-1.5 inline-flex items-center rounded px-1 py-0.5 text-[var(--fg-subtle)] hover:bg-[var(--surface-raised)] hover:text-[var(--fg-muted)]"
+                >
+                  <NotebookPen aria-hidden className="size-3.5" />
+                </button>
+              )}
+
               {editing.onPark && (
                 <button
                   type="button"
@@ -210,8 +268,17 @@ export function ModuleRow({
         )}
       </div>
 
-      <div className={cn('pb-3 pl-4 md:px-3 md:pt-3 md:pl-3', nested && 'pl-7 md:pl-3')}>
+      <div className={cn('space-y-1 pb-3 pl-4 md:px-3 md:pt-3 md:pl-3', nested && 'pl-7 md:pl-3')}>
         {info.length > 0 && <InfoChips items={info} />}
+        {editing && (
+          <ChipsInput
+            values={materials}
+            onChange={(next) => writeDesc('materials', next.length > 0 ? next : undefined)}
+            addLabel={t('materials.add')}
+            removeLabel={(name) => t('materials.remove', { name })}
+            placeholder={t('materials.placeholder')}
+          />
+        )}
       </div>
 
       <span className="hidden md:block" />
@@ -240,16 +307,29 @@ export function ModuleRow({
   )
 }
 
+/**
+ * What an editor may change about a section header.
+ *
+ * The pin, and nothing else. A section's title and colour are a separate
+ * feature with their own questions; bundling them here is how "the minimal
+ * shape" stops being minimal.
+ */
+export type ClusterEditing = {
+  onPinChange: (minute: number | null) => void
+}
+
 export function ClusterRow({
   cluster,
   entry,
   childCount,
   chrome,
+  editing,
 }: {
   cluster: ClusterDto
   entry: ScheduleEntry
   childCount: number
   chrome?: RowChrome
+  editing?: ClusterEditing
 }) {
   const t = useTranslations('agenda')
   const titleId = `cluster-title-${cluster.id}`
@@ -281,7 +361,16 @@ export function ClusterRow({
       <div className={cn('items-center', GRID)}>
         <span className="hidden md:block" />
         <div className="hidden py-2 md:block md:px-2">
-          <TimeCell entry={entry} showDuration={false} />
+          <TimeCell
+            entry={entry}
+            showDuration={false}
+            editing={
+              editing && {
+                onPinChange: editing.onPinChange,
+                pinnedStartMinute: cluster.pinnedStartMinute,
+              }
+            }
+          />
         </div>
         <span className="hidden md:block" />
         <div className="flex items-baseline gap-2 border-l-4 border-[var(--cat-bar)] py-2 pl-3 md:px-3">
@@ -292,6 +381,13 @@ export function ClusterRow({
             {t('blockCount', { count: childCount })} ·{' '}
             {formatDuration(entry.durationMinutes, { spaced: true })}
           </span>
+          {/*
+            A section can be pinned too, so it can overrun too. Without this the
+            conflict was computed and then never said out loud.
+          */}
+          {entry.conflict?.kind === 'overlap' && (
+            <OverlapWarning minutes={entry.conflict.minutes} />
+          )}
         </div>
         <span className="hidden md:block" />
         <span className="hidden md:block" />
@@ -305,6 +401,7 @@ export function ClusterRow({
  * would otherwise read as an unexplained jump in the time column.
  */
 export function GapRow({ minutes }: { minutes: number }) {
+  const t = useTranslations('agenda')
   return (
     <div aria-hidden className={cn('items-center', GRID)}>
       <span className="hidden md:block" />
@@ -312,7 +409,7 @@ export function GapRow({ minutes }: { minutes: number }) {
       <span className="hidden md:block" />
       <div className="flex items-center gap-2 py-1.5 pl-4 md:col-span-3 md:pl-3">
         <span className="tabular text-[13px] text-[var(--fg-subtle)]">
-          {formatDuration(minutes, { spaced: true })} Puffer
+          {formatDuration(minutes, { spaced: true })} {t('buffer')}
         </span>
         <span className="h-px flex-1 border-t border-dashed border-[var(--border-strong)]" />
       </div>
@@ -346,15 +443,19 @@ export function EndOfDay({
   )
 }
 
-function InfoChips({ items }: { items: string[] }) {
+function InfoChips({ items }: { items: SummaryChip[] }) {
   return (
     <ul className="flex flex-wrap gap-1">
       {items.map((item) => (
         <li
-          key={item}
+          key={`${item.key}:${item.text}`}
+          // The field's own name, so a chip reading "Mira" is not a riddle for
+          // anyone using a screen reader.
+          title={item.label}
           className="rounded border border-[var(--border)] bg-[var(--surface)] px-1.5 py-0.5 text-[13px] text-[var(--fg-muted)]"
         >
-          {item}
+          <span className="sr-only">{item.label}: </span>
+          {item.text}
         </li>
       ))}
     </ul>
@@ -362,17 +463,12 @@ function InfoChips({ items }: { items: string[] }) {
 }
 
 /**
- * Only a handful of `desc` fields ever reach the table: the ones a module type
- * flags with `x-gw.summary`. Everything else lives in the inspector. The moment
- * arbitrary schema fields render inline, the product becomes a database admin
- * panel.
+ * Whether there is a facilitator note worth pointing at.
+ *
+ * An empty rich-text document is still a document, so the text has to be
+ * looked at rather than the key.
  */
-function additionalInfo(mod: ModuleDto): string[] {
-  const out: string[] = []
-  const materials = mod.desc.materials
-  if (Array.isArray(materials))
-    out.push(...materials.filter((m): m is string => typeof m === 'string'))
-  if (typeof mod.desc.catering_note === 'string') out.push(mod.desc.catering_note)
-  if (typeof mod.desc.deliverable === 'string') out.push(mod.desc.deliverable)
-  return out
+function hasFacilitatorNotes(mod: ModuleDto): boolean {
+  const notes = mod.desc.facilitator_notes
+  return isRichTextValue(notes) && toPlainText(notes).trim() !== ''
 }

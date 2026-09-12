@@ -75,6 +75,7 @@ declare const messages: {
     "addTag": "Tag hinzufügen",
     "blockCount": "{count, plural, one {# Block} other {# Blöcke}}",
     "breaks": "{duration} Pausen",
+    "buffer": "Puffer",
     "columns": {
       "time": "Zeit",
       "titleAndDescription": "Titel und Beschreibung",
@@ -109,8 +110,15 @@ declare const messages: {
       "unset": "— keine Angabe —"
     },
     "filterPlaceholder": "Tippen zum Filtern …",
+    "materials": {
+      "add": "Material hinzufügen",
+      "remove": "Material {name} entfernen",
+      "placeholder": "+ Material"
+    },
     "moreFields": "Mehr Felder",
+    "noFields": "Dieser Modultyp hat keine weiteren Felder.",
     "noTypeMatches": "Kein Blocktyp passt dazu.",
+    "notes": "Moderationsnotizen vorhanden",
     "offline": "Keine Verbindung. Deine Änderungen werden übertragen, sobald sie wieder steht.",
     "overPlan": "{duration} über Plan",
     "overlap": "Überschneidet den vorherigen Block um {duration}",
@@ -119,6 +127,16 @@ declare const messages: {
     "parkLabel": "{title} parken",
     "parkedHeading": "Geparkt ({count, number})",
     "parkedHint": "Gehört zum Tag, zählt nicht zur Zeit.",
+    "participation": {
+      "choose": "Sozialform wählen",
+      "unset": "keine Angabe"
+    },
+    "pin": {
+      "set": "Startzeit fixieren",
+      "clear": "Fixierung aufheben",
+      "time": "Fixierte Startzeit"
+    },
+    "pinnedStart": "Startzeit fixiert:",
     "presence": "Weitere Personen an diesem Tag",
     "regionLabel": "Agenda {title}",
     "removeTag": "Tag {name} entfernen",
