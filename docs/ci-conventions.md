@@ -56,6 +56,15 @@ because the digest-merge mechanics look awkward.
 - Declare `permissions:` minimally per job. `packages: write` **only** in the release job.
 - Caching: `actions/setup-node` with `cache: pnpm`; Playwright browsers through `actions/cache`
   keyed on the lockfile hash; Docker layers through `cache-from/to: type=gha`.
+- **Ignore patterns carry no leading anchor.** Every one in `eslint.config.mjs` is prefixed with
+  `**/`, and `.claude/worktrees/**` is ignored outright. Sessions here work in git worktrees
+  placed _inside_ the repository, so an anchored `.next/**` walks around the artefact one
+  directory down: once a worktree had been built, `pnpm lint` in the main checkout drowned in
+  hundreds of findings from minified vendor chunks. CI never saw it, because CI has no
+  worktrees — which is the point worth remembering.
+  **A green pipeline is not evidence that a local command works.** A worktree is a checkout of
+  its own at its own commit, with its own lint run; linting one from the main checkout reports
+  findings about code that is not on this branch.
 
 ## The registry name has to be lowercase
 
