@@ -80,6 +80,13 @@ export default defineConfig({
         // a hook that calls server actions have no meaningful unit surface.
         'src/features/agenda/keyboard.ts',
         'src/features/agenda/use-persistence.ts',
+        // The same category, and it only appears on this list because Vitest 4
+        // started counting files no test imports -- under 3 it was never
+        // measured at all, so this restores the intended scope rather than
+        // narrowing it. What the hook does is asserted through
+        // agenda-surface.test.tsx and by Playwright, which is where a React
+        // hook's behaviour is legible.
+        'src/features/agenda/use-local-document.ts',
         // A hand-written WebSocket client with reconnect backoff, and the hook
         // that drives it. What matters about them -- that an edit reaches the
         // other browser -- is asserted end to end by Playwright and by the
