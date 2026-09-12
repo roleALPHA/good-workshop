@@ -4,9 +4,29 @@ on:
   pull_request:
   push:
     branches: [main]
+  # Nightly on main, and not redundant with the push runs.
+  #
+  # Nothing here is hermetic: the lockfile pins packages but not the registry,
+  # the Dockerfile pins a base image by tag, Playwright downloads a browser, and
+  # the runner image itself is rebuilt weekly. A pipeline that only runs when
+  # somebody pushes tells you that the code was fine on the day it was written
+  # -- and that is the day nobody needs to be told about. What matters is
+  # finding out on a Tuesday that `main` stopped building, rather than finding
+  # out from the first pull request after a fortnight of quiet.
+  #
+  # 03:40 rather than on the hour: GitHub's scheduler queues everything written
+  # at :00, and a job that starts twenty minutes late for no reason is a job
+  # somebody eventually stops trusting.
+  schedule:
+    - cron: '40 3 * * *'
+  # So a run can be asked for after changing something outside this repository
+  # -- a registry credential, a base image, a branch protection rule.
+  workflow_dispatch:
 
 concurrency:
-  group: ${{ github.workflow }}-${{ github.ref }}
+  # Scheduled runs share `github.ref` with pushes to main, and cancelling one
+  # because the other started would mean the nightly quietly never completes.
+  group: ${{ github.workflow }}-${{ github.ref }}-${{ github.event_name }}
   cancel-in-progress: true
 
 permissions:

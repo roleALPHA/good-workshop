@@ -71,8 +71,21 @@ because the digest-merge mechanics look awkward.
 
 ## Conventions
 
-- `concurrency: { group: ${{ github.workflow }}-${{ github.ref }}, cancel-in-progress: true }`
-  in every workflow — otherwise superseded commits keep running.
+- `concurrency` in every workflow — otherwise superseded commits keep running. `ci.yml` puts
+  `github.event_name` in the group as well: a scheduled run and a push to `main` share a ref, and
+  cancelling one because the other started would mean the nightly quietly never completes.
+- **`ci.yml` also runs nightly on `main`, and that is not redundant.** Nothing in this pipeline
+  is hermetic: the lockfile pins packages but not the registry, the Dockerfile pins a base image
+  by tag, Playwright downloads a browser, and the runner image is rebuilt weekly. A pipeline that
+  runs only on a push tells you the code was fine on the day it was written — the one day nobody
+  needs to be told about. The nightly is how `main` breaking gets noticed on a Tuesday instead of
+  in the first pull request after a fortnight of quiet.
+
+  Two things to know about it: GitHub **disables a scheduled workflow after 60 days** with no
+  activity in the repository, and it says so by e-mail — a silent nightly is a stopped nightly,
+  not a passing one. And `workflow_dispatch` is on the same file, so a run can be asked for after
+  something changed _outside_ the repository.
+
 - Every action pinned to a **full-length commit SHA**, not to `@v4`. Dependabot keeps them
   current — `.github/dependabot.yml` covers actions, npm and Docker, weekly.
 - **Repository security settings are part of the setup, not a preference.** Secret scanning with
