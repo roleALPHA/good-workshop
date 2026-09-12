@@ -80,6 +80,43 @@ test('invites a colleague, shares a workshop, and edits it together', async ({ p
     colleague,
   )
 
+  // ── Downgraded to reading: the agenda, and no way into it ─────────────
+  // The colleague used to be handed the whole editor here, connected to
+  // nothing -- so every control worked and every change was gone on reload.
+  await page.goto(`/w/${workshopId}/sharing`)
+  await page.getByLabel(`Zugriff von ${colleague}`).selectOption('viewer')
+  await expect(page.getByLabel(`Zugriff von ${colleague}`)).toHaveValue('viewer')
+
+  await second.page.goto(dayUrl)
+  await expect(second.page.getByText('Nur Lesen')).toBeVisible()
+
+  // What they came for is still all there -- but it arrives by a different
+  // road. An editor is handed the live document; a reader is handed the
+  // server-rendered one, which comes from the relational tables, which the room
+  // writes on a 3s debounce (`materializeDebounceMs`). So this reloads until
+  // the block has landed rather than assuming it already has. The wait is the
+  // materialisation, not the rendering.
+  await expect(async () => {
+    await second.page.reload()
+    await expect(second.page.getByRole('article', { name: 'Energizer' })).toBeVisible({
+      timeout: 1_000,
+    })
+  }).toPass({ timeout: 15_000 })
+
+  // And deliberately NOT `connected()`: there is no document to join.
+  await expect(second.page.getByRole('button', { name: 'Block hinzufügen' })).toHaveCount(0)
+  await expect(second.page.getByRole('region', { name: /^Agenda/ })).not.toHaveAttribute(
+    'data-save-state',
+    'live',
+  )
+
+  // The same answer one level up, before the workshop is even opened -- and
+  // no bin button, which the server would refuse anyway.
+  await second.page.goto('/library')
+  const shared = second.page.getByRole('listitem').filter({ hasText: title })
+  await expect(shared.getByText('Nur Lesen')).toBeVisible()
+  await expect(shared.getByRole('button', { name: /Papierkorb/ })).toHaveCount(0)
+
   // ── Revoking takes it away again ──────────────────────────────────────
   await page.goto(`/w/${workshopId}/sharing`)
   await page.getByLabel(`Zugriff von ${colleague}`).selectOption('none')
