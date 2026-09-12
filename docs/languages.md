@@ -111,8 +111,10 @@ whose entire job is relaying WebSocket frames.
 
 ## What deliberately stays untranslated
 
-- **`GoodWorkshop · powered by roleALPHA`.** In the footer and in the mail signature. Not in the
-  catalogs, not interpolated from tenant data.
+- **`GoodWorkshop · powered by roleALPHA · AGPL-3.0`.** In the footer, the print view, the two
+  mail signatures and the Markdown export. Not in the catalogs, not interpolated from tenant
+  data — it lives in `src/lib/attribution.ts`, in the three shapes those surfaces need. A
+  constant is not a translation.
 - **MCP tool descriptions, server instructions and errors.** Prompt material for a model, not
   interface text: four variants would be four artifacts whose correctness means "the model still
   behaves", which no translator can check. The exception is `get_workshop` with

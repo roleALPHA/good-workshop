@@ -1,5 +1,6 @@
 import { describe, expect, it } from 'vitest'
 import { magicLinkMail } from './mail'
+import { ATTRIBUTION_TEXT } from '@/lib/attribution'
 import { LOCALES } from '@/i18n/config'
 
 /**
@@ -31,9 +32,17 @@ describe('magicLinkMail', () => {
     // docs/ui-conventions.md says this string is not in the catalogs and is
     // not interpolated from tenant data. A mail reaches the same person as the
     // footer does.
-    expect(magicLinkMail('a@b.test', LINK, locale).text).toContain(
-      'GoodWorkshop · powered by roleALPHA',
-    )
+    expect(magicLinkMail('a@b.test', LINK, locale).text).toContain(ATTRIBUTION_TEXT)
+  })
+
+  it('spells the two addresses out, because a mail has nothing to click', () => {
+    const { text } = magicLinkMail('a@b.test', LINK, 'de')
+    expect(text).toContain('rolealpha.com')
+    // AGPL section 13: whoever uses this over the network has to be able to
+    // reach the source. A licence name on its own does not do that.
+    expect(text).toContain('AGPL-3.0')
+    expect(text).toContain('github.com/roleALPHA/good-workshop')
+    expect(text).not.toContain('](')
   })
 
   it.each(LOCALES)('renders every argument in %s -- no leftover placeholders', (locale) => {

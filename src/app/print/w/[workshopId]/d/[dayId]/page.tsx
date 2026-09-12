@@ -8,6 +8,7 @@ import { flattenDay, toScheduleItems } from '@/features/agenda/flatten'
 import { findField, parseSchema } from '@/domain/moduleType/profile'
 import { ParticipationBadge } from '@/components/agenda/participation-control'
 import { catClass } from '@/lib/category-colors'
+import { ATTRIBUTION_TEXT } from '@/lib/attribution'
 import { RichText } from '@/lib/richtext/render'
 import { isRichTextValue } from '@/lib/richtext/schema'
 import { readSession } from '@/server/auth/session'
@@ -172,9 +173,7 @@ export default async function PrintPage({
       <p className="tabular mt-6 border-t border-neutral-300 pt-3 text-neutral-600">
         {t('end', { time: formatTime(schedule.dayEndMinute, locale) })}
       </p>
-      <p className="mt-6 text-center text-xs text-neutral-500">
-        GoodWorkshop · powered by roleALPHA
-      </p>
+      <p className="mt-6 text-center text-xs text-neutral-500">{ATTRIBUTION_TEXT}</p>
     </main>
   )
 }

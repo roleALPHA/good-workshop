@@ -4,6 +4,7 @@ import { formatDuration, formatTime } from '@/features/agenda/duration'
 import { flattenDay, toScheduleItems } from '@/features/agenda/flatten'
 import { richTextToMarkdown } from '@/lib/richtext/markdown'
 import { isRichTextValue } from '@/lib/richtext/schema'
+import { ATTRIBUTION_MARKDOWN } from '@/lib/attribution'
 import { DEFAULT_LOCALE, type Locale } from '@/i18n/config'
 import { parseSchema } from '@/domain/moduleType/profile'
 import type { ModuleTypeDto } from '@/domain/agenda/types'
@@ -104,7 +105,7 @@ export function renderDayMarkdown(
     if (details) out.push(details)
   }
 
-  out.push('---', 'GoodWorkshop · powered by roleALPHA')
+  out.push('---', ATTRIBUTION_MARKDOWN)
 
   return (
     out
