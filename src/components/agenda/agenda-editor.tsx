@@ -396,7 +396,13 @@ export function AgendaEditor({ document: agenda }: { document: AgendaDocument })
         <LiveRegion message={liveMessage} />
       </section>
 
-      <DragOverlay dropAnimation={null}>
+      {/* `pointerEvents: 'none'` for the same reason the library's overlay has
+          it: a ghost of what you are carrying must never be a target. Here it is
+          a guard rather than a fix -- `dropAnimation={null}` unmounts the
+          overlay the moment the pointer is released, so there is no window in
+          which it could swallow a press. Enabling a drop animation without this
+          would open one. */}
+      <DragOverlay dropAnimation={null} style={{ pointerEvents: 'none' }}>
         {activeRow && activeRow.kind !== 'gap' ? (
           // This wrapper keeps the dragged row's exact box, and that is not
           // cosmetic: dnd-kit measures the overlay's only element child
