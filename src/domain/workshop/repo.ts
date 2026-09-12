@@ -1,5 +1,5 @@
 import { uuidv7 } from 'uuidv7'
-import { and, asc, desc, eq, ilike, isNotNull, isNull, or, sql } from 'drizzle-orm'
+import { and, asc, desc, eq, ilike, isNotNull, isNull, ne, or, sql } from 'drizzle-orm'
 import type { Actor, Tx } from '@/server/db'
 import {
   folder,
@@ -9,7 +9,7 @@ import {
   workshopCollaborator,
   workshopDay,
 } from '@/server/db/schema'
-import { keyAtEnd } from '@/domain/agenda/ordering'
+import { keyAtEnd, placeAfter } from '@/domain/agenda/ordering'
 import { NotFoundError, type WorkshopAccess } from '@/domain/agenda/access'
 import { DomainError } from '@/domain/errors'
 
@@ -368,6 +368,48 @@ export async function restoreWorkshop(tx: Tx, access: WorkshopAccess): Promise<v
     .where(eq(workshop.id, access.workshopId))
 }
 
+export class WorkshopFolderError extends DomainError {}
+
+/**
+ * Files a workshop in a folder, or takes it out of all of them.
+ *
+ * Deliberately NOT a change to `updated_at`. The library is sorted by it, so
+ * bumping it would send every filed workshop to the top of the list -- somebody
+ * tidying ten of them away would watch the list rebuild itself ten times, and
+ * each row would move for a reason that has nothing to do with what they did.
+ * Filing is about where a workshop sits, not about what it says. `trashWorkshop`
+ * and `restoreWorkshop` above draw the same line for the same reason.
+ *
+ * `position` is left alone as well: for workshops the column is written at
+ * insert and read by nothing. Writing a key here would invent an order the rest
+ * of the system does not honour.
+ */
+export async function moveWorkshopToFolder(
+  tx: Tx,
+  access: WorkshopAccess,
+  folderId: string | null,
+): Promise<void> {
+  if (folderId !== null) {
+    // RLS hides another tenant's folders, so "no row" covers both "gone" and
+    // "not yours" -- and it answers before the composite foreign key can fail
+    // in a way nobody can read.
+    const rows = await tx
+      .select({ id: folder.id })
+      .from(folder)
+      .where(eq(folder.id, folderId))
+      .limit(1)
+    if (!rows[0]) throw new WorkshopFolderError('folder.targetGone')
+  }
+
+  // No existence check on the workshop: assertWorkshopAccess already found the
+  // row, excluded trashed ones and took FOR UPDATE on it. The access token is
+  // the proof. renameWorkshop relies on the same thing.
+  await tx
+    .update(workshop)
+    .set({ folderId, updatedBy: access.actor.memberId })
+    .where(eq(workshop.id, access.workshopId))
+}
+
 /**
  * The one irreversible operation in the application.
  *
@@ -426,60 +468,141 @@ export class FolderMoveError extends DomainError {}
  * a theoretical case: it is what a drag onto the wrong row does, and the result
  * would be a cycle -- a subtree detached from the root, invisible in the
  * sidebar and unreachable except by id.
+ *
+ * `afterId` names the sibling the folder lands behind, null for first. An
+ * anchor rather than an index, for the reason `placeAfter` documents: if a
+ * sibling moved in the meantime you still land after the right neighbour.
  */
-export async function moveFolder(tx: Tx, id: string, parentId: string | null): Promise<void> {
+export async function moveFolder(
+  tx: Tx,
+  id: string,
+  parentId: string | null,
+  afterId: string | null = null,
+): Promise<void> {
   const rows = await tx
-    .select({ id: folder.id, parentId: folder.parentId, ancestors: folder.ancestorIds })
+    .select({
+      id: folder.id,
+      name: folder.name,
+      parentId: folder.parentId,
+      ancestors: folder.ancestorIds,
+    })
     .from(folder)
     .where(eq(folder.id, id))
     .limit(1)
 
   const moving = rows[0]
   if (!moving) throw new FolderMoveError('folder.gone')
-  if (moving.parentId === parentId) return
 
-  let ancestors: string[] = []
-  if (parentId !== null) {
-    if (parentId === id) throw new FolderMoveError('folder.intoItself')
+  // Staying under the same parent is no longer nothing to do: it is how the
+  // sidebar is put in order. Only the path rewrite below is skipped.
+  const reparenting = moving.parentId !== parentId
 
-    const targets = await tx
-      .select({ ancestors: folder.ancestorIds })
-      .from(folder)
-      .where(eq(folder.id, parentId))
-      .limit(1)
+  let ancestors: string[] = moving.ancestors
+  if (reparenting) {
+    ancestors = []
+    if (parentId !== null) {
+      if (parentId === id) throw new FolderMoveError('folder.intoItself')
 
-    const target = targets[0]
-    if (!target) throw new FolderMoveError('folder.targetGone')
-    if (target.ancestors.includes(id)) {
-      throw new FolderMoveError('folder.intoOwnDescendant')
+      const targets = await tx
+        .select({ ancestors: folder.ancestorIds })
+        .from(folder)
+        .where(eq(folder.id, parentId))
+        .limit(1)
+
+      const target = targets[0]
+      if (!target) throw new FolderMoveError('folder.targetGone')
+      if (target.ancestors.includes(id)) {
+        throw new FolderMoveError('folder.intoOwnDescendant')
+      }
+
+      ancestors = [...target.ancestors, parentId]
     }
 
-    ancestors = [...target.ancestors, parentId]
+    // Asked before the write, because folder_sibling_name_uq would otherwise
+    // answer with a unique violation that reaches the person as "something went
+    // wrong". Two projects each holding an "Archiv" is the most ordinary folder
+    // drag there is, and the name is something they can change.
+    const clash = await tx
+      .select({ id: folder.id })
+      .from(folder)
+      .where(
+        and(
+          sameParent(parentId),
+          sql`lower(${folder.name}) = lower(${moving.name})`,
+          ne(folder.id, id),
+        ),
+      )
+      .limit(1)
+    if (clash[0]) throw new FolderMoveError('folder.nameTaken')
   }
 
-  // The descendants, read and rewritten one by one rather than with an array
-  // expression built into the statement. A folder tree is hundreds of rows at
-  // most -- the same reason listFolders sorts in memory -- and the alternative
-  // meant interpolating ids into SQL text, which is a habit worth not having in
-  // this codebase even where the values come from the database.
-  const descendants = await tx
-    .select({ id: folder.id, ancestors: folder.ancestorIds })
+  if (reparenting) {
+    // The descendants, read and rewritten one by one rather than with an array
+    // expression built into the statement. A folder tree is hundreds of rows at
+    // most -- the same reason listFolders sorts in memory -- and the alternative
+    // meant interpolating ids into SQL text, which is a habit worth not having
+    // in this codebase even where the values come from the database.
+    const descendants = await tx
+      .select({ id: folder.id, ancestors: folder.ancestorIds })
+      .from(folder)
+      .where(sql`${id}::uuid = any(${folder.ancestorIds})`)
+
+    const newPath = [...ancestors, id]
+
+    for (const row of descendants) {
+      // Everything from the moved folder downwards is kept; what was above it is
+      // replaced by the new location.
+      const below = row.ancestors.slice(row.ancestors.indexOf(id) + 1)
+      await tx
+        .update(folder)
+        .set({ ancestorIds: [...newPath, ...below] })
+        .where(eq(folder.id, row.id))
+    }
+  }
+
+  // Without this the folder keeps a key from the sibling list it came from and
+  // lands among its new siblings at a spot nobody chose -- which, once a drag
+  // makes moving cheap, reads as the feature being broken.
+  const siblings = await tx
+    .select({ id: folder.id, position: folder.position })
     .from(folder)
-    .where(sql`${id}::uuid = any(${folder.ancestorIds})`)
+    .where(and(sameParent(parentId), ne(folder.id, id)))
 
-  const newPath = [...ancestors, id]
+  const placement = placeAfter(siblings, afterId)
+  const position =
+    placement.rebalance === null
+      ? placement.position
+      : await applyFolderRebalance(tx, placement.rebalance)
 
-  for (const row of descendants) {
-    // Everything from the moved folder downwards is kept; what was above it is
-    // replaced by the new location.
-    const below = row.ancestors.slice(row.ancestors.indexOf(id) + 1)
-    await tx
-      .update(folder)
-      .set({ ancestorIds: [...newPath, ...below] })
-      .where(eq(folder.id, row.id))
+  await tx
+    .update(folder)
+    .set({ parentId, ancestorIds: ancestors, position })
+    .where(eq(folder.id, id))
+}
+
+const sameParent = (parentId: string | null) =>
+  parentId === null ? isNull(folder.parentId) : eq(folder.parentId, parentId)
+
+/**
+ * Spreads a sibling list out again and returns the slot left for the mover.
+ *
+ * `redistribute` marks that slot with an empty id -- the same contract
+ * `applyRebalance` in the agenda repo reads. Rare and invisible: it only fires
+ * after many insertions between the same two folders.
+ */
+async function applyFolderRebalance(
+  tx: Tx,
+  rebalance: { id: string; position: string }[],
+): Promise<string> {
+  let reserved = ''
+  for (const row of rebalance) {
+    if (row.id === '') {
+      reserved = row.position
+      continue
+    }
+    await tx.update(folder).set({ position: row.position }).where(eq(folder.id, row.id))
   }
-
-  await tx.update(folder).set({ parentId, ancestorIds: ancestors }).where(eq(folder.id, id))
+  return reserved
 }
 
 /**

@@ -30,6 +30,7 @@ export const DOMAIN_ERROR_KEYS = [
   'folder.intoItself',
   'folder.targetGone',
   'folder.intoOwnDescendant',
+  'folder.nameTaken',
   // Tags
   'tags.tooMany',
   'tags.tooLong',
