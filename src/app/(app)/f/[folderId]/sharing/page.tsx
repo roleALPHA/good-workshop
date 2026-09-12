@@ -32,7 +32,7 @@ export default async function FolderSharingPage({
   if (!result.ok) notFound()
 
   const t = await getTranslations('library')
-  const { name, createdBy, grantable, people } = result.data
+  const { name, grantable, people } = result.data
 
   return (
     <div className="mx-auto max-w-2xl">
@@ -49,12 +49,7 @@ export default async function FolderSharingPage({
         )}
       </header>
 
-      <FolderSharingList
-        folderId={folderId}
-        createdBy={createdBy}
-        grantable={grantable}
-        people={people}
-      />
+      <FolderSharingList folderId={folderId} grantable={grantable} people={people} />
     </div>
   )
 }

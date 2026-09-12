@@ -19,13 +19,12 @@ import {
  */
 export function FolderSharingList({
   folderId,
-  createdBy,
   grantable,
   people,
 }: {
   folderId: string
-  createdBy: string | null
   grantable: readonly GrantableFolderRole[]
+  /** `access: 'creator'` is already resolved by the action; no id to compare. */
   people: FolderSharingView['people']
 }) {
   const t = useTranslations('library')
