@@ -491,9 +491,10 @@ text differ, the licence text is what counts.
 This is **source-available, not open source** in the OSI sense: the Commons Clause restricts a
 use that an open-source licence has to allow. GitHub accordingly shows the licence as "Other".
 
-**Earlier versions.** Releases up to and including `v0.3.1` were published under AGPL-3.0-only.
-Anyone who received one keeps those rights for that version; the new terms apply from the first
-release after it.
+**Earlier versions.** Releases up to and including `v0.3.1` were published under AGPL-3.0-only
+and have since been withdrawn — their release pages, tags and container images are gone. Anyone
+who received one keeps the rights that licence grants for that copy; the new terms apply from
+`v0.4.0`.
 
 **Other people's code.** The image ships with dependencies under their own licences.
 [THIRD-PARTY-LICENSES.md](THIRD-PARTY-LICENSES.md) is the index, and the notices themselves —
