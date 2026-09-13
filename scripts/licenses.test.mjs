@@ -178,6 +178,11 @@ describe('platform binaries in the index', () => {
     ['@img/sharp-libvips-darwin-arm64', '@img/sharp-libvips-*'],
     ['@next/swc-win32-ia32-msvc', '@next/swc-*'],
     ['@parcel/watcher-linux-x64-glibc', '@parcel/watcher-*'],
+    // sharp spells the libc into the platform token. This is what is actually
+    // inside the published Alpine image.
+    ['@img/sharp-linuxmusl-arm64', '@img/sharp-*'],
+    ['@img/sharp-libvips-linuxmusl-arm64', '@img/sharp-libvips-*'],
+    ['@swc/core-linux-arm64-musl', '@swc/core-*'],
     ['lightningcss-linux-arm64-musl', 'lightningcss-*'],
     ['@esbuild/darwin-arm64', '@esbuild/*'],
   ])('collapses %s', (name, expected) => {

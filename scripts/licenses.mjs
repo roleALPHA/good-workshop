@@ -171,16 +171,24 @@ export function violations(rows) {
  * attestation and has nothing platform-specific about it, and a looser rule
  * eats it.
  *
+ * `linuxmusl` is listed separately and BEFORE `linux`, because sharp spells the
+ * libc into the platform token rather than into a suffix: the image is built on
+ * Alpine and carries `@img/sharp-linuxmusl-arm64` where a glibc machine has
+ * `@img/sharp-linux-x64-gnu`. Found by reading the notice file out of a
+ * published image and noticing the name did not match anything on this laptop.
+ *
  * Only the INDEX collapses these. The notices file and the SBOM keep the real
  * names, because those describe one concrete build.
  */
 const PLATFORM_BINARY =
-  /-(darwin|linux|win32|freebsd|openbsd|android|sunos)-(x64|arm64|arm|ia32|s390x|ppc64|riscv64|loong64|mips64el)(-(musl|glibc|gnu|gnueabihf|msvc))?$/
+  /-(darwin|linuxmusl|linux|win32|freebsd|openbsd|android|sunos)-(x64|arm64|arm|ia32|s390x|ppc64|riscv64|loong64|mips64el)(-(musl|glibc|gnu|gnueabihf|msvc))?$/
 
 export function canonicalName(name) {
   // `@esbuild/darwin-arm64` puts the platform where the package name goes, so
   // the suffix rule above has nothing to bite on.
-  const scoped = /^(@[^/]+)\/(darwin|linux|win32|freebsd|openbsd|android|sunos)-/.exec(name)
+  const scoped = /^(@[^/]+)\/(darwin|linuxmusl|linux|win32|freebsd|openbsd|android|sunos)-/.exec(
+    name,
+  )
   if (scoped) return `${scoped[1]}/*`
   return name.replace(PLATFORM_BINARY, '-*')
 }
