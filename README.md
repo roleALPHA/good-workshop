@@ -95,7 +95,8 @@ roleALPHA · Apache-2.0 + Commons Clause`, with the name pointing at
 [rolealpha.com](https://rolealpha.com) and the licence at its full text.
 
 **Connects to an AI client.** GoodWorkshop is an MCP server: Claude Desktop, Claude Code or
-any other MCP client can read and write workshops. You create a token under **Tokens** in
+any other MCP client can do what the library and the day editor offer — folders, workshops,
+tags, the bin, days and their agendas. Sharing and user administration stay in the app. You create a token under **Tokens** in
 your settings; the page then prints the finished command or configuration for Claude Code,
 Claude Desktop, the Gemini CLI, Codex and Langdock, with this host and that token already in
 it. A token acts as the person who created it — it can never do more than that person can, and

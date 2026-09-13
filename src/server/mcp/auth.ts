@@ -115,7 +115,7 @@ export function hasScope(actor: PatActor, scope: McpScope): boolean {
 export class ScopeError extends Error {
   constructor(scope: McpScope) {
     super(
-      `Dieses Token hat den Bereich "${scope}" nicht. Lege in den Einstellungen ein Token mit diesem Bereich an.`,
+      `This token does not have the "${scope}" scope. Create a token with that scope in the settings.`,
     )
     this.name = 'ScopeError'
   }

@@ -25,6 +25,7 @@ export const DOMAIN_ERROR_KEYS = [
   'workshop.unknownModuleType',
   'workshop.unknownModuleTypeOptions',
   'workshop.descInvalid',
+  'workshop.lastDay',
   // Folders
   'folder.gone',
   'folder.intoItself',

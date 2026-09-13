@@ -267,8 +267,16 @@ Every change optionally takes `expectedVersion`. Without it a client with a five
 state silently overwrites live editing — which is then reported as "the AI deleted my
 workshop".
 
-There is deliberately **no** area for user administration: an MCP client must never be able to
-invite users or make anybody an admin.
+**A model can do what the library and the day editor let a person do** — create, move and
+delete folders; create, rename, file, tag, bin, restore and purge workshops; add, change and
+delete days; add, change, park, move and delete blocks and clusters. Every tool calls the same
+repository function behind the same capability check as the corresponding server action, so a
+token never reaches further than its person: moving and deleting folders stays with tenant
+admins, a viewer cannot rename, and `list_workshops` lists only what the library would.
+
+There is deliberately **no** area for user administration and none for access: an MCP client
+must never be able to invite users, make anybody an admin, or share a workshop or folder.
+Handing out access on somebody's behalf is a step a model must not be able to take.
 
 **A model is a collaborator, not a second write path.** Writing tools go through the same room
 as a browser: the model appears in the presence list, its block shows up immediately for

@@ -319,7 +319,8 @@
         "versionConflict": "L'atelier a été modifié entre-temps (attendu {expected}, trouvé {actual}).",
         "unknownModuleType": "Ce type de bloc n'existe pas.",
         "unknownModuleTypeOptions": "Type de bloc inconnu « {key} ». Disponibles : {available}",
-        "descInvalid": "Valeurs invalides : {issues}"
+        "descInvalid": "Valeurs invalides : {issues}",
+        "lastDay": "Un atelier a besoin d'au moins une journée. La dernière journée ne peut pas être supprimée."
       },
       "oauth": {
         "noRedirectUri": "Ce client n'a indiqué aucune adresse de retour utilisable.",

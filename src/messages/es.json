@@ -319,7 +319,8 @@
         "versionConflict": "El taller ha cambiado mientras tanto (esperado {expected}, encontrado {actual}).",
         "unknownModuleType": "Ese tipo de bloque no existe.",
         "unknownModuleTypeOptions": "Tipo de bloque desconocido «{key}». Disponibles: {available}",
-        "descInvalid": "Valores inválidos: {issues}"
+        "descInvalid": "Valores inválidos: {issues}",
+        "lastDay": "Un taller necesita al menos un día. El último día no se puede eliminar."
       },
       "oauth": {
         "noRedirectUri": "Este cliente no indicó una dirección de retorno válida.",
