@@ -1,4 +1,5 @@
 import { authConfig } from '@/server/auth/config'
+import { OAUTH_SCOPES } from '@/domain/oauth/rules'
 import { SCOPES } from '@/domain/tenant/tokens'
 
 /**
@@ -25,13 +26,29 @@ export function protectedResourceMetadata() {
   return {
     resource: mcpResource(),
     authorization_servers: [issuer()],
-    // The minimum that is still useful, per the specification's scope
-    // minimisation note -- a client asks for more through a step-up when it
-    // actually needs it, rather than up front because the list was there.
-    scopes_supported: ['workshops:read', 'module_types:read'],
+    // What a client should ask for, and it asks for exactly this. Reading alone
+    // left Claude and ChatGPT unable to write anything; see OAUTH_SCOPES.
+    scopes_supported: [...OAUTH_SCOPES],
     bearer_methods_supported: ['header'],
     resource_documentation: new URL('/settings/tokens', authConfig.appUrl).href,
   }
+}
+
+/**
+ * The WWW-Authenticate value of a 401 from /api/mcp.
+ *
+ * `resource_metadata` is what turns a 401 into a way forward -- RFC 9728, and a
+ * MUST in the MCP specification: a client that has never seen this server
+ * follows the pointer, finds the authorization server and starts the flow.
+ * `scope` is what it will ask for there, so it names the same list the metadata
+ * does.
+ */
+export function unauthorizedChallenge(): string {
+  return (
+    `Bearer realm="GoodWorkshop", error="invalid_token", ` +
+    `resource_metadata="${protectedResourceUrl()}", ` +
+    `scope="${OAUTH_SCOPES.join(' ')}"`
+  )
 }
 
 /** RFC 8414, which is one of the two discovery mechanisms a client may expect. */

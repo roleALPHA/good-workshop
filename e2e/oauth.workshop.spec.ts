@@ -31,11 +31,15 @@ test('a client discovers, registers, is consented to, and then reads', async ({
   // Without this pointer a client that has never seen this server has nowhere
   // to go -- which is why the specification makes it a MUST.
   expect(challenge401).toContain('resource_metadata=')
+  // And what to ask for. Reading alone left a client able to look at an agenda
+  // and unable to build one.
+  expect(challenge401).toContain('workshops:write')
   const metadataUrl = /resource_metadata="([^"]+)"/.exec(challenge401)![1]!
 
   // ── 2. Discovery ────────────────────────────────────────────────────────
   const prm = await (await request.get(metadataUrl)).json()
   expect(prm.resource).toBe(`${baseURL}/api/mcp`)
+  expect(prm.scopes_supported).toContain('workshops:write')
 
   const asMeta = await (
     await request.get(`${prm.authorization_servers[0]}/.well-known/oauth-authorization-server`)
@@ -58,7 +62,7 @@ test('a client discovers, registers, is consented to, and then reads', async ({
   authorize.searchParams.set('response_type', 'code')
   authorize.searchParams.set('code_challenge', challenge)
   authorize.searchParams.set('code_challenge_method', 'S256')
-  authorize.searchParams.set('scope', 'workshops:read module_types:read')
+  authorize.searchParams.set('scope', prm.scopes_supported.join(' '))
   authorize.searchParams.set('state', 'xyz')
   authorize.searchParams.set('resource', `${baseURL}/api/mcp`)
 
@@ -67,6 +71,7 @@ test('a client discovers, registers, is consented to, and then reads', async ({
   await expect(page.getByText('E2E-Client')).toBeVisible()
   // It says what it will be able to do, in words, before anybody agrees.
   await expect(page.getByText('Workshops lesen')).toBeVisible()
+  await expect(page.getByText('Workshops schreiben')).toBeVisible()
 
   // The redirect target is not a real host, so the navigation fails -- the URL
   // it tried is the thing under test.

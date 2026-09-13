@@ -76,6 +76,31 @@ export function registrableRedirectUri(raw: string): boolean {
 }
 
 /**
+ * What this installation offers a client that connects over OAuth.
+ *
+ * The workshops, to read and to write, and the block types a model has to know
+ * to write a block. It used to be the reading two alone -- "the minimum that is
+ * still useful", with a step-up to ask for more. No client ever stepped up: a
+ * refused write comes back as a tool result inside a 200, not as an HTTP 403
+ * with `insufficient_scope`, so Claude and ChatGPT were shown every write tool
+ * and could run none of them.
+ *
+ * Offering is not granting. The consent screen lists exactly these, in words,
+ * and nothing happens until a person agrees; a token still never reaches
+ * further than that person. What stays out is administrative: block types are
+ * an admin's catalog, the tenant is not a workshop, and members were never a
+ * scope at all.
+ *
+ * One list, read by the default below, the protected resource metadata and the
+ * 401 -- three places that once said the same thing separately.
+ */
+export const OAUTH_SCOPES: readonly Scope[] = [
+  'workshops:read',
+  'workshops:write',
+  'module_types:read',
+]
+
+/**
  * The scopes a request may actually receive.
  *
  * The intersection of what was asked for with what this product has -- an
@@ -86,8 +111,8 @@ export function registrableRedirectUri(raw: string): boolean {
  */
 export function narrowScopes(requested: string | null | undefined): Scope[] {
   const asked = (requested ?? '').split(/\s+/).filter(Boolean)
-  // No scope named at all means the minimum that is still useful: reading.
-  if (asked.length === 0) return ['workshops:read', 'module_types:read']
+  // No scope named at all means what is on offer; the consent screen says what that is.
+  if (asked.length === 0) return [...OAUTH_SCOPES]
   return SCOPES.filter((scope) => asked.includes(scope))
 }
 

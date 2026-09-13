@@ -19,10 +19,10 @@ import { Client } from './connect-guide'
  * - Signing in on the way does not bring somebody back to the consent screen
  *   (docs/architecture.md, "deliberately not built yet"), so being signed in
  *   first is the difference between one attempt and two.
- * - What such a client may do is decided by the scopes it asks for, and the
- *   ones this server offers it are the reading ones. Saying so here is cheaper
- *   than a facilitator discovering it halfway through asking Claude to build
- *   an agenda.
+ * - What such a client may do is decided by the scopes it asks for: reading
+ *   and writing workshops, and reading block types. Said here as well as on the
+ *   consent screen, because "can Claude build my agenda" is the question
+ *   somebody arrives at this page with.
  *
  * Menu labels in the vendors' products are quoted as the vendors document
  * them and hedged once, not per step: they change, and a guide that pretends
@@ -51,7 +51,7 @@ export function OAuthGuide({ origin }: { origin: string }) {
       <ul className="mt-3 list-disc space-y-1.5 pl-5 text-[14px] text-[var(--fg-muted)]">
         <li>{t('publicNote')}</li>
         <li>{t('signInFirst')}</li>
-        <li>{t('readOnly')}</li>
+        <li>{t('permissions')}</li>
       </ul>
 
       <div className="mt-4 space-y-2">

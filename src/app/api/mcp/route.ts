@@ -7,7 +7,7 @@ import { resolveBearer } from '@/server/mcp/auth'
 import { rateLimiter } from '@/server/auth/ratelimit'
 import { clientAddress } from '@/server/auth/client-address'
 import { buildMcpServer } from '@/server/mcp/server'
-import { protectedResourceUrl } from '@/server/oauth/metadata'
+import { unauthorizedChallenge } from '@/server/oauth/metadata'
 
 export const runtime = 'nodejs'
 export const dynamic = 'force-dynamic'
@@ -41,23 +41,9 @@ export async function POST(request: NextRequest) {
       status: 401,
       headers: {
         'content-type': 'application/json',
-        /**
-         * `resource_metadata` is what turns a 401 into a way forward.
-         *
-         * RFC 9728, and the MCP specification makes it a MUST: a client that
-         * has never seen this server reads the pointer, fetches the document,
-         * finds the authorization server and starts the flow. Without it the
-         * only clients that can ever connect are the ones somebody configured
-         * by hand with a token.
-         *
-         * `scope` names the minimum that is useful rather than everything on
-         * offer -- the specification's least-privilege guidance. A client asks
-         * for more through a step-up, when it actually needs more.
-         */
-        'www-authenticate':
-          `Bearer realm="GoodWorkshop", error="invalid_token", ` +
-          `resource_metadata="${protectedResourceUrl()}", ` +
-          `scope="workshops:read module_types:read"`,
+        // Where to go and what to ask for. Built beside the metadata document
+        // it points at, so the two cannot name different scopes.
+        'www-authenticate': unauthorizedChallenge(),
       },
     })
   }
