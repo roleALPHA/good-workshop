@@ -188,19 +188,19 @@ export function FolderRow({
  * after five letters whether anybody was pointing at it or not. Now the name
  * has the row until somebody reaches for the buttons.
  *
- * `pointer-events-none` while hidden, or an invisible button would swallow the
- * click meant for the name underneath it. Still focusable: opacity does not
- * take anything out of the tab order, and focus is what reveals the bar.
+ * Hidden by opacity alone, deliberately not by `pointer-events-none`. A pointer
+ * cannot reach the buttons without hovering the row, which shows them first, so
+ * nobody clicks one they could not see. And opacity keeps them in the tab order
+ * and hit-testable -- focus is what reveals the bar for a keyboard, and the
+ * library's end-to-end tests aim at these buttons by name.
  *
  * On a coarse pointer there is no hover to reveal anything with, so the bar
  * goes back into the flow, always visible -- the name yields there, as before.
  */
 const actionsClass = cn(
   'absolute inset-y-0 right-0 flex items-center gap-1 rounded bg-[var(--bg)] pl-1',
-  'pointer-events-none opacity-0',
-  'group-hover:pointer-events-auto group-hover:opacity-100',
-  'group-focus-within:pointer-events-auto group-focus-within:opacity-100',
-  'pointer-coarse:pointer-events-auto pointer-coarse:static pointer-coarse:opacity-100',
+  'opacity-0 group-hover:opacity-100 group-focus-within:opacity-100',
+  'pointer-coarse:static pointer-coarse:opacity-100',
 )
 
 /**
