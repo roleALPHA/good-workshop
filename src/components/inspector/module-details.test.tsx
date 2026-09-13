@@ -153,7 +153,7 @@ describe('the module detail fields', () => {
   })
 
   /**
-   * The row edits the social form and the material in place. Offering them
+   * The row edits the description, social form and material in place. Offering them
    * here as well is not merely redundant: two controls over one value means
    * whichever one somebody did not touch writes its stale copy over the other
    * on blur, and the change vanishes with both controls still on screen.
@@ -169,8 +169,7 @@ describe('the module detail fields', () => {
 
     expect(screen.queryByLabelText('Material')).not.toBeInTheDocument()
     expect(screen.queryByLabelText('Sozialform')).not.toBeInTheDocument()
-    // Still offered, because the row shows the description but cannot change it.
-    expect(screen.getByLabelText('Beschreibung')).toBeInTheDocument()
+    expect(screen.queryByLabelText('Beschreibung')).not.toBeInTheDocument()
   })
 
   it('does not mistake a row-edited value for one whose field is gone', () => {

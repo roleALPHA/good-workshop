@@ -1,10 +1,12 @@
-import { randomUUID, timingSafeEqual } from 'node:crypto'
+import { randomUUID } from 'node:crypto'
 import { and, count, eq } from 'drizzle-orm'
 import { withAuth, withTenantOnly } from '@/server/db'
 import { identity, member } from '@/server/db/schema'
 import { authConfig } from '@/server/auth/config'
 import { DomainError } from '@/domain/errors'
-import { generateSecret } from '@/server/auth/tokens'
+import { setupTokenMatches } from './setup-token'
+
+export { currentSetupToken, setupTokenMatches } from './setup-token'
 
 /**
  * First-run setup: the one screen that turns a fresh deployment into an
@@ -28,29 +30,6 @@ import { generateSecret } from '@/server/auth/tokens'
  * claim, and the route is gone -- not merely hidden. An installation cannot be
  * talked into a second first-run.
  */
-
-let setupToken: string | undefined
-
-/**
- * The token for this process, created on first use.
- *
- * Held in memory rather than in the database on purpose: a restart invalidates
- * it, which is the right behaviour for a credential that exists only to bridge
- * the first few minutes. It is printed by the boot hook, next to the other
- * things an operator reads out of the log.
- */
-export function currentSetupToken(): string {
-  setupToken ??= generateSecret(24)
-  return setupToken
-}
-
-export function setupTokenMatches(candidate: string): boolean {
-  const expected = Buffer.from(currentSetupToken(), 'utf8')
-  const given = Buffer.from(candidate.trim(), 'utf8')
-  // Length first: timingSafeEqual throws on a mismatch, and the length of a
-  // token is not the secret.
-  return expected.length === given.length && timingSafeEqual(expected, given)
-}
 
 /** Whether this installation still has nobody who could log in and configure it. */
 export async function needsSetup(): Promise<boolean> {

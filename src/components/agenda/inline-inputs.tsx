@@ -1,10 +1,12 @@
 'use client'
 
-import { useRef, useState } from 'react'
+import { useLayoutEffect, useRef, useState } from 'react'
 import { Lock, LockOpen } from 'lucide-react'
 import { useTranslations } from 'next-intl'
 import { formatDuration, parseDuration } from '@/features/agenda/duration'
 import { cn } from '@/lib/cn'
+import { markdownToRichText, richTextToMarkdown } from '@/lib/richtext/markdown'
+import type { RichTextValue } from '@/lib/richtext/schema'
 
 /**
  * Editing happens in the row, with no visible chrome until you touch it.
@@ -54,6 +56,85 @@ export function TitleInput({
     />
   )
 }
+
+export function DescriptionInput({
+  value,
+  label,
+  onCommit,
+  className,
+}: {
+  value: RichTextValue | null
+  label: string
+  onCommit: (value: RichTextValue | undefined) => void
+  className?: string
+}) {
+  const source = value ? editableMarkdown(value) : ''
+  const [draft, setDraft] = useState(source)
+  const ref = useRef<HTMLTextAreaElement>(null)
+  const cancelled = useRef(false)
+  // Adopt values from collaboration during render, matching the other inline
+  // fields and avoiding an extra stale paint after a remote change.
+  const [seenSource, setSeenSource] = useState(source)
+  if (source !== seenSource) {
+    setSeenSource(source)
+    setDraft(source)
+  }
+
+  useLayoutEffect(() => {
+    const textarea = ref.current
+    if (!textarea) return
+
+    const resize = () => {
+      textarea.style.height = 'auto'
+      if (textarea.scrollHeight > 0) textarea.style.height = `${textarea.scrollHeight}px`
+    }
+
+    resize()
+    window.addEventListener('resize', resize)
+    return () => window.removeEventListener('resize', resize)
+  }, [draft])
+
+  function commit() {
+    if (cancelled.current) {
+      cancelled.current = false
+      setDraft(source)
+      return
+    }
+
+    const next = draft.trim()
+    if (next === source.trim()) return
+    onCommit(next === '' ? undefined : markdownToRichText(next))
+  }
+
+  return (
+    <textarea
+      ref={ref}
+      rows={1}
+      aria-label={label}
+      placeholder={label}
+      className={cn(
+        bare,
+        'mt-1 -ml-1 min-h-7 resize-none overflow-hidden text-[15px] leading-6 text-[var(--fg-muted)] pointer-coarse:text-[16px]',
+        className,
+      )}
+      value={draft}
+      onChange={(event) => setDraft(event.target.value)}
+      onBlur={commit}
+      onKeyDown={(event) => {
+        if (event.key === 'Enter' && !event.shiftKey) {
+          event.preventDefault()
+          event.currentTarget.blur()
+        } else if (event.key === 'Escape') {
+          cancelled.current = true
+          event.currentTarget.blur()
+        }
+      }}
+    />
+  )
+}
+
+const editableMarkdown = (value: RichTextValue) =>
+  richTextToMarkdown(value).replaceAll('  \n', '\n')
 
 /**
  * The most-used control in the app.
