@@ -385,6 +385,8 @@ declare const messages: {
   },
   "library": {
     "allWorkshops": "Alle Workshops",
+    "collapseFolder": "Ordner {name} zuklappen",
+    "expandFolder": "Ordner {name} aufklappen",
     "atTopLevel": "auf der obersten Ebene",
     "bin": {
       "title": "Papierkorb",
@@ -408,8 +410,6 @@ declare const messages: {
       "instructions": "Zum Verschieben auf einen Ordner ziehen. Mit der Tastatur: die Schaltfläche daneben öffnet eine Auswahlliste.",
       "invalid": "{title} kann hier nicht abgelegt werden.",
       "landing": "{title} landet {where}.",
-      "nowAfter": "{name} steht jetzt hinter {after}.",
-      "nowFirst": "{name} steht jetzt an erster Stelle.",
       "picked": "{title} aufgenommen.",
       "region": "Verschieben"
     },
@@ -419,6 +419,8 @@ declare const messages: {
     "emptyHint": "Leg einen an — der erste Tag ist gleich mit dabei.",
     "folderName": "Name des Ordners",
     "folders": "Ordner",
+    "folderSearch": "Ordner suchen",
+    "folderSearchLabel": "Ordner durchsuchen",
     "hideFolders": "Ordner ausblenden",
     "inFolder": "in {name}",
     "moveFolderHint": "In einen anderen Ordner verschieben",
@@ -433,6 +435,7 @@ declare const messages: {
     "newFolder": "Ordner",
     "newWorkshop": "Neuer Workshop",
     "noFolder": "Ohne Ordner",
+    "noFolderMatch": "Kein Ordner passt zu „{query}“.",
     "removeFolder": "Ordner entfernen — der Inhalt rückt eine Ebene hoch",
     "removeFolderLabel": "Ordner {name} entfernen",
     "search": "Suchen",

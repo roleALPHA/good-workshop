@@ -2,12 +2,11 @@
 
 import Link from 'next/link'
 import { useState, useTransition } from 'react'
-import { FolderIcon, FolderInput, Users, X } from 'lucide-react'
+import { ChevronRight, FolderIcon, FolderInput, Users, X } from 'lucide-react'
 import { deleteFolderAction, moveFolderAction } from '@/server/actions/workshop'
 import { useTranslations } from 'next-intl'
 import { cn } from '@/lib/cn'
 import { DropTarget, MoveControl } from './drag-parts'
-import { InsertionLine } from './folder-tree'
 import { useLibraryDrag } from './library-dnd'
 
 /**
@@ -27,6 +26,10 @@ export function FolderRow({
   depth,
   active,
   canManage,
+  draggable = true,
+  foldable = false,
+  folded = false,
+  onToggleFold,
   /** Every folder this one may move into: itself and its own subtree excluded. */
   targets,
 }: {
@@ -36,6 +39,12 @@ export function FolderRow({
   depth: number
   active: boolean
   canManage: boolean
+  /** It has subfolders, so it can be folded. */
+  foldable?: boolean
+  folded?: boolean
+  onToggleFold?: () => void
+  /** False while the tree is filtered: the button then only opens the select. */
+  draggable?: boolean
   targets: { id: string; name: string; depth: number }[]
 }) {
   const t = useTranslations('library')
@@ -62,13 +71,12 @@ export function FolderRow({
     })
   }
 
-  // A workshop is aimed at one row; a folder is aimed between rows, so the row
-  // it would land under is highlighted and a line marks the slot.
+  // A workshop is aimed at one row; a folder is aimed between rows, and the row
+  // it would land under is highlighted. No line for the slot among siblings:
+  // they are alphabetical, so the folder takes its place by name.
   const takesWorkshop = dragging?.kind === 'workshop' && overId === id
   const becomesParent =
     dragging?.kind === 'folder' && projection?.valid === true && projection.parentId === id
-  const lineBelow =
-    dragging?.kind === 'folder' && projection?.valid === true && projection.afterId === id
 
   return (
     <DropTarget id={id}>
@@ -82,6 +90,28 @@ export function FolderRow({
               pendingId === id && 'opacity-60',
             )}
           >
+            {/* A spacer where there is nothing to fold, so every name starts at
+                the same place for its depth. */}
+            {foldable ? (
+              <button
+                type="button"
+                onClick={onToggleFold}
+                aria-expanded={!folded}
+                aria-label={folded ? t('expandFolder', { name }) : t('collapseFolder', { name })}
+                className={cn(foldClass, 'hover:bg-[var(--surface-raised)]')}
+              >
+                <ChevronRight
+                  aria-hidden
+                  className={cn(
+                    'size-3.5 transition-transform motion-reduce:transition-none',
+                    !folded && 'rotate-90',
+                  )}
+                />
+              </button>
+            ) : (
+              <span aria-hidden className={foldClass} />
+            )}
+
             <Link
               href={`/library?folder=${id}`}
               // A drop that lands on a link would otherwise navigate as well.
@@ -118,6 +148,7 @@ export function FolderRow({
               {canManage && (
                 <MoveControl
                   drag={{ kind: 'folder', id, name }}
+                  draggable={draggable}
                   expanded={moving}
                   onToggle={() => setMoving((open) => !open)}
                   label={t('moveFolderLabel', { name })}
@@ -142,8 +173,6 @@ export function FolderRow({
               )}
             </div>
           </div>
-
-          {lineBelow && <InsertionLine depth={projection.depth} />}
 
           {moving && (
             <div className="mt-1 ml-2">
@@ -201,6 +230,18 @@ const actionsClass = cn(
   'absolute inset-y-0 right-0 flex items-center gap-1 rounded bg-[var(--bg)] pl-1',
   'opacity-0 group-hover:opacity-100 group-focus-within:opacity-100',
   'pointer-coarse:static pointer-coarse:opacity-100',
+)
+
+/**
+ * The fold toggle, and the spacer that stands in for it.
+ *
+ * Small on a mouse, where it sits in a 200px sidebar next to the indent. Larger
+ * under a thumb, though not the full 44px: the row's own buttons already take
+ * that, and a second one per row would leave no room for the name.
+ */
+const foldClass = cn(
+  'grid size-5 shrink-0 place-items-center rounded text-[var(--fg-subtle)]',
+  'pointer-coarse:size-8',
 )
 
 /**

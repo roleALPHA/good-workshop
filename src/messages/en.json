@@ -382,6 +382,8 @@
   },
   "library": {
     "allWorkshops": "All workshops",
+    "collapseFolder": "Collapse folder {name}",
+    "expandFolder": "Expand folder {name}",
     "atTopLevel": "at the top level",
     "bin": {
       "title": "Bin",
@@ -405,8 +407,6 @@
       "instructions": "Drag onto a folder to move it. With the keyboard: the button next to it opens a list to pick from.",
       "invalid": "{title} cannot be dropped here.",
       "landing": "{title} will land {where}.",
-      "nowAfter": "{name} now sits behind {after}.",
-      "nowFirst": "{name} now sits first.",
       "picked": "Picked up {title}.",
       "region": "Moving"
     },
@@ -416,6 +416,8 @@
     "emptyHint": "Create one — the first day comes with it.",
     "folderName": "Folder name",
     "folders": "Folders",
+    "folderSearch": "Search folders",
+    "folderSearchLabel": "Search folders",
     "hideFolders": "Hide folders",
     "inFolder": "in {name}",
     "moveFolderHint": "Move into another folder",
@@ -430,6 +432,7 @@
     "newFolder": "Folder",
     "newWorkshop": "New workshop",
     "noFolder": "No folder",
+    "noFolderMatch": "No folder matches “{query}”.",
     "removeFolder": "Remove the folder — its contents move up one level",
     "removeFolderLabel": "Remove folder {name}",
     "search": "Search",

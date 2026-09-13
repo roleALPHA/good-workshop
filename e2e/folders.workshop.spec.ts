@@ -165,6 +165,53 @@ test('shows the folder tree on a phone too', async ({ page }) => {
   await expect(page).toHaveURL(/folder=/)
 })
 
+test('lists folders alphabetically, finds one by name, and folds a branch away', async ({
+  page,
+}) => {
+  const stamp = Date.now()
+  const zebra = `Zebra ${stamp}`
+  const anchor = `Anker ${stamp}`
+  const cabin = `Kajuete ${stamp}`
+  const link = (name: string) => sidebar(page).getByRole('link', { name, exact: true })
+
+  await page.goto('/library')
+
+  // Made in the wrong order on purpose: the tree puts them right.
+  for (const name of [zebra, anchor]) {
+    await sidebar(page).getByRole('button', { name: 'Ordner', exact: true }).click()
+    await page.getByLabel('Name des Ordners').fill(name)
+    await page.keyboard.press('Enter')
+    await expect(link(name)).toBeVisible()
+  }
+  await expect(async () => {
+    const names = (await sidebar(page).getByRole('link').allInnerTexts())
+      .map((text) => text.trim())
+      .filter((text) => text.endsWith(String(stamp)))
+    expect(names).toEqual([anchor, zebra])
+  }).toPass({ timeout: 10_000 })
+
+  await link(anchor).click()
+  await sidebar(page).getByRole('button', { name: 'Ordner', exact: true }).click()
+  await page.getByLabel('Name des Unterordners').fill(cabin)
+  await page.keyboard.press('Enter')
+  await expect(link(cabin)).toBeVisible()
+
+  // Folded away, and still folded after a reload: the browser remembers.
+  await sidebar(page)
+    .getByRole('button', { name: `Ordner ${anchor} zuklappen` })
+    .click()
+  await expect(link(cabin)).toBeHidden()
+  await page.reload()
+  await expect(link(anchor)).toBeVisible()
+  await expect(link(cabin)).toBeHidden()
+
+  // A search looks inside the folded branch anyway.
+  await sidebar(page).getByRole('searchbox', { name: 'Ordner durchsuchen' }).fill(cabin)
+  await expect(link(cabin)).toBeVisible()
+  await expect(link(anchor)).toBeVisible()
+  await expect(link(zebra)).toBeHidden()
+})
+
 test.describe('filing things by dragging them', () => {
   // By name: dnd-kit keeps a second, unnamed status region of its own, which
   // we silence but cannot remove.

@@ -382,6 +382,8 @@
   },
   "library": {
     "allWorkshops": "Tous les ateliers",
+    "collapseFolder": "Replier le dossier {name}",
+    "expandFolder": "Déplier le dossier {name}",
     "atTopLevel": "au niveau supérieur",
     "bin": {
       "title": "Corbeille",
@@ -405,8 +407,6 @@
       "instructions": "Faites glisser sur un dossier pour déplacer. Au clavier : le bouton à côté ouvre une liste de choix.",
       "invalid": "{title} ne peut pas être déposé ici.",
       "landing": "{title} arrivera {where}.",
-      "nowAfter": "{name} se trouve maintenant après {after}.",
-      "nowFirst": "{name} se trouve maintenant en premier.",
       "picked": "{title} saisi.",
       "region": "Déplacement"
     },
@@ -416,6 +416,8 @@
     "emptyHint": "Crées-en un — la première journée vient avec.",
     "folderName": "Nom du dossier",
     "folders": "Dossiers",
+    "folderSearch": "Rechercher un dossier",
+    "folderSearchLabel": "Rechercher dans les dossiers",
     "hideFolders": "Masquer les dossiers",
     "inFolder": "dans {name}",
     "moveFolderHint": "Déplacer dans un autre dossier",
@@ -430,6 +432,7 @@
     "newFolder": "Dossier",
     "newWorkshop": "Nouvel atelier",
     "noFolder": "Sans dossier",
+    "noFolderMatch": "Aucun dossier ne correspond à « {query} ».",
     "removeFolder": "Supprimer le dossier — son contenu remonte d'un niveau",
     "removeFolderLabel": "Supprimer le dossier {name}",
     "search": "Rechercher",

@@ -188,37 +188,37 @@ describe('filing a workshop', () => {
 })
 
 describe('ordering folders', () => {
-  it('moves a folder behind one of its siblings without changing its parent', async () => {
+  it('lists siblings alphabetically, not in the order they were made', async () => {
     const parent = await folderNamed('Kunden')
-    const a = await folderNamed('Alpha', parent)
-    const b = await folderNamed('Beta', parent)
     const c = await folderNamed('Gamma', parent)
+    const a = await folderNamed('Alpha', parent)
+    const b = await folderNamed('beta', parent)
+
     expect(await siblingOrder(parent)).toEqual([a, b, c])
-
-    // The case the early return used to swallow: same parent, new place.
-    await withTenant(admin(), (tx) => moveFolder(tx, c, parent, a))
-
-    expect(await siblingOrder(parent)).toEqual([a, c, b])
   })
 
-  it('puts a folder first when there is nothing to land behind', async () => {
+  /**
+   * `position` is still written -- an older MCP client may send `afterId` --
+   * but the list does not read it, so no placement can break the order.
+   */
+  it('keeps them alphabetical whatever a move asks for', async () => {
     const parent = await folderNamed('Projekte')
     const a = await folderNamed('Eins', parent)
     const b = await folderNamed('Zwei', parent)
 
     await withTenant(admin(), (tx) => moveFolder(tx, b, parent, null))
 
-    expect(await siblingOrder(parent)).toEqual([b, a])
+    expect(await siblingOrder(parent)).toEqual([a, b])
   })
 
-  it('lands where it was aimed after changing parent, not at an arbitrary spot', async () => {
+  it('takes its alphabetical place among the siblings of its new parent', async () => {
     const from = await folderNamed('Herkunft')
     const to = await folderNamed('Ziel')
     const first = await folderNamed('Erster', to)
     const second = await folderNamed('Zweiter', to)
     const moving = await folderNamed('Wanderer', from)
 
-    await withTenant(admin(), (tx) => moveFolder(tx, moving, to, first))
+    await withTenant(admin(), (tx) => moveFolder(tx, moving, to, null))
 
     expect(await siblingOrder(to)).toEqual([first, moving, second])
 
