@@ -13,7 +13,7 @@ included.
 **Your contribution itself is licensed under plain Apache-2.0, without the Commons Clause.**
 Section 5 of the Apache License already says that a contribution submitted for inclusion is under
 the terms of that licence; this file says which one is meant, so nobody has to argue about it
-later. The difference is practical: it lets roleALPHA, which maintains this project, keep
+later. The difference is practical: it lets roleALPHA GmbH, which maintains this project, keep
 offering GoodWorkshop under further terms — a hosted edition, for example — without having to
 find every contributor and ask. You keep the copyright in what you write, and there is no
 copyright assignment.
