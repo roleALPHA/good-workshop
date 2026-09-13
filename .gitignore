@@ -1,4 +1,8 @@
 node_modules/
+# Also the bare name: a worktree that links the main checkout's node_modules
+# has a symlink here, and `node_modules/` only matches a directory -- the link
+# was committed once and broke every CI install.
+node_modules
 .next/
 out/
 build/
