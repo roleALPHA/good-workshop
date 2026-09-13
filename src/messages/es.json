@@ -135,7 +135,7 @@
     "parkHint": "Sacarlo del desarrollo sin eliminarlo",
     "parkLabel": "Apartar {title}",
     "parkedHeading": "Apartados ({count, number})",
-    "parkedHint": "Pertenece a la jornada, no cuenta para el tiempo.",
+    "parkedHint": "Pertenece al taller, no cuenta para el tiempo.",
     "participation": {
       "choose": "Elegir la forma de participación",
       "unset": "sin indicar"
@@ -621,7 +621,20 @@
     "untitled": "Taller",
     "untitledDay": "Jornada",
     "you": "tú",
-    "withNotes": "Con notas de moderación"
+    "withNotes": "Con notas de moderación",
+    "day": {
+      "add": "Añadir jornada del taller",
+      "addShort": "Jornada",
+      "newTitle": "Día {number, number}",
+      "title": "Nombre de la jornada",
+      "date": "Fecha de la jornada",
+      "moveEarlier": "Mover la jornada antes",
+      "moveLater": "Mover la jornada después",
+      "delete": "Eliminar jornada del taller",
+      "deleteWarning": "¿Eliminar definitivamente «{title}» y su desarrollo? Los bloques apartados se conservan.",
+      "deleteConfirm": "Eliminar definitivamente",
+      "cancel": "Cancelar"
+    }
   },
   "oauth": {
     "title": "¿Permitir el acceso?",

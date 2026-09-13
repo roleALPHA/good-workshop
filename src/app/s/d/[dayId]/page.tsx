@@ -1,4 +1,3 @@
-import Link from 'next/link'
 import { notFound } from 'next/navigation'
 import { eq } from 'drizzle-orm'
 import { getLocale, getTranslations } from 'next-intl/server'
@@ -9,6 +8,7 @@ import { loadDay } from '@/domain/agenda/repo'
 import { presenceHue } from '@/domain/collab/presence'
 import { listDays } from '@/domain/workshop/repo'
 import { guestActor, readGuestSessionCached } from '@/server/auth/share-session'
+import { parkedElsewhere } from '@/server/collab/across-days'
 import { withTenant } from '@/server/db'
 import { workshop as workshopTable } from '@/server/db/schema'
 import { LeaveGuestAccess } from './leave'
@@ -62,7 +62,11 @@ export default async function GuestDayPage({ params }: { params: Promise<{ dayId
     return {
       doc,
       title: meta[0]?.title ?? t('untitled'),
-      days,
+      days: days.map(({ id, title, date }) => ({ id, title, date })),
+      // The shelf of the whole workshop is theirs to see. Bringing a block
+      // over from another day is not: that runs as a server action, and a
+      // guest session reaches the room but none of those.
+      parkedElsewhere: await parkedElsewhere(tx, guest.workshopId, dayId),
       canEdit: access.can('workshop.content.write'),
       // From the share link rather than a member id, so a guest keeps one colour
       // across their devices -- the same reasoning as for a colleague.
@@ -93,30 +97,19 @@ export default async function GuestDayPage({ params }: { params: Promise<{ dayId
           </div>
           <LeaveGuestAccess label={g('leave')} />
         </div>
-
-        {data.days.length > 1 && (
-          <nav aria-label={t('days')} className="mt-3 flex flex-wrap gap-1">
-            {data.days.map((day) => (
-              <Link
-                key={day.id}
-                href={`/s/d/${day.id}`}
-                aria-current={day.id === dayId ? 'page' : undefined}
-                className={`rounded px-2.5 py-1 text-[14px] ${
-                  day.id === dayId
-                    ? 'bg-[var(--brand-subtle-bg)] font-medium text-[var(--brand-subtle-fg)]'
-                    : 'text-[var(--fg-muted)] hover:bg-[var(--surface-raised)]'
-                }`}
-              >
-                {day.title || t('untitledDay')}
-              </Link>
-            ))}
-          </nav>
-        )}
       </header>
 
       <AgendaSurface
         doc={data.doc}
         canEdit={data.canEdit}
+        days={{
+          workshopId: guest.workshopId,
+          activeDayId: dayId,
+          basePath: '/s/d/',
+          days: data.days,
+          parkedElsewhere: data.parkedElsewhere,
+          canManage: false,
+        }}
         collab={
           data.canEdit
             ? {

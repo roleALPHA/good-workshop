@@ -302,12 +302,18 @@ export function readDayFields(doc: Y.Doc): {
   startMinute: number
   title: string
   desc: Record<string, unknown>
+  /**
+   * Undefined when the document never held a date, which is not the same as
+   * holding none: the first leaves the column alone, the second clears it.
+   */
+  date: string | null | undefined
 } {
   const day = dayOf(doc)
   return {
     startMinute: Number(day.get('startMinute') ?? 540),
     title: String(day.get('title') ?? ''),
     desc: (day.get('desc') as Record<string, unknown>) ?? {},
+    date: day.has('date') ? ((day.get('date') as string | null) ?? null) : undefined,
   }
 }
 

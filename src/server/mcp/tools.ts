@@ -5,10 +5,11 @@ import { uuidv7 } from 'uuidv7'
 import type { McpServer } from '@modelcontextprotocol/sdk/server/mcp.js'
 import {
   assertWorkshopAccess,
+  NotFoundError,
   VersionConflictError,
   type WorkshopAccess,
 } from '@/domain/agenda/access'
-import { loadDay } from '@/domain/agenda/repo'
+import { assertDayInWorkshop, loadDay } from '@/domain/agenda/repo'
 import { localiseModuleType } from '@/domain/moduleType/localise'
 import { ModuleDescError, validateModuleDesc } from '@/domain/moduleType/validate'
 import { setDayDate } from '@/domain/workshop/days'
@@ -39,6 +40,7 @@ import { firstDayOf } from '@/domain/workshop/repo'
 import { computeSchedule } from '@/domain/schedule/computeSchedule'
 import { formatDuration, formatTime } from '@/features/agenda/duration'
 import { flattenDay, toScheduleItems } from '@/features/agenda/flatten'
+import { moveModuleToDay, parkedElsewhere, roomEditor } from '@/server/collab/across-days'
 import { editInRoom } from '@/server/collab/client'
 import { renderDayMarkdown } from '@/server/export/markdown'
 import { withTenant, type Tx } from '@/server/db'
@@ -142,6 +144,8 @@ export function registerTools(server: McpServer, ctx: Ctx): void {
       title: 'Read a workshop day',
       description:
         'The agenda of a workshop day with computed start times, block ids, cluster ids and parked blocks. ' +
+        'The parking area belongs to the whole workshop: `parkedElsewhere` lists the blocks parked on the other days, ' +
+        'and move_module with toDayId brings one into this day. ' +
         'The structured `blocks` carry every field update_module can change. `view: markdown` returns the finished export.',
       inputSchema: {
         workshopId: Id,
@@ -208,6 +212,8 @@ export function registerTools(server: McpServer, ctx: Ctx): void {
           // Parked blocks are out of the running order, so flattenDay leaves
           // them out. A model that cannot see them cannot bring one back.
           const parked = doc.modules.filter((m) => m.parked)
+          // And the rest of the shelf, which is not on this day at all.
+          const elsewhere = await parkedElsewhere(tx, workshopId, resolvedDayId)
           const note = typeof doc.desc?.text === 'string' ? doc.desc.text : ''
 
           const blocks = [
@@ -247,10 +253,20 @@ export function registerTools(server: McpServer, ctx: Ctx): void {
               ...(parked.length > 0
                 ? [
                     '',
-                    'Parked (kept with the day, not scheduled):',
+                    'Parked on this day (not scheduled):',
                     ...parked.map(
                       (m) =>
                         `- ${m.title} · ${formatDuration(m.durationMinutes)} · ${typeKey(m.moduleTypeId) ?? '?'} · id=${m.id}`,
+                    ),
+                  ]
+                : []),
+              ...(elsewhere.length > 0
+                ? [
+                    '',
+                    'Parked on other days (bring one here with move_module, dayId=<its day>, toDayId=this day):',
+                    ...elsewhere.map(
+                      (m) =>
+                        `- ${m.title} · ${formatDuration(m.durationMinutes)} · ${typeKey(m.moduleTypeId) ?? '?'} · dayId=${m.dayId} · id=${m.id}`,
                     ),
                   ]
                 : []),
@@ -265,6 +281,13 @@ export function registerTools(server: McpServer, ctx: Ctx): void {
                 note,
               },
               blocks,
+              parkedElsewhere: elsewhere.map((m) => ({
+                id: m.id,
+                dayId: m.dayId,
+                title: m.title,
+                durationMinutes: m.durationMinutes,
+                typeKey: typeKey(m.moduleTypeId),
+              })),
             },
           )
         })
@@ -574,19 +597,55 @@ export function registerTools(server: McpServer, ctx: Ctx): void {
       title: 'Move a block',
       description:
         'Moves a block or cluster. `clusterId` is the cluster it goes into (null = day level; clusters ' +
-        'always stay at day level). `afterId` is the id of the sibling it should land after, or null for the top.',
+        'always stay at day level). `afterId` is the id of the sibling it should land after, or null for the top. ' +
+        '`toDayId` moves a block (not a cluster) to the end of another day of the same workshop -- the way to bring a ' +
+        'block from the parking area of one day into another. It gets a new id there, returned as `id`; ' +
+        '`parked` says whether it lands in the schedule (false) or stays parked (true, or left out).',
       inputSchema: {
         workshopId: Id,
         moduleId: Id,
-        dayId: Id,
+        dayId: Id.describe('The day the block is on now.'),
         clusterId: Id.nullable().default(null),
         afterId: Id.nullable().default(null),
+        toDayId: Id.optional(),
+        parked: z.boolean().optional(),
         expectedVersion: Version,
       },
     },
-    async ({ workshopId, moduleId, dayId, clusterId, afterId, expectedVersion }) =>
+    async ({ workshopId, moduleId, dayId, clusterId, afterId, toDayId, parked, expectedVersion }) =>
       guarded(async () => {
         requireScope(actor, 'workshops:write')
+
+        if (toDayId !== undefined && toDayId !== dayId) {
+          await preflight(workshopId, expectedVersion, async (tx, access) => {
+            await assertDayInWorkshop(tx, access, dayId)
+            await assertDayInWorkshop(tx, access, toDayId)
+          })
+
+          try {
+            const moved = await moveModuleToDay(
+              roomEditor({ workshopId, authorization, presence }),
+              { moduleId, fromDayId: dayId, toDayId, parked },
+            )
+            await record('module.move', workshopId, {
+              moduleId,
+              arrivedAs: moved.moduleId,
+              fromDayId: dayId,
+              toDayId,
+            })
+            return ok(`Moved to day ${toDayId}. Its id there: ${moved.moduleId}`, {
+              id: moved.moduleId,
+              contentVersion: moved.contentVersion.toString(),
+            })
+          } catch (error) {
+            if (!(error instanceof NotFoundError)) throw error
+            return fail(
+              `Block ${moduleId} is not a block on day ${dayId}; clusters cannot change day. ` +
+                'Read the day again with get_workshop.',
+            )
+          }
+        }
+
         await preflight(workshopId, expectedVersion)
         const { result, contentVersion } = await inRoom(workshopId, dayId, (doc) =>
           moveBlock(doc, moduleId, clusterId, afterId),
@@ -599,7 +658,7 @@ export function registerTools(server: McpServer, ctx: Ctx): void {
         }
 
         await record('module.move', workshopId, { moduleId })
-        return ok('Moved.', { contentVersion: contentVersion.toString() })
+        return ok('Moved.', { id: moduleId, contentVersion: contentVersion.toString() })
       }),
   )
 

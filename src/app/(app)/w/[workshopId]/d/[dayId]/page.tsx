@@ -12,6 +12,7 @@ import { loadDay } from '@/domain/agenda/repo'
 import { tagsOf } from '@/domain/workshop/tags'
 import { listDays } from '@/domain/workshop/repo'
 import { currentActor } from '@/server/actions/context'
+import { parkedElsewhere } from '@/server/collab/across-days'
 import { readSession } from '@/server/auth/session'
 import { memberIdOf, withTenant } from '@/server/db'
 import { workshop as workshopTable } from '@/server/db/schema'
@@ -54,7 +55,8 @@ export default async function DayPage({
       doc,
       contentVersion: contentVersion.toString(),
       title: meta[0]?.title ?? t('untitled'),
-      days: await listDays(tx, workshopId),
+      days: (await listDays(tx, workshopId)).map(({ id, title, date }) => ({ id, title, date })),
+      parkedElsewhere: await parkedElsewhere(tx, workshopId, dayId),
       tags: await tagsOf(tx, workshopId),
       canUpdate: access.can('workshop.update'),
       canEdit: access.can('workshop.content.write'),
@@ -108,30 +110,19 @@ export default async function DayPage({
             <HandoverLinks workshopId={workshopId} dayId={dayId} />
           </div>
         </div>
-
-        {data.days.length > 1 && (
-          <nav aria-label={t('days')} className="mt-3 flex flex-wrap gap-1">
-            {data.days.map((day) => (
-              <Link
-                key={day.id}
-                href={`/w/${workshopId}/d/${day.id}`}
-                aria-current={day.id === dayId ? 'page' : undefined}
-                className={`rounded px-2.5 py-1 text-[14px] ${
-                  day.id === dayId
-                    ? 'bg-[var(--brand-subtle-bg)] font-medium text-[var(--brand-subtle-fg)]'
-                    : 'text-[var(--fg-muted)] hover:bg-[var(--surface-raised)]'
-                }`}
-              >
-                {day.title || t('untitledDay')}
-              </Link>
-            ))}
-          </nav>
-        )}
       </header>
 
       <AgendaSurface
         doc={data.doc}
         canEdit={data.canEdit}
+        days={{
+          workshopId,
+          activeDayId: dayId,
+          basePath: `/w/${workshopId}/d/`,
+          days: data.days,
+          parkedElsewhere: data.parkedElsewhere,
+          canManage: data.canEdit,
+        }}
         collab={
           data.canEdit
             ? {

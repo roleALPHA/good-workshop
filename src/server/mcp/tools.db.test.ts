@@ -162,6 +162,7 @@ describe('the tool list', () => {
         'list_days',
         'create_day',
         'update_day',
+        'move_day',
         'delete_day',
         'add_cluster',
         'update_module',
@@ -358,6 +359,68 @@ describe('days', () => {
       workshopId,
     ])
     expect(remaining.rows.map((r: { id: string }) => r.id)).toEqual([firstDay])
+  })
+
+  it('orders days, and keeps one parking area across all of them', async () => {
+    const { must } = await connect(me)
+    const { data } = await must('create_workshop', { title: unique('Parkplatz') })
+    const workshopId = data.workshopId as string
+    const firstDay = data.dayId as string
+    const secondDay = (await must('create_day', { workshopId, title: 'Tag 2' })).data
+      .dayId as string
+
+    await must('move_day', { workshopId, dayId: secondDay, afterId: null })
+    const days = await must('list_days', { workshopId })
+    expect((days.data.days as { id: string }[]).map((d) => d.id)).toEqual([secondDay, firstDay])
+
+    // Parked on one day, seen from the other: a model that cannot see the
+    // shelf of the whole workshop cannot bring anything off it.
+    const block = await must('add_module', {
+      workshopId,
+      dayId: firstDay,
+      typeKey: 'break',
+      title: 'Plan B',
+    })
+    await must('update_module', {
+      workshopId,
+      dayId: firstDay,
+      moduleId: block.data.id,
+      parked: true,
+    })
+
+    const seen = await must('get_workshop', { workshopId, dayId: secondDay })
+    expect(seen.data.parkedElsewhere).toEqual([
+      expect.objectContaining({ id: block.data.id, dayId: firstDay, title: 'Plan B' }),
+    ])
+    expect(seen.text).toContain('Plan B')
+
+    const moved = await must('move_module', {
+      workshopId,
+      dayId: firstDay,
+      moduleId: block.data.id,
+      toDayId: secondDay,
+      parked: false,
+    })
+    expect(moved.data.id).not.toBe(block.data.id)
+
+    const arrived = await must('get_workshop', { workshopId, dayId: secondDay })
+    expect(arrived.data.blocks).toEqual([
+      expect.objectContaining({ id: moved.data.id, title: 'Plan B', parked: false }),
+    ])
+    expect(arrived.data.parkedElsewhere).toEqual([])
+
+    // Deleting a day takes its schedule, not its shelf.
+    await must('update_module', {
+      workshopId,
+      dayId: secondDay,
+      moduleId: moved.data.id,
+      parked: true,
+    })
+    const deleted = await must('delete_day', { workshopId, dayId: secondDay })
+    expect(deleted.text).toContain('1 parked')
+
+    const kept = await must('get_workshop', { workshopId, dayId: firstDay })
+    expect(kept.data.blocks).toEqual([expect.objectContaining({ title: 'Plan B', parked: true })])
   })
 })
 

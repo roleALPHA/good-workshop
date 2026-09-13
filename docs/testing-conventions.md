@@ -134,6 +134,8 @@ fixing, not the selector.
 9. Guest access: a member invites an address, a browser with no session is refused the wrong
    address and admitted with the right one, cannot reach the library, and loses access the
    moment the invitation is withdrawn
+10. Several days: a block parked on one day is brought into the next from the shared parking
+    area and is gone from the first; a day is named, moved without a pointer and deleted
 
 Flows whose feature does not exist yet are **not** anticipated as `test.fixme` stubs — they sit
 as a list in the header comment of `e2e/agenda.spec.ts` and arrive with their feature.

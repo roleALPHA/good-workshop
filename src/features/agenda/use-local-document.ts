@@ -2,7 +2,14 @@
 
 import { useCallback, useMemo, useState } from 'react'
 import type { DayDoc } from '@/domain/agenda/types'
-import type { AgendaDocument, ClusterPatch, ModulePatch, NewBlock, Peer } from './document'
+import type {
+  AgendaDocument,
+  ClusterPatch,
+  DayPatch,
+  ModulePatch,
+  NewBlock,
+  Peer,
+} from './document'
 import { applyMove } from './move'
 import type { Projection } from './projection'
 
@@ -15,8 +22,12 @@ import type { Projection } from './projection'
 export function useLocalDocument(initial: DayDoc): AgendaDocument {
   const [doc, setDoc] = useState(initial)
 
-  const patchDay = useCallback((patch: { desc?: Record<string, unknown> }) => {
-    setDoc((current) => ({ ...current, ...(patch.desc === undefined ? {} : { desc: patch.desc }) }))
+  const patchDay = useCallback((patch: DayPatch) => {
+    // Undefined means untouched, as everywhere here; `date: null` is a value.
+    const changes = Object.fromEntries(
+      Object.entries(patch).filter(([, value]) => value !== undefined),
+    )
+    setDoc((current) => ({ ...current, ...changes }))
   }, [])
 
   const patchModule = useCallback((moduleId: string, patch: ModulePatch) => {

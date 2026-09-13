@@ -217,6 +217,68 @@ test('parks a block out of the schedule and brings it back', async ({ page }) =>
   await expect(agenda.getByRole('article', { name: title })).toBeVisible()
 })
 
+test('runs over several days with one parking area for all of them', async ({ page }) => {
+  // A workshop that runs over two days: a block cut from the first is exactly
+  // the alternative somebody reaches for on the second.
+  await addBlock(page, 'Gruppenarbeit')
+  await page.getByRole('button', { name: 'Gruppenarbeit parken' }).click()
+  await expect(
+    page.getByRole('region', { name: /Geparkt/ }).getByRole('article', { name: 'Gruppenarbeit' }),
+  ).toBeVisible()
+
+  // Added and opened at once -- straight after parking, before the tables
+  // have caught up, which is the moment the shelf must not come up empty.
+  await page.getByRole('button', { name: 'Neuer Workshoptag' }).click()
+  const days = page.getByRole('navigation', { name: 'Tage' })
+  await expect(days.getByRole('link', { name: 'Tag 2' })).toHaveAttribute('aria-current', 'page')
+  await connected(page)
+
+  await page
+    .getByRole('region', { name: /Geparkt/ })
+    .getByRole('button', { name: 'Gruppenarbeit zurück in den Ablauf' })
+    .click()
+
+  // Into the schedule of the day on screen, through the room, without a reload.
+  await expect(
+    page.getByRole('region', { name: /^Agenda/ }).getByRole('article', { name: 'Gruppenarbeit' }),
+  ).toBeVisible()
+  await expect(page.getByRole('region', { name: /Geparkt/ })).toHaveCount(0)
+
+  // And off the first day: moved, not copied.
+  await days.getByRole('link', { name: 'Tag 1' }).click()
+  await expect(days.getByRole('link', { name: 'Tag 1' })).toHaveAttribute('aria-current', 'page')
+  await reloadUntil(page, async () => {
+    await expect(page.getByRole('article', { name: 'Gruppenarbeit' })).toHaveCount(0)
+  })
+})
+
+test('names, orders and deletes the days of a workshop', async ({ page }) => {
+  await page.getByRole('button', { name: 'Neuer Workshoptag' }).click()
+  const days = page.getByRole('navigation', { name: 'Tage' })
+  await expect(days.getByRole('link', { name: 'Tag 2' })).toHaveAttribute('aria-current', 'page')
+  await connected(page)
+
+  // The tab follows the name as it is written into the shared document.
+  const name = page.getByLabel('Name des Tags')
+  await name.fill('Abschluss')
+  await name.press('Enter')
+  await expect(days.getByRole('link', { name: 'Abschluss' })).toBeVisible()
+
+  // Without a pointer: the arrows are the mechanism, the drag an accelerator.
+  await page.getByRole('button', { name: 'Tag nach vorn' }).click()
+  await expect(days.getByRole('link')).toHaveText(['Abschluss', 'Tag 1'])
+
+  await reloadUntil(page, async () => {
+    await expect(days.getByRole('link')).toHaveText(['Abschluss', 'Tag 1'])
+  })
+
+  await page.getByRole('button', { name: 'Workshoptag löschen' }).click()
+  await page.getByRole('button', { name: 'Endgültig löschen' }).click()
+
+  await expect(days.getByRole('link')).toHaveText(['Tag 1'])
+  await expect(days.getByRole('link', { name: 'Tag 1' })).toHaveAttribute('aria-current', 'page')
+})
+
 test('keeps a note about the day itself, and survives a reload with it', async ({ page }) => {
   // The information that belongs to nobody's block: room, keys, who brings the
   // flipchart. workshop_day.json_desc had been in the schema from the start and

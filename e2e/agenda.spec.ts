@@ -90,6 +90,11 @@ test.describe('drag & drop', () => {
     const handle = page.getByRole('button', { name: 'Energizer: Zwei Wahrheiten verschieben' })
     const target = block(page, 'Check-out')
 
+    // A mouse can only press what is on screen. Measured without this, the
+    // handle sat a few pixels below the fold the moment the day tabs took their
+    // row above the agenda -- and the press went nowhere. The target may stay
+    // below the fold: dnd-kit scrolls towards it during the drag.
+    await handle.scrollIntoViewIfNeeded()
     const from = (await handle.boundingBox())!
     const to = (await target.boundingBox())!
 
