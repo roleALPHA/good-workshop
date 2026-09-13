@@ -21,6 +21,38 @@ const sidebar = (page: Page) => page.getByRole('navigation', { name: 'Ordner und
  * buttons rather than links.
  */
 
+/**
+ * The library with a tag in it.
+ *
+ * The page is a Server Component, and it styled its tag links with `navClass`
+ * imported from folder-tree.tsx -- a 'use client' module. Next refuses a
+ * server call into a client module, so the library threw for anybody whose
+ * tenant had a tag, and rendered fine for everybody else. Every test in this
+ * file ran on a tenant without tags, which is how it shipped in v0.4.0 and was
+ * found on a live install.
+ */
+test('shows the library, with its tags, once a workshop carries one', async ({ page }) => {
+  const title = `Getaggt ${Date.now()}`
+  const tag = `Tag${Date.now()}`
+
+  await page.goto('/library')
+  await page.getByRole('button', { name: 'Neuer Workshop' }).click()
+  await page.getByLabel('Titel des Workshops').fill(title)
+  await page.getByRole('button', { name: 'Anlegen', exact: true }).click()
+  await expect(page.getByRole('heading', { name: title })).toBeVisible()
+
+  await page.getByLabel('Tag hinzufügen').fill(tag)
+  await page.keyboard.press('Enter')
+  await expect(page.getByRole('button', { name: `Tag ${tag} entfernen` })).toBeVisible()
+
+  await expect(async () => {
+    await page.goto('/library')
+    await expect(sidebar(page).getByRole('link', { name: new RegExp(tag) })).toBeVisible({
+      timeout: 2_000,
+    })
+  }).toPass({ timeout: 15_000 })
+})
+
 test('creates a folder inside another, then moves it back out', async ({ page }) => {
   const outer = `Außen ${Date.now()}`
   const inner = `Innen ${Date.now()}`
