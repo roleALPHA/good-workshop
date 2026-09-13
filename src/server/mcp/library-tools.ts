@@ -8,6 +8,7 @@ import {
   createWorkshop,
   deleteFolder,
   listDays,
+  LIBRARY_PAGE_SIZE,
   listFolders,
   listTags,
   listTrashedWorkshops,
@@ -206,7 +207,7 @@ export function registerLibraryTools(server: McpServer, { actor, authorization }
         tagId: Id.optional(),
         search: z.string().trim().max(200).optional().describe('Part of the title.'),
         cursor: z.string().max(200).optional(),
-        limit: z.number().int().min(1).max(100).default(25),
+        limit: z.number().int().min(1).max(100).default(LIBRARY_PAGE_SIZE),
       },
     },
     async ({ folderId, tagId, search, cursor, limit }) =>

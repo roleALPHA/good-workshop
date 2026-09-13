@@ -128,6 +128,24 @@ describe('what the list offers', () => {
 })
 
 describe('paging', () => {
+  /**
+   * Twenty, not more: the list loads the next page as its end scrolls into
+   * view, so a page only has to fill a screen or two -- and every row costs a
+   * folder path and a tag aggregate on the server.
+   */
+  it('hands out twenty workshops a page unless asked for another size', async () => {
+    const reader = await makeMember()
+    for (let i = 0; i < 21; i++) await makeWorkshop(`Zwanzig ${i}`, reader, i)
+
+    const first = await list(as(reader))
+    expect(first.workshops).toHaveLength(20)
+    expect(first.nextCursor).toBeTruthy()
+
+    const second = await list(as(reader), { cursor: first.nextCursor ?? undefined })
+    expect(second.workshops).toHaveLength(1)
+    expect(second.nextCursor).toBeNull()
+  })
+
   it('walks the whole list without repeating or skipping a row', async () => {
     for (let i = 0; i < 7; i++) await makeWorkshop(`Seite ${i}`, ownerId, i)
 

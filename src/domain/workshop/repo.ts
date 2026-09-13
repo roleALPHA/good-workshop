@@ -101,7 +101,14 @@ export type LibraryPage = {
   nextCursor: string | null
 }
 
-const DEFAULT_LIMIT = 25
+/**
+ * One page of the library, unless a caller asks for another size.
+ *
+ * The screen loads the next page as the end of the list scrolls into view, so a
+ * page only has to fill a screen or two -- and every row costs a folder path
+ * and a tag aggregate here. Exported so MCP pages the same way.
+ */
+export const LIBRARY_PAGE_SIZE = 20
 
 /**
  * The library, one page at a time.
@@ -120,7 +127,7 @@ export async function listWorkshops(
   actor: Actor,
   options: LibraryQuery = {},
 ): Promise<LibraryPage> {
-  const limit = Math.min(Math.max(options.limit ?? DEFAULT_LIMIT, 1), 100)
+  const limit = Math.min(Math.max(options.limit ?? LIBRARY_PAGE_SIZE, 1), 100)
   const after = parseCursor(options.cursor)
 
   const rows = await tx

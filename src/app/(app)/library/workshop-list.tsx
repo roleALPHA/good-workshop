@@ -1,7 +1,7 @@
 'use client'
 
 import Link from 'next/link'
-import { useCallback, useEffect, useState, useTransition } from 'react'
+import { useCallback, useEffect, useRef, useState, useTransition } from 'react'
 import type { WorkshopSummary } from '@/domain/workshop/repo'
 import { FolderInput, Trash2 } from 'lucide-react'
 import { ReadOnlyBadge } from '@/components/read-only-badge'
@@ -16,9 +16,13 @@ export type FolderChoice = { id: string; name: string; depth: number }
 /**
  * The list, one page at a time.
  *
- * "Load more" rather than infinite scroll: a workshop library is something
- * people search and return to, and a list that grows as you scroll has no
- * bottom to reach and no position to come back to.
+ * The next page loads as the end of the list comes into view -- twenty rows at
+ * a time, so the first paint stays small however large the library grows.
+ *
+ * "Load more" used to be the only way on, for a reason that still holds: a list
+ * without a bottom has no position to come back to. So the button stays, under
+ * the list, as the way a keyboard and a screen reader reach the next page, and
+ * as what is left where a browser has no IntersectionObserver.
  */
 export function WorkshopList({
   initial,
@@ -114,14 +118,48 @@ export function WorkshopList({
   // The server re-renders this component with fresh props when the URL
   // changes, but React keeps the state of a component it is reusing -- so the
   // page identity has to be part of the key. It is, one level up.
-  function more() {
+  //
+  // A ref, not `pending`, guards against a second request: an observer fires
+  // again for every scroll that keeps the end in view, and the transition's
+  // state has not reached this closure by then. The same page twice would put
+  // every row in the list twice.
+  const loading = useRef(false)
+  const more = useCallback(() => {
+    if (!cursor || loading.current) return
+    loading.current = true
     startTransition(async () => {
-      const result = await loadLibrary({ ...query, cursor: cursor ?? undefined })
-      if (!result.ok) return
-      setWorkshops((current) => [...current, ...result.data.workshops])
-      setCursor(result.data.nextCursor)
+      try {
+        const result = await loadLibrary({ ...query, cursor })
+        if (!result.ok) return
+        setWorkshops((current) => [...current, ...result.data.workshops])
+        setCursor(result.data.nextCursor)
+      } finally {
+        loading.current = false
+      }
     })
-  }
+  }, [cursor, query])
+
+  /**
+   * Infinite scrolling: a marker under the last row, watched with a margin so
+   * the page is on its way before the end is actually reached.
+   *
+   * Rebuilt whenever the cursor changes. A new observer reports the marker's
+   * state at once, so a page too short to push it out of view loads the next
+   * one straight away rather than waiting for a scroll that cannot happen.
+   */
+  const end = useRef<HTMLDivElement>(null)
+  useEffect(() => {
+    const target = end.current
+    if (!cursor || !target || typeof IntersectionObserver === 'undefined') return
+    const observer = new IntersectionObserver(
+      (entries) => {
+        if (entries.some((entry) => entry.isIntersecting)) more()
+      },
+      { rootMargin: '0px 0px 400px 0px' },
+    )
+    observer.observe(target)
+    return () => observer.disconnect()
+  }, [cursor, more])
 
   if (workshops.length === 0) {
     return (
@@ -259,14 +297,17 @@ export function WorkshopList({
       )}
 
       {cursor && (
-        <button
-          type="button"
-          onClick={more}
-          disabled={pending}
-          className="mt-3 w-full rounded border border-[var(--border-strong)] px-3 py-2 text-[15px] hover:bg-[var(--surface-raised)] disabled:opacity-60"
-        >
-          {pending ? tc('loading') : tc('loadMore')}
-        </button>
+        <>
+          <div ref={end} aria-hidden className="h-px" />
+          <button
+            type="button"
+            onClick={more}
+            disabled={pending}
+            className="mt-3 w-full rounded border border-[var(--border-strong)] px-3 py-2 text-[15px] hover:bg-[var(--surface-raised)] disabled:opacity-60"
+          >
+            {pending ? tc('loading') : tc('loadMore')}
+          </button>
+        </>
       )}
     </>
   )
