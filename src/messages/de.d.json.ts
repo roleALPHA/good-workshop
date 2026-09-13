@@ -34,7 +34,19 @@ declare const messages: {
       "alreadyMember": "{email} war schon Mitglied.",
       "invited": "{email} wurde eingeladen.",
       "linkOnItsWay": "Der Anmeldelink ist unterwegs.",
-      "noMailSetUp": "Es ist kein Mailversand eingerichtet. Gib diesen Link persönlich weiter — wer ihn öffnet, ist als {email} angemeldet."
+      "noMailSetUp": "Es ist kein Mailversand eingerichtet. Gib diesen Link persönlich weiter — wer ihn öffnet, ist als {email} angemeldet.",
+      "remove": "Entfernen",
+      "removeCancel": "Doch nicht",
+      "removeConfirm": "Endgültig entfernen",
+      "removeHeading": "{name} aus diesem Workspace entfernen",
+      "removeWarning": "Das lässt sich nicht rückgängig machen. Zugang, Tokens und Freigaben dieser Person verschwinden sofort.",
+      "removeForgets": "Gehört die Adresse zu keinem anderen Workspace, wird auch das Konto gelöscht.",
+      "removeOwnsNothing": "Diesem Mitglied gehören keine Workshops und keine Ordner.",
+      "removeOwns": "Zu übergeben: {workshops, plural, =0 {keine Workshops} one {# Workshop} other {# Workshops}} und {folders, plural, =0 {keine Ordner} one {# Ordner} other {# Ordner}}.",
+      "successor": "Übernimmt",
+      "successorPlaceholder": "Bitte wählen …",
+      "removeTypeLabel": "Zum Bestätigen die E-Mail-Adresse eintippen: {email}",
+      "removed": "{name} wurde entfernt."
     },
     "mail": {
       "title": "Mailversand",
@@ -271,7 +283,12 @@ declare const messages: {
         "gone": "Dieses Mitglied gibt es nicht.",
         "cannotDisableSelf": "Du kannst dich nicht selbst abschalten.",
         "lastAdmin": "Das ist der letzte aktive Admin. Mach zuerst jemand anderen zum Admin — sonst kommt niemand mehr an die Verwaltung.",
-        "checkEmailAndRole": "Bitte E-Mail-Adresse und Rolle prüfen."
+        "checkEmailAndRole": "Bitte E-Mail-Adresse und Rolle prüfen.",
+        "cannotRemoveSelf": "Du kannst dich nicht selbst entfernen. Bitte jemand anderen mit Admin-Rechten darum.",
+        "successorRequired": "Diesem Mitglied gehören noch Workshops oder Ordner. Wähle zuerst, wer sie übernimmt.",
+        "successorIsLeaver": "Das Mitglied kann nicht selbst übernehmen, was es abgibt.",
+        "successorGone": "Wer übernehmen sollte, ist kein Mitglied mehr. Bitte neu auswählen.",
+        "successorDisabled": "Wer übernehmen soll, ist abgeschaltet und könnte sich nicht anmelden. Lass die Person erst wieder zu oder wähle jemand anderen."
       },
       "setup": {
         "wrongKey": "Der Einrichtungsschlüssel stimmt nicht.",

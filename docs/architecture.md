@@ -129,7 +129,8 @@ stolen one works at most once, and the theft surfaces as the real client being l
 There is a second SECURITY DEFINER function, `app.resolve_oauth_token`, beside the one that
 resolves personal access tokens. Two functions rather than one widened one: a PAT has no
 audience and an OAuth token does, and folding them together would mean a null that means "skip a
-security check".
+security check". (A third, `app.forget_identity_if_orphaned`, answers a different question the
+application's own role cannot ask — see Access and invitations below.)
 
 **What is deliberately not built yet:** Client ID Metadata Documents, which the specification
 prefers over dynamic registration; and a sign-in that returns to the consent screen afterwards —
@@ -141,6 +142,23 @@ starts the flow again from the client.
 A membership starts as "invited"; only opening the sign-in link activates it. An admin cannot
 activate anybody by decree — otherwise they could invite a foreign address and take over the
 account that results.
+
+**Disabling and removing are different answers.** Disabling revokes access and keeps the row;
+removing deletes it, and a `disabled` row still holds a name and an address, which is precisely
+what an erasure request is about. Removing therefore asks for a successor: `workshop.owner_id`
+is `RESTRICT`, so the database already refuses to let a member vanish out from under a team's
+agendas, and `folder.created_by` — which
+[`folderRoleFromPath`](../src/domain/workshop/folder-access.ts) reads as folder ownership —
+carries no foreign key at all, so nothing but the application keeps it pointing at somebody who
+exists. Choosing the successor is a decision for the admin rather than a default, because every
+default hands somebody else's work to whoever the code guessed.
+
+Once the last membership is gone, so is the account — and that answer needs a third SECURITY
+DEFINER function, [`app.forget_identity_if_orphaned`](../drizzle/sql/902_forget_identity.sql).
+`gw_app` may read `member` but not `identity`, `gw_auth` the reverse, and the question "does
+this person still belong to any workspace at all?" spans both. It runs with BYPASSRLS on
+purpose: an admin of one workspace must not delete an account another workspace still uses, and
+a membership count scoped by the caller's tenant would answer "none left" and be wrong.
 
 Access to a single workshop is granted from inside the tenant, never by e-mail address: an
 address is an identity, and identities are global; inviting by address would silently grant

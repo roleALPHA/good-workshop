@@ -58,6 +58,13 @@ export const DOMAIN_ERROR_KEYS = [
   'member.invalidEmail',
   'member.gone',
   'member.cannotDisableSelf',
+  // Removal, which is a different question from disabling: a disabled row still
+  // holds a name and an address, and erasure is about exactly those.
+  'member.cannotRemoveSelf',
+  'member.successorRequired',
+  'member.successorIsLeaver',
+  'member.successorGone',
+  'member.successorDisabled',
   'member.lastAdmin',
   // Branding
   'brand.notHex',

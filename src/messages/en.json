@@ -31,7 +31,19 @@
       "alreadyMember": "{email} was already a member.",
       "invited": "{email} has been invited.",
       "linkOnItsWay": "The sign-in link is on its way.",
-      "noMailSetUp": "No mail delivery is configured. Pass this link on in person — whoever opens it is signed in as {email}."
+      "noMailSetUp": "No mail delivery is configured. Pass this link on in person — whoever opens it is signed in as {email}.",
+      "remove": "Remove",
+      "removeCancel": "Keep them",
+      "removeConfirm": "Remove for good",
+      "removeHeading": "Remove {name} from this workspace",
+      "removeWarning": "This cannot be undone. Their access, tokens and shares disappear immediately.",
+      "removeForgets": "If the address belongs to no other workspace, the account is deleted as well.",
+      "removeOwnsNothing": "This member owns no workshops and no folders.",
+      "removeOwns": "To hand over: {workshops, plural, =0 {no workshops} one {# workshop} other {# workshops}} and {folders, plural, =0 {no folders} one {# folder} other {# folders}}.",
+      "successor": "Taken over by",
+      "successorPlaceholder": "Please choose …",
+      "removeTypeLabel": "Type the email address to confirm: {email}",
+      "removed": "{name} has been removed."
     },
     "mail": {
       "title": "Mail delivery",
@@ -268,7 +280,12 @@
         "gone": "There is no such member.",
         "cannotDisableSelf": "You cannot disable yourself.",
         "lastAdmin": "That is the last active admin. Make somebody else an admin first — otherwise nobody can reach the administration any more.",
-        "checkEmailAndRole": "Please check the e-mail address and the role."
+        "checkEmailAndRole": "Please check the e-mail address and the role.",
+        "cannotRemoveSelf": "You cannot remove yourself. Ask somebody else with admin rights.",
+        "successorRequired": "This member still owns workshops or folders. Choose who takes them over first.",
+        "successorIsLeaver": "The member cannot take over what they are handing on.",
+        "successorGone": "The person who was to take over is no longer a member. Please choose again.",
+        "successorDisabled": "The person who is to take over is disabled and could not sign in. Enable them first, or choose somebody else."
       },
       "setup": {
         "wrongKey": "That setup key is not correct.",

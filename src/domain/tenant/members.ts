@@ -2,7 +2,7 @@ import { randomUUID } from 'node:crypto'
 import { and, asc, eq, inArray, ne, sql } from 'drizzle-orm'
 import type { Actor, Tx } from '@/server/db'
 import { withAuth, withTenant } from '@/server/db'
-import { identity, member } from '@/server/db/schema'
+import { folder, identity, member, workshop } from '@/server/db/schema'
 import { DomainError } from '@/domain/errors'
 import type { Locale } from '@/i18n/config'
 
@@ -26,6 +26,23 @@ export type MemberRow = {
   role: TenantRole
   status: MemberStatus
   isSelf: boolean
+  /**
+   * What would have to change hands if this member were removed.
+   *
+   * Carried on the administrative row rather than fetched when somebody opens
+   * the confirmation, because the number is the warning: "3 Workshops, 1
+   * Ordner" is what makes an admin stop and think about who should get them,
+   * and a number that appears only after the decision has been started is a
+   * number that arrives too late.
+   */
+  owns: MemberEstate
+}
+
+/** Workshops and folders that belong to one member. */
+export type MemberEstate = { workshops: number; folders: number }
+
+export function ownsSomething(estate: MemberEstate): boolean {
+  return estate.workshops > 0 || estate.folders > 0
 }
 
 export class MemberError extends DomainError {}
@@ -37,10 +54,57 @@ export function assertTenantAdmin(actor: Actor): void {
   }
 }
 
-/** The administrative list. Everything, including who is switched off. */
+/**
+ * The administrative list. Everything, including who is switched off, and what
+ * each of them owns -- the latter only here, because only this screen can act
+ * on it.
+ */
 export async function listMembers(actor: Actor): Promise<MemberRow[]> {
   assertTenantAdmin(actor)
-  return readMembers(actor)
+  const rows = await readMembers(actor)
+  if (rows.length === 0) return rows
+
+  const estates = await withTenant(actor, (tx) => estatesOf(tx))
+  return rows.map((row) => ({ ...row, owns: estates.get(row.id) ?? EMPTY_ESTATE }))
+}
+
+const EMPTY_ESTATE: MemberEstate = { workshops: 0, folders: 0 }
+
+/**
+ * Who owns how much, for the whole tenant, in one round trip.
+ *
+ * Two aggregates rather than one join: a member can own folders and no
+ * workshops or the other way round, and joining the two tables would multiply
+ * the rows and count each side by the other's cardinality. That bug reads as
+ * "4 workshops" for somebody who owns two, which nobody checks against the
+ * library before clicking.
+ *
+ * `folder.created_by` IS folder ownership -- see folderRoleFromPath in
+ * domain/workshop/folder-access, which turns exactly that column into 'owner'.
+ * It carries no foreign key, so nothing in the database would stop a member
+ * from being deleted out from under a folder; this is what stops it.
+ */
+export async function estatesOf(tx: Tx): Promise<Map<string, MemberEstate>> {
+  const [workshops, folders] = await Promise.all([
+    tx
+      .select({ memberId: workshop.ownerId, count: sql<number>`count(*)::int` })
+      .from(workshop)
+      .groupBy(workshop.ownerId),
+    tx
+      .select({ memberId: folder.createdBy, count: sql<number>`count(*)::int` })
+      .from(folder)
+      .groupBy(folder.createdBy),
+  ])
+
+  const estates = new Map<string, MemberEstate>()
+  const at = (id: string) => {
+    const found = estates.get(id) ?? { workshops: 0, folders: 0 }
+    estates.set(id, found)
+    return found
+  }
+  for (const row of workshops) if (row.memberId) at(row.memberId).workshops = row.count
+  for (const row of folders) if (row.memberId) at(row.memberId).folders = row.count
+  return estates
 }
 
 /**
@@ -98,6 +162,7 @@ async function readMembers(actor: Actor): Promise<MemberRow[]> {
       role: row.role === 'admin' ? 'admin' : 'member',
       status: row.status as MemberStatus,
       isSelf: row.id === actor.memberId,
+      owns: EMPTY_ESTATE,
     }
   })
 }
@@ -240,4 +305,114 @@ async function assertAnotherAdminRemains(tx: Tx, exceptMemberId: string): Promis
   if ((others[0]?.count ?? 0) === 0) {
     throw new MemberError('member.lastAdmin')
   }
+}
+
+export type RemoveMemberResult = {
+  /** How much changed hands, so the confirmation can say it rather than imply it. */
+  handedOver: MemberEstate
+  /** Whether the account behind the membership went with it. */
+  identityForgotten: boolean
+}
+
+/**
+ * Removes somebody from this workspace for good, after their work has an owner.
+ *
+ * Disabling and removing are different answers to different questions. Somebody
+ * on parental leave is disabled; somebody who has left and asked to be erased
+ * is removed, and a `disabled` row still holds their name and address, which is
+ * precisely what erasure is about.
+ *
+ * The successor is a parameter rather than a default for a reason that is not
+ * technical: `workshop.owner_id` is RESTRICT, so the database already refuses
+ * to let a member vanish out from under a team's agendas. Picking a successor
+ * silently -- the acting admin, the oldest member -- would satisfy the
+ * constraint and hand somebody else's work to whoever the code guessed. Making
+ * it a choice keeps the decision with the person who knows the team.
+ *
+ * Folders are the same decision one level down: `folder.created_by` is what
+ * folderRoleFromPath reads as ownership, and it carries no foreign key at all,
+ * so nothing but this function keeps it pointing at somebody who exists.
+ */
+export async function removeMember(
+  actor: Actor,
+  memberId: string,
+  successorId: string | null,
+): Promise<RemoveMemberResult> {
+  assertTenantAdmin(actor)
+
+  // Before anything else, and separately from the last-admin rule below: an
+  // admin removing themselves is not a governance question but a foot-gun,
+  // and the message for it should say so rather than talk about admins.
+  if (memberId === actor.memberId) {
+    throw new MemberError('member.cannotRemoveSelf')
+  }
+  if (successorId === memberId) {
+    throw new MemberError('member.successorIsLeaver')
+  }
+
+  const removed = await withTenant(actor, async (tx) => {
+    const leaving = await tx
+      .select({ identityId: member.identityId })
+      .from(member)
+      .where(eq(member.id, memberId))
+      .limit(1)
+    if (!leaving[0]) throw new MemberError('member.gone')
+
+    await assertAnotherAdminRemains(tx, memberId)
+
+    const estate = (await estatesOf(tx)).get(memberId) ?? EMPTY_ESTATE
+    if (ownsSomething(estate)) {
+      if (!successorId) throw new MemberError('member.successorRequired')
+
+      const successor = await tx
+        .select({ status: member.status })
+        .from(member)
+        .where(eq(member.id, successorId))
+        .limit(1)
+      if (!successor[0]) throw new MemberError('member.successorGone')
+      // A disabled member cannot sign in, so handing them a team's workshops
+      // means nobody can open them until somebody notices why.
+      if (successor[0].status === 'disabled') throw new MemberError('member.successorDisabled')
+
+      await tx
+        .update(workshop)
+        .set({ ownerId: successorId, updatedAt: sql`now()` })
+        .where(eq(workshop.ownerId, memberId))
+
+      await tx
+        .update(folder)
+        .set({ createdBy: successorId, updatedAt: sql`now()` })
+        .where(eq(folder.createdBy, memberId))
+    }
+
+    // Tokens, OAuth grants and every collaboration grant follow by cascade.
+    // Nothing is left that could still act as this person.
+    await tx.delete(member).where(eq(member.id, memberId))
+
+    return { identityId: leaving[0].identityId, handedOver: estate }
+  })
+
+  /**
+   * The account itself, but only if this was its last membership anywhere.
+   *
+   * The check cannot happen in the transaction above: `gw_app` cannot see
+   * `identity` at all, and a count of memberships scoped by RLS would see only
+   * this tenant and answer "none left" for somebody who works in two. The
+   * SECURITY DEFINER function in drizzle/sql/902_forget_identity.sql asks the
+   * question with BYPASSRLS and acts on it atomically.
+   *
+   * Outside the transaction it is therefore its own failure mode: if this
+   * throws, the membership is already gone and the e-mail address is not. That
+   * is the safe half to be left holding -- the person has no access either way,
+   * and an orphaned identity can be removed again. The reverse order could
+   * delete an account whose membership then failed to go.
+   */
+  const identityForgotten = await withTenant(actor, async (tx) => {
+    const answer = await tx.execute(
+      sql`select app.forget_identity_if_orphaned(${removed.identityId}::uuid) as forgotten`,
+    )
+    return Boolean((answer as unknown as { rows: { forgotten: boolean }[] }).rows?.[0]?.forgotten)
+  })
+
+  return { handedOver: removed.handedOver, identityForgotten }
 }
