@@ -15,7 +15,7 @@ import { RichText } from '@/lib/richtext/render'
 import { ChipsInput } from './chips-input'
 import { ParticipationBadge, ParticipationControl } from './participation-control'
 import { PeerMarks } from './presence'
-import { TitleInput } from './inline-inputs'
+import { DescriptionInput, TitleInput } from './inline-inputs'
 import { OverlapWarning, TimeCell } from './time-cell'
 import { useLocale, useTranslations } from 'next-intl'
 
@@ -123,6 +123,7 @@ export function ModuleRow({
   // `additionalProperties: false` rejects on the way to the database -- and the
   // editor would go on showing it.
   const participation = findField(groups, 'participation')
+  const descriptionField = findField(groups, 'description')
   const materialField = findField(groups, 'materials')
   const materials = stringList(mod.desc.materials)
   // Material has its own control in the editor, so it must not also arrive as
@@ -201,10 +202,27 @@ export function ModuleRow({
             {mod.title}
           </h3>
         )}
-        {type && <p className="mt-0.5 text-[13px] text-[var(--cat-fg)] md:hidden">{type.name}</p>}
-        {description && (
-          <RichText value={description} className="mt-1 text-[15px] text-[var(--fg-muted)]" />
+        {editing && descriptionField ? (
+          <>
+            <DescriptionInput
+              value={description}
+              label={descriptionField.label}
+              onCommit={(value) => writeDesc('description', value)}
+              className="hidden lg:block"
+            />
+            {description && (
+              <RichText
+                value={description}
+                className="mt-1 text-[15px] text-[var(--fg-muted)] lg:hidden"
+              />
+            )}
+          </>
+        ) : (
+          description && (
+            <RichText value={description} className="mt-1 text-[15px] text-[var(--fg-muted)]" />
+          )
         )}
+        {type && <p className="mt-0.5 text-[13px] text-[var(--cat-fg)] md:hidden">{type.name}</p>}
         {entry.conflict?.kind === 'overlap' && <OverlapWarning minutes={entry.conflict.minutes} />}
 
         {editing && (

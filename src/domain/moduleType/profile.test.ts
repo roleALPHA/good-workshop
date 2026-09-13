@@ -226,7 +226,7 @@ describe('the fields the row edits in place', () => {
     }
   })
 
-  it('leaves the description alone, because the row shows it without editing it', () => {
-    expect(ROW_FIELDS).not.toContain('description')
+  it('includes the description now that it is editable directly below the title', () => {
+    expect(ROW_FIELDS).toContain('description')
   })
 })

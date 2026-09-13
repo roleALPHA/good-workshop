@@ -5,7 +5,7 @@ import { loadDay } from '@/domain/agenda/repo'
 import { computeSchedule } from '@/domain/schedule/computeSchedule'
 import { formatDuration, formatTime } from '@/features/agenda/duration'
 import { flattenDay, toScheduleItems } from '@/features/agenda/flatten'
-import { findField, parseSchema } from '@/domain/moduleType/profile'
+import { findField, parseSchema, summaryChips } from '@/domain/moduleType/profile'
 import { ParticipationBadge } from '@/components/agenda/participation-control'
 import { catClass } from '@/lib/category-colors'
 import { ATTRIBUTION_TEXT } from '@/lib/attribution'
@@ -42,7 +42,11 @@ export default async function PrintPage({
   const { workshopId, dayId } = await params
   const { notes } = await searchParams
   const showNotes = notes === '1'
-  const [t, locale] = await Promise.all([getTranslations('workshop'), getLocale()])
+  const [t, tAgenda, locale] = await Promise.all([
+    getTranslations('workshop'),
+    getTranslations('agenda'),
+    getLocale(),
+  ])
 
   const actor = {
     tenantId: session.tenantId,
@@ -83,6 +87,15 @@ export default async function PrintPage({
       </header>
 
       <div>
+        <div
+          data-print-section
+          className="mb-2 grid grid-cols-[5rem_minmax(0,1fr)_12rem] gap-3 border-b border-neutral-300 pb-1 text-[10px] font-medium tracking-wide text-neutral-500 uppercase"
+        >
+          <span>{tAgenda('columns.time')}</span>
+          <span>{tAgenda('columns.titleAndDescription')}</span>
+          <span>{tAgenda('columns.info')}</span>
+        </div>
+
         {rows.map((row) => {
           const entry = schedule.entries.get(row.id)
           if (!entry) return null
@@ -115,15 +128,17 @@ export default async function PrintPage({
           // Beside the time, as on screen: the paper copy is what a facilitator
           // holds while running the room, and "plenary or small groups" is what
           // they look up there.
-          const participation = findField(parseSchema(type?.jsonSchema), 'participation')
+          const groups = parseSchema(type?.jsonSchema)
+          const participation = findField(groups, 'participation')
+          const info = summaryChips(groups, row.module.desc)
 
           return (
             <article
               key={row.id}
               data-print-row
-              className={`${catClass(type?.color)} mb-3 flex gap-3 border-l-4 border-[var(--cat-bar)] pl-3 ${row.depth === 1 ? 'ml-6' : ''}`}
+              className={`${catClass(type?.color)} mb-3 grid grid-cols-[5rem_minmax(0,1fr)_12rem] gap-3 border-l-4 border-[var(--cat-bar)] pl-3 ${row.depth === 1 ? 'ml-6' : ''}`}
             >
-              <div className="tabular w-20 shrink-0">
+              <div className="tabular">
                 <div className="font-medium">
                   {entry.pinned ? '🔒 ' : ''}
                   {formatTime(entry.startMinute, locale)}
@@ -156,15 +171,15 @@ export default async function PrintPage({
                     <RichText value={facilitatorNotes} />
                   </div>
                 )}
-                {Array.isArray(row.module.desc.materials) &&
-                  row.module.desc.materials.length > 0 && (
-                    <p className="mt-1 text-[14px] text-neutral-600">
-                      {t('materials', {
-                        items: (row.module.desc.materials as string[]).join(', '),
-                      })}
-                    </p>
-                  )}
               </div>
+              <dl className="min-w-0 space-y-1 text-[12px] text-neutral-600">
+                {info.map((item) => (
+                  <div key={`${item.key}:${item.text}`} className="break-words">
+                    <dt className="inline font-medium text-neutral-700">{item.label}: </dt>
+                    <dd className="inline">{item.text}</dd>
+                  </div>
+                ))}
+              </dl>
             </article>
           )
         })}

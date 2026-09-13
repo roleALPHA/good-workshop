@@ -210,11 +210,9 @@ export function summaryFields(groups: FieldGroup[]): FieldSpec[] {
  * value over the other on blur, and the change disappears while both controls
  * are visibly present.
  *
- * A field only belongs here once the row can actually EDIT it. Showing a value
- * is not editing it -- the description is rendered in the row and still belongs
- * in the panel, because the row offers no way to change it.
+ * A field only belongs here once the row can actually edit it.
  */
-export const ROW_FIELDS: readonly string[] = ['participation', 'materials']
+export const ROW_FIELDS: readonly string[] = ['description', 'participation', 'materials']
 
 /** One field by key, wherever its group put it. */
 export function findField(groups: FieldGroup[], key: string): FieldSpec | undefined {

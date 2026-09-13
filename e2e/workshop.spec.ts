@@ -288,6 +288,9 @@ test('exports the day as Markdown', async ({ page }) => {
 
 test('renders a printable day without any editor JavaScript', async ({ page }) => {
   await addBlock(page, 'Gruppenarbeit')
+  const block = page.getByRole('article', { name: 'Gruppenarbeit' })
+  await block.getByLabel('Material hinzufügen').fill('Moderationskarten')
+  await block.getByLabel('Material hinzufügen').press('Enter')
 
   // Waited on BEFORE navigating away, not just retried afterwards.
   //
@@ -305,6 +308,8 @@ test('renders a printable day without any editor JavaScript', async ({ page }) =
     await page.goto(url)
     await expect(page.getByRole('heading', { name: workshopTitle })).toBeVisible()
     await expect(page.getByText('Gruppenarbeit')).toBeVisible()
+    await expect(page.getByText('Zusatzinfo')).toBeVisible()
+    await expect(page.getByText('Moderationskarten')).toBeVisible()
   }).toPass({ timeout: 10_000 })
   // No drag handles, no inputs: what comes out of the printer must match what
   // was on screen, and a hydration pass would reflow it mid-dialog.

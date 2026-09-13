@@ -274,6 +274,7 @@ test.describe('inline editing in the day view', () => {
     // lines below it.
     await expect(row.getByLabel('Material', { exact: true })).toHaveCount(0)
     await expect(row.getByLabel('Sozialform', { exact: true })).toHaveCount(0)
+    await expect(row.getByLabel('Beschreibung', { exact: true })).toHaveCount(1)
     await expect(row.getByLabel('Material hinzufügen')).toBeVisible()
     await expect(row.getByRole('button', { name: /^Sozialform:/ })).toBeVisible()
   })
@@ -284,12 +285,13 @@ test.describe('inline editing in the day view', () => {
     // The guardrail against the agenda turning into a wall of forms.
     //
     // What a closed row carries is a decision, not an accident, so it is named
-    // here in full: time, duration, title, the participation format, the
-    // material, and the lock. Everything else the type declares waits behind
-    // "Mehr Felder" -- the long-form task among it.
+    // here in full: time, duration, title, description, the participation
+    // format, the material, and the lock. Everything else the type declares
+    // waits behind "Mehr Felder" -- the long-form task among it.
     const row = block(page, 'Spannungsfelder sammeln')
 
     await expect(row.getByLabel('Titel')).toBeVisible()
+    await expect(row.getByLabel('Beschreibung')).toBeVisible()
     await expect(row.getByLabel('Dauer')).toBeVisible()
     await expect(row.getByRole('button', { name: /^Sozialform:/ })).toBeVisible()
     await expect(row.getByLabel('Material hinzufügen')).toBeVisible()
@@ -297,6 +299,27 @@ test.describe('inline editing in the day view', () => {
 
     await expect(row.getByLabel('Arbeitsauftrag')).toHaveCount(0)
     await expect(row.getByLabel('Gruppengröße')).toHaveCount(0)
+  })
+
+  test('edits Markdown below the title and grows with the entered lines', async ({ page }) => {
+    const row = block(page, 'Spannungsfelder sammeln')
+    const description = row.getByLabel('Beschreibung')
+    const oneLineHeight = (await description.boundingBox())!.height
+
+    await description.fill('- Erster Punkt')
+    await description.press('Shift+Enter')
+    await description.pressSequentially('- Zweiter Punkt')
+
+    await expect(description).toHaveValue('- Erster Punkt\n- Zweiter Punkt')
+    expect((await description.boundingBox())!.height).toBeGreaterThan(oneLineHeight)
+
+    // Enter without Shift finishes the edit; the collaboration document then
+    // survives a reload and hands the Markdown source back to the row field.
+    await description.press('Enter')
+    await page.reload()
+    await expect(block(page, 'Spannungsfelder sammeln').getByLabel('Beschreibung')).toHaveValue(
+      '- Erster Punkt\n- Zweiter Punkt',
+    )
   })
 
   test('sets a start time and holds it while the day above it changes', async ({ page }) => {

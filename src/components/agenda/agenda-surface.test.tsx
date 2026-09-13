@@ -179,6 +179,16 @@ describe('the agenda as a whole', () => {
     ).toBeInTheDocument()
   })
 
+  it('offers the description directly below the title instead of in the detail panel', () => {
+    renderEditor()
+    const row = within(block('Check-in & Start'))
+
+    expect(row.getByRole('textbox', { name: 'Beschreibung' })).toHaveAttribute('rows', '1')
+    expect(row.getByRole('textbox', { name: 'Beschreibung' })).toHaveValue(
+      'Kurze Vorstellungsrunde, ein Satz pro Person.',
+    )
+  })
+
   it('offers an editor a lock for the start time of a block and of a section', () => {
     renderEditor()
 
