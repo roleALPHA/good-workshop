@@ -75,7 +75,7 @@ describe('the day tabs', () => {
     createDayAction.mockResolvedValue({ ok: true, data: { dayId: 'd-4' } })
     render(<DayTabs nav={nav()} activeTitle="Tag 1" activeDate={null} />)
 
-    await userEvent.click(screen.getByRole('button', { name: 'Workshoptag hinzufügen' }))
+    await userEvent.click(screen.getByRole('button', { name: 'Neuer Workshoptag' }))
 
     expect(createDayAction).toHaveBeenCalledWith({ workshopId: 'w-1', title: 'Tag 4' })
     await waitFor(() => expect(push).toHaveBeenCalledWith('/w/w-1/d/d-4'))
@@ -157,7 +157,7 @@ describe('the day tabs', () => {
         activeDate={null}
       />,
     )
-    expect(screen.getByRole('button', { name: 'Workshoptag hinzufügen' })).toBeVisible()
+    expect(screen.getByRole('button', { name: 'Neuer Workshoptag' })).toBeVisible()
     expect(screen.queryByRole('button', { name: 'Workshoptag löschen' })).not.toBeInTheDocument()
   })
 

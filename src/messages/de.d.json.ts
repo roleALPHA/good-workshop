@@ -626,7 +626,7 @@ declare const messages: {
     "you": "du",
     "withNotes": "Mit Moderationsnotizen",
     "day": {
-      "add": "Workshoptag hinzufügen",
+      "add": "Neuer Workshoptag",
       "addShort": "Workshoptag",
       "newTitle": "Tag {number, number}",
       "title": "Name des Tags",

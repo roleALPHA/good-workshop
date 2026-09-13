@@ -228,7 +228,7 @@ test('runs over several days with one parking area for all of them', async ({ pa
 
   // Added and opened at once -- straight after parking, before the tables
   // have caught up, which is the moment the shelf must not come up empty.
-  await page.getByRole('button', { name: 'Workshoptag hinzufügen' }).click()
+  await page.getByRole('button', { name: 'Neuer Workshoptag' }).click()
   const days = page.getByRole('navigation', { name: 'Tage' })
   await expect(days.getByRole('link', { name: 'Tag 2' })).toHaveAttribute('aria-current', 'page')
   await connected(page)
@@ -253,7 +253,7 @@ test('runs over several days with one parking area for all of them', async ({ pa
 })
 
 test('names, orders and deletes the days of a workshop', async ({ page }) => {
-  await page.getByRole('button', { name: 'Workshoptag hinzufügen' }).click()
+  await page.getByRole('button', { name: 'Neuer Workshoptag' }).click()
   const days = page.getByRole('navigation', { name: 'Tage' })
   await expect(days.getByRole('link', { name: 'Tag 2' })).toHaveAttribute('aria-current', 'page')
   await connected(page)
