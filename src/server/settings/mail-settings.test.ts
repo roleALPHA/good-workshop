@@ -3,6 +3,7 @@ import { encryptSecret, resetSecretKeyCache } from './secretbox'
 import {
   applyMailSettings,
   describeMailSettings,
+  mailSettingsInput,
   resolveMailConfig,
   type StoredMail,
 } from './mail-settings'
@@ -92,6 +93,20 @@ describe('applying a form submission', () => {
     const after = applyMailSettings(before, { transport: 'graph', graphClientSecret: 'neu' })
 
     expect(resolveMailConfig(after, {}).graphClientSecret).toBe('neu')
+  })
+
+  it('accepts a submission without a transport when the environment dictates it', () => {
+    // The form disables the radio buttons for a transport set in the
+    // environment, and a disabled input is not submitted. That is the documented
+    // installation: GW_MAIL_TRANSPORT in the .env, SMTP_URL typed in here.
+    const parsed = mailSettingsInput.safeParse({ smtpUrl: 'smtp://u:p@relay:587' })
+    expect(parsed.success).toBe(true)
+
+    const after = applyMailSettings({ transport: 'console' }, parsed.data!)
+    expect(after.transport).toBe('console')
+    expect(resolveMailConfig(after, { GW_MAIL_TRANSPORT: 'smtp' }).smtpUrl).toBe(
+      'smtp://u:p@relay:587',
+    )
   })
 
   it('stores secrets encrypted, never in the clear', () => {

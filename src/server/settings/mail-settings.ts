@@ -29,7 +29,10 @@ export type MailTransport = (typeof MAIL_TRANSPORTS)[number]
 /** What an operator may set. Secrets are write-only from the form's side: the
  *  stored value is never sent back to the browser, only whether there is one. */
 export const mailSettingsInput = z.object({
-  transport: z.enum(MAIL_TRANSPORTS),
+  // Optional because the form locks the radio buttons when GW_MAIL_TRANSPORT is
+  // set, and a disabled input is not submitted. Required, it rejected every save
+  // on exactly the installation the README describes.
+  transport: z.enum(MAIL_TRANSPORTS).optional(),
   smtpUrl: z.string().trim().max(2000).optional(),
   smtpFrom: z.string().trim().max(320).optional(),
   graphTenantId: z.string().trim().max(200).optional(),
@@ -165,7 +168,7 @@ function smtpUrlFromEnv(env: MailEnv): string | undefined {
  * explicit action.
  */
 export function applyMailSettings(stored: StoredMail, input: MailSettingsInput): StoredMail {
-  const next: StoredMail = { ...stored, transport: input.transport }
+  const next: StoredMail = { ...stored, transport: input.transport ?? stored.transport }
 
   for (const field of ['smtpFrom', 'graphTenantId', 'graphClientId', 'graphSender'] as const) {
     const value = input[field]

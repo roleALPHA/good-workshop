@@ -189,12 +189,15 @@ async function flush(
   }
 }
 
-function collabUrl(target: RoomTarget): string {
+export function collabUrl(target: RoomTarget): string {
   // The internal address, not the one the browser uses: the browser goes
   // through the reverse proxy, and this process is inside it.
+  //
+  // `||`, not `??`: compose.yaml passes `${GW_COLLAB_INTERNAL_URL:-}`, so an
+  // unset value arrives as an empty string, and `new URL('')` throws.
   const base =
-    target.url ??
-    process.env.GW_COLLAB_INTERNAL_URL ??
+    target.url ||
+    process.env.GW_COLLAB_INTERNAL_URL ||
     `ws://127.0.0.1:${process.env.GW_COLLAB_PORT ?? 3001}${process.env.GW_COLLAB_PATH ?? '/collab'}`
 
   const url = new URL(base)
