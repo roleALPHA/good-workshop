@@ -508,7 +508,7 @@
     "title": "Paramètres",
     "tokens": {
       "title": "Jetons d'accès",
-      "intro": "Pour les clients MCP comme Claude Code, Claude Desktop, Gemini CLI, Codex ou Langdock. Un jeton agit en tant que toi — il ne peut jamais faire plus que toi.",
+      "intro": "Pour les clients MCP comme Claude Code, Claude Desktop, Gemini CLI, Codex ou Langdock. Un jeton agit en votre nom — il ne peut jamais faire plus que vous. Claude, ChatGPT et d'autres peuvent aussi se connecter sans jeton via OAuth, plus bas sur cette page.",
       "freshLabel": "Ton nouveau jeton",
       "freshHint": "Il n'est affiché qu'une fois — seul son hachage est conservé.",
       "hide": "Compris, masquer",
@@ -548,6 +548,34 @@
         "copyEndpoint": "Copier l'URL du serveur",
         "copyToken": "Copier le jeton",
         "copyCodex": "Copier les commandes Codex"
+      },
+      "oauth": {
+        "title": "Se connecter sans jeton (OAuth)",
+        "intro": "Claude, ChatGPT et beaucoup d'autres clients se connectent eux-mêmes. Vous saisissez l'URL du serveur, vous vous connectez à GoodWorkshop dans le navigateur et vous confirmez ce que le client peut faire. Aucun jeton n'est nécessaire.",
+        "endpointLabel": "URL du serveur",
+        "copyEndpoint": "Copier l'URL du serveur",
+        "publicNote": "Claude (web, bureau, app) et ChatGPT se connectent depuis le cloud de leur éditeur. Cela ne fonctionne que si cette adresse est accessible depuis Internet en HTTPS. Claude Code et Gemini CLI s'exécutent sur votre ordinateur et atteignent aussi les installations d'un réseau d'entreprise.",
+        "signInFirst": "Connectez-vous d'abord à GoodWorkshop dans ce navigateur. Sinon, vous arrivez dans la bibliothèque après la connexion et devez relancer la connexion depuis le client.",
+        "readOnly": "Via OAuth, un client ne peut pour l'instant que lire : ateliers et types de modules. S'il doit créer ou modifier des programmes, connectez-le plus haut avec un jeton qui a « Écrire les ateliers ».",
+        "claude": "Claude (web, bureau, app)",
+        "claudeStep1": "Dans Claude, ouvrez « Customize » → « Connectors », cliquez sur « + » puis choisissez « Add custom connector ».",
+        "claudeStep2": "Donnez-lui un nom, par exemple GoodWorkshop, et collez l'URL du serveur. Laissez « Advanced settings » vide.",
+        "claudeStep3": "« Add », puis « Connect ». Connectez-vous à GoodWorkshop dans le navigateur et choisissez « Autoriser l'accès ».",
+        "claudeTeam": "Avec Claude Team et Enterprise, seul un Owner ajoute le connecteur, sous « Organization settings » → « Connectors ». Les autres cliquent ensuite simplement sur « Connect ». Le forfait gratuit permet un connecteur personnalisé.",
+        "chatgpt": "ChatGPT",
+        "chatgptStep1": "Sur le web, activez le mode développeur sous « Paramètres » → « Apps » → « Paramètres avancés ». Il est disponible avec Plus, Pro, Business, Enterprise et Edu ; dans un espace de travail, un administrateur doit peut-être l'autoriser d'abord.",
+        "chatgptStep2": "Sous « Apps », créez une nouvelle app : nom, URL du serveur, authentification « OAuth ».",
+        "chatgptStep3": "Enregistrez et connectez. Connectez-vous à GoodWorkshop dans le navigateur et choisissez « Autoriser l'accès ».",
+        "claudeCode": "Claude Code (OAuth)",
+        "claudeCodeStep": "Ajoutez-le dans le terminal sans en-tête. Puis lancez /mcp dans Claude Code, choisissez le serveur et « Authenticate » – le navigateur s'ouvre.",
+        "gemini": "Gemini CLI (OAuth)",
+        "geminiStep": "Ajoutez-le dans le terminal sans en-tête. Le navigateur s'ouvre de lui-même à la première connexion ; pour vous reconnecter plus tard, lancez /mcp auth goodworkshop.",
+        "other": "Autres clients",
+        "otherStep": "Mistral Le Chat, Cursor, VS Code et d'autres : saisissez l'URL du serveur, choisissez OAuth comme authentification (le client le détecte souvent lui-même), connectez-vous dans le navigateur et acceptez. Si un client ne peut envoyer que des en-têtes fixes, utilisez un jeton plus haut.",
+        "revoke": "Mettre fin à l'accès : déconnectez le connecteur dans le client. GoodWorkshop ne permet pas encore de révoquer un accès OAuth.",
+        "labelsNote": "Les noms de menus dans Claude et ChatGPT peuvent légèrement varier selon la langue et la version.",
+        "copyClaudeCode": "Copier la commande pour Claude Code",
+        "copyGemini": "Copier la commande pour Gemini CLI"
       }
     }
   },

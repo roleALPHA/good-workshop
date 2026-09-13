@@ -508,7 +508,7 @@
     "title": "Settings",
     "tokens": {
       "title": "Access tokens",
-      "intro": "For MCP clients such as Claude Code, Claude Desktop, the Gemini CLI, Codex or Langdock. A token acts as you — it can never do more than you can.",
+      "intro": "For MCP clients such as Claude Code, Claude Desktop, Gemini CLI, Codex or Langdock. A token acts as you — it can never do more than you can. Claude, ChatGPT and others can instead sign in over OAuth without a token, further down this page.",
       "freshLabel": "Your new token",
       "freshHint": "It is shown once only — what is stored is its hash.",
       "hide": "Got it, hide this",
@@ -548,6 +548,34 @@
         "copyEndpoint": "Copy the server URL",
         "copyToken": "Copy the token",
         "copyCodex": "Copy the Codex commands"
+      },
+      "oauth": {
+        "title": "Connect without a token (OAuth)",
+        "intro": "Claude, ChatGPT and many other clients sign themselves in. You enter the server URL, sign in to GoodWorkshop in the browser and confirm what the client may do. No token needed.",
+        "endpointLabel": "Server URL",
+        "copyEndpoint": "Copy server URL",
+        "publicNote": "Claude (web, desktop, app) and ChatGPT connect from their vendors' cloud. That only works if this address is reachable from the internet over HTTPS. Claude Code and the Gemini CLI run on your computer and can also reach installations inside a company network.",
+        "signInFirst": "Sign in to GoodWorkshop in this browser first. Otherwise you land in the library after signing in and have to start connecting again from the client.",
+        "readOnly": "Over OAuth a client can currently only read: workshops and module types. If it should create or change agendas, connect it above with a token that has “Write workshops”.",
+        "claude": "Claude (web, desktop, app)",
+        "claudeStep1": "In Claude, open “Customize” → “Connectors”, click “+” and choose “Add custom connector”.",
+        "claudeStep2": "Give it a name, for example GoodWorkshop, and paste the server URL. Leave “Advanced settings” empty.",
+        "claudeStep3": "“Add”, then “Connect”. Sign in to GoodWorkshop in the browser and choose “Allow access”.",
+        "claudeTeam": "On Claude Team and Enterprise only an Owner adds the connector, under “Organization settings” → “Connectors”. Everybody else then just clicks “Connect”. The Free plan allows one custom connector.",
+        "chatgpt": "ChatGPT",
+        "chatgptStep1": "On the web, turn on developer mode under “Settings” → “Apps” → “Advanced settings”. It is available on Plus, Pro, Business, Enterprise and Edu; in a workspace an admin may have to allow it first.",
+        "chatgptStep2": "Under “Apps”, create a new app: name, server URL, authentication “OAuth”.",
+        "chatgptStep3": "Save and connect. Sign in to GoodWorkshop in the browser and choose “Allow access”.",
+        "claudeCode": "Claude Code (OAuth)",
+        "claudeCodeStep": "Add it in the terminal without a header. Then run /mcp in Claude Code, pick the server and choose “Authenticate” – the browser opens.",
+        "gemini": "Gemini CLI (OAuth)",
+        "geminiStep": "Add it in the terminal without a header. The browser opens by itself on the first connection; to sign in again later, run /mcp auth goodworkshop.",
+        "other": "Other clients",
+        "otherStep": "Mistral Le Chat, Cursor, VS Code and others: enter the server URL, choose OAuth as authentication (clients often detect it themselves), sign in in the browser and consent. If a client can only send fixed headers, use a token above.",
+        "revoke": "Ending access: disconnect the connector in the client. GoodWorkshop itself cannot yet revoke OAuth access.",
+        "labelsNote": "Menu names in Claude and ChatGPT may differ slightly by language and version.",
+        "copyClaudeCode": "Copy command for Claude Code",
+        "copyGemini": "Copy command for Gemini CLI"
       }
     }
   },
