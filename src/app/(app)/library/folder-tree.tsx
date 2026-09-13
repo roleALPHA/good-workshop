@@ -8,6 +8,7 @@ import { cn } from '@/lib/cn'
 import { DropTarget } from './drag-parts'
 import { FolderRow } from './folder-row'
 import { useLibraryDrag } from './library-dnd'
+import { navClass } from './nav-class'
 
 /**
  * The folder tree, and the row above it that means "no folder".
@@ -91,11 +92,3 @@ export function InsertionLine({ depth }: { depth: number }) {
     />
   )
 }
-
-export const navClass = (active: boolean) =>
-  cn(
-    'block rounded px-2 py-1 text-[15px]',
-    active
-      ? 'bg-[var(--brand-subtle-bg)] text-[var(--brand-subtle-fg)]'
-      : 'hover:bg-[var(--surface-raised)]',
-  )
