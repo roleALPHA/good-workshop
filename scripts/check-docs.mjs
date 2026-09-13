@@ -68,7 +68,8 @@ const INTERNAL = {
 const INFRA = {
   GW_HOSTNAME: 'Goes to the Caddy container, which substitutes it inside the Caddyfile.',
   GW_PORT: 'Host side of the port mapping. Compose reads it; the container never sees it.',
-  GW_VERSION: 'Selects the image tag. Also passed to app so /api/health can report it.',
+  GW_VERSION:
+    'Selects the image tag. Also passed to app, which reports it in /api/health and the footer.',
 }
 
 const VALUE_FLAGS = new Set([

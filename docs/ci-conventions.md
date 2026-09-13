@@ -135,7 +135,11 @@ Every job that uses the name directly normalises it first:
   fails the healthcheck rather than serving broken pages. New checks go into `runChecks()` in
   `src/app/api/health/route.ts`, nowhere else, and are **fail-closed**: an unknown state is not
   a healthy state.
-- `GW_VERSION` enters the image as a build `ARG` and is reported back by `/api/health`. That is
+- `GW_VERSION` enters the image as a build `ARG` and is reported back by `/api/health` and in
+  the page footer. Read through `appVersion()` in `src/lib/version.ts`, never `process.env`
+  directly, and only from a Server Component or a route handler — Next inlines `process.env.*`
+  into a client bundle for `NEXT_PUBLIC_` names and nothing else, so a Client Component would be
+  told `dev` on a machine running a release. That is
   not a secret — secrets arrive exclusively at runtime as environment variables.
 - The message catalogs are imported statically, so the build traces them into
   `.next/standalone` on its own. A dynamic `import()` of `../messages/${locale}.json` works in

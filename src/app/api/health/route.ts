@@ -1,5 +1,6 @@
 import { NextResponse } from 'next/server'
 import { publicReport, runChecks } from '@/server/ops/health'
+import { appVersion } from '@/lib/version'
 
 // The Edge runtime has no TCP, so anything that will eventually talk to
 // Postgres has to declare Node explicitly.
@@ -24,7 +25,7 @@ export async function GET(request: Request) {
   const secret = process.env.GW_OPS_TOKEN
   const detailed = Boolean(secret) && request.headers.get('x-ops-token') === secret
 
-  return NextResponse.json(publicReport(checks, process.env.GW_VERSION ?? 'dev', { detailed }), {
+  return NextResponse.json(publicReport(checks, appVersion(), { detailed }), {
     status: ok ? 200 : 503,
     headers: { 'cache-control': 'no-store' },
   })
