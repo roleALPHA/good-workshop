@@ -33,6 +33,12 @@ COPY --from=deps /app/node_modules ./node_modules
 COPY . .
 RUN pnpm build
 
+# The copyright lines and licence texts of everything that ships. MIT, BSD and
+# Apache all require these to travel WITH the distributed software, and a Docker
+# image is distribution -- a list in the source repository does not discharge
+# that for somebody who only ever receives the image.
+RUN pnpm licenses:notices
+
 # --- runner -----------------------------------------------------------------
 FROM node:${NODE_VERSION} AS runner
 WORKDIR /app
@@ -52,6 +58,8 @@ ENV GW_VERSION=${GW_VERSION}
 COPY --from=builder --chown=node:node /app/.next/standalone ./
 COPY --from=builder --chown=node:node /app/.next/static ./.next/static
 COPY --from=builder --chown=node:node /app/public ./public
+COPY --from=builder --chown=node:node /app/THIRD-PARTY-LICENSES.txt ./THIRD-PARTY-LICENSES.txt
+COPY --chown=node:node LICENSE ./LICENSE
 
 # The operational half of the image: migrations, provisioning and the CLI that
 # gets an operator in when there is neither HTTPS nor SMTP. Without these the

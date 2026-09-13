@@ -52,3 +52,39 @@ even if nothing else looks broken:
 ## Supported versions
 
 The latest release. This project is young and moves quickly; there is no back-porting yet.
+
+## How a report is handled
+
+So that the process is visible rather than promised:
+
+1. **Acknowledged within a week**, through the private advisory thread.
+2. **Assessed** — what an attacker gets, which versions are affected, whether it crosses one of
+   the boundaries above.
+3. **Fixed on a private fork** where the change is not public before the advisory is.
+4. **Released** as a normal tagged release, with the advisory published at the same time and a
+   CVE requested through GitHub where one is warranted.
+5. **Credited** to you in the advisory unless you would rather we did not.
+
+Because every installation is somebody else's, there is no "we patched production and you are
+already safe". Operators have to pull an image, so the advisory says which version fixes it and
+the release notes repeat it.
+
+## Finding out what is in a release
+
+You do not have to take our word for what a version contains:
+
+- **`sbom.cdx.json`** is attached to every release — a CycloneDX document with the exact version
+  of every dependency that went into it. Feed it to Dependency-Track, Grype or anything else
+  that speaks CycloneDX.
+- **The published image carries an SPDX attestation** of its own filesystem, readable without
+  pulling it:
+
+  ```bash
+  docker buildx imagetools inspect ghcr.io/rolealpha/good-workshop:0.3.1 --format '{{ json .SBOM }}'
+  ```
+
+- **`THIRD-PARTY-LICENSES.txt`** ships inside the image and is attached to every release.
+
+Dependabot, CodeQL (`security-extended`), dependency review and secret scanning with push
+protection run on this repository, and CI runs the full suite nightly. That is how we find the
+boring half; the interesting half comes from people like you.

@@ -22,7 +22,8 @@ Jobs run **in parallel**, not as a chain:
 
 | Job     | Contents                                                                                                                                                                            |
 | ------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| `lint`  | ESLint (including `no-restricted-imports` on `src/server/db`, the hex-colour rule and the German-prose rule), Prettier check, `tsc --noEmit`                                        |
+| `lint`  | ESLint (including `no-restricted-imports` on `src/server/db`, the hex-colour rule and the German-prose rule), Prettier check, `tsc --noEmit`, `check:docs`, `check:licenses`        |
+| `dco`   | Pull requests only: every commit carries a `Signed-off-by` trailer matching its author. Bots and merge commits are exempt — see CONTRIBUTING.md for what it certifies               |
 | `unit`  | Vitest, coverage report as a PR comment                                                                                                                                             |
 | `db`    | Postgres 17 **service container**, `migrate` + `provision`, then the RLS metadata test, cross-tenant fixtures, repository integration tests                                         |
 | `e2e`   | Playwright against the built standalone server, **two shards**, Chromium plus a mobile viewport project (`Pixel 5`). Traces and videos only `on-first-retry`, uploaded as artifacts |
@@ -52,7 +53,7 @@ a known vulnerability, or one whose licence this project cannot absorb — befor
 than after Dependabot notices it on `main`. Fails at `moderate`, because this is a small tree and
 a moderate finding here is a decision somebody should make.
 
-### `.github/workflows/release.yml` — on git tag `v*`
+### `.github/workflows/publish.yml` — on push to `main`, on git tag `v*`
 
 Push to `ghcr.io/<owner>/goodworkshop`, tags from `docker/metadata-action` (`1.2.3`, `1.2`,
 `latest`; `latest` only without a prerelease suffix), plus **SBOM and provenance**
@@ -68,6 +69,20 @@ The obvious alternative — one job with QEMU emulation and
 `platforms: linux/amd64,linux/arm64` — is considerably simpler, and turns a two-minute Next.js
 build into a twenty-minute one. When changing this workflow: **do not fall back to QEMU** just
 because the digest-merge mechanics look awkward.
+
+A third job, `sbom`, runs **only for tags** and attaches `sbom.cdx.json` and
+`THIRD-PARTY-LICENSES.txt` to the GitHub release. It takes `contents: write` and nothing else;
+in particular it does not take `id-token: write`, for the reason in the build job's comment.
+
+The CycloneDX document it generates is not the same as the SPDX attestation on the image, and
+neither replaces the other: BuildKit scans the container's filesystem, which sees the few dozen
+packages Next traced in; this one reads the lockfile, which sees the whole closure including
+everything bundled into the JavaScript. A reviewer asking "which versions are in this release"
+wants the second.
+
+The job creates the release from the tag's annotation if it does not exist yet — pushing a tag
+and writing the release notes by hand are two steps, and this one may win the race. Write the
+annotation as if it were the release note; `gh release edit` can still improve it afterwards.
 
 ## Conventions
 
@@ -135,6 +150,10 @@ Every job that uses the name directly normalises it first:
   fails the healthcheck rather than serving broken pages. New checks go into `runChecks()` in
   `src/app/api/health/route.ts`, nowhere else, and are **fail-closed**: an unknown state is not
   a healthy state.
+- `pnpm licenses:notices` runs in the **builder** stage and its output is copied into the
+  runner, together with `LICENSE`. MIT, BSD and Apache all require the notice to travel with the
+  distributed software, and a list in the source repository does not discharge that for somebody
+  who only ever receives the image.
 - `GW_VERSION` enters the image as a build `ARG` and is reported back by `/api/health` and in
   the page footer. Read through `appVersion()` in `src/lib/version.ts`, never `process.env`
   directly, and only from a Server Component or a route handler — Next inlines `process.env.*`
