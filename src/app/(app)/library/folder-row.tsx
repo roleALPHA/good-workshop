@@ -1,7 +1,7 @@
 'use client'
 
 import Link from 'next/link'
-import { useState, useTransition } from 'react'
+import { useRef, useState, useTransition } from 'react'
 import { ChevronRight, FolderIcon, FolderInput, Users, X } from 'lucide-react'
 import { deleteFolderAction, moveFolderAction } from '@/server/actions/workshop'
 import { useTranslations } from 'next-intl'
@@ -53,6 +53,31 @@ export function FolderRow({
   const [pending, startTransition] = useTransition()
   const [failed, setFailed] = useState<string | null>(null)
   const [moving, setMoving] = useState(false)
+  const [showName, setShowName] = useState(false)
+  const nameRef = useRef<HTMLSpanElement>(null)
+  const actionsRef = useRef<HTMLDivElement>(null)
+
+  /**
+   * The whole name, but only where some of it is out of sight.
+   *
+   * Out of sight twice over: cut off by the column, or -- the moment the pointer
+   * arrives -- covered by the row's buttons, which lie over the end of the name
+   * (see `actionsClass`). A native `title` did neither well: it came after a
+   * second, and not at all over the part the buttons hide.
+   */
+  function revealName() {
+    const text = nameRef.current
+    if (!text || dragging) return
+    const actions = actionsRef.current?.getBoundingClientRect()
+    const cutOff = text.scrollWidth > text.clientWidth
+    // Only an overlay covers anything; under a thumb the bar sits in the flow,
+    // to the right of the name, and has no width to speak of until laid out.
+    const covered =
+      actions !== undefined &&
+      actions.width > 0 &&
+      text.getBoundingClientRect().left + text.scrollWidth > actions.left
+    setShowName(cutOff || covered)
+  }
 
   function remove() {
     setFailed(null)
@@ -114,6 +139,10 @@ export function FolderRow({
               onClickCapture={(event) => {
                 if (dragging) event.preventDefault()
               }}
+              onPointerEnter={revealName}
+              onPointerLeave={() => setShowName(false)}
+              onFocus={revealName}
+              onBlur={() => setShowName(false)}
               className={cn(
                 // Left padding on every row, foldable or not, so names line up
                 // for their depth -- the toggle sits in it rather than beside it.
@@ -125,13 +154,19 @@ export function FolderRow({
               )}
             >
               <FolderIcon aria-hidden className="size-3.5 shrink-0" />
-              {/* The whole name on hover, for the ones that still do not fit. */}
-              <span className="truncate" title={name}>
+              <span ref={nameRef} data-folder-name className="truncate">
                 {name}
               </span>
             </Link>
 
-            <div className={actionsClass}>
+            {/* Hidden from assistive tech: the link already carries the name. */}
+            {showName && (
+              <span aria-hidden data-testid="folder-name-tooltip" className={tooltipClass}>
+                {name}
+              </span>
+            )}
+
+            <div ref={actionsRef} className={actionsClass}>
               {/* Not behind `canManage`: a folder viewer may look at who else has
                   access even though they can change little or nothing. The page
                   itself decides what the select offers -- see folder-sharing. */}
@@ -229,6 +264,21 @@ const actionsClass = cn(
   'absolute inset-y-0 right-0 flex items-center gap-1 rounded bg-[var(--bg)] pl-1',
   'opacity-0 group-hover:opacity-100 group-focus-within:opacity-100',
   'pointer-coarse:static pointer-coarse:opacity-100',
+)
+
+/**
+ * The full folder name, just below the row.
+ *
+ * Below rather than beside: the sidebar is 240px, and whatever is too long for
+ * it needs the room of the page. It may reach over the workshop list and over
+ * the next row, so it takes no pointer events -- the row underneath stays
+ * clickable. Lined up with the name (past the fold toggle and the icon), so it
+ * reads as that name spelled out.
+ */
+const tooltipClass = cn(
+  'pointer-events-none absolute top-full left-10 z-20 mt-1 w-max max-w-[min(28rem,80vw)]',
+  'rounded border border-[var(--border)] bg-[var(--surface)] px-2 py-1 text-[14px] break-words',
+  'text-[var(--fg)] shadow-md',
 )
 
 /**
