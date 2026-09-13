@@ -90,15 +90,13 @@ export function FolderRow({
               pendingId === id && 'opacity-60',
             )}
           >
-            {/* A spacer where there is nothing to fold, so every name starts at
-                the same place for its depth. */}
-            {foldable ? (
+            {foldable && (
               <button
                 type="button"
                 onClick={onToggleFold}
                 aria-expanded={!folded}
                 aria-label={folded ? t('expandFolder', { name }) : t('collapseFolder', { name })}
-                className={cn(foldClass, 'hover:bg-[var(--surface-raised)]')}
+                className={foldClass}
               >
                 <ChevronRight
                   aria-hidden
@@ -108,8 +106,6 @@ export function FolderRow({
                   )}
                 />
               </button>
-            ) : (
-              <span aria-hidden className={foldClass} />
             )}
 
             <Link
@@ -119,7 +115,10 @@ export function FolderRow({
                 if (dragging) event.preventDefault()
               }}
               className={cn(
-                'inline-flex min-w-0 flex-1 items-center gap-1.5 rounded px-2 py-1 text-[15px]',
+                // Left padding on every row, foldable or not, so names line up
+                // for their depth -- the toggle sits in it rather than beside it.
+                'inline-flex min-w-0 flex-1 items-center gap-1.5 rounded py-1 pr-2 pl-6 text-[15px]',
+                'pointer-coarse:pl-8',
                 active
                   ? 'bg-[var(--surface-raised)] font-medium'
                   : 'text-[var(--fg-muted)] hover:bg-[var(--surface-raised)]',
@@ -233,15 +232,19 @@ const actionsClass = cn(
 )
 
 /**
- * The fold toggle, and the spacer that stands in for it.
+ * The fold toggle, laid over the link's left padding.
  *
- * Small on a mouse, where it sits in a 200px sidebar next to the indent. Larger
- * under a thumb, though not the full 44px: the row's own buttons already take
- * that, and a second one per row would leave no room for the name.
+ * Not beside the link, in the flow: that took 24px from a 200px sidebar, and
+ * the middle of every name slid under the row's buttons, which catch clicks
+ * while still invisible (see `actionsClass`). Over the padding, the link keeps
+ * the whole row and the name keeps its room.
+ *
+ * Wider under a thumb, though not the full 44px: the row's own buttons already
+ * take that, and a second one per row would leave no room for the name.
  */
 const foldClass = cn(
-  'grid size-5 shrink-0 place-items-center rounded text-[var(--fg-subtle)]',
-  'pointer-coarse:size-8',
+  'absolute inset-y-0 left-0 z-10 grid w-6 place-items-center rounded text-[var(--fg-subtle)]',
+  'hover:bg-[var(--surface-raised)] pointer-coarse:w-8',
 )
 
 /**

@@ -141,7 +141,8 @@ test('keeps the folder tree out of the way on a phone until it is asked for', as
   // The point of folding it away: what you came for is on screen without
   // scrolling. Asserted on the search box, which sits directly above the list
   // and is there whether or not the library has anything in it yet.
-  await expect(page.getByPlaceholder('Suchen')).toBeInViewport()
+  // Exact: the folder tree has a search of its own now, "Ordner suchen".
+  await expect(page.getByPlaceholder('Suchen', { exact: true })).toBeInViewport()
   await expect(page.getByRole('heading', { name: 'Workshops' })).toBeInViewport()
 })
 
