@@ -55,7 +55,7 @@ export async function saveMailSettings(
   if (!actor) return fail('unauthenticated', 'unauthenticated')
 
   const parsed = mailSettingsInput.safeParse({
-    transport: formData.get('transport'),
+    transport: str(formData.get('transport')),
     smtpUrl: str(formData.get('smtpUrl')),
     smtpFrom: str(formData.get('smtpFrom')),
     graphTenantId: str(formData.get('graphTenantId')),

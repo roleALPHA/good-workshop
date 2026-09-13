@@ -151,8 +151,10 @@ export function useCollabDocument(initial: DayDoc, target: CollabTarget): Agenda
   )
 }
 
-function collabUrl(target: CollabTarget): string {
-  const base = new URL(target.url ?? '/collab', window.location.href)
+export function collabUrl(target: CollabTarget): string {
+  // `||`, not `??`: compose.yaml passes GW_COLLAB_URL as an empty string when
+  // it is unset, and '' resolved against the page is the page itself.
+  const base = new URL(target.url || '/collab', window.location.href)
   if (base.protocol === 'https:') base.protocol = 'wss:'
   else if (base.protocol === 'http:') base.protocol = 'ws:'
   base.searchParams.set('workshop', target.workshopId)

@@ -1,5 +1,5 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
-import { auditAuthConfig } from './config'
+import { auditAuthConfig, authConfig } from './config'
 
 /**
  * The boot-time audit of the auth configuration.
@@ -17,7 +17,7 @@ import { auditAuthConfig } from './config'
  *     asserts the wiring and not just the text.
  */
 
-const ENV_KEYS = ['GW_APP_URL', 'GW_MAIL_TRANSPORT'] as const
+const ENV_KEYS = ['GW_APP_URL', 'GW_MAIL_TRANSPORT', 'GW_RP_ID', 'GW_RP_NAME'] as const
 let saved: Record<string, string | undefined>
 
 beforeEach(() => {
@@ -63,5 +63,27 @@ describe('auditAuthConfig', () => {
     process.env.GW_APP_URL = 'https://ws.example.com'
     process.env.GW_MAIL_TRANSPORT = 'smtp'
     expect(auditAuthConfig()).toEqual([])
+  })
+})
+
+describe('authConfig', () => {
+  // compose.yaml passes `GW_RP_ID: ${GW_RP_ID:-}`, so a value left out of the
+  // .env arrives as an empty string, not as an absent variable. The browser
+  // then refuses every passkey: 'The RP ID "" is invalid for this domain'.
+  it('treats an empty GW_RP_ID as unset and falls back to the host of GW_APP_URL', () => {
+    process.env.GW_APP_URL = 'https://ws.example.com'
+    process.env.GW_RP_ID = ''
+    expect(authConfig.rpId).toBe('ws.example.com')
+  })
+
+  it('uses GW_RP_ID when it is set', () => {
+    process.env.GW_APP_URL = 'https://ws.example.com'
+    process.env.GW_RP_ID = 'example.com'
+    expect(authConfig.rpId).toBe('example.com')
+  })
+
+  it('treats an empty GW_RP_NAME as unset', () => {
+    process.env.GW_RP_NAME = ''
+    expect(authConfig.rpName).toBe('GoodWorkshop')
   })
 })

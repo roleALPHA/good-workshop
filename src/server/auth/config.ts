@@ -29,12 +29,18 @@ export const authConfig = {
   get origin() {
     return appUrl().origin
   },
-  /** The WebAuthn Relying Party ID. Defaults to the host of GW_APP_URL. */
+  /**
+   * The WebAuthn Relying Party ID. Defaults to the host of GW_APP_URL.
+   *
+   * `||`, not `??`: compose.yaml passes `GW_RP_ID: ${GW_RP_ID:-}`, so a value
+   * left out of the .env arrives as an empty string -- and the browser refuses
+   * every passkey for the RP ID "".
+   */
   get rpId() {
-    return process.env.GW_RP_ID ?? appUrl().hostname
+    return process.env.GW_RP_ID || appUrl().hostname
   },
   get rpName() {
-    return process.env.GW_RP_NAME ?? 'GoodWorkshop'
+    return process.env.GW_RP_NAME || 'GoodWorkshop'
   },
   /** localhost is the one origin where browsers allow WebAuthn without TLS. */
   get passkeysAvailable() {
