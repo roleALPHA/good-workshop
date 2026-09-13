@@ -21,8 +21,20 @@ FROM node:${NODE_VERSION} AS deps
 WORKDIR /app
 RUN corepack enable
 COPY package.json pnpm-lock.yaml ./
+COPY scripts/licenses.mjs ./scripts/licenses.mjs
+# The notice file is written HERE, in the same RUN as the install, and for one
+# reason: `pnpm licenses list` reads the pnpm store, and the store only exists
+# inside this cache mount. The builder stage receives node_modules but no
+# store, so the same command fails there with
+# ERR_PNPM_MISSING_PACKAGE_INDEX_FILE -- which is exactly how it failed once.
+#
+# What it produces is the copyright lines and licence texts of everything that
+# ships. MIT, BSD and Apache all require those to travel WITH the distributed
+# software, and a list in the source repository does not discharge that for
+# somebody who only ever receives the image.
 RUN --mount=type=cache,id=pnpm,target=/pnpm/store \
-    PNPM_HOME=/pnpm pnpm install --frozen-lockfile
+    PNPM_HOME=/pnpm pnpm install --frozen-lockfile && \
+    PNPM_HOME=/pnpm node scripts/licenses.mjs --notices THIRD-PARTY-LICENSES.txt
 
 # --- builder ----------------------------------------------------------------
 FROM node:${NODE_VERSION} AS builder
@@ -32,12 +44,6 @@ ENV NEXT_TELEMETRY_DISABLED=1
 COPY --from=deps /app/node_modules ./node_modules
 COPY . .
 RUN pnpm build
-
-# The copyright lines and licence texts of everything that ships. MIT, BSD and
-# Apache all require these to travel WITH the distributed software, and a Docker
-# image is distribution -- a list in the source repository does not discharge
-# that for somebody who only ever receives the image.
-RUN pnpm licenses:notices
 
 # --- runner -----------------------------------------------------------------
 FROM node:${NODE_VERSION} AS runner
@@ -58,7 +64,7 @@ ENV GW_VERSION=${GW_VERSION}
 COPY --from=builder --chown=node:node /app/.next/standalone ./
 COPY --from=builder --chown=node:node /app/.next/static ./.next/static
 COPY --from=builder --chown=node:node /app/public ./public
-COPY --from=builder --chown=node:node /app/THIRD-PARTY-LICENSES.txt ./THIRD-PARTY-LICENSES.txt
+COPY --from=deps --chown=node:node /app/THIRD-PARTY-LICENSES.txt ./THIRD-PARTY-LICENSES.txt
 COPY --chown=node:node LICENSE ./LICENSE
 
 # The operational half of the image: migrations, provisioning and the CLI that
