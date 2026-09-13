@@ -11,7 +11,7 @@ import {
 } from '@/domain/agenda/access'
 import { assertDayInWorkshop, loadDay } from '@/domain/agenda/repo'
 import { localiseModuleType } from '@/domain/moduleType/localise'
-import { ModuleDescError, validateModuleDesc } from '@/domain/moduleType/validate'
+import { ModuleDescError, validateModuleDesc, type FieldError } from '@/domain/moduleType/validate'
 import { setDayDate } from '@/domain/workshop/days'
 import { CATEGORY_COLORS } from '@/lib/category-colors'
 import { fail, guarded, ok, toolError } from './respond'
@@ -342,13 +342,34 @@ export function registerTools(server: McpServer, ctx: Ctx): void {
       () => {},
     )
 
+  // Everything a block can carry, so a whole agenda -- with every block's
+  // fields filled in -- is one call rather than one apply and twenty updates.
+  const BlockFields = {
+    typeKey: z.string(),
+    title: z.string().optional(),
+    durationMinutes: Duration.optional(),
+    pinnedStartMinute: Minute.nullable().optional(),
+    desc: z
+      .record(z.string(), z.unknown())
+      .optional()
+      .describe(
+        "The block type's own fields (presenter, materials, description, ...), " +
+          'shaped by its schema from list_module_types. Left out, the block starts empty.',
+      ),
+    parked: z.boolean().optional().describe('true puts the block straight into the parking area.'),
+  }
+
   server.registerTool(
     'apply_agenda',
     {
       title: 'Write a day agenda',
       description:
-        'Writes a complete day agenda in one go. `replace` replaces the day, `append` adds to it. ' +
-        'Always use this tool to build an agenda -- not twenty separate calls.',
+        'Writes a complete day agenda in one go, every block with all its fields: title, duration, ' +
+        "pinned start, parked and `desc` -- the block type's own fields such as presenter, materials " +
+        'or description, matching its schema from list_module_types. `replace` replaces the day, ' +
+        '`append` adds to it. All or nothing: if one block names an unknown type or a `desc` that ' +
+        'does not fit its schema, nothing is written. ' +
+        'Always use this tool to build or fill in an agenda -- not twenty separate calls.',
       inputSchema: {
         workshopId: Id,
         dayId: Id,
@@ -360,24 +381,10 @@ export function registerTools(server: McpServer, ctx: Ctx): void {
               kind: z.literal('cluster'),
               title: z.string().min(1),
               color: z.enum(CATEGORY_COLORS).optional(),
-              children: z
-                .array(
-                  z.object({
-                    typeKey: z.string(),
-                    title: z.string().optional(),
-                    durationMinutes: Duration.optional(),
-                    pinnedStartMinute: Minute.nullable().optional(),
-                  }),
-                )
-                .optional(),
-            }),
-            z.object({
-              kind: z.literal('module'),
-              typeKey: z.string(),
-              title: z.string().optional(),
-              durationMinutes: Duration.optional(),
               pinnedStartMinute: Minute.nullable().optional(),
+              children: z.array(z.object(BlockFields)).optional(),
             }),
+            z.object({ kind: z.literal('module'), ...BlockFields }),
           ]),
         ),
       },
@@ -397,26 +404,58 @@ export function registerTools(server: McpServer, ctx: Ctx): void {
         const unknown = [...new Set(wanted)].filter((key) => !types.has(key))
         if (unknown.length > 0) return fail(unknownTypes(unknown, types))
 
+        // The same for every description, and every problem at once: the
+        // path names the item, so the next call can fix them all.
+        const issues: FieldError[] = []
+        const descs = new Map<string, Record<string, unknown>>()
+        const check = (block: { typeKey: string; desc?: Record<string, unknown> }, at: string) => {
+          if (block.desc === undefined) return
+          const validated = validateModuleDesc(types.get(block.typeKey)!, block.desc)
+          if (validated.ok) descs.set(at, validated.value)
+          else
+            issues.push(
+              ...validated.errors.map((e) => ({
+                ...e,
+                path: e.path ? `${at}.desc.${e.path}` : `${at}.desc`,
+              })),
+            )
+        }
+        items.forEach((item, i) => {
+          if (item.kind === 'module') return check(item, `items[${i}]`)
+          item.children?.forEach((child, j) => check(child, `items[${i}].children[${j}]`))
+        })
+        if (issues.length > 0) return toolError(new ModuleDescError(issues))
+
         const { result, contentVersion, rejected } = await inRoom(workshopId, dayId, (doc) => {
           let created = 0
           doc.transact(() => {
             if (mode === 'replace') clearBlocks(doc)
 
-            for (const item of items) {
+            items.forEach((item, i) => {
               if (item.kind === 'module') {
-                addModuleBlock(doc, uuidv7(), moduleFrom(item, types))
+                addModuleBlock(doc, uuidv7(), {
+                  ...moduleFrom(item, types),
+                  desc: descs.get(`items[${i}]`),
+                })
                 created += 1
-                continue
+                return
               }
 
               const clusterId = uuidv7()
               addClusterBlock(doc, clusterId, { title: item.title, color: item.color ?? null })
-              created += 1
-              for (const child of item.children ?? []) {
-                addModuleBlock(doc, uuidv7(), { ...moduleFrom(child, types), parentId: clusterId })
-                created += 1
+              if (item.pinnedStartMinute != null) {
+                patchBlock(doc, clusterId, { pinnedStartMinute: item.pinnedStartMinute })
               }
-            }
+              created += 1
+              item.children?.forEach((child, j) => {
+                addModuleBlock(doc, uuidv7(), {
+                  ...moduleFrom(child, types),
+                  desc: descs.get(`items[${i}].children[${j}]`),
+                  parentId: clusterId,
+                })
+                created += 1
+              })
+            })
           })
           return created
         })
@@ -802,7 +841,7 @@ type UpdateOutcome =
   | { kind: 'wrongKind'; isCluster: boolean; fields: string[] }
   | { kind: 'invalid'; error: ModuleDescError }
 
-type ResolvedType = { id: string; name: string; defaultDurationMinutes: number }
+type ResolvedType = TypeSchema & { name: string; defaultDurationMinutes: number }
 
 async function readTypes(tx: Tx): Promise<Map<string, ResolvedType>> {
   const rows = await tx
@@ -811,6 +850,8 @@ async function readTypes(tx: Tx): Promise<Map<string, ResolvedType>> {
       key: moduleType.key,
       name: moduleType.name,
       defaultDurationMinutes: moduleType.defaultDurationMinutes,
+      schemaVersion: moduleType.schemaVersion,
+      jsonSchema: moduleType.jsonSchema,
     })
     .from(moduleType)
   return new Map(rows.map((row) => [row.key, row]))
@@ -836,6 +877,7 @@ function moduleFrom(
     title?: string
     durationMinutes?: number
     pinnedStartMinute?: number | null
+    parked?: boolean
   },
   types: Map<string, ResolvedType>,
 ): NewModuleBlock {
@@ -855,6 +897,7 @@ function moduleFrom(
     title: input.title ?? type.name,
     durationMinutes: input.durationMinutes ?? type.defaultDurationMinutes,
     pinnedStartMinute: input.pinnedStartMinute ?? null,
+    parked: input.parked,
   }
 }
 

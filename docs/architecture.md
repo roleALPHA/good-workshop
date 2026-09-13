@@ -273,7 +273,11 @@ the logo is only ever served into an `<img>` — browsers run no script inside o
 
 The most important tool is `apply_agenda`: it writes a complete day agenda in one go. Twenty
 separate, dependent calls are the point at which models fall apart — they lose ids, drift in
-the ordering, and on an error apply half of it. A declarative write is all or nothing.
+the ordering, and on an error apply half of it. A declarative write is all or nothing. Each block
+carries all its fields in the same call — title, duration, pinned start, parked and `desc`, the
+block type's own fields — so filling in an agenda is not one `update_module` per block. Every
+`desc` is validated against its schema before anything is written, and the error names each
+item (`items[1].children[0].desc.presenter`).
 
 Every change optionally takes `expectedVersion`. Without it a client with a five-minute-old
 state silently overwrites live editing — which is then reported as "the AI deleted my

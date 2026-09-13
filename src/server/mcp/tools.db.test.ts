@@ -488,3 +488,102 @@ describe('blocks', () => {
     expect(outline.text).toContain('Parked')
   })
 })
+
+describe('apply_agenda', () => {
+  it('writes every block with all its fields in one call', async () => {
+    const { must } = await connect(me)
+    const { data } = await must('create_workshop', { title: unique('Agenda') })
+    const workshopId = data.workshopId as string
+    const dayId = data.dayId as string
+
+    await must('apply_agenda', {
+      workshopId,
+      dayId,
+      mode: 'replace',
+      items: [
+        {
+          kind: 'module',
+          typeKey: 'presentation',
+          title: 'Kick-off',
+          durationMinutes: 20,
+          desc: {
+            presenter: 'Linh',
+            key_points: ['Ziel', 'Ablauf'],
+            materials: ['Beamer'],
+            participation: 'plenary',
+            description: { format: 'tiptap-doc-v1', doc: { type: 'doc' }, text: 'Worum es geht' },
+          },
+        },
+        {
+          kind: 'cluster',
+          title: 'Arbeitsphase',
+          pinnedStartMinute: 600,
+          children: [
+            {
+              typeKey: 'presentation',
+              title: 'Input',
+              desc: { presenter: 'Alex' },
+            },
+            { typeKey: 'break', title: 'Reserve', parked: true },
+          ],
+        },
+      ],
+    })
+
+    const rows = await ops.query(
+      `select m.title, m.json_desc, m.parked, c.title as cluster
+         from module m left join cluster c on c.id = m.cluster_id
+        where m.workshop_id = $1 order by m.title`,
+      [workshopId],
+    )
+    expect(rows.rows).toMatchObject([
+      { title: 'Input', json_desc: { presenter: 'Alex' }, parked: false, cluster: 'Arbeitsphase' },
+      {
+        title: 'Kick-off',
+        json_desc: {
+          presenter: 'Linh',
+          key_points: ['Ziel', 'Ablauf'],
+          materials: ['Beamer'],
+          participation: 'plenary',
+          description: { text: 'Worum es geht' },
+        },
+        parked: false,
+        cluster: null,
+      },
+      { title: 'Reserve', parked: true, cluster: 'Arbeitsphase' },
+    ])
+    const cluster = await ops.query(
+      'select pinned_start_time::text from cluster where workshop_id = $1',
+      [workshopId],
+    )
+    expect(cluster.rows[0]).toEqual({ pinned_start_time: '10:00:00' })
+  })
+
+  it('writes nothing when one description does not fit its schema, and says which', async () => {
+    const { must, call } = await connect(me)
+    const { data } = await must('create_workshop', { title: unique('Agenda') })
+    const workshopId = data.workshopId as string
+    const dayId = data.dayId as string
+
+    const result = await call('apply_agenda', {
+      workshopId,
+      dayId,
+      items: [
+        { kind: 'module', typeKey: 'presentation', desc: { presenter: 'Linh' } },
+        {
+          kind: 'cluster',
+          title: 'Teil 2',
+          children: [{ typeKey: 'presentation', desc: { presenter: 42 } }],
+        },
+      ],
+    })
+    expect(result.isError).toBe(true)
+    expect(result.text).toContain('items[1].children[0]')
+    expect(result.text).toContain('presenter')
+
+    const rows = await ops.query('select count(*)::int as n from module where workshop_id = $1', [
+      workshopId,
+    ])
+    expect(rows.rows[0]).toEqual({ n: 0 })
+  })
+})
