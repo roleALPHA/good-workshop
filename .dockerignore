@@ -15,4 +15,8 @@ playwright-report
 Dockerfile
 .dockerignore
 README.md
-LICENSE
+
+# LICENSE is NOT excluded, although it is documentation like the README above.
+# AGPL section 4 asks that a copy of the licence travel with the program, and
+# an image handed to an operator is a conveyance. It costs 34 kB of build
+# context.

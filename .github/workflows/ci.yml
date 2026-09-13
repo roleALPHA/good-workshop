@@ -57,6 +57,79 @@ jobs:
       # command that no longer exists.
       - name: Documentation and code agree
         run: pnpm check:docs
+      # Two questions in one step, both of which have a wrong answer that is
+      # invisible until somebody asks: may every dependency legally ship inside
+      # an AGPL-3.0 image, and does the committed index still list the packages
+      # that are actually there. A new transitive dependency turns this red on
+      # purpose -- that is the moment its licence gets looked at.
+      - name: Dependency licences may ship
+        run: pnpm check:licenses
+
+  # Every commit has to carry a Signed-off-by trailer -- the Developer
+  # Certificate of Origin. CONTRIBUTING.md says what that certifies and why
+  # this project uses it instead of a CLA.
+  #
+  # Only on pull requests: the range base..head is what a contributor can still
+  # fix with `git rebase --signoff`. Running it on push to main would fail on
+  # history that is already merged and cannot be rewritten.
+  dco:
+    name: Sign-off
+    runs-on: ubuntu-latest
+    if: github.event_name == 'pull_request'
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          # The whole range has to be present locally, and a shallow clone has
+          # neither the base commit nor the bodies of the commits in between.
+          fetch-depth: 0
+      - name: Every commit is signed off
+        env:
+          BASE: ${{ github.event.pull_request.base.sha }}
+          HEAD: ${{ github.event.pull_request.head.sha }}
+        run: |
+          set -euo pipefail
+          missing=0
+          # NUL-separated, because a commit body contains newlines and a
+          # line-based loop would read half a message as a commit.
+          while IFS= read -r -d '' commit; do
+            sha=${commit%%$'\n'*}
+            rest=${commit#*$'\n'}
+            author=${rest%%$'\n'*}
+            body=${rest#*$'\n'}
+
+            # Bots cannot certify anything. Dependabot opens a pull request a
+            # week here, and blocking those would mean turning the check off.
+            case "$author" in
+              *'[bot] <'*) continue ;;
+            esac
+
+            # A merge commit is somebody else's history joined in, not a
+            # contribution of its own.
+            if [ "$(git rev-list --parents -n 1 "$sha" | wc -w)" -gt 2 ]; then
+              continue
+            fi
+
+            email=${author##*<}
+            email=${email%>}
+            if ! grep -qiF "Signed-off-by: " <<< "$body"; then
+              echo "::error::$sha has no Signed-off-by line ($author)"
+              missing=$((missing + 1))
+            elif ! grep -qi "^Signed-off-by: .*<${email}>[[:space:]]*$" <<< "$body"; then
+              echo "::error::$sha is signed off by somebody other than its author ($author)"
+              missing=$((missing + 1))
+            fi
+          done < <(git log -z --format='%H%n%an <%ae>%n%B' "$BASE..$HEAD")
+
+          if [ "$missing" -gt 0 ]; then
+            echo
+            echo "$missing commit(s) are missing a sign-off. Add it with:"
+            echo "    git rebase --signoff $BASE"
+            echo "    git push --force-with-lease"
+            echo
+            echo "What you are certifying is in CONTRIBUTING.md."
+            exit 1
+          fi
+          echo "Every commit in this pull request is signed off."
 
   unit:
     name: Unit & Component Tests
