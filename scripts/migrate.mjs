@@ -74,10 +74,16 @@ try {
  * can replace it itself, so falling back is correct rather than lenient.
  */
 async function applyPatResolver() {
-  // Both resolvers, in one connection: they have the same owner, the same
-  // grant and the same reason to exist, and applying one without the other
-  // leaves the MCP endpoint able to authenticate half its callers.
-  const files = ['drizzle/sql/900_pat_resolver.sql', 'drizzle/sql/901_oauth_resolver.sql']
+  // Every SECURITY DEFINER function in one connection: they have the same
+  // owner, the same grant and the same reason to exist -- a question the
+  // application's own role is deliberately unable to ask. Applying one without
+  // the others leaves the MCP endpoint able to authenticate half its callers,
+  // or an admin able to remove a member but not the account behind it.
+  const files = [
+    'drizzle/sql/900_pat_resolver.sql',
+    'drizzle/sql/901_oauth_resolver.sql',
+    'drizzle/sql/902_forget_identity.sql',
+  ]
   const source = (await Promise.all(files.map((file) => readFile(join(root, file), 'utf8')))).join(
     '\n',
   )

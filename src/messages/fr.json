@@ -31,7 +31,19 @@
       "alreadyMember": "{email} était déjà membre.",
       "invited": "{email} a été invitée.",
       "linkOnItsWay": "Le lien de connexion est en route.",
-      "noMailSetUp": "Aucun envoi d'e-mails n'est configuré. Transmets ce lien en personne — qui l'ouvre est connecté en tant que {email}."
+      "noMailSetUp": "Aucun envoi d'e-mails n'est configuré. Transmets ce lien en personne — qui l'ouvre est connecté en tant que {email}.",
+      "remove": "Supprimer",
+      "removeCancel": "Finalement non",
+      "removeConfirm": "Supprimer définitivement",
+      "removeHeading": "Supprimer {name} de cet espace de travail",
+      "removeWarning": "Cette action est irréversible. Son accès, ses jetons et ses partages disparaissent immédiatement.",
+      "removeForgets": "Si l'adresse n'appartient à aucun autre espace de travail, le compte est supprimé lui aussi.",
+      "removeOwnsNothing": "Ce membre ne possède ni ateliers ni dossiers.",
+      "removeOwns": "À reprendre : {workshops, plural, =0 {aucun atelier} one {# atelier} many {# ateliers} other {# ateliers}} et {folders, plural, =0 {aucun dossier} one {# dossier} many {# dossiers} other {# dossiers}}.",
+      "successor": "Repris par",
+      "successorPlaceholder": "Veuillez choisir …",
+      "removeTypeLabel": "Saisissez l'adresse e-mail pour confirmer : {email}",
+      "removed": "{name} a été supprimé."
     },
     "mail": {
       "title": "Envoi d'e-mails",
@@ -268,7 +280,12 @@
         "gone": "Ce membre n'existe pas.",
         "cannotDisableSelf": "Tu ne peux pas te désactiver toi-même.",
         "lastAdmin": "C'est le dernier admin actif. Nomme d'abord quelqu'un d'autre admin — sinon plus personne n'accédera à l'administration.",
-        "checkEmailAndRole": "Vérifie l'adresse e-mail et le rôle."
+        "checkEmailAndRole": "Vérifie l'adresse e-mail et le rôle.",
+        "cannotRemoveSelf": "Vous ne pouvez pas vous supprimer vous-même. Demandez-le à une autre personne ayant les droits d'administration.",
+        "successorRequired": "Ce membre possède encore des ateliers ou des dossiers. Choisissez d'abord qui les reprend.",
+        "successorIsLeaver": "Le membre ne peut pas reprendre ce qu'il cède.",
+        "successorGone": "La personne qui devait reprendre n'est plus membre. Veuillez choisir à nouveau.",
+        "successorDisabled": "La personne qui doit reprendre est désactivée et ne pourrait pas se connecter. Réactivez-la ou choisissez quelqu'un d'autre."
       },
       "setup": {
         "wrongKey": "La clé d'installation est incorrecte.",

@@ -5,9 +5,11 @@ import { z } from 'zod'
 import {
   inviteMember,
   listMembers,
+  removeMember,
   setMemberRole,
   setMemberStatus,
   type MemberRow,
+  type RemoveMemberResult,
 } from '@/domain/tenant/members'
 import { inviteDisclosure } from '@/domain/tenant/invite'
 import { issueMagicLink } from '@/server/auth/magic-link'
@@ -138,6 +140,39 @@ export async function setMemberStatusAction(raw: {
     await setMemberStatus(actor, raw.memberId, raw.status)
     revalidatePath('/admin/members')
     return { ok: true, data: null }
+  } catch (error) {
+    return toResult(error)
+  }
+}
+
+/**
+ * Removing somebody for good, with their work handed to a colleague.
+ *
+ * `successorId` is nullable rather than absent: a member who owns nothing needs
+ * no successor, and requiring one would mean inventing a choice for the common
+ * case. The domain refuses a missing successor exactly when it matters, which
+ * is a decision that belongs next to the count it is based on rather than in a
+ * schema here.
+ */
+export async function removeMemberAction(raw: {
+  memberId: string
+  successorId: string | null
+}): Promise<ActionResult<RemoveMemberResult>> {
+  const actor = await currentActor()
+  if (!actor) return fail('unauthenticated', 'unauthenticated')
+
+  const input = z
+    .object({ memberId: z.string().uuid(), successorId: z.string().uuid().nullable() })
+    .safeParse(raw)
+  if (!input.success) return fail('invalid_input', 'member.gone')
+
+  try {
+    const result = await removeMember(actor, input.data.memberId, input.data.successorId)
+    revalidatePath('/admin/members')
+    // The library lists workshops by owner, so a handover changes what a
+    // colleague sees there without them having touched anything.
+    revalidatePath('/library')
+    return { ok: true, data: result }
   } catch (error) {
     return toResult(error)
   }

@@ -31,7 +31,19 @@
       "alreadyMember": "{email} ya era miembro.",
       "invited": "{email} ha sido invitada.",
       "linkOnItsWay": "El enlace de acceso va de camino.",
-      "noMailSetUp": "No hay envío de correo configurado. Pasa este enlace en persona — quien lo abra queda con la sesión iniciada como {email}."
+      "noMailSetUp": "No hay envío de correo configurado. Pasa este enlace en persona — quien lo abra queda con la sesión iniciada como {email}.",
+      "remove": "Eliminar",
+      "removeCancel": "Mejor no",
+      "removeConfirm": "Eliminar definitivamente",
+      "removeHeading": "Eliminar a {name} de este espacio de trabajo",
+      "removeWarning": "Esto no se puede deshacer. Su acceso, sus tokens y sus permisos desaparecen de inmediato.",
+      "removeForgets": "Si la dirección no pertenece a ningún otro espacio de trabajo, también se elimina la cuenta.",
+      "removeOwnsNothing": "Este miembro no posee talleres ni carpetas.",
+      "removeOwns": "Por traspasar: {workshops, plural, =0 {ningún taller} one {# taller} many {# talleres} other {# talleres}} y {folders, plural, =0 {ninguna carpeta} one {# carpeta} many {# carpetas} other {# carpetas}}.",
+      "successor": "Los asume",
+      "successorPlaceholder": "Elige una persona …",
+      "removeTypeLabel": "Escribe la dirección de correo para confirmar: {email}",
+      "removed": "Se ha eliminado a {name}."
     },
     "mail": {
       "title": "Envío de correo",
@@ -268,7 +280,12 @@
         "gone": "Ese miembro no existe.",
         "cannotDisableSelf": "No puedes desactivarte a ti misma.",
         "lastAdmin": "Es la última administradora activa. Nombra antes a otra persona administradora — si no, nadie podrá acceder a la administración.",
-        "checkEmailAndRole": "Revisa la dirección de correo y el rol."
+        "checkEmailAndRole": "Revisa la dirección de correo y el rol.",
+        "cannotRemoveSelf": "No puedes eliminarte a ti mismo. Pídeselo a otra persona con permisos de administración.",
+        "successorRequired": "Este miembro todavía posee talleres o carpetas. Elige primero quién los asume.",
+        "successorIsLeaver": "El miembro no puede asumir lo que está cediendo.",
+        "successorGone": "La persona que iba a asumirlos ya no es miembro. Elige de nuevo.",
+        "successorDisabled": "La persona que debe asumirlos está desactivada y no podría iniciar sesión. Vuelve a habilitarla o elige a otra."
       },
       "setup": {
         "wrongKey": "La clave de instalación no es correcta.",

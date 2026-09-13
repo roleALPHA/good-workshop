@@ -104,9 +104,18 @@ and these statements are meant to sweep all of them.
 wrote is not attributed to them per field — the CRDT log records authorship of edits, the
 relational tables do not.
 
-**Erasure (Art. 17).** Here is the second honest limitation: **the application has no delete
-function for a person.** An admin can set a member to `disabled`, which revokes access, and that
-is all the interface offers. Actual erasure is a database operation today, and it has an order:
+**Erasure (Art. 17).** An admin removes somebody under **Administration → Members**. The screen
+asks which colleague takes over their workshops and folders, says how many there are before it
+asks, and needs the address typed to confirm. Removing deletes the membership together with
+their tokens, OAuth grants and every collaboration grant — and if that was the person's last
+membership in any workspace, the account itself goes with it, taking sessions, login tokens and
+passkeys by cascade. What is left afterwards is no e-mail address.
+
+Two things the screen does **not** reach, and they are the same two as ever: names inside agenda
+content, and names inside the CRDT update history. Read on.
+
+The database route below still exists, for an installation being repaired from the outside or a
+person who was never a member of the workspace you are in. It has an order:
 
 ```sql
 -- 1. Workshops they own block the delete. This is deliberate -- `workshop.owner_id`
