@@ -147,7 +147,12 @@ export default defineConfig({
         // proves the thing a component test cannot: that the layout is rendered
         // per request and not prerendered into the build, which in the Docker
         // image would freeze the version at whatever the builder stage knew.
+        //
+        // Both, because they are read by different things: GW_VERSION by
+        // /api/health, GW_BUILD by the footer. See displayVersion in
+        // src/lib/version.ts.
         GW_VERSION: 'e2e',
+        GW_BUILD: 'e2e',
       },
       // The root, not /api/health. Health is honest about needing a database --
       // it returns 503 without one -- while "is the server listening" and "can
