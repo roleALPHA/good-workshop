@@ -43,41 +43,29 @@ describe('dropping a workshop', () => {
 describe('dropping a folder', () => {
   it('asks for the move when the parent changes', () => {
     expect(
-      resolveFolderDrop(
-        { id: 'f-1', parentId: null },
-        { afterId: 'f-0' },
-        { parentId: 'f-9', afterId: null, valid: true },
-      ),
-    ).toEqual({ id: 'f-1', parentId: 'f-9', afterId: null })
+      resolveFolderDrop({ id: 'f-1', parentId: null }, { parentId: 'f-9', valid: true }),
+    ).toEqual({ id: 'f-1', parentId: 'f-9' })
   })
 
-  it('asks for the move when only the order changes', () => {
+  it('asks for the move to the top level', () => {
     expect(
-      resolveFolderDrop(
-        { id: 'f-1', parentId: 'f-9' },
-        { afterId: null },
-        { parentId: 'f-9', afterId: 'f-2', valid: true },
-      ),
-    ).toEqual({ id: 'f-1', parentId: 'f-9', afterId: 'f-2' })
+      resolveFolderDrop({ id: 'f-1', parentId: 'f-9' }, { parentId: null, valid: true }),
+    ).toEqual({ id: 'f-1', parentId: null })
   })
 
-  it('asks for nothing when it lands where it already is', () => {
+  /**
+   * Siblings are listed alphabetically, so a folder dragged up or down within
+   * its own parent would snap straight back. That is no move worth a request.
+   */
+  it('asks for nothing when it stays in the same parent', () => {
     expect(
-      resolveFolderDrop(
-        { id: 'f-1', parentId: 'f-9' },
-        { afterId: 'f-2' },
-        { parentId: 'f-9', afterId: 'f-2', valid: true },
-      ),
+      resolveFolderDrop({ id: 'f-1', parentId: 'f-9' }, { parentId: 'f-9', valid: true }),
     ).toBeNull()
   })
 
   it('asks for nothing when the projection refused', () => {
     expect(
-      resolveFolderDrop(
-        { id: 'f-1', parentId: null },
-        { afterId: null },
-        { parentId: 'f-9', afterId: null, valid: false },
-      ),
+      resolveFolderDrop({ id: 'f-1', parentId: null }, { parentId: 'f-9', valid: false }),
     ).toBeNull()
   })
 })

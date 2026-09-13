@@ -204,16 +204,15 @@ export async function deleteFolderAction(raw: { id: string }): Promise<ActionRes
 }
 
 /**
- * Moves a folder into another, or to the top level, and says where among its
- * new siblings it lands.
+ * Moves a folder into another, or to the top level.
  *
  * The refusals -- into itself, into its own descendant, onto a name that is
  * taken -- come back as messages rather than as a generic failure: all three
  * are ordinary mis-aims, and the person doing it needs to know which one they
  * hit.
  *
- * `afterId` is the sibling the folder lands behind, null for first, and absent
- * when the caller does not care (the select control does not).
+ * `afterId` is still accepted, but the sidebar sends none: folders are listed
+ * alphabetically, so where among its siblings one lands is decided by its name.
  */
 export async function moveFolderAction(raw: {
   id: string

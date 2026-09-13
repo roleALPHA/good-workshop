@@ -16,6 +16,7 @@ import {
   inheritedWorkshopRole,
   type FolderPathRow,
 } from '@/domain/workshop/folder-access'
+import { sortFolderTree } from '@/domain/workshop/folder-order'
 import { keyAtEnd, placeAfter } from '@/domain/agenda/ordering'
 import { NotFoundError, type WorkshopAccess } from '@/domain/agenda/access'
 import { DomainError } from '@/domain/errors'
@@ -75,36 +76,14 @@ export async function listFolders(tx: Tx): Promise<FolderNode[]> {
       id: folder.id,
       name: folder.name,
       parentId: folder.parentId,
-      ancestors: folder.ancestorIds,
-      position: folder.position,
+      ancestorIds: folder.ancestorIds,
     })
     .from(folder)
-    .orderBy(asc(folder.position))
 
   // Sorted into tree order in memory: folder trees are hundreds of rows, and a
-  // recursive CTE here would buy nothing but a harder query to read.
-  const byParent = new Map<string | null, typeof rows>()
-  for (const row of rows) {
-    const bucket = byParent.get(row.parentId)
-    if (bucket) bucket.push(row)
-    else byParent.set(row.parentId, [row])
-  }
-
-  const out: FolderNode[] = []
-  const walk = (parentId: string | null, depth: number) => {
-    for (const row of byParent.get(parentId) ?? []) {
-      out.push({
-        id: row.id,
-        name: row.name,
-        parentId: row.parentId,
-        depth,
-        ancestorIds: row.ancestors,
-      })
-      walk(row.id, depth + 1)
-    }
-  }
-  walk(null, 0)
-  return out
+  // recursive CTE here would buy nothing but a harder query to read. The
+  // siblings come out alphabetical -- see folder-order.ts for why.
+  return sortFolderTree(rows)
 }
 export type LibraryQuery = {
   folderId?: string | null
@@ -501,9 +480,9 @@ export class FolderMoveError extends DomainError {}
  * would be a cycle -- a subtree detached from the root, invisible in the
  * sidebar and unreachable except by id.
  *
- * `afterId` names the sibling the folder lands behind, null for first. An
- * anchor rather than an index, for the reason `placeAfter` documents: if a
- * sibling moved in the meantime you still land after the right neighbour.
+ * `afterId` still places `position` behind that sibling, null for first, but
+ * `listFolders` no longer reads it: siblings are listed alphabetically. The
+ * parameter stays for MCP clients that send it.
  */
 export async function moveFolder(
   tx: Tx,

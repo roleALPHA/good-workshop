@@ -41,6 +41,8 @@ import {
   type FolderProjection,
   type FolderRow,
 } from '@/features/library/folder-projection'
+import { visibleFolders } from '@/features/library/folder-tree'
+import { useFoldedFolders } from '@/hooks/use-folded-folders'
 import { useMediaQuery } from '@/hooks/use-media-query'
 import { moveFolderAction } from '@/server/actions/workshop'
 
@@ -136,9 +138,17 @@ export function LibraryDnd({ folders, children }: { folders: FolderNode[]; child
     useSensor(TouchSensor, TOUCH_OPTIONS),
   )
 
+  // The rows on screen, not the whole tree: a folder is aimed between the rows
+  // you can see, and a folded branch is not among them.
+  const { folded } = useFoldedFolders()
   const rows = useMemo<FolderRow[]>(
-    () => folders.map((node) => ({ id: node.id, parentId: node.parentId, depth: node.depth })),
-    [folders],
+    () =>
+      visibleFolders(folders, folded).map((node) => ({
+        id: node.id,
+        parentId: node.parentId,
+        depth: node.depth,
+      })),
+    [folders, folded],
   )
 
   const projection = useMemo(() => {
@@ -241,7 +251,7 @@ export function LibraryDnd({ folders, children }: { folders: FolderNode[]; child
     const node = folders.find((entry) => entry.id === dragged.id)
     if (!node || !projected) return
 
-    const move = resolveFolderDrop(node, { afterId: currentAnchor(rows, node.id) }, projected)
+    const move = resolveFolderDrop(node, projected)
     if (!move) return
 
     setPendingId(dragged.id)
@@ -252,12 +262,7 @@ export function LibraryDnd({ folders, children }: { folders: FolderNode[]; child
       announce(result.message)
       return
     }
-    const after = nameOf(move.afterId)
-    announce(
-      after === null
-        ? t('drag.nowFirst', { name: dragged.name })
-        : t('drag.nowAfter', { name: dragged.name, after }),
-    )
+    announce(t('drag.dropped', { title: dragged.name, where: where(move.parentId) }))
     router.refresh()
   }
 
@@ -339,16 +344,4 @@ export function LibraryDnd({ folders, children }: { folders: FolderNode[]; child
       </DndContext>
     </LibraryDragContext.Provider>
   )
-}
-
-/** The sibling a folder currently sits behind, so a no-op drop stays a no-op. */
-function currentAnchor(rows: FolderRow[], id: string): string | null {
-  const index = rows.findIndex((row) => row.id === id)
-  if (index === -1) return null
-  const depth = rows[index]!.depth
-  for (let i = index - 1; i >= 0; i--) {
-    if (rows[i]!.depth === depth) return rows[i]!.id
-    if (rows[i]!.depth < depth) return null
-  }
-  return null
 }

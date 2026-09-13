@@ -141,7 +141,8 @@ test('keeps the folder tree out of the way on a phone until it is asked for', as
   // The point of folding it away: what you came for is on screen without
   // scrolling. Asserted on the search box, which sits directly above the list
   // and is there whether or not the library has anything in it yet.
-  await expect(page.getByPlaceholder('Suchen')).toBeInViewport()
+  // Exact: the folder tree has a search of its own now, "Ordner suchen".
+  await expect(page.getByPlaceholder('Suchen', { exact: true })).toBeInViewport()
   await expect(page.getByRole('heading', { name: 'Workshops' })).toBeInViewport()
 })
 
@@ -163,6 +164,53 @@ test('shows the folder tree on a phone too', async ({ page }) => {
   // And it filters, which is what the tree is for.
   await sidebar(page).getByRole('link', { name, exact: true }).click()
   await expect(page).toHaveURL(/folder=/)
+})
+
+test('lists folders alphabetically, finds one by name, and folds a branch away', async ({
+  page,
+}) => {
+  const stamp = Date.now()
+  const zebra = `Zebra ${stamp}`
+  const anchor = `Anker ${stamp}`
+  const cabin = `Kajuete ${stamp}`
+  const link = (name: string) => sidebar(page).getByRole('link', { name, exact: true })
+
+  await page.goto('/library')
+
+  // Made in the wrong order on purpose: the tree puts them right.
+  for (const name of [zebra, anchor]) {
+    await sidebar(page).getByRole('button', { name: 'Ordner', exact: true }).click()
+    await page.getByLabel('Name des Ordners').fill(name)
+    await page.keyboard.press('Enter')
+    await expect(link(name)).toBeVisible()
+  }
+  await expect(async () => {
+    const names = (await sidebar(page).getByRole('link').allInnerTexts())
+      .map((text) => text.trim())
+      .filter((text) => text.endsWith(String(stamp)))
+    expect(names).toEqual([anchor, zebra])
+  }).toPass({ timeout: 10_000 })
+
+  await link(anchor).click()
+  await sidebar(page).getByRole('button', { name: 'Ordner', exact: true }).click()
+  await page.getByLabel('Name des Unterordners').fill(cabin)
+  await page.keyboard.press('Enter')
+  await expect(link(cabin)).toBeVisible()
+
+  // Folded away, and still folded after a reload: the browser remembers.
+  await sidebar(page)
+    .getByRole('button', { name: `Ordner ${anchor} zuklappen` })
+    .click()
+  await expect(link(cabin)).toBeHidden()
+  await page.reload()
+  await expect(link(anchor)).toBeVisible()
+  await expect(link(cabin)).toBeHidden()
+
+  // A search looks inside the folded branch anyway.
+  await sidebar(page).getByRole('searchbox', { name: 'Ordner durchsuchen' }).fill(cabin)
+  await expect(link(cabin)).toBeVisible()
+  await expect(link(anchor)).toBeVisible()
+  await expect(link(zebra)).toBeHidden()
 })
 
 test.describe('filing things by dragging them', () => {

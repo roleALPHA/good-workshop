@@ -37,15 +37,15 @@ export function resolveWorkshopDrop(
 /**
  * The move a folder drop asks for, or null when it asks for nothing.
  *
- * The projection has already decided where the folder lands; this only strips
- * out the drop that would rewrite a row into the position it is already in.
+ * The projection has already decided where the folder lands; only the parent
+ * counts. Siblings are listed alphabetically, so a folder dragged up or down
+ * inside its own parent would snap straight back -- that is no move at all.
  */
 export function resolveFolderDrop(
   active: { id: string; parentId: string | null },
-  current: { afterId: string | null },
-  projected: { parentId: string | null; afterId: string | null; valid: boolean },
-): { id: string; parentId: string | null; afterId: string | null } | null {
+  projected: { parentId: string | null; valid: boolean },
+): { id: string; parentId: string | null } | null {
   if (!projected.valid) return null
-  if (projected.parentId === active.parentId && projected.afterId === current.afterId) return null
-  return { id: active.id, parentId: projected.parentId, afterId: projected.afterId }
+  if (projected.parentId === active.parentId) return null
+  return { id: active.id, parentId: projected.parentId }
 }

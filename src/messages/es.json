@@ -382,6 +382,8 @@
   },
   "library": {
     "allWorkshops": "Todos los talleres",
+    "collapseFolder": "Contraer la carpeta {name}",
+    "expandFolder": "Expandir la carpeta {name}",
     "atTopLevel": "en el nivel superior",
     "bin": {
       "title": "Papelera",
@@ -405,8 +407,6 @@
       "instructions": "Arrastra sobre una carpeta para mover. Con el teclado: el botón de al lado abre una lista para elegir.",
       "invalid": "{title} no se puede soltar aquí.",
       "landing": "{title} caerá {where}.",
-      "nowAfter": "{name} está ahora detrás de {after}.",
-      "nowFirst": "{name} está ahora en primer lugar.",
       "picked": "{title} tomado.",
       "region": "Mover"
     },
@@ -416,6 +416,8 @@
     "emptyHint": "Crea uno — la primera jornada viene incluida.",
     "folderName": "Nombre de la carpeta",
     "folders": "Carpetas",
+    "folderSearch": "Buscar carpetas",
+    "folderSearchLabel": "Buscar en las carpetas",
     "hideFolders": "Ocultar carpetas",
     "inFolder": "en {name}",
     "moveFolderHint": "Mover a otra carpeta",
@@ -430,6 +432,7 @@
     "newFolder": "Carpeta",
     "newWorkshop": "Nuevo taller",
     "noFolder": "Sin carpeta",
+    "noFolderMatch": "Ninguna carpeta coincide con «{query}».",
     "removeFolder": "Eliminar la carpeta — su contenido sube un nivel",
     "removeFolderLabel": "Eliminar la carpeta {name}",
     "search": "Buscar",

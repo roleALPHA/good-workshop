@@ -87,7 +87,8 @@ export function registerLibraryTools(server: McpServer, { actor, authorization }
     {
       title: 'List folders',
       description:
-        'The folder tree, in display order. `depth` 0 is the top level; `parentId` names the folder above.',
+        'The folder tree, in display order: every folder directly below its parent, siblings alphabetical. ' +
+        '`depth` 0 is the top level; `parentId` names the folder above.',
       inputSchema: {},
     },
     async () =>
@@ -132,7 +133,8 @@ export function registerLibraryTools(server: McpServer, { actor, authorization }
       title: 'Move a folder',
       description:
         'Moves a folder with everything in it under `parentId`, or to the top level with null. ' +
-        '`afterId` is the sibling it lands behind, null for first. Tenant admins only.',
+        'Folders are always listed alphabetically, so there is no position to choose; `afterId` is ' +
+        'still accepted from older clients and changes nothing visible. Tenant admins only.',
       inputSchema: {
         folderId: Id,
         parentId: Id.nullable(),

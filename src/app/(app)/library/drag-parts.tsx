@@ -25,6 +25,7 @@ export function MoveControl({
   label,
   hint,
   disabled,
+  draggable = true,
   className,
   children,
 }: {
@@ -34,6 +35,8 @@ export function MoveControl({
   label: string
   hint: string
   disabled?: boolean
+  /** False turns off the drag alone; the button still opens its list. */
+  draggable?: boolean
   className?: string
   children: ReactNode
 }) {
@@ -43,7 +46,7 @@ export function MoveControl({
   // visible to aim at -- and outside the provider entirely (component tests,
   // and any future surface reusing the row) there is no DndContext to register
   // with. Two components rather than a conditional hook.
-  return dragEnabled ? (
+  return dragEnabled && draggable ? (
     <DraggableMoveControl
       drag={drag}
       expanded={expanded}
