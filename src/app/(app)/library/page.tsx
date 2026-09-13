@@ -45,7 +45,7 @@ export default async function LibraryPage({
     // the list has to reach a folder row in the sidebar, and they are siblings.
     // Everything inside stays server-rendered.
     <LibraryDnd folders={folders}>
-      <div className="grid gap-6 md:grid-cols-[200px_1fr]">
+      <div className="grid gap-6 md:grid-cols-[240px_1fr]">
         {/*
         Shown on a phone as well, above the list rather than beside it.
         It used to be `hidden md:block`, which left the phone with no folders at
