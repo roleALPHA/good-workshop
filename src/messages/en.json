@@ -135,7 +135,7 @@
     "parkHint": "Take it out of the schedule without deleting it",
     "parkLabel": "Park {title}",
     "parkedHeading": "Parked ({count, number})",
-    "parkedHint": "Belongs to the day, does not count towards the time.",
+    "parkedHint": "Belongs to the workshop, does not count towards the time.",
     "participation": {
       "choose": "Choose a participation format",
       "unset": "not set"
@@ -621,7 +621,20 @@
     "untitled": "Workshop",
     "untitledDay": "Day",
     "you": "you",
-    "withNotes": "With facilitation notes"
+    "withNotes": "With facilitation notes",
+    "day": {
+      "add": "Add workshop day",
+      "addShort": "Workshop day",
+      "newTitle": "Day {number, number}",
+      "title": "Name of the day",
+      "date": "Date of the day",
+      "moveEarlier": "Move day earlier",
+      "moveLater": "Move day later",
+      "delete": "Delete workshop day",
+      "deleteWarning": "Delete “{title}” and its schedule for good? Parked blocks stay in the parking area.",
+      "deleteConfirm": "Delete for good",
+      "cancel": "Cancel"
+    }
   },
   "oauth": {
     "title": "Allow access?",

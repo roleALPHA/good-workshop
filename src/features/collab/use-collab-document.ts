@@ -17,6 +17,7 @@ import type { DayDoc } from '@/domain/agenda/types'
 import type {
   AgendaDocument,
   ClusterPatch,
+  DayPatch,
   DocumentStatus,
   ModulePatch,
   NewBlock,
@@ -137,10 +138,10 @@ export function useCollabDocument(initial: DayDoc, target: CollabTarget): Agenda
         withDoc((d) => patchModule(d, moduleId, patch)),
       patchCluster: (clusterId: string, patch: ClusterPatch) =>
         withDoc((d) => patchCluster(d, clusterId, patch)),
-      // Straight onto the day map: everybody with the day open sees the note
-      // arrive, and the materialiser carries it to workshop_day.json_desc.
-      patchDay: (patch: { desc?: Record<string, unknown> }) =>
-        withDoc((d) => setDayFields(d, patch)),
+      // Straight onto the day map: everybody with the day open sees the note,
+      // the name or the date arrive, and the materialiser carries them to
+      // workshop_day.
+      patchDay: (patch: DayPatch) => withDoc((d) => setDayFields(d, patch)),
       move: (blockId: string, projection: Projection) =>
         withDoc((d) => applyProjection(d, blockId, projection)),
       addModule: (block: NewBlock) => withDoc((d) => addModule(d, uuidv7(), block)),

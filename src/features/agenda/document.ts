@@ -20,6 +20,13 @@ export type ModulePatch = {
   parked?: boolean
 }
 
+/** The day itself: its note, its name, its date. `date: null` clears it. */
+export type DayPatch = {
+  desc?: Record<string, unknown>
+  title?: string
+  date?: string | null
+}
+
 /** A section header. Only its start time is editable from the agenda today. */
 export type ClusterPatch = {
   pinnedStartMinute?: number | null
@@ -57,7 +64,7 @@ export type AgendaDocument = {
   patchModule: (moduleId: string, patch: ModulePatch) => void
   patchCluster: (clusterId: string, patch: ClusterPatch) => void
   /** Fields that belong to the day itself rather than to a block. */
-  patchDay: (patch: { desc?: Record<string, unknown> }) => void
+  patchDay: (patch: DayPatch) => void
   /** Applies a finished drag. */
   move: (blockId: string, projection: Projection) => void
   addModule: (block: NewBlock) => void

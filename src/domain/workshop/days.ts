@@ -4,7 +4,7 @@ import type { Tx } from '@/server/db'
 import { workshopDay } from '@/server/db/schema'
 import { bumpContentVersion, NotFoundError, type WorkshopAccess } from '@/domain/agenda/access'
 import { assertDayInWorkshop } from '@/domain/agenda/repo'
-import { keyAtEnd, sortByPosition } from '@/domain/agenda/ordering'
+import { keyAtEnd, placeAfter, sortByPosition } from '@/domain/agenda/ordering'
 import { DomainError } from '@/domain/errors'
 
 /**
@@ -81,6 +81,48 @@ export async function deleteDay(
   await tx
     .delete(workshopDay)
     .where(and(eq(workshopDay.id, dayId), eq(workshopDay.workshopId, access.workshopId)))
+
+  return contentVersion
+}
+
+/**
+ * Puts a day behind another one, or first when `afterId` is null.
+ *
+ * Anchor-based like every other move here: if a day was added or moved in the
+ * meantime, this one still lands behind the neighbour that was meant.
+ */
+export async function moveDay(
+  tx: Tx,
+  access: WorkshopAccess,
+  dayId: string,
+  afterId: string | null,
+  expectedVersion?: bigint,
+): Promise<bigint> {
+  const days = await tx
+    .select({ id: workshopDay.id, position: workshopDay.position })
+    .from(workshopDay)
+    .where(eq(workshopDay.workshopId, access.workshopId))
+
+  const known = new Set(days.map((day) => day.id))
+  if (!known.has(dayId) || (afterId !== null && !known.has(afterId))) throw new NotFoundError()
+
+  const contentVersion = await bumpContentVersion(tx, access, expectedVersion)
+  if (afterId === dayId) return contentVersion
+
+  const placement = placeAfter(
+    days.filter((day) => day.id !== dayId),
+    afterId,
+  )
+  const writes = placement.rebalance
+    ? placement.rebalance.map((row) => ({ id: row.id || dayId, position: row.position }))
+    : [{ id: dayId, position: placement.position }]
+
+  for (const row of writes) {
+    await tx
+      .update(workshopDay)
+      .set({ position: row.position })
+      .where(and(eq(workshopDay.id, row.id), eq(workshopDay.workshopId, access.workshopId)))
+  }
 
   return contentVersion
 }

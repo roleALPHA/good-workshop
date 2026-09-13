@@ -34,6 +34,23 @@ export type NewModuleBlock = {
   pinnedStartMinute?: number | null
   desc?: Record<string, unknown>
   parentId?: string | null
+  /** Straight onto the shelf -- a block arriving from another day's parking area. */
+  parked?: boolean
+}
+
+/**
+ * Everything a block takes with it to another day.
+ *
+ * Not its id, its position or its cluster: those describe where it sat in the
+ * day it is leaving, and the day it arrives in decides all three afresh.
+ */
+export type ModuleSnapshot = {
+  moduleTypeId: string
+  title: string
+  durationMinutes: number
+  pinnedStartMinute: number | null
+  desc: Record<string, unknown>
+  parked: boolean
 }
 
 export type NewClusterBlock = {
@@ -72,9 +89,38 @@ export function addModuleBlock(doc: Y.Doc, id: string, input: NewModuleBlock): v
         durationMinutes: input.durationMinutes,
         pinnedStartMinute: input.pinnedStartMinute ?? null,
         desc: input.desc ?? {},
+        parked: input.parked,
       }),
     )
   })
+}
+
+/** A module as it would travel. Null for a cluster, or for a block that is not here. */
+export function snapshotModule(doc: Y.Doc, blockId: string): ModuleSnapshot | null {
+  const block = blocksOf(doc).get(blockId)
+  if (!block || block.get('kind') === 'cluster') return null
+
+  return {
+    moduleTypeId: String(block.get('moduleTypeId') ?? ''),
+    title: String(block.get('title') ?? ''),
+    durationMinutes: Number(block.get('durationMinutes') ?? 0),
+    pinnedStartMinute: (block.get('pinnedStartMinute') as number | null) ?? null,
+    desc: (block.get('desc') as Record<string, unknown>) ?? {},
+    parked: block.get('parked') === true,
+  }
+}
+
+/** The blocks set aside on this day, in the order they sit in. */
+export function parkedModules(doc: Y.Doc): (ModuleSnapshot & { id: string })[] {
+  const blocks = blocksOf(doc)
+  const parked: Ordered[] = []
+  blocks.forEach((block, id) => {
+    if (block.get('kind') !== 'cluster' && block.get('parked') === true) {
+      parked.push({ id, position: String(block.get('position') ?? '') })
+    }
+  })
+
+  return sortByPosition(parked).map(({ id }) => ({ id, ...snapshotModule(doc, id)! }))
 }
 
 /** Appends a cluster to the end of the day. Clusters only ever live at day level. */

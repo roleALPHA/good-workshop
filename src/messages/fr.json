@@ -135,7 +135,7 @@
     "parkHint": "Le retirer du déroulé sans le supprimer",
     "parkLabel": "Mettre {title} de côté",
     "parkedHeading": "De côté ({count, number})",
-    "parkedHint": "Fait partie de la journée, ne compte pas dans le temps.",
+    "parkedHint": "Fait partie de l'atelier, ne compte pas dans le temps.",
     "participation": {
       "choose": "Choisir la forme de participation",
       "unset": "non renseigné"
@@ -621,7 +621,20 @@
     "untitled": "Atelier",
     "untitledDay": "Journée",
     "you": "toi",
-    "withNotes": "Avec les notes de modération"
+    "withNotes": "Avec les notes de modération",
+    "day": {
+      "add": "Ajouter une journée d'atelier",
+      "addShort": "Journée",
+      "newTitle": "Jour {number, number}",
+      "title": "Nom de la journée",
+      "date": "Date de la journée",
+      "moveEarlier": "Avancer la journée",
+      "moveLater": "Reculer la journée",
+      "delete": "Supprimer la journée d'atelier",
+      "deleteWarning": "Supprimer définitivement « {title} » et son déroulé ? Les blocs mis de côté sont conservés.",
+      "deleteConfirm": "Supprimer définitivement",
+      "cancel": "Annuler"
+    }
   },
   "oauth": {
     "title": "Autoriser l'accès ?",

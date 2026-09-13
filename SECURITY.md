@@ -80,7 +80,7 @@ You do not have to take our word for what a version contains:
   pulling it:
 
   ```bash
-  docker buildx imagetools inspect ghcr.io/rolealpha/good-workshop:0.4.3 --format '{{ json .SBOM }}'
+  docker buildx imagetools inspect ghcr.io/rolealpha/good-workshop:0.4.4 --format '{{ json .SBOM }}'
   ```
 
 - **`THIRD-PARTY-LICENSES.txt`** ships inside the image and is attached to every release.

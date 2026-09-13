@@ -275,8 +275,9 @@ state silently overwrites live editing — which is then reported as "the AI del
 workshop".
 
 **A model can do what the library and the day editor let a person do** — create, move and
-delete folders; create, rename, file, tag, bin, restore and purge workshops; add, change and
-delete days; add, change, park, move and delete blocks and clusters. Every tool calls the same
+delete folders; create, rename, file, tag, bin, restore and purge workshops; add, change, order
+and delete days; add, change, park, move and delete blocks and clusters, and move a block from
+one day to another. Every tool calls the same
 repository function behind the same capability check as the corresponding server action, so a
 token never reaches further than its person: moving and deleting folders stays with tenant
 admins, a viewer cannot rename, and `list_workshops` lists only what the library would.
@@ -290,6 +291,17 @@ as a browser: the model appears in the presence list, its block shows up immedia
 everybody who has the day open, and both changes merge rather than overwrite. If the
 collaboration service is not running, the call fails with a named error rather than writing
 data that disappears shortly afterwards.
+
+**The parking area belongs to the workshop, and a block crosses days as a copy and a deletion.**
+Every day is a room of its own, and its materialiser deletes every row of its day that its
+document does not hold. A block therefore cannot simply change its `day_id`: it is written into
+the day it goes to — with a new id, so two open rooms never fight over one row — and only then
+removed from the day it left. If the second step fails, the block exists twice, which somebody
+can see; the other order would lose it. `get_workshop` lists what is parked on the other days,
+`move_module` with `toDayId` brings a block over, and `delete_day` moves the parked blocks of
+the day it deletes to a day that stays. The day editor uses the same functions
+(`src/server/collab/across-days.ts`) through server actions, which open the rooms with the
+person's own session cookie.
 
 **MCP answers in English.** Tool descriptions are prompt material: a model reads them and
 decides its next call from them. Four translated variants would be four artifacts whose

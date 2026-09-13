@@ -26,6 +26,7 @@ import { formatDuration, formatTime } from '@/features/agenda/duration'
 import { flattenDay, toScheduleItems, withGapRows } from '@/features/agenda/flatten'
 import { ImmediateKeyboardSensor, treeKeyboardCoordinateGetter } from '@/features/agenda/keyboard'
 import type { AgendaDocument, DocumentStatus, Peer } from '@/features/agenda/document'
+import type { ParkedElsewhere } from '@/features/agenda/days'
 // Used only to preview a move for the announcement -- it mutates nothing.
 import { applyMove } from '@/features/agenda/move'
 import {
@@ -87,7 +88,19 @@ const SILENT_ANNOUNCEMENTS: Announcements = {
  * Times are never stored, so nothing has to be recomputed after a move: the
  * schedule is derived from the new document on the next render, for free.
  */
-export function AgendaEditor({ document: agenda }: { document: AgendaDocument }) {
+export function AgendaEditor({
+  document: agenda,
+  elsewhere,
+  onBringHere,
+  parkingError,
+}: {
+  document: AgendaDocument
+  /** What is parked on the other days of the workshop. */
+  elsewhere?: ParkedElsewhere[]
+  /** Brings one of those into this day. Absent for anyone who cannot reach another day. */
+  onBringHere?: (block: ParkedElsewhere) => void
+  parkingError?: string | null
+}) {
   const t = useTranslations('agenda')
   const locale = useLocale()
   const doc = agenda.doc
@@ -441,7 +454,13 @@ export function AgendaEditor({ document: agenda }: { document: AgendaDocument })
 
       {/* Below the agenda, outside the sortable tree: parked blocks have no
           place in the running order, which is the whole point of them. */}
-      <ParkingArea doc={doc} onUnpark={(id) => agenda.patchModule(id, { parked: false })} />
+      <ParkingArea
+        doc={doc}
+        elsewhere={elsewhere}
+        onUnpark={(id) => agenda.patchModule(id, { parked: false })}
+        onBringHere={onBringHere}
+        error={parkingError}
+      />
     </DndContext>
   )
 }

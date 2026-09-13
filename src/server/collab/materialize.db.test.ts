@@ -322,6 +322,28 @@ describe('the note on the day', () => {
   })
 })
 
+describe('the date of the day', () => {
+  it('travels from the shared document into workshop_day.date', async () => {
+    // The day editor sets the date where it sets the title: on the document.
+    // A guest link's lifetime is read from this column, so a date that stayed
+    // in the document would leave an invitation valid for the wrong day.
+    const doc = await seedLog()
+    setDayFields(doc, { date: '2026-10-02' })
+    await withTenant(actor(), (tx) => appendUpdate(tx, dayId, Y.encodeStateAsUpdate(doc)))
+    await materialize()
+
+    const { rows } = await ops.query('select date::text from workshop_day where id = $1', [dayId])
+    expect(rows[0]?.date).toBe('2026-10-02')
+
+    setDayFields(doc, { date: null })
+    await withTenant(actor(), (tx) => appendUpdate(tx, dayId, Y.encodeStateAsUpdate(doc)))
+    await materialize()
+
+    const cleared = await ops.query('select date from workshop_day where id = $1', [dayId])
+    expect(cleared.rows[0]?.date).toBeNull()
+  })
+})
+
 describe('materialising the CRDT', () => {
   it('writes the whole day into the relational tables', async () => {
     await seedLog()

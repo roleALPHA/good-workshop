@@ -75,6 +75,9 @@ export async function materializeDay(
       startTime: toTime(day.startMinute),
       title: day.title,
       jsonDesc: day.desc,
+      // The day editor sets the date where it sets the title. Carried like the
+      // title, because a guest link's lifetime is read from this column.
+      ...(day.date === undefined ? {} : { date: day.date }),
       updatedAt: sql`now()`,
     })
     .where(eq(workshopDay.id, dayId))

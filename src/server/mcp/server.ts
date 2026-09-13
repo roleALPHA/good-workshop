@@ -37,10 +37,16 @@ export function buildMcpServer(actor: PatActor, authorization: string): McpServe
         '',
         'How to work:',
         '1. Call list_module_types to learn the available block types and their fields.',
-        '2. create_workshop creates the workshop and its first day; create_day adds more.',
+        '2. create_workshop creates the workshop and its first day; create_day adds more,',
+        '   move_day reorders them and delete_day removes one.',
         '3. apply_agenda writes a whole day agenda in one go.',
         '4. get_workshop reads a day with every id; update_module, move_module and',
         '   delete_module change single blocks, update_day the day itself.',
+        '',
+        'Parking a block (update_module parked=true) takes it out of the schedule without',
+        'deleting it. The parking area belongs to the whole workshop: get_workshop lists',
+        'what is parked on the other days, and move_module with toDayId brings a block',
+        'into another day.',
         '',
         'Start times are computed from the day start and the durations, never set.',
         'A block can be pinned to a fixed clock time with pinnedStartMinute.',
@@ -54,7 +60,7 @@ export function buildMcpServer(actor: PatActor, authorization: string): McpServe
     },
   )
 
-  registerLibraryTools(server, { actor })
+  registerLibraryTools(server, { actor, authorization })
   registerTools(server, { actor, authorization })
   return server
 }

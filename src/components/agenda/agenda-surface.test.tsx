@@ -1,6 +1,15 @@
 import { screen, within } from '@testing-library/react'
 import { renderWithIntl as render } from '@/test/intl'
-import { describe, expect, it } from 'vitest'
+import { describe, expect, it, vi } from 'vitest'
+
+// The surface can bring a block over from another day, which is a server
+// action. None of these tests gets that far, but the import has to resolve.
+vi.mock('@/server/actions/days', () => ({
+  bringParkedBlockAction: vi.fn(),
+  createDayAction: vi.fn(),
+  moveDayAction: vi.fn(),
+  deleteDayAction: vi.fn(),
+}))
 import { computeSchedule } from '@/domain/schedule/computeSchedule'
 import { createDemoDay } from '@/features/agenda/fixtures/day-fixture'
 import { flattenDay, toScheduleItems, withGapRows } from '@/features/agenda/flatten'

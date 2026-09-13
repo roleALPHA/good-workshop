@@ -135,7 +135,7 @@
     "parkHint": "Aus dem Ablauf nehmen, ohne ihn zu löschen",
     "parkLabel": "{title} parken",
     "parkedHeading": "Geparkt ({count, number})",
-    "parkedHint": "Gehört zum Tag, zählt nicht zur Zeit.",
+    "parkedHint": "Gehört zum Workshop, zählt nicht zur Zeit.",
     "participation": {
       "choose": "Sozialform wählen",
       "unset": "keine Angabe"
@@ -621,7 +621,20 @@
     "untitled": "Workshop",
     "untitledDay": "Tag",
     "you": "du",
-    "withNotes": "Mit Moderationsnotizen"
+    "withNotes": "Mit Moderationsnotizen",
+    "day": {
+      "add": "Workshoptag hinzufügen",
+      "addShort": "Workshoptag",
+      "newTitle": "Tag {number, number}",
+      "title": "Name des Tags",
+      "date": "Datum des Tags",
+      "moveEarlier": "Tag nach vorn",
+      "moveLater": "Tag nach hinten",
+      "delete": "Workshoptag löschen",
+      "deleteWarning": "„{title}“ mit seinem Ablauf endgültig löschen? Geparkte Blöcke bleiben auf dem Parkplatz.",
+      "deleteConfirm": "Endgültig löschen",
+      "cancel": "Abbrechen"
+    }
   },
   "oauth": {
     "title": "Zugriff erlauben?",

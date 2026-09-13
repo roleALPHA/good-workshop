@@ -52,7 +52,12 @@ export type RoomTarget = {
   workshopId: string
   dayId: string
   /** Passed through verbatim; the room authenticates it exactly like a browser's cookie. */
-  authorization: string
+  authorization?: string
+  /**
+   * The signed-in person's own Cookie header, for a server action acting for
+   * them. Still no privileged path: the room checks it like the browser's.
+   */
+  cookie?: string
   /** How the writer appears to the people in the room. */
   presence?: { name: string; hue: number; kind: 'person' | 'model' }
   url?: string
@@ -72,7 +77,10 @@ export async function editInRoom<T>(
 ): Promise<{ result: T; contentVersion: bigint; rejected: number }> {
   const timeoutMs = target.timeoutMs ?? 15_000
   const socket = new WebSocket(collabUrl(target), {
-    headers: { authorization: target.authorization },
+    headers: {
+      ...(target.authorization ? { authorization: target.authorization } : {}),
+      ...(target.cookie ? { cookie: target.cookie } : {}),
+    },
   })
 
   const doc = new Y.Doc()

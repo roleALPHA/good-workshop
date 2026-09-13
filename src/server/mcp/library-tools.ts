@@ -2,7 +2,7 @@ import { z } from 'zod'
 import type { McpServer } from '@modelcontextprotocol/sdk/server/mcp.js'
 import { assertWorkshopAccess, NotFoundError } from '@/domain/agenda/access'
 import { assertTenantAdmin } from '@/domain/tenant/members'
-import { createDay, deleteDay } from '@/domain/workshop/days'
+import { createDay, moveDay } from '@/domain/workshop/days'
 import {
   createFolder,
   createWorkshop,
@@ -20,6 +20,7 @@ import {
   trashWorkshop,
 } from '@/domain/workshop/repo'
 import { pruneUnusedTags, setWorkshopTags } from '@/domain/workshop/tags'
+import { deleteDayKeepingParked, roomEditor } from '@/server/collab/across-days'
 import { withTenant, type Tx } from '@/server/db'
 import { auditEvent } from '@/server/db/schema'
 import { requireScope, type PatActor } from './auth'
@@ -39,12 +40,14 @@ import { guarded, ok } from './respond'
  * members. A token acts as its person, and handing out access on that person's
  * behalf is a step a model must not be able to take. See docs/architecture.md.
  *
- * None of these touch a day's CONTENT, so none of them go through the
- * collaboration room. Creating a day writes a row nobody can have open yet;
- * deleting one takes its room state with it.
+ * None of these touch a day's CONTENT, so they do not go through the
+ * collaboration room -- with one exception. Creating a day writes a row nobody
+ * can have open yet, and moving one only changes the order. Deleting one takes
+ * its room state with it, but not its parked blocks: those belong to the whole
+ * workshop and move to a day that stays, which is a write into that day's room.
  */
 
-type Ctx = { actor: PatActor }
+type Ctx = { actor: PatActor; authorization: string }
 
 const Id = z.string().uuid()
 const Title = z.string().trim().min(1).max(300)
@@ -58,7 +61,7 @@ const Version = z
 
 const asVersion = (value?: string) => (value === undefined ? undefined : BigInt(value))
 
-export function registerLibraryTools(server: McpServer, { actor }: Ctx): void {
+export function registerLibraryTools(server: McpServer, { actor, authorization }: Ctx): void {
   /** Written in the same transaction as the change it describes. */
   const audit = (
     tx: Tx,
@@ -500,22 +503,63 @@ export function registerLibraryTools(server: McpServer, { actor }: Ctx): void {
   )
 
   server.registerTool(
+    'move_day',
+    {
+      title: 'Move a day',
+      description:
+        'Changes the order of the days. `afterId` is the day it should come after, or null to make it the first day.',
+      inputSchema: { workshopId: Id, dayId: Id, afterId: Id.nullable(), expectedVersion: Version },
+    },
+    async ({ workshopId, dayId, afterId, expectedVersion }) =>
+      guarded(async () => {
+        requireScope(actor, 'workshops:write')
+        return withTenant(actor, async (tx) => {
+          const access = await assertWorkshopAccess(tx, actor, workshopId, 'workshop.content.write')
+          const contentVersion = await moveDay(
+            tx,
+            access,
+            dayId,
+            afterId,
+            asVersion(expectedVersion),
+          )
+          await audit(tx, 'workshop', 'day.move', workshopId, { dayId, afterId })
+          return ok('Day moved.', { contentVersion: contentVersion.toString() })
+        })
+      }),
+  )
+
+  server.registerTool(
     'delete_day',
     {
       title: 'Delete a day',
       description:
-        'Deletes a day with all its blocks, for good. The last remaining day of a workshop cannot be deleted.',
+        'Deletes a day with its agenda, for good. Its parked blocks are kept: they move to the day before it ' +
+        '(or after it, for the first day). The last remaining day of a workshop cannot be deleted.',
       inputSchema: { workshopId: Id, dayId: Id, expectedVersion: Version },
     },
     async ({ workshopId, dayId, expectedVersion }) =>
       guarded(async () => {
         requireScope(actor, 'workshops:write')
-        return withTenant(actor, async (tx) => {
-          const access = await assertWorkshopAccess(tx, actor, workshopId, 'workshop.content.write')
-          const contentVersion = await deleteDay(tx, access, dayId, asVersion(expectedVersion))
-          await audit(tx, 'workshop', 'day.delete', workshopId, { dayId })
-          return ok('Day deleted.', { contentVersion: contentVersion.toString() })
-        })
+        const presence = { name: 'KI-Assistent', hue: 292, kind: 'model' as const }
+        const result = await deleteDayKeepingParked(
+          actor,
+          roomEditor({ workshopId, authorization, presence }),
+          { workshopId, dayId, expectedVersion: asVersion(expectedVersion) },
+        )
+
+        await withTenant(actor, (tx) =>
+          audit(tx, 'workshop', 'day.delete', workshopId, { dayId, rescued: result.rescued }),
+        )
+        return ok(
+          result.rescued > 0
+            ? `Day deleted. ${result.rescued} parked ${result.rescued === 1 ? 'block' : 'blocks'} moved to day ${result.remainingDayId}.`
+            : 'Day deleted.',
+          {
+            contentVersion: result.contentVersion.toString(),
+            remainingDayId: result.remainingDayId,
+            rescued: result.rescued,
+          },
+        )
       }),
   )
 }
