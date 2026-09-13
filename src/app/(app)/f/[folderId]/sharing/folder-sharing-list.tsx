@@ -13,6 +13,12 @@ import {
 /**
  * One row per colleague, one select per row -- the workshop screen's shape.
  *
+ * What a folder above gives is shown where "no access" would otherwise stand:
+ * that grant reaches this folder, and saying "no access" here was a screen that
+ * contradicted the access it describes. A grant on this folder is nearer and
+ * wins; taking it away falls back to the inherited one, never to nothing -- so
+ * the select offers "· über Kunden" in place of "Kein Zugriff".
+ *
  * The select offers only what the reader may hand on. A folder viewer therefore
  * gets "no access" and "read" and nothing else: the rule lives in the domain,
  * and a screen that offered "edit" would be asking the server to say no.
@@ -33,10 +39,10 @@ export function FolderSharingList({
   const [error, setError] = useState<{ memberId: string; message: string } | null>(null)
   const [pending, startTransition] = useTransition()
 
-  function change(memberId: string, value: GrantableFolderRole | 'none') {
+  function change(memberId: string, value: GrantableFolderRole | 'none' | 'inherit') {
     startTransition(async () => {
       const result =
-        value === 'none'
+        value === 'none' || value === 'inherit'
           ? await removeFolderCollaboratorAction({ folderId, memberId })
           : await setFolderCollaboratorAction({ folderId, memberId, role: value })
 
@@ -51,51 +57,79 @@ export function FolderSharingList({
 
   return (
     <ul className="divide-y divide-[var(--border)] border-y border-[var(--border)]">
-      {people.map((person) => (
-        <li key={person.id} className="py-3">
-          <div className="flex flex-wrap items-center gap-x-4 gap-y-2">
-            <div className="min-w-0 flex-1">
-              <p className="truncate text-[15px] font-medium">
-                {person.displayName || person.email}
-                {person.isSelf && <span className="text-[var(--fg-subtle)]"> · {t('you')}</span>}
-              </p>
-              {person.displayName && (
-                <p className="truncate text-[13px] text-[var(--fg-muted)]">{person.email}</p>
+      {people.map((person) => {
+        const { inherited } = person
+        const inheritedLabel = inherited
+          ? inherited.role === 'owner'
+            ? t('folderCreatorAbove', { folder: inherited.folderName })
+            : t('folderInherited', {
+                role: tAccess(inherited.role),
+                folder: inherited.folderName,
+              })
+          : null
+        // Whoever made a folder above holds this one from there, and no grant
+        // here could take that away -- unless they have one of their own.
+        const fixed =
+          person.access === 'creator' ||
+          grantable.length === 0 ||
+          (inherited?.role === 'owner' && person.access === 'none')
+
+        return (
+          <li key={person.id} className="py-3">
+            <div className="flex flex-wrap items-center gap-x-4 gap-y-2">
+              <div className="min-w-0 flex-1">
+                <p className="truncate text-[15px] font-medium">
+                  {person.displayName || person.email}
+                  {person.isSelf && <span className="text-[var(--fg-subtle)]"> · {t('you')}</span>}
+                </p>
+                {person.displayName && (
+                  <p className="truncate text-[13px] text-[var(--fg-muted)]">{person.email}</p>
+                )}
+              </div>
+
+              {fixed ? (
+                <span className="text-[14px] text-[var(--fg-muted)]">
+                  {person.access === 'creator'
+                    ? t('folderCreator')
+                    : person.access !== 'none'
+                      ? tAccess(person.access)
+                      : (inheritedLabel ?? tAccess('none'))}
+                </span>
+              ) : (
+                <select
+                  aria-label={t('folderAccessOf', { email: person.email })}
+                  className="rounded border border-[var(--border-strong)] bg-[var(--surface)] px-2 py-1.5 text-[16px]"
+                  value={person.access !== 'none' ? person.access : inherited ? 'inherit' : 'none'}
+                  disabled={pending}
+                  onChange={(e) =>
+                    change(person.id, e.target.value as GrantableFolderRole | 'none' | 'inherit')
+                  }
+                >
+                  {inheritedLabel ? (
+                    <option value="inherit">{inheritedLabel}</option>
+                  ) : (
+                    <option value="none">{tAccess('none')}</option>
+                  )}
+                  {/* Only what this reader holds. `grantable` comes from the same
+                    function the server checks against, so the two cannot drift. */}
+                  {grantable.includes('viewer') && (
+                    <option value="viewer">{tAccess('viewer')}</option>
+                  )}
+                  {grantable.includes('editor') && (
+                    <option value="editor">{tAccess('editor')}</option>
+                  )}
+                </select>
               )}
             </div>
 
-            {person.access === 'creator' || grantable.length === 0 ? (
-              <span className="text-[14px] text-[var(--fg-muted)]">
-                {person.access === 'creator' ? t('folderCreator') : tAccess(person.access)}
-              </span>
-            ) : (
-              <select
-                aria-label={t('folderAccessOf', { email: person.email })}
-                className="rounded border border-[var(--border-strong)] bg-[var(--surface)] px-2 py-1.5 text-[16px]"
-                value={person.access}
-                disabled={pending}
-                onChange={(e) => change(person.id, e.target.value as GrantableFolderRole | 'none')}
-              >
-                <option value="none">{tAccess('none')}</option>
-                {/* Only what this reader holds. `grantable` comes from the same
-                    function the server checks against, so the two cannot drift. */}
-                {grantable.includes('viewer') && (
-                  <option value="viewer">{tAccess('viewer')}</option>
-                )}
-                {grantable.includes('editor') && (
-                  <option value="editor">{tAccess('editor')}</option>
-                )}
-              </select>
+            {error?.memberId === person.id && (
+              <p role="alert" className="mt-2 text-[14px] text-[var(--danger-fg)]">
+                {error.message}
+              </p>
             )}
-          </div>
-
-          {error?.memberId === person.id && (
-            <p role="alert" className="mt-2 text-[14px] text-[var(--danger-fg)]">
-              {error.message}
-            </p>
-          )}
-        </li>
-      ))}
+          </li>
+        )
+      })}
     </ul>
   )
 }

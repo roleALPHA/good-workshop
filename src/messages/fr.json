@@ -450,6 +450,8 @@
     "folderAccessReadOnly": "Tu peux voir qui a accès, mais rien changer.",
     "folderAccessOf": "Accès de {email} à ce dossier",
     "folderCreator": "Créé par",
+    "folderCreatorAbove": "A créé {folder}",
+    "folderInherited": "{role} · via {folder}",
     "folderShare": "Accès",
     "folderShareOf": "Accès au dossier {name}",
     "you": "toi"

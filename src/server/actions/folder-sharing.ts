@@ -9,7 +9,7 @@ import { listDirectory, type MemberRow } from '@/domain/tenant/members'
 import { grantableRoles, type GrantableFolderRole } from '@/domain/workshop/folder-access'
 import {
   assertFolderAccess,
-  listFolderCollaborators,
+  listFolderAccess,
   removeFolderCollaborator,
   setFolderCollaborator,
 } from '@/domain/workshop/folder-collaborators'
@@ -29,7 +29,12 @@ export type FolderSharingView = {
   createdBy: string | null
   /** Empty for somebody who may look but not grant. */
   grantable: readonly GrantableFolderRole[]
-  people: (MemberRow & { access: 'creator' | GrantableFolderRole | 'none' })[]
+  people: (MemberRow & {
+    /** What they hold on this folder itself. */
+    access: 'creator' | GrantableFolderRole | 'none'
+    /** What a folder above gives them, and which one. Null when nothing does. */
+    inherited: { role: 'owner' | GrantableFolderRole; folderName: string } | null
+  })[]
 }
 
 export async function loadFolderSharing(
@@ -53,12 +58,12 @@ export async function loadFolderSharing(
           name: meta[0]?.name ?? '',
           createdBy: meta[0]?.createdBy ?? null,
           grantable: grantableRoles(access.role),
-          collaborators: await listFolderCollaborators(tx, access),
+          entries: await listFolderAccess(tx, access),
         }
       }),
     ])
 
-    const roleByMember = new Map(data.collaborators.map((row) => [row.memberId, row.role]))
+    const entryByMember = new Map(data.entries.map((entry) => [entry.memberId, entry]))
 
     return {
       ok: true,
@@ -66,11 +71,20 @@ export async function loadFolderSharing(
         name: data.name,
         createdBy: data.createdBy,
         grantable: data.grantable,
-        people: members.map((person) => ({
-          ...person,
-          access:
-            person.id === data.createdBy ? 'creator' : (roleByMember.get(person.id) ?? 'none'),
-        })),
+        people: members.map((person) => {
+          // The creator holds more than anything above could add to it.
+          if (person.id === data.createdBy) {
+            return { ...person, access: 'creator' as const, inherited: null }
+          }
+          const entry = entryByMember.get(person.id)
+          return {
+            ...person,
+            access: entry?.direct ?? 'none',
+            inherited: entry?.inherited
+              ? { role: entry.inherited.role, folderName: entry.inherited.folderName }
+              : null,
+          }
+        }),
       },
     }
   } catch (error) {
