@@ -59,7 +59,7 @@ jobs:
         run: pnpm check:docs
       # Two questions in one step, both of which have a wrong answer that is
       # invisible until somebody asks: may every dependency legally ship inside
-      # an AGPL-3.0 image, and does the committed index still list the packages
+      # an image under this project's licence, and does the committed index list the packages
       # that are actually there. A new transitive dependency turns this red on
       # purpose -- that is the moment its licence gets looked at.
       - name: Dependency licences may ship

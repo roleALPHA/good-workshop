@@ -16,7 +16,7 @@ Dockerfile
 .dockerignore
 README.md
 
-# LICENSE is NOT excluded, although it is documentation like the README above.
-# AGPL section 4 asks that a copy of the licence travel with the program, and
-# an image handed to an operator is a conveyance. It costs 34 kB of build
-# context.
+# LICENSE and NOTICE are NOT excluded, although they are documentation like the
+# README above. Apache 2.0 section 4 asks that both accompany every
+# redistribution, and an image handed to an operator is one. They cost a few
+# kilobytes of build context.

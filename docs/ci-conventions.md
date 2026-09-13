@@ -11,7 +11,7 @@ Verify when changing; state of the planning:
   (minutes are not counted). Only "larger runners" cost money.
 - **ghcr.io** has no storage or egress quota for **public** packages.
 
-So both are free once the repository is public under AGPL-3.0. While it is private the free
+So both are free once the repository is public. While it is private the free
 quota applies (2,000 Actions minutes, 500 MB packages) — reduce the Playwright matrix then.
 
 ## Workflows

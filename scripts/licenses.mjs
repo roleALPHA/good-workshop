@@ -10,10 +10,14 @@
  *      licence text travel with it. A Docker image IS distribution. A list of
  *      package names does not discharge that -- the notices themselves have to
  *      be in the artifact, which is what `--notices` writes into the image.
- *   2. COMPATIBILITY. This project is AGPL-3.0-only. Not every open-source
- *      licence can be combined with it -- GPL-2.0-only famously cannot -- and
- *      a licence that is not open source at all (SSPL, BUSL) cannot be shipped
- *      in it under any reading. That is what the policy below decides.
+ *   2. COMPATIBILITY. This project is Apache-2.0 with the Commons Clause.
+ *      Permissive licences combine with that freely. Strong copyleft does not:
+ *      GPL and AGPL forbid adding restrictions to the combined work, and the
+ *      Commons Clause is exactly such a restriction. Neither do licences that
+ *      carry service restrictions of their own (SSPL, BUSL), which would bind
+ *      our users beyond our own terms. That is what the policy below decides.
+ *      It was stricter in the other direction while this project was AGPL,
+ *      which is why GPL-3.0 used to be on the allowed list and is not now.
  *
  * The committed index (THIRD-PARTY-LICENSES.md) is the reviewable half: it
  * changes when the set of packages changes, which is exactly when somebody
@@ -36,7 +40,8 @@ import { join } from 'node:path'
 import { fileURLToPath } from 'node:url'
 
 /**
- * Licences that may be combined into an AGPL-3.0-only distribution.
+ * Licences that may ship inside an image distributed under Apache-2.0 with the
+ * Commons Clause.
  *
  * Every entry carries a reason, for the same purpose as the INTERNAL list in
  * check-docs.mjs: adding a licence here has to be a decision somebody made,
@@ -49,21 +54,19 @@ const ALLOWED = {
   '0BSD': 'Permissive, no attribution required.',
   'BSD-2-Clause': 'Permissive.',
   'BSD-3-Clause': 'Permissive, plus a no-endorsement clause we do not violate.',
-  'Apache-2.0':
-    'Permissive with a patent grant. One-way compatible with GPL-3.0 and therefore with AGPL-3.0 -- the direction that matters here.',
+  'Apache-2.0': 'Permissive with a patent grant. The base licence of this project itself.',
   'BlueOak-1.0.0': 'Permissive, plainly worded.',
-  'Python-2.0': 'Permissive, GPL-compatible per the FSF.',
+  'Python-2.0': 'Permissive.',
   'CC0-1.0': 'Public-domain dedication.',
   Unlicense: 'Public-domain dedication.',
   'CC-BY-4.0':
     'Attribution required and nothing else -- usually data or documentation rather than code. The notice file carries the attribution.',
   'MPL-2.0':
-    'File-scoped copyleft. Explicitly compatible with (A)GPL via its own section 3.3; modifications to MPL files stay MPL.',
-  'LGPL-3.0-or-later': 'Library copyleft, upward-compatible with AGPL-3.0.',
-  'LGPL-3.0-only': 'Library copyleft, upward-compatible with AGPL-3.0.',
-  'GPL-3.0-or-later': 'Same copyleft family.',
-  'AGPL-3.0-only': 'This project. Sub-dependencies under it are unremarkable.',
-  'AGPL-3.0-or-later': 'Same copyleft family.',
+    'File-scoped copyleft. Section 3.3 lets MPL files sit inside a Larger Work under other terms; changes to the MPL files themselves stay MPL.',
+  'LGPL-3.0-or-later':
+    'Library copyleft. Fine as a separately replaceable library -- sharp ships libvips as its own shared object. The Commons Clause restricts GoodWorkshop, not the library, and changes to the library itself would stay LGPL.',
+  'LGPL-3.0-only':
+    'Library copyleft. Same reasoning as LGPL-3.0-or-later: a replaceable library, not the combined work.',
   'Apache-2.0 AND MIT': 'Both halves are allowed above.',
   '(MIT OR CC0-1.0)': 'Either half is allowed above.',
   '(MIT OR Apache-2.0)': 'Either half is allowed above.',
@@ -79,25 +82,47 @@ const ALLOWED = {
  */
 const REFUSED = {
   'GPL-2.0-only':
-    'GPL-2.0-only cannot be combined with AGPL-3.0. The package has to go, or be replaced.',
-  'GPL-2.0': 'Ambiguous, and if it means GPL-2.0-only it is incompatible with AGPL-3.0.',
-  SSPL: 'Not an open-source licence. Cannot be distributed inside an AGPL image.',
-  'SSPL-1.0': 'Not an open-source licence. Cannot be distributed inside an AGPL image.',
-  'BUSL-1.1': 'Source-available, not open source. Its use grant does not permit this.',
-  'Elastic-2.0': 'Source-available, not open source.',
+    'Strong copyleft. It forbids further restrictions on the combined work, and the Commons Clause is one. The package has to go, or be replaced.',
+  'GPL-2.0': 'Ambiguous, and strong copyleft either way -- see GPL-2.0-only.',
+  'GPL-2.0-or-later': 'Strong copyleft, same conflict with the Commons Clause as GPL-2.0-only.',
+  'GPL-3.0-only':
+    'Strong copyleft. GPL-3.0 section 10 forbids imposing further restrictions, and the Commons Clause is one. The package has to go, or be replaced.',
+  'GPL-3.0-or-later': 'Strong copyleft, same conflict with the Commons Clause as GPL-3.0-only.',
+  'AGPL-3.0-only':
+    'Strong network copyleft -- the licence this project left. Same conflict with the Commons Clause as GPL-3.0.',
+  'AGPL-3.0-or-later':
+    'Strong network copyleft, same conflict with the Commons Clause as AGPL-3.0-only.',
+  SSPL: 'Requires anyone offering the software as a service to publish their whole service stack. That would bind our users beyond our own terms.',
+  'SSPL-1.0':
+    'Requires anyone offering the software as a service to publish their whole service stack. That would bind our users beyond our own terms.',
+  'BUSL-1.1':
+    'Source-available with use restrictions of its own. They would bind our users beyond our own terms, and they are not ours to pass on.',
+  'Elastic-2.0':
+    'Source-available with its own restriction on offering the software as a service -- not ours to pass on.',
   UNLICENSED: 'Explicitly reserves all rights. Shipping it would be infringement.',
   UNKNOWN: 'The package declares no licence. Treat as all rights reserved until proven otherwise.',
 }
 
 const INDEX_FILE = 'THIRD-PARTY-LICENSES.md'
 
+/**
+ * This project's own licence as an SPDX expression, for the SBOM.
+ *
+ * SPDX has no identifier for the Commons Clause, so it is a LicenseRef -- the
+ * mechanism SPDX provides for exactly that. The same string is the image's
+ * org.opencontainers.image.licenses label in publish.yml, so a scanner reading
+ * either one reports the same terms.
+ */
+export const PROJECT_LICENSE = 'Apache-2.0 AND LicenseRef-Commons-Clause-1.0'
+
 const PREAMBLE = `<!-- Generated by scripts/licenses.mjs -- do not edit by hand.
      Regenerate with \`pnpm licenses:write\` and commit the result. -->
 
 # Third-party licences
 
-GoodWorkshop is AGPL-3.0-only. It is distributed as a Docker image that
-contains other people's code, which carries its own terms.
+GoodWorkshop is licensed under Apache-2.0 with the Commons Clause (see LICENSE).
+It is distributed as a Docker image that contains other people's code, which
+carries its own terms.
 
 This file is the reviewable index: which packages, under which licence. It
 deliberately carries no version numbers, so that a dependency bump does not
@@ -153,7 +178,7 @@ export function violations(rows) {
       ...row,
       reason:
         REFUSED[row.license] ??
-        `Not in the policy in scripts/licenses.mjs. Decide whether it may ship in an AGPL-3.0 image, then add it there WITH the reason.`,
+        `Not in the policy in scripts/licenses.mjs. Decide whether it may ship in an image under Apache-2.0 with the Commons Clause, then add it there WITH the reason.`,
     }))
 }
 
@@ -241,7 +266,8 @@ export function renderNotices(rows) {
   const parts = [
     'THIRD-PARTY NOTICES',
     '',
-    'GoodWorkshop (AGPL-3.0-only) is distributed with the following components.',
+    'GoodWorkshop (Apache-2.0 with the Commons Clause; see LICENSE and NOTICE)',
+    'is distributed with the following components.',
     'Each is provided under its own licence, reproduced below.',
     '',
     'The index without licence texts, and the reasoning behind this file, are in',
@@ -320,7 +346,7 @@ export function renderSbom(rows, { name, version, timestamp }) {
         name,
         version,
         purl: purl(name, version),
-        licenses: [licenseEntry('AGPL-3.0-only')],
+        licenses: [licenseEntry(PROJECT_LICENSE)],
       },
     },
     components,
@@ -377,7 +403,7 @@ if (isMain) {
 
   const bad = violations(rows)
   if (bad.length > 0) {
-    console.error(`\n${bad.length} dependency/-ies may not ship in an AGPL-3.0 image:\n`)
+    console.error(`\n${bad.length} dependency/-ies may not ship under this project's licence:\n`)
     for (const row of bad) {
       console.error(`  ${row.name}  (${row.license})\n    ${row.reason}\n`)
     }

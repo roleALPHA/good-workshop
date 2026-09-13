@@ -1,4 +1,4 @@
-import { LICENSE, ROLEALPHA_URL, SOURCE_URL } from '@/lib/attribution'
+import { LICENSE, LICENSE_URL, ROLEALPHA_URL } from '@/lib/attribution'
 import { appVersion } from '@/lib/version'
 
 /**
@@ -44,7 +44,7 @@ export function AppFooter({ className }: { className?: string }) {
         </a>{' '}
         ·{' '}
         <a
-          href={SOURCE_URL}
+          href={LICENSE_URL}
           target="_blank"
           rel="noreferrer"
           className="underline underline-offset-2 hover:text-[var(--fg-muted)]"

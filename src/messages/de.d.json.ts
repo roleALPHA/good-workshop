@@ -468,7 +468,7 @@ declare const messages: {
     }
   },
   "meta": {
-    "description": "Open-Source-Workshopplanung. Selbst gehostet, MCP-fähig.",
+    "description": "Workshopplanung für Moderation und Facilitation. Selbst gehostet, MCP-fähig.",
     "printTitle": "Druckansicht"
   },
   "nav": {
