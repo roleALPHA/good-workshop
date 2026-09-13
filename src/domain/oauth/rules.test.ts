@@ -4,6 +4,7 @@ import {
   audienceMatches,
   canonicalResource,
   narrowScopes,
+  OAUTH_SCOPES,
   redirectUriAllowed,
   registrableRedirectUri,
   verifyCodeChallenge,
@@ -103,9 +104,29 @@ describe('scopes', () => {
     expect(narrowScopes('members:write admin tenant:write')).toEqual([])
   })
 
-  it('falls back to reading when the client names no scope at all', () => {
-    expect(narrowScopes(null)).toEqual(['workshops:read', 'module_types:read'])
-    expect(narrowScopes('   ')).toEqual(['workshops:read', 'module_types:read'])
+  /**
+   * What a client connecting over OAuth is offered: the workshops, to read and
+   * to write, and the block types it needs to write them. It used to be
+   * reading alone, which left Claude and ChatGPT able to look at an agenda and
+   * unable to build one -- with every MCP write tool listed and then refused.
+   *
+   * Nothing administrative: block types are an admin's catalog, and the tenant
+   * is not a workshop.
+   */
+  it('offers reading and writing workshops, and nothing administrative', () => {
+    expect(OAUTH_SCOPES).toEqual(['workshops:read', 'workshops:write', 'module_types:read'])
+  })
+
+  it('falls back to what is offered when the client names no scope at all', () => {
+    expect(narrowScopes(null)).toEqual(OAUTH_SCOPES)
+    expect(narrowScopes('   ')).toEqual(OAUTH_SCOPES)
+  })
+
+  it('still grants no more than a client asked for', () => {
+    expect(narrowScopes('workshops:read module_types:read')).toEqual([
+      'workshops:read',
+      'module_types:read',
+    ])
   })
 
   it('treats offline_access as a request for a refresh token, not as a permission', () => {

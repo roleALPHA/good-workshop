@@ -63,9 +63,11 @@ describe('the OAuth instructions', () => {
     expect(screen.getByText(/Melde dich vorher in diesem Browser/)).toBeInTheDocument()
   })
 
-  it('says what a client connected this way may do, and where writing comes from', () => {
+  it('says a client connected this way may read and write workshops, once you allow it', () => {
     render(<OAuthGuide origin={ORIGIN} />)
-    expect(screen.getByText(/nur lesen/)).toHaveTextContent('Workshops schreiben')
+    const note = screen.getByText(/Workshops lesen und schreiben/)
+    expect(note).toHaveTextContent('Freigabeseite')
+    expect(screen.queryByText(/nur lesen/)).not.toBeInTheDocument()
   })
 
   it('walks through Claude and ChatGPT, neither of which takes a token', () => {

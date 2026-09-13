@@ -116,6 +116,13 @@ Four decisions worth knowing, because each has a tempting alternative:
   accident — "the registered URI plus anything" includes paths the client never asked for. A
   broken request is therefore shown ON the consent screen rather than bounced to an address we
   have not validated, and a refusal is validated the same way an approval is.
+- **A client is offered reading and writing workshops**, not only reading. The specification's
+  advice is to start small and step up, but a step-up needs a 403 with `insufficient_scope` at the
+  HTTP level, and a refused write here is a tool result inside a 200 — no client ever stepped up,
+  so Claude and ChatGPT were shown every write tool and could run none. Offering is not
+  granting: the consent screen lists the scopes in words and a person decides. Block types stay
+  read-only and the tenant is not offered at all. One list, `OAUTH_SCOPES`, feeds the default,
+  the metadata document and the 401.
 - **Tokens carry their audience.** The MCP specification requires a server to accept only tokens
   issued for itself; `resource` is stored on the row and compared on every call. Without it a
   client could carry a token minted here to somebody else's server, which is where a confused

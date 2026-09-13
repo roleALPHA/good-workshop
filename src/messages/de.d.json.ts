@@ -560,7 +560,7 @@ declare const messages: {
         "copyEndpoint": "Server-URL kopieren",
         "publicNote": "Claude (Web, Desktop, App) und ChatGPT verbinden sich aus der Cloud ihrer Anbieter. Das klappt nur, wenn diese Adresse aus dem Internet per HTTPS erreichbar ist. Claude Code und die Gemini CLI laufen auf deinem Rechner und erreichen auch Installationen im Firmennetz.",
         "signInFirst": "Melde dich vorher in diesem Browser bei GoodWorkshop an. Sonst landest du nach der Anmeldung in der Bibliothek und musst das Verbinden im Client neu starten.",
-        "readOnly": "Per OAuth darf ein Client derzeit nur lesen: Workshops und Modultypen. Soll er Agenden anlegen oder ändern, verbinde ihn oben mit einem Token, das „Workshops schreiben“ darf.",
+        "permissions": "Per OAuth darf ein Client Workshops lesen und schreiben und Modultypen lesen. Das steht auf der Freigabeseite, bevor du zustimmst. Mitglieder und Freigaben kann er nicht verwalten.",
         "claude": "Claude (Web, Desktop, App)",
         "claudeStep1": "In Claude „Customize“ → „Connectors“ öffnen, auf „+“ klicken und „Add custom connector“ wählen.",
         "claudeStep2": "Einen Namen vergeben, zum Beispiel GoodWorkshop, und die Server-URL einfügen. Die „Advanced settings“ bleiben leer.",
