@@ -8,6 +8,7 @@ import { listWorkshops } from './repo'
 import {
   FolderSharingError,
   assertFolderAccess,
+  listFolderAccess,
   removeFolderCollaborator,
   setFolderCollaborator,
 } from './folder-collaborators'
@@ -168,6 +169,77 @@ describe('a grant on a folder', () => {
       await expect(
         assertWorkshopAccess(tx, as(colleagueId), workshopId, 'workshop.delete'),
       ).rejects.toThrow(/forbidden/)
+    })
+  })
+})
+
+/**
+ * What the access screen of a subfolder shows.
+ *
+ * The grant reached the subtree all along; the screen did not say so. It read
+ * the rows of the folder itself and nothing else, so a colleague given "Kunden"
+ * stood on "Kunden / Acme" as "no access" -- while they could open every
+ * workshop in it. A sharing screen that contradicts the access it describes is
+ * how somebody ends up granting twice, or believing a subtree is private.
+ */
+describe('the access list of a subfolder', () => {
+  const accessOn = (actorId: string, folderId: string) =>
+    withTenant(as(actorId), async (tx) =>
+      listFolderAccess(tx, await assertFolderAccess(tx, as(actorId), folderId)),
+    )
+  const entryFor = async (actorId: string, folderId: string, memberId: string) =>
+    (await accessOn(actorId, folderId)).find((entry) => entry.memberId === memberId)
+
+  it('shows a grant on the folder above as inherited, and says from where', async () => {
+    await grant(creatorId, rootId, colleagueId, 'viewer')
+
+    expect(await entryFor(creatorId, childId, colleagueId)).toEqual({
+      memberId: colleagueId,
+      direct: null,
+      inherited: { role: 'viewer', folderId: rootId, folderName: 'Kunden' },
+    })
+  })
+
+  it('keeps a grant on the folder itself apart from what it inherits', async () => {
+    await grant(creatorId, rootId, colleagueId, 'editor')
+    await grant(creatorId, childId, colleagueId, 'viewer')
+
+    expect(await entryFor(creatorId, childId, colleagueId)).toEqual({
+      memberId: colleagueId,
+      direct: 'viewer',
+      inherited: { role: 'editor', folderId: rootId, folderName: 'Kunden' },
+    })
+  })
+
+  it('inherits nothing on the top folder, where there is nothing above', async () => {
+    await grant(creatorId, rootId, colleagueId, 'viewer')
+
+    expect(await entryFor(creatorId, rootId, colleagueId)).toEqual({
+      memberId: colleagueId,
+      direct: 'viewer',
+      inherited: null,
+    })
+  })
+
+  it('lists nobody the tree says nothing about', async () => {
+    await grant(creatorId, rootId, colleagueId, 'viewer')
+
+    expect(await entryFor(creatorId, childId, outsiderId)).toBeUndefined()
+  })
+
+  it('shows whoever made a folder above as holding the subfolder from there', async () => {
+    const projectId = uuidv7()
+    await ops.query(
+      `insert into folder (id, tenant_id, parent_id, name, position, created_by, ancestor_ids)
+       values ($1, $2, $3, 'Projekt', 'a0', $4, array[$5::uuid, $3::uuid])`,
+      [projectId, TENANT, childId, colleagueId, rootId],
+    )
+
+    // The nearest folder decides: Acme, which creatorId made, before Kunden.
+    expect(await entryFor(colleagueId, projectId, creatorId)).toEqual({
+      memberId: creatorId,
+      direct: null,
+      inherited: { role: 'owner', folderId: childId, folderName: 'Acme' },
     })
   })
 })

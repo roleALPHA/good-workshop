@@ -453,6 +453,8 @@ declare const messages: {
     "folderAccessReadOnly": "Du kannst hier sehen, wer Zugriff hat, aber nichts ändern.",
     "folderAccessOf": "Zugriff von {email} auf diesen Ordner",
     "folderCreator": "Angelegt",
+    "folderCreatorAbove": "Hat {folder} angelegt",
+    "folderInherited": "{role} · über {folder}",
     "folderShare": "Zugriff",
     "folderShareOf": "Zugriff auf Ordner {name}",
     "you": "du"

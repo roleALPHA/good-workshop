@@ -1,4 +1,4 @@
-import { and, eq, sql } from 'drizzle-orm'
+import { and, eq, inArray, sql } from 'drizzle-orm'
 import type { Actor, Tx } from '@/server/db'
 import { folder, folderCollaborator, member } from '@/server/db/schema'
 import { DomainError } from '@/domain/errors'
@@ -22,8 +22,6 @@ import {
  */
 
 export class FolderSharingError extends DomainError {}
-
-export type FolderCollaborator = { memberId: string; role: GrantableFolderRole }
 
 /** Proof that folder access was resolved, with what it resolved to. */
 export type FolderAccess = {
@@ -78,19 +76,85 @@ export async function assertFolderAccess(
   return { folderId, role, actor }
 }
 
-export async function listFolderCollaborators(
-  tx: Tx,
-  access: FolderAccess,
-): Promise<FolderCollaborator[]> {
-  const rows = await tx
-    .select({ memberId: folderCollaborator.memberId, role: folderCollaborator.role })
-    .from(folderCollaborator)
-    .where(eq(folderCollaborator.folderId, access.folderId))
+/** One person on a folder's access screen: what they hold here, and from above. */
+export type FolderAccessEntry = {
+  memberId: string
+  /** A grant on this folder itself. */
+  direct: GrantableFolderRole | null
+  /**
+   * What the nearest folder above that says anything about them gives --
+   * having made it, or a grant on it. Null on a top folder, or when nothing
+   * above names them.
+   */
+  inherited: { role: 'owner' | GrantableFolderRole; folderId: string; folderName: string } | null
+}
 
-  return rows.map((row) => ({
-    memberId: row.memberId,
-    role: row.role === 'editor' ? 'editor' : 'viewer',
-  }))
+/**
+ * Everybody the folder tree gives something on this folder, directly or from
+ * above.
+ *
+ * The screen used to read only the rows on the folder itself, so a colleague
+ * given "Kunden" stood on "Kunden / Acme" as "no access" -- while they could
+ * open everything in it. The grant always reached the subtree; now the list
+ * says so.
+ *
+ * The walk is the one `effectiveFolderRole` makes: nearest folder first, and on
+ * one folder the creator before a grant. The direct grant is kept apart rather
+ * than folded in -- it is nearer and wins, and taking it away falls back to the
+ * inherited one, which the screen has to be able to show.
+ */
+export async function listFolderAccess(tx: Tx, access: FolderAccess): Promise<FolderAccessEntry[]> {
+  const target = await tx
+    .select({ ancestorIds: folder.ancestorIds })
+    .from(folder)
+    .where(eq(folder.id, access.folderId))
+    .limit(1)
+  const ancestors = target[0]?.ancestorIds ?? []
+  const path = [...ancestors, access.folderId]
+
+  const [folders, grants] = await Promise.all([
+    tx
+      .select({ id: folder.id, name: folder.name, createdBy: folder.createdBy })
+      .from(folder)
+      .where(inArray(folder.id, path)),
+    tx
+      .select({
+        folderId: folderCollaborator.folderId,
+        memberId: folderCollaborator.memberId,
+        role: folderCollaborator.role,
+      })
+      .from(folderCollaborator)
+      .where(inArray(folderCollaborator.folderId, path)),
+  ])
+
+  const entries = new Map<string, FolderAccessEntry>()
+  const entryOf = (memberId: string) => {
+    let entry = entries.get(memberId)
+    if (!entry) {
+      entry = { memberId, direct: null, inherited: null }
+      entries.set(memberId, entry)
+    }
+    return entry
+  }
+  const asRole = (role: string): GrantableFolderRole => (role === 'editor' ? 'editor' : 'viewer')
+
+  for (const row of grants) {
+    if (row.folderId === access.folderId) entryOf(row.memberId).direct = asRole(row.role)
+  }
+
+  const byId = new Map(folders.map((row) => [row.id, row]))
+  for (const id of ancestors.slice().reverse()) {
+    const above = byId.get(id)
+    if (!above) continue
+    const from = { folderId: above.id, folderName: above.name }
+    if (above.createdBy) entryOf(above.createdBy).inherited ??= { role: 'owner', ...from }
+    for (const row of grants) {
+      if (row.folderId !== id) continue
+      entryOf(row.memberId).inherited ??= { role: asRole(row.role), ...from }
+    }
+  }
+
+  return [...entries.values()]
 }
 
 /**
