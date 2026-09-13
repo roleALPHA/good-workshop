@@ -56,8 +56,14 @@ ENV NODE_ENV=production \
 
 # Baked in at build time so /api/health can report which image is running --
 # that is how a rolling deploy notices it is serving the wrong version.
+#
+# Twice, on purpose. compose passes GW_VERSION from the .env into the container,
+# which replaces this value with the image TAG -- right for /api/health, and
+# the reason the footer once read "main". GW_BUILD is the same value under a
+# name compose leaves alone, so the footer can still say which build it is.
 ARG GW_VERSION=dev
-ENV GW_VERSION=${GW_VERSION}
+ENV GW_VERSION=${GW_VERSION} \
+    GW_BUILD=${GW_VERSION}
 
 # `output: 'standalone'` traces exactly the files the server needs, so the
 # runtime layer carries no package manager and no dev dependencies.

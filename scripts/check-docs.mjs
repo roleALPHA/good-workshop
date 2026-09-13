@@ -55,6 +55,9 @@ const INTERNAL = {
   GW_COLLAB_GRACE_MS: 'Collaboration server timing. Tuning knob.',
   GW_COLLAB_MATERIALIZE_MS: 'Collaboration server timing. Tuning knob.',
   GW_COLLAB_PERSIST_MS: 'Collaboration server timing. Tuning knob.',
+  GW_BUILD:
+    'Baked into the image by the Dockerfile from the build argument. Names the build the ' +
+    'footer shows; an operator setting it would make the footer lie.',
 }
 
 /**
@@ -68,8 +71,7 @@ const INTERNAL = {
 const INFRA = {
   GW_HOSTNAME: 'Goes to the Caddy container, which substitutes it inside the Caddyfile.',
   GW_PORT: 'Host side of the port mapping. Compose reads it; the container never sees it.',
-  GW_VERSION:
-    'Selects the image tag. Also passed to app, which reports it in /api/health and the footer.',
+  GW_VERSION: 'Selects the image tag. Also passed to app, which reports it in /api/health.',
 }
 
 const VALUE_FLAGS = new Set([
