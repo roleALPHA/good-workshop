@@ -1,5 +1,6 @@
 'use client'
 
+import { useId } from 'react'
 import { useTranslations } from 'next-intl'
 import { CopyBlock } from '@/components/copy-block'
 
@@ -25,6 +26,7 @@ const PLACEHOLDER = 'gwp_dein_token'
  */
 export function ConnectGuide({ origin, token }: { origin: string; token: string | null }) {
   const t = useTranslations('settings.tokens.connect')
+  const headingId = useId()
   const endpoint = `${origin}/api/mcp`
   const secret = token ?? PLACEHOLDER
 
@@ -60,8 +62,13 @@ export function ConnectGuide({ origin, token }: { origin: string; token: string 
   )
 
   return (
-    <section className="mt-6">
-      <h2 className="text-[15px] font-medium">{t('title')}</h2>
+    // Named after its heading, like the OAuth section below it: with two sets of
+    // instructions on one page, a screen reader can jump between them, and a test
+    // can ask for the commands of one without catching the other's.
+    <section className="mt-6" aria-labelledby={headingId}>
+      <h2 id={headingId} className="text-[15px] font-medium">
+        {t('title')}
+      </h2>
       <p className="mt-0.5 mb-2 text-[14px] text-[var(--fg-muted)]">
         {token ? t('freshNote') : t('placeholderNote')}
       </p>
@@ -112,7 +119,7 @@ export function ConnectGuide({ origin, token }: { origin: string; token: string 
 }
 
 /** The project's disclosure: a native `details`, not a hand-rolled one. */
-function Client({ name, children }: { name: string; children: React.ReactNode }) {
+export function Client({ name, children }: { name: string; children: React.ReactNode }) {
   return (
     <details className="rounded border border-[var(--border)] bg-[var(--surface-raised)]">
       <summary className="cursor-pointer px-3 py-2.5 text-[15px] font-medium">{name}</summary>

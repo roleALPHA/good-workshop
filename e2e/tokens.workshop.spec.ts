@@ -30,10 +30,21 @@ test('makes a token that works, and can take it back', async ({ page, request })
   // token has to be able to hand it to a client without leaving the page. A
   // command with a placeholder in it would be no better than the sentence it
   // replaced.
-  await page.getByText('Claude Code', { exact: true }).click()
-  await expect(page.getByText(/^claude mcp add /)).toContainText(
+  //
+  // Asked for inside its own section: the page carries a second `claude mcp add`
+  // further down, for connecting over OAuth without a token, and a bare text
+  // match catches both.
+  const withToken = page.getByRole('region', { name: 'Client verbinden' })
+  await withToken.getByText('Claude Code', { exact: true }).click()
+  await expect(withToken.getByText(/^claude mcp add /)).toContainText(
     `--header "Authorization: Bearer ${token}"`,
   )
+
+  // And the OAuth variant must NOT carry the token: a header would make the
+  // client authenticate with it and never start the flow it is there for.
+  const withoutToken = page.getByRole('region', { name: 'Ohne Token verbinden (OAuth)' })
+  await withoutToken.getByText('Claude Code (OAuth)', { exact: true }).click()
+  await expect(withoutToken.getByText(/^claude mcp add /)).not.toContainText('Authorization')
 
   const call = (body: unknown) =>
     request.post('/api/mcp', {

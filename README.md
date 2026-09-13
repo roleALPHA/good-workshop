@@ -104,7 +104,10 @@ it cannot touch user administration at all.
 Clients that cannot hold a fixed token — ChatGPT's connectors, the connector UI in claude.ai —
 connect over **OAuth** instead: they discover this installation, register themselves, and you
 approve them once on a consent screen that says which client is asking and exactly what it will
-be able to do. Nothing is configured for that; it is there.
+be able to do. Nothing is configured for that; it is there. The **Tokens** page walks through it for Claude,
+ChatGPT, Claude Code, the Gemini CLI and other clients — including the two things the flow does
+not tell you: the hosted clients need this installation reachable from the internet, and a client
+connected this way can currently only read.
 
 How this is built on the inside, and why, is in [docs/architecture.md](docs/architecture.md).
 

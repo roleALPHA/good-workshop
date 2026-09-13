@@ -508,7 +508,7 @@
     "title": "Ajustes",
     "tokens": {
       "title": "Tokens de acceso",
-      "intro": "Para clientes MCP como Claude Code, Claude Desktop, Gemini CLI, Codex o Langdock. Un token actúa como tú — nunca puede hacer más de lo que puedes tú.",
+      "intro": "Para clientes MCP como Claude Code, Claude Desktop, Gemini CLI, Codex o Langdock. Un token actúa como tú: nunca puede hacer más que tú. Claude, ChatGPT y otros también pueden conectarse sin token mediante OAuth, más abajo en esta página.",
       "freshLabel": "Tu nuevo token",
       "freshHint": "Se muestra una sola vez — lo que se guarda es su hash.",
       "hide": "Entendido, ocultar",
@@ -548,6 +548,34 @@
         "copyEndpoint": "Copiar la URL del servidor",
         "copyToken": "Copiar el token",
         "copyCodex": "Copiar los comandos de Codex"
+      },
+      "oauth": {
+        "title": "Conectar sin token (OAuth)",
+        "intro": "Claude, ChatGPT y muchos otros clientes inician sesión por sí mismos. Introduces la URL del servidor, inicias sesión en GoodWorkshop en el navegador y confirmas lo que puede hacer el cliente. No necesitas ningún token.",
+        "endpointLabel": "URL del servidor",
+        "copyEndpoint": "Copiar URL del servidor",
+        "publicNote": "Claude (web, escritorio, app) y ChatGPT se conectan desde la nube de su proveedor. Solo funciona si esta dirección es accesible desde internet por HTTPS. Claude Code y Gemini CLI se ejecutan en tu ordenador y también llegan a instalaciones dentro de una red corporativa.",
+        "signInFirst": "Inicia sesión antes en GoodWorkshop en este navegador. Si no, tras iniciar sesión llegarás a la biblioteca y tendrás que volver a conectar desde el cliente.",
+        "readOnly": "Mediante OAuth, un cliente por ahora solo puede leer: talleres y tipos de módulo. Si debe crear o modificar agendas, conéctalo más arriba con un token que tenga «Escribir talleres».",
+        "claude": "Claude (web, escritorio, app)",
+        "claudeStep1": "En Claude, abre «Customize» → «Connectors», haz clic en «+» y elige «Add custom connector».",
+        "claudeStep2": "Ponle un nombre, por ejemplo GoodWorkshop, y pega la URL del servidor. Deja vacío «Advanced settings».",
+        "claudeStep3": "«Add» y después «Connect». Inicia sesión en GoodWorkshop en el navegador y elige «Permitir el acceso».",
+        "claudeTeam": "En Claude Team y Enterprise solo un Owner añade el conector, en «Organization settings» → «Connectors». Los demás solo tienen que hacer clic en «Connect». El plan gratuito permite un conector personalizado.",
+        "chatgpt": "ChatGPT",
+        "chatgptStep1": "En la web, activa el modo desarrollador en «Configuración» → «Apps» → «Configuración avanzada». Está disponible en Plus, Pro, Business, Enterprise y Edu; en un espacio de trabajo puede que primero tenga que permitirlo un administrador.",
+        "chatgptStep2": "En «Apps», crea una app nueva: nombre, URL del servidor, autenticación «OAuth».",
+        "chatgptStep3": "Guarda y conecta. Inicia sesión en GoodWorkshop en el navegador y elige «Permitir el acceso».",
+        "claudeCode": "Claude Code (OAuth)",
+        "claudeCodeStep": "Añádelo en el terminal sin cabecera. Después ejecuta /mcp en Claude Code, elige el servidor y «Authenticate»: se abre el navegador.",
+        "gemini": "Gemini CLI (OAuth)",
+        "geminiStep": "Añádelo en el terminal sin cabecera. En la primera conexión el navegador se abre solo; para volver a iniciar sesión más tarde, ejecuta /mcp auth goodworkshop.",
+        "other": "Otros clientes",
+        "otherStep": "Mistral Le Chat, Cursor, VS Code y otros: introduce la URL del servidor, elige OAuth como autenticación (a menudo el cliente lo detecta solo), inicia sesión en el navegador y acepta. Si un cliente solo puede enviar cabeceras fijas, usa un token más arriba.",
+        "revoke": "Terminar el acceso: desconecta el conector en el cliente. GoodWorkshop todavía no permite revocar un acceso OAuth.",
+        "labelsNote": "Los nombres de los menús en Claude y ChatGPT pueden variar ligeramente según el idioma y la versión.",
+        "copyClaudeCode": "Copiar comando para Claude Code",
+        "copyGemini": "Copiar comando para Gemini CLI"
       }
     }
   },

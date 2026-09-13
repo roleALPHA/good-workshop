@@ -2,6 +2,7 @@ import { SCOPES } from '@/domain/tenant/tokens'
 import { authConfig } from '@/server/auth/config'
 import { getTranslations } from 'next-intl/server'
 import { loadTokens } from '@/server/actions/tokens'
+import { OAuthGuide } from './oauth-guide'
 import { TokenList } from './token-list'
 
 export const dynamic = 'force-dynamic'
@@ -28,6 +29,11 @@ export default async function TokensPage() {
           {result.message}
         </p>
       )}
+
+      {/* Outside the token list's success branch on purpose: connecting over
+          OAuth needs no token, so a failure to load tokens is no reason to
+          hide how to do without one. */}
+      <OAuthGuide origin={authConfig.origin} />
     </div>
   )
 }
