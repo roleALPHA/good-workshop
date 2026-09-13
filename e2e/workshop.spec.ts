@@ -277,7 +277,9 @@ test('exports the day as Markdown', async ({ page }) => {
     expect(result.type).toContain('text/markdown')
     expect(result.body).toContain(workshopTitle)
     expect(result.body).toContain('Gruppenarbeit')
-    expect(result.body).toContain('[AGPL-3.0](https://github.com/roleALPHA/good-workshop)')
+    expect(result.body).toContain(
+      '[Apache-2.0 + Commons Clause](https://github.com/roleALPHA/good-workshop/blob/main/LICENSE)',
+    )
     // Retried at all, not budgeted for slowness: the tables trail the live
     // document by one debounce, deliberately. The generous budget this used to
     // carry blamed "a slow first materialisation" for what was really a race

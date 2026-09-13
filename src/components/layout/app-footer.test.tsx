@@ -1,6 +1,6 @@
 import { render, screen } from '@testing-library/react'
 import { afterEach, describe, expect, it, vi } from 'vitest'
-import { ROLEALPHA_URL, SOURCE_URL } from '@/lib/attribution'
+import { LICENSE_URL, ROLEALPHA_URL } from '@/lib/attribution'
 import { AppFooter } from './app-footer'
 
 /**
@@ -19,8 +19,8 @@ describe('the footer', () => {
     const maker = screen.getByRole('link', { name: 'roleALPHA' })
     expect(maker).toHaveAttribute('href', ROLEALPHA_URL)
 
-    const licence = screen.getByRole('link', { name: 'AGPL-3.0' })
-    expect(licence).toHaveAttribute('href', SOURCE_URL)
+    const licence = screen.getByRole('link', { name: 'Apache-2.0 + Commons Clause' })
+    expect(licence).toHaveAttribute('href', LICENSE_URL)
 
     for (const link of [maker, licence]) {
       expect(link).toHaveAttribute('target', '_blank')
@@ -53,7 +53,7 @@ describe('the footer', () => {
     vi.stubEnv('GW_VERSION', 'v0.3.1')
     const { container } = render(<AppFooter />)
     expect(container.textContent).toMatch(
-      /GoodWorkshop \u00b7 powered by roleALPHA \u00b7 AGPL-3\.0 \u00b7 v0\.3\.1$/,
+      /GoodWorkshop \u00b7 powered by roleALPHA \u00b7 Apache-2\.0 \+ Commons Clause \u00b7 v0\.3\.1$/,
     )
   })
 })

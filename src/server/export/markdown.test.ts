@@ -94,6 +94,8 @@ describe('renderDayMarkdown', () => {
     // A Markdown export is a document somebody pastes somewhere, so the
     // addresses go in as links rather than as bare text the way a mail needs.
     expect(out).toContain('[roleALPHA](https://rolealpha.com)')
-    expect(out).toContain('[AGPL-3.0](https://github.com/roleALPHA/good-workshop)')
+    expect(out).toContain(
+      '[Apache-2.0 + Commons Clause](https://github.com/roleALPHA/good-workshop/blob/main/LICENSE)',
+    )
   })
 })

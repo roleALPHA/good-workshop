@@ -65,7 +65,11 @@ COPY --from=builder --chown=node:node /app/.next/standalone ./
 COPY --from=builder --chown=node:node /app/.next/static ./.next/static
 COPY --from=builder --chown=node:node /app/public ./public
 COPY --from=deps --chown=node:node /app/THIRD-PARTY-LICENSES.txt ./THIRD-PARTY-LICENSES.txt
+# Apache 2.0 section 4 asks that whoever receives the software also receives a
+# copy of the licence (a) and the NOTICE file (d). An image pulled onto
+# somebody's server is exactly that, whether or not they ever see this repo.
 COPY --chown=node:node LICENSE ./LICENSE
+COPY --chown=node:node NOTICE ./NOTICE
 
 # The operational half of the image: migrations, provisioning and the CLI that
 # gets an operator in when there is neither HTTPS nor SMTP. Without these the

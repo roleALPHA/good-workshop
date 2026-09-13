@@ -136,7 +136,7 @@ Tests and fixtures are exempt: German is the source, so the reference agenda is 
 
 Three things deliberately stay outside the catalogs, and it is worth knowing why:
 
-- **The footer.** `<AppFooter>` says `GoodWorkshop · powered by roleALPHA · AGPL-3.0` in every
+- **The footer.** `<AppFooter>` says `GoodWorkshop · powered by roleALPHA · Apache-2.0 + Commons Clause` in every
   language, followed by the running build (`v0.3.1`, `main-414f9e2`, or `dev` for a checkout
   that was never packaged). The build is a separate segment on purpose: the sentence before it
   is a constant, and folding a value read from the environment into it would make that claim
@@ -154,16 +154,16 @@ The details are in [Languages](languages.md).
 
 ## Footer
 
-`<AppFooter>` with `GoodWorkshop · powered by roleALPHA · AGPL-3.0` is present on **every**
+`<AppFooter>` with `GoodWorkshop · powered by roleALPHA · Apache-2.0 + Commons Clause` is present on **every**
 view — app shell, login, mobile reading view, print view. Building a new top-level view means
 bringing it along. The string is not in the i18n catalogs and is not interpolated from tenant
 data.
 
 The two names are links, and both leave the application, so both open in a tab of their own: a
 facilitator who taps the licence mid-workshop has to come back to the agenda. `roleALPHA` goes
-to `rolealpha.com`; `AGPL-3.0` goes to the **source**, not to a copy of the licence — AGPL
-section 13 is about the code being reachable by whoever uses the service over the network, and
-a LICENSE file satisfies nobody's right to it.
+to `rolealpha.com`; `Apache-2.0 + Commons Clause` goes to the **LICENSE** file. The label names
+both halves on purpose: the Commons Clause requires every licence notice to mention it, and
+`Apache-2.0` on its own would describe rights this project does not grant.
 
 The line lives in `src/lib/attribution.ts` in three shapes, because three of its five surfaces
 cannot carry an anchor: `ATTRIBUTION_TEXT` spells the addresses out for the mail signatures and

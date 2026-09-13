@@ -11,15 +11,17 @@
  * no catalog and no branding setting can quietly replace it. A constant is not
  * a translation.
  *
- * The licence links to the SOURCE rather than to the licence text. That is what
- * AGPL section 13 actually asks of a network service: somebody using this over
- * the network has to be able to get at the code, and a copy of the licence is
- * not the code.
+ * The licence links to the LICENSE file. Under AGPL it pointed at the source,
+ * because AGPL section 13 is about the code being reachable over the network;
+ * Apache 2.0 with the Commons Clause asks for something else -- whoever
+ * receives the software gets the terms. The label names both halves because
+ * the Clause's own last sentence requires any licence notice to mention it, and
+ * "Apache-2.0" on its own would describe rights this project does not grant.
  */
 
 export const ROLEALPHA_URL = 'https://rolealpha.com'
-export const SOURCE_URL = 'https://github.com/roleALPHA/good-workshop'
-export const LICENSE = 'AGPL-3.0'
+export const LICENSE_URL = 'https://github.com/roleALPHA/good-workshop/blob/main/LICENSE'
+export const LICENSE = 'Apache-2.0 + Commons Clause'
 
 /** What a URL looks like when it is not clickable. */
 const bare = (url: string) => url.replace(/^https:\/\//, '')
@@ -27,8 +29,8 @@ const bare = (url: string) => url.replace(/^https:\/\//, '')
 /** Plain text: the mail signatures and the print view, where a link is dead. */
 export const ATTRIBUTION_TEXT =
   `GoodWorkshop · powered by roleALPHA (${bare(ROLEALPHA_URL)})` +
-  ` · ${LICENSE} (${bare(SOURCE_URL)})`
+  ` · ${LICENSE} (${bare(LICENSE_URL)})`
 
 /** Markdown: the export, which is a document somebody pastes somewhere. */
 export const ATTRIBUTION_MARKDOWN =
-  `GoodWorkshop · powered by [roleALPHA](${ROLEALPHA_URL})` + ` · [${LICENSE}](${SOURCE_URL})`
+  `GoodWorkshop · powered by [roleALPHA](${ROLEALPHA_URL})` + ` · [${LICENSE}](${LICENSE_URL})`

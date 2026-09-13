@@ -3,8 +3,9 @@
 
 # Third-party licences
 
-GoodWorkshop is AGPL-3.0-only. It is distributed as a Docker image that
-contains other people's code, which carries its own terms.
+GoodWorkshop is licensed under Apache-2.0 with the Commons Clause (see LICENSE).
+It is distributed as a Docker image that contains other people's code, which
+carries its own terms.
 
 This file is the reviewable index: which packages, under which licence. It
 deliberately carries no version numbers, so that a dependency bump does not
@@ -29,7 +30,7 @@ Permissive, no attribution required.
 
 ## Apache-2.0
 
-Permissive with a patent grant. One-way compatible with GPL-3.0 and therefore with AGPL-3.0 -- the direction that matters here.
+Permissive with a patent grant. The base licence of this project itself.
 
 - [@img/sharp-*](https://sharp.pixelplumbing.com)
 - [@playwright/test](https://playwright.dev)
@@ -102,7 +103,7 @@ Permissive, functionally MIT.
 
 ## LGPL-3.0-or-later
 
-Library copyleft, upward-compatible with AGPL-3.0.
+Library copyleft. Fine as a separately replaceable library -- sharp ships libvips as its own shared object. The Commons Clause restricts GoodWorkshop, not the library, and changes to the library itself would stay LGPL.
 
 - [@img/sharp-libvips-*](https://sharp.pixelplumbing.com)
 

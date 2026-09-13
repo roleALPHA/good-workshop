@@ -38,10 +38,10 @@ describe('magicLinkMail', () => {
   it('spells the two addresses out, because a mail has nothing to click', () => {
     const { text } = magicLinkMail('a@b.test', LINK, 'de')
     expect(text).toContain('rolealpha.com')
-    // AGPL section 13: whoever uses this over the network has to be able to
-    // reach the source. A licence name on its own does not do that.
-    expect(text).toContain('AGPL-3.0')
-    expect(text).toContain('github.com/roleALPHA/good-workshop')
+    // The terms, spelled out: a licence name on its own does not tell anybody
+    // what they may do, and a mail has nothing to click.
+    expect(text).toContain('Apache-2.0 + Commons Clause')
+    expect(text).toContain('github.com/roleALPHA/good-workshop/blob/main/LICENSE')
     expect(text).not.toContain('](')
   })
 

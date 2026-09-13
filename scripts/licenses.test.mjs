@@ -53,7 +53,7 @@ describe('the policy', () => {
 
   it('names why GPL-2.0-only cannot ship, rather than only that it is unlisted', () => {
     const rows = flatten({ 'GPL-2.0-only': [{ name: 'old', versions: ['1.0.0'], paths: [] }] })
-    expect(violations(rows)[0].reason).toContain('cannot be combined with AGPL-3.0')
+    expect(violations(rows)[0].reason).toContain('Commons Clause')
   })
 
   it('refuses a licence nobody has decided about, rather than assuming it is fine', () => {
@@ -127,7 +127,9 @@ describe('the SBOM', () => {
   it('names the project itself as the subject of the document', () => {
     const doc = renderSbom(flatten(sample), meta)
     expect(doc.metadata.component.purl).toBe('pkg:npm/goodworkshop@0.3.1')
-    expect(doc.metadata.component.licenses).toEqual([{ license: { id: 'AGPL-3.0-only' } }])
+    expect(doc.metadata.component.licenses).toEqual([
+      { expression: 'Apache-2.0 AND LicenseRef-Commons-Clause-1.0' },
+    ])
   })
 })
 
@@ -138,7 +140,7 @@ describe('run from the command line', () => {
     })
     expect(result.status).toBe(1)
     expect(result.stderr).toContain('sourceavailable')
-    expect(result.stderr).toContain('not open source')
+    expect(result.stderr).toContain('beyond our own terms')
   })
 
   it('writes an SBOM a consumer can actually parse', () => {
@@ -212,5 +214,30 @@ describe('platform binaries in the index', () => {
       .split('\n')
       .filter((l) => l.includes('sharp'))
     expect(lines).toEqual(['- @img/sharp-*'])
+  })
+})
+
+describe('the policy after leaving AGPL', () => {
+  /**
+   * The direction flipped with the licence. Under AGPL, GPL-3.0 code was
+   * welcome; under the Commons Clause it is the one thing that cannot ship,
+   * because GPL forbids exactly the restriction the Clause adds.
+   */
+  it.each(['GPL-3.0-only', 'GPL-3.0-or-later', 'AGPL-3.0-only', 'AGPL-3.0-or-later'])(
+    'refuses %s, and says it is the Commons Clause that conflicts',
+    (license) => {
+      const rows = flatten({ [license]: [{ name: 'copyleft', versions: ['1.0.0'], paths: [] }] })
+      expect(violations(rows)).toHaveLength(1)
+      expect(violations(rows)[0].reason).toContain('Commons Clause')
+    },
+  )
+
+  it('still ships the LGPL library sharp depends on', () => {
+    const rows = flatten({
+      'LGPL-3.0-or-later': [
+        { name: '@img/sharp-libvips-linux-x64', versions: ['1.0.0'], paths: [] },
+      ],
+    })
+    expect(violations(rows)).toEqual([])
   })
 })

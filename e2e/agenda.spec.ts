@@ -35,9 +35,9 @@ test('carries the attribution footer on every view', async ({ page }) => {
     'href',
     'https://rolealpha.com',
   )
-  await expect(footer.getByRole('link', { name: 'AGPL-3.0' })).toHaveAttribute(
+  await expect(footer.getByRole('link', { name: 'Apache-2.0 + Commons Clause' })).toHaveAttribute(
     'href',
-    'https://github.com/roleALPHA/good-workshop',
+    'https://github.com/roleALPHA/good-workshop/blob/main/LICENSE',
   )
   // GW_VERSION reaches the page from the running process, not from the build.
   // See the env block in playwright.config.ts.

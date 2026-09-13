@@ -6,15 +6,25 @@ terms a contribution arrives under, and the one mechanical step that records the
 
 ## The licence your contribution is under
 
-GoodWorkshop is **AGPL-3.0-only**. A contribution merged here is distributed under that licence
-to everyone who receives the software, including everyone who reaches it over a network.
+GoodWorkshop is distributed under the **Apache License 2.0 with the Commons Clause** — see
+[LICENSE](LICENSE). Everybody who receives the project receives it under those terms, you
+included.
 
-You keep the copyright in what you write. There is no copyright assignment and no CLA — we do
-not ask you to sign your rights over to roleALPHA. The practical consequence, stated plainly
-because it is easy to discover too late: this project therefore **cannot** be relicensed, dual
-licensed or offered under a commercial licence without asking every contributor individually.
-That is a deliberate trade. It keeps the barrier to contributing at zero and closes off a
-business model, and we would rather have the contributors.
+**Your contribution itself is licensed under plain Apache-2.0, without the Commons Clause.**
+Section 5 of the Apache License already says that a contribution submitted for inclusion is under
+the terms of that licence; this file says which one is meant, so nobody has to argue about it
+later. The difference is practical: it lets roleALPHA GmbH, which maintains this project, keep
+offering GoodWorkshop under further terms — a hosted edition, for example — without having to
+find every contributor and ask. You keep the copyright in what you write, and there is no
+copyright assignment.
+
+It also keeps the DCO below accurate as written. It speaks of an "open source license", and plain
+Apache-2.0 is one — the Commons Clause, which is not, applies to the distributed project rather
+than to what you contribute.
+
+Up to `v0.3.1` this project was AGPL-3.0-only, and this file used to say that contributions under
+it could not be relicensed without asking every contributor. That was true. The change was
+possible only because, at that point, nobody outside roleALPHA had contributed.
 
 ## Sign your work — the Developer Certificate of Origin
 
@@ -69,8 +79,9 @@ published. GitHub's `@users.noreply.github.com` address is fine and is what most
 
 Two cases come up often enough to name:
 
-- **Code from another project.** Fine under (b), if its licence is compatible with AGPL-3.0 —
-  see the policy in [`scripts/licenses.mjs`](scripts/licenses.mjs). Say where it came from in
+- **Code from another project.** Fine under (b), if its licence may ship under this project's
+  terms — see the policy in [`scripts/licenses.mjs`](scripts/licenses.mjs). GPL and AGPL code
+  cannot. Say where it came from in
   the commit message and keep its copyright header.
 - **Code an AI assistant generated.** You are the contributor and you sign off on it: (a) covers
   it, and the responsibility for it being yours to give is yours. Review it like any other code

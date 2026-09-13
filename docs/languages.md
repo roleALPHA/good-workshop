@@ -111,7 +111,7 @@ whose entire job is relaying WebSocket frames.
 
 ## What deliberately stays untranslated
 
-- **`GoodWorkshop · powered by roleALPHA · AGPL-3.0`.** In the footer, the print view, the two
+- **`GoodWorkshop · powered by roleALPHA · Apache-2.0 + Commons Clause`.** In the footer, the print view, the two
   mail signatures and the Markdown export. Not in the catalogs, not interpolated from tenant
   data — it lives in `src/lib/attribution.ts`, in the three shapes those surfaces need. A
   constant is not a translation. The version that follows it in the footer is not translated

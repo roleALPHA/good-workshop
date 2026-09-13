@@ -1,6 +1,6 @@
 # GoodWorkshop
 
-Open-source workshop planning. Self-hosted, MCP-ready.
+Source-available workshop planning. Self-hosted, MCP-ready.
 
 Build agendas out of blocks, clusters and workshop days, reorder them by drag and drop,
 export them as Markdown — and the data stays on your own machine.
@@ -91,8 +91,8 @@ leak.
 
 **Looks like you.** Under **Branding** you can set a logo and an accent colour; the server
 derives the light and dark steps itself. The footer stays `GoodWorkshop · powered by
-roleALPHA · AGPL-3.0`, with the name pointing at [rolealpha.com](https://rolealpha.com) and
-the licence at the source.
+roleALPHA · Apache-2.0 + Commons Clause`, with the name pointing at
+[rolealpha.com](https://rolealpha.com) and the licence at its full text.
 
 **Connects to an AI client.** GoodWorkshop is an MCP server: Claude Desktop, Claude Code or
 any other MCP client can read and write workshops. You create a token under **Tokens** in
@@ -116,19 +116,19 @@ pnpm db:up      # Postgres and a mail catcher for development
 pnpm dev
 ```
 
-| Command               | Purpose                                                                                    |
-| --------------------- | ------------------------------------------------------------------------------------------ |
-| `pnpm lint`           | ESLint including the project guardrails                                                    |
-| `pnpm typecheck`      | `tsc --noEmit`                                                                             |
-| `pnpm test`           | Vitest (unit + component)                                                                  |
-| `pnpm test:coverage`  | with coverage thresholds on `src/domain`, `src/features`, `src/i18n`                       |
-| `pnpm test:db`        | tenant isolation and auth against a real database                                          |
-| `pnpm test:e2e`       | Playwright (desktop + Pixel 5) against the built standalone server                         |
-| `pnpm format`         | Prettier                                                                                   |
-| `pnpm build`          | production build (`output: 'standalone'`)                                                  |
-| `pnpm check:docs`     | checks that README, `.env.example` and `compose.yaml` still fit the code                   |
-| `pnpm check:licenses` | checks every dependency may ship in an AGPL-3.0 image, and that the index is current       |
-| `pnpm licenses:write` | regenerates [`THIRD-PARTY-LICENSES.md`](THIRD-PARTY-LICENSES.md) after a dependency change |
+| Command               | Purpose                                                                                      |
+| --------------------- | -------------------------------------------------------------------------------------------- |
+| `pnpm lint`           | ESLint including the project guardrails                                                      |
+| `pnpm typecheck`      | `tsc --noEmit`                                                                               |
+| `pnpm test`           | Vitest (unit + component)                                                                    |
+| `pnpm test:coverage`  | with coverage thresholds on `src/domain`, `src/features`, `src/i18n`                         |
+| `pnpm test:db`        | tenant isolation and auth against a real database                                            |
+| `pnpm test:e2e`       | Playwright (desktop + Pixel 5) against the built standalone server                           |
+| `pnpm format`         | Prettier                                                                                     |
+| `pnpm build`          | production build (`output: 'standalone'`)                                                    |
+| `pnpm check:docs`     | checks that README, `.env.example` and `compose.yaml` still fit the code                     |
+| `pnpm check:licenses` | checks every dependency may ship under this project's licence, and that the index is current |
+| `pnpm licenses:write` | regenerates [`THIRD-PARTY-LICENSES.md`](THIRD-PARTY-LICENSES.md) after a dependency change   |
 
 The conventions below are also published as agent skills in
 [`.agents/skills/`](.agents/skills/), so a coding assistant picks up the same rules a person
@@ -471,15 +471,33 @@ link issued for **any** address. The application says so again at startup.
 
 ## Licence
 
-AGPL-3.0-only. You may run it, change it and pass it on; if you offer it to others over a
-network, they get the right to the source of what you are running. The full text is in
-[LICENSE](LICENSE).
+**Apache License 2.0 with the Commons Clause.** The terms are in [LICENSE](LICENSE), the copyright
+notice in [NOTICE](NOTICE). What follows is a summary in plain words; where it and the licence
+text differ, the licence text is what counts.
+
+- **Use it for free, commercially too.** A company may run GoodWorkshop for its own people and
+  in its own business — host it, change it, build on it, and plan and run the workshops it earns
+  its money with.
+- **Do not sell GoodWorkshop itself.** Nobody may offer it to third parties for a fee — hosted or
+  otherwise — as a product or service whose value comes _entirely or substantially_ from
+  GoodWorkshop's functionality.
+- **That includes paid hosting and paid support for the software.** The Commons Clause names
+  "fees for hosting or consulting/support services related to the Software" in so many words.
+  Charging somebody to install, run or support GoodWorkshop for them counts.
+
+This is **source-available, not open source** in the OSI sense: the Commons Clause restricts a
+use that an open-source licence has to allow. GitHub accordingly shows the licence as "Other".
+
+**Earlier versions.** Releases up to and including `v0.3.1` were published under AGPL-3.0-only.
+Anyone who received one keeps those rights for that version; the new terms apply from the first
+release after it.
 
 **Other people's code.** The image ships with dependencies under their own licences.
 [THIRD-PARTY-LICENSES.md](THIRD-PARTY-LICENSES.md) is the index, and the notices themselves —
 copyright lines and full licence texts — are inside every image at
 `/app/THIRD-PARTY-LICENSES.txt` and attached to every release. CI refuses a dependency whose
-licence may not ship in an AGPL-3.0 image.
+licence cannot ship under these terms — GPL and AGPL among them, because their copyleft forbids
+exactly the restriction the Commons Clause adds.
 
 **Bill of materials.** Every release carries `sbom.cdx.json`, a CycloneDX document listing the
 exact versions that went into it. The published image additionally carries an SPDX attestation

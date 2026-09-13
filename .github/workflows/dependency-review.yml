@@ -23,7 +23,13 @@ jobs:
           # moderate finding here is a decision somebody should make, not a
           # line in a report nobody opens.
           fail-on-severity: moderate
-          # AGPL-3.0 is this project's own licence. What it cannot absorb is a
-          # dependency that is more restrictive than that, or one whose terms
-          # are unclear -- both are a problem for whoever self-hosts this.
-          deny-licenses: SSPL-1.0, BUSL-1.1, Elastic-2.0
+          # This project is Apache-2.0 with the Commons Clause. Two families
+          # cannot ship inside it: strong copyleft (GPL, AGPL), which forbids
+          # adding a restriction and the Commons Clause is one; and licences
+          # with service restrictions of their own (SSPL, BUSL, Elastic), which
+          # would bind our users beyond our own terms. scripts/licenses.mjs has
+          # the same policy with a reason per licence.
+          deny-licenses: >-
+            SSPL-1.0, BUSL-1.1, Elastic-2.0,
+            GPL-2.0-only, GPL-2.0-or-later, GPL-3.0-only, GPL-3.0-or-later,
+            AGPL-3.0-only, AGPL-3.0-or-later

@@ -65,6 +65,12 @@ jobs:
         uses: docker/metadata-action@dc802804100637a589fabce1cb79ff13a1411302 # v6.2.0
         with:
           images: ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}
+          # Explicit, because metadata-action copies the licence GitHub
+          # detects, and GitHub knows no SPDX id for Apache 2.0 with the
+          # Commons Clause -- left alone, the label would read NOASSERTION and
+          # a scanner would report the image as unlicensed.
+          labels: |
+            org.opencontainers.image.licenses=Apache-2.0 AND LicenseRef-Commons-Clause-1.0
 
       - uses: docker/setup-buildx-action@37fe631027851001ddb9b187196cc803df7f5f0e # v4.3.0
 
