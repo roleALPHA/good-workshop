@@ -27,7 +27,12 @@ setup('authenticate', async ({ page, baseURL }) => {
   const link = /https?:\/\/\S+/.exec(output)?.[0]
   expect(link, 'the CLI must print a login link').toBeTruthy()
 
+  // Twice before anybody clicks, the way a mail scanner and a link preview get
+  // to it first. Opening the link must not spend it -- only the button does.
   await page.goto(link!)
+  await page.goto(link!)
+  await page.getByRole('button', { name: 'Anmelden', exact: true }).click()
+  await page.waitForURL((url) => !url.pathname.startsWith('/verify'))
   await page.goto('/library')
   await expect(page.getByRole('heading', { name: 'Workshops' })).toBeVisible()
 

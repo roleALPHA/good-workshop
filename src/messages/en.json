@@ -181,6 +181,12 @@
       "linkExpired": "This link has expired or has already been used. Ask for a new one.",
       "linkIncomplete": "The link was incomplete. Ask for a new one."
     },
+    "verify": {
+      "title": "Confirm sign-in",
+      "intro": "One more step: “Sign in” and you are in, after which the link stops working. This step keeps mail filters from using up the link before you do.",
+      "submit": "Sign in",
+      "submitting": "Signing in …"
+    },
     "setup": {
       "title": "Set up GoodWorkshop",
       "intro": "This installation has nobody who can administer it yet. Enter yourself as the first administrator — everything else, mail delivery included, happens in the interface afterwards.",

@@ -8,11 +8,11 @@ export const dynamic = 'force-dynamic'
  * Where an invitation lands.
  *
  * A GET that changes NOTHING, which is the one thing to preserve about this
- * route. The magic-link route at /verify is the opposite -- it consumes its token
- * on GET, deliberately, because a prefetching mail client burning a single-use
- * login link is harmless. Here the link is durable: the guest will come back to
- * it tomorrow from their phone. A link preview must not be able to spend it, and
- * nothing on this page is a side effect.
+ * route. The magic-link page at /verify learned the same lesson the hard way:
+ * it used to consume its token on GET, and mail scanners spent every link
+ * before its recipient could. Here the link is durable besides -- the guest will
+ * come back to it tomorrow from their phone. A link preview must not be able to
+ * spend it, and nothing on this page is a side effect.
  *
  * What it shows is the workshop's TITLE and nothing else. Not the day, not the
  * agenda, and not the invited address -- somebody who received the invitation

@@ -181,6 +181,12 @@
       "linkExpired": "Este enlace ha caducado o ya se ha usado. Pide uno nuevo.",
       "linkIncomplete": "El enlace estaba incompleto. Pide uno nuevo."
     },
+    "verify": {
+      "title": "Confirmar el acceso",
+      "intro": "Un paso más: con «Iniciar sesión» ya estás dentro, y después el enlace deja de funcionar. Este paso evita que los filtros de correo gasten el enlace antes que tú.",
+      "submit": "Iniciar sesión",
+      "submitting": "Iniciando sesión …"
+    },
     "setup": {
       "title": "Configurar GoodWorkshop",
       "intro": "Esta instalación todavía no tiene a nadie que pueda administrarla. Regístrate como primera administradora — todo lo demás, incluido el envío de correo, se hace después en la interfaz.",

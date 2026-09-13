@@ -110,6 +110,40 @@ export async function sendMagicLink(emailAddress: string, tenantId?: string): Pr
   await sendMail(magicLinkMail(issued.email, issued.link, issued.locale), tenant)
 }
 
+/**
+ * Whether a token would be accepted, without spending it.
+ *
+ * What /verify does on GET. Scanners open links before people do -- Microsoft
+ * Defender's Safe Links rewrites and fetches every URL in a Microsoft 365
+ * mailbox, and iOS renders a preview -- and when that GET consumed the token,
+ * the person arrived to "expired" on every single attempt. Only the button on
+ * the page consumes, because a scanner fetches and does not submit forms.
+ *
+ * The same conditions as consumeMagicLink, so the page does not offer a button
+ * that is certain to fail. It stays an answer about THIS moment: the UPDATE
+ * there is still what decides.
+ */
+export async function peekMagicLink(secret: string): Promise<boolean> {
+  const tokenHash = hashSecret(secret)
+
+  return withAuth(async (tx) => {
+    const rows = await tx
+      .select({ id: emailToken.id })
+      .from(emailToken)
+      .where(
+        and(
+          eq(emailToken.tokenHash, tokenHash),
+          isNull(emailToken.consumedAt),
+          gt(emailToken.expiresAt, new Date()),
+          eq(emailToken.purpose, 'login'),
+        ),
+      )
+      .limit(1)
+
+    return rows.length > 0
+  })
+}
+
 export type ConsumedToken = { identityId: string; tenantId: string; email: string }
 
 /**

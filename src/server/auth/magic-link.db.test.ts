@@ -1,7 +1,7 @@
 import { randomUUID } from 'node:crypto'
 import pg from 'pg'
 import { afterAll, beforeAll, describe, expect, it } from 'vitest'
-import { consumeMagicLink, issueMagicLink } from './magic-link'
+import { consumeMagicLink, issueMagicLink, peekMagicLink } from './magic-link'
 import { authConfig } from './config'
 
 /**
@@ -21,6 +21,11 @@ const identityId = randomUUID()
 const burstEmail = `burst-${randomUUID()}@example.test`
 const burstIdentityId = randomUUID()
 
+// The same reason: looking at links issues a few more of them, and five per
+// address is the whole window.
+const peekEmail = `peek-${randomUUID()}@example.test`
+const peekIdentityId = randomUUID()
+
 beforeAll(async () => {
   await ops.connect()
   await ops.query(
@@ -30,6 +35,7 @@ beforeAll(async () => {
   for (const [id, address] of [
     [identityId, email],
     [burstIdentityId, burstEmail],
+    [peekIdentityId, peekEmail],
   ]) {
     await ops.query('insert into identity (id, email, status) values ($1, $2, $3)', [
       id,
@@ -46,7 +52,7 @@ beforeAll(async () => {
 
 afterAll(async () => {
   await ops.query('delete from identity where id = any($1::uuid[])', [
-    [identityId, burstIdentityId],
+    [identityId, burstIdentityId, peekIdentityId],
   ])
   await ops.end()
 })
@@ -82,10 +88,32 @@ describe('magic links', () => {
     expect(await consumeMagicLink(token)).toBeNull()
   })
 
+  it('can be looked at any number of times without spending it', async () => {
+    // What /verify does on GET. Microsoft Defender's Safe Links, iOS link
+    // previews and every other scanner open the link before the person does;
+    // when that GET consumed the token, the person only ever saw "expired".
+    const issued = await issueMagicLink(peekEmail)
+    const token = tokenOf(issued!.link)
+
+    expect(await peekMagicLink(token)).toBe(true)
+    expect(await peekMagicLink(token)).toBe(true)
+    expect((await consumeMagicLink(token))?.identityId).toBe(peekIdentityId)
+  })
+
+  it('reports a spent token as unusable when looked at', async () => {
+    const issued = await issueMagicLink(peekEmail)
+    const token = tokenOf(issued!.link)
+    await consumeMagicLink(token)
+
+    expect(await peekMagicLink(token)).toBe(false)
+    expect(await peekMagicLink('vollstaendig-erfunden')).toBe(false)
+  })
+
   it('refuses a token that has expired', async () => {
     const issued = await issueMagicLink(email)
     const token = tokenOf(issued!.link)
     await ops.query(`update email_token set expires_at = now() - interval '1 minute'`)
+    expect(await peekMagicLink(token)).toBe(false)
     expect(await consumeMagicLink(token)).toBeNull()
   })
 
