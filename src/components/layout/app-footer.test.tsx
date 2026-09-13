@@ -1,5 +1,5 @@
 import { render, screen } from '@testing-library/react'
-import { describe, expect, it } from 'vitest'
+import { afterEach, describe, expect, it, vi } from 'vitest'
 import { ROLEALPHA_URL, SOURCE_URL } from '@/lib/attribution'
 import { AppFooter } from './app-footer'
 
@@ -7,6 +7,10 @@ import { AppFooter } from './app-footer'
  * No `renderWithIntl` here, deliberately: this footer has no translated string
  * in it, and rendering it through the provider would suggest it does.
  */
+
+afterEach(() => {
+  vi.unstubAllEnvs()
+})
 
 describe('the footer', () => {
   it('links the maker and the licence, each leaving the application', () => {
@@ -27,5 +31,29 @@ describe('the footer', () => {
   it('still says who made it', () => {
     const { container } = render(<AppFooter />)
     expect(container.textContent).toContain('GoodWorkshop · powered by roleALPHA')
+  })
+  it('names the build that is serving the page', () => {
+    vi.stubEnv('GW_VERSION', 'v0.3.1')
+    const { container } = render(<AppFooter />)
+    expect(container.textContent).toContain('v0.3.1')
+  })
+
+  it('says dev rather than nothing when no image built it', () => {
+    vi.stubEnv('GW_VERSION', undefined)
+    const { container } = render(<AppFooter />)
+    expect(container.textContent).toContain('dev')
+  })
+
+  /**
+   * The attribution sentence is a constant on purpose -- see @/lib/attribution.
+   * The version sits AFTER it, not inside it, so that no later edit folds a
+   * value read from the environment into a line that claims to be fixed.
+   */
+  it('puts the build after the attribution, not inside it', () => {
+    vi.stubEnv('GW_VERSION', 'v0.3.1')
+    const { container } = render(<AppFooter />)
+    expect(container.textContent).toMatch(
+      /GoodWorkshop \u00b7 powered by roleALPHA \u00b7 AGPL-3\.0 \u00b7 v0\.3\.1$/,
+    )
   })
 })

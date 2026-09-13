@@ -137,7 +137,10 @@ Tests and fixtures are exempt: German is the source, so the reference agenda is 
 Three things deliberately stay outside the catalogs, and it is worth knowing why:
 
 - **The footer.** `<AppFooter>` says `GoodWorkshop · powered by roleALPHA · AGPL-3.0` in every
-  language.
+  language, followed by the running build (`v0.3.1`, `main-414f9e2`, or `dev` for a checkout
+  that was never packaged). The build is a separate segment on purpose: the sentence before it
+  is a constant, and folding a value read from the environment into it would make that claim
+  false.
 - **MCP tool descriptions.** They are prompt material for a model, not interface text.
 - **The duration input vocabulary.** `parseDuration` accepts `Stunden`, `hours`, `heures`,
   `horas` — that is parser input, and a translator editing a JSON string must not be able to

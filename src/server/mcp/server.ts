@@ -1,6 +1,7 @@
 import { McpServer } from '@modelcontextprotocol/sdk/server/mcp.js'
 import type { PatActor } from './auth'
 import { registerTools } from './tools'
+import { appVersion } from '@/lib/version'
 
 /**
  * A fresh server per request.
@@ -12,7 +13,7 @@ import { registerTools } from './tools'
  */
 export function buildMcpServer(actor: PatActor, authorization: string): McpServer {
   const server = new McpServer(
-    { name: 'goodworkshop', version: process.env.GW_VERSION ?? 'dev' },
+    { name: 'goodworkshop', version: appVersion() },
     {
       /**
        * English, always, and not from the message catalog.

@@ -143,6 +143,11 @@ export default defineConfig({
         // Separate from the one above because the browser goes through a
         // proxy in a real deployment and this process is inside it.
         GW_COLLAB_INTERNAL_URL: `ws://localhost:${COLLAB_PORT}/collab`,
+        // Set here so the footer assertion has something to recognise. It also
+        // proves the thing a component test cannot: that the layout is rendered
+        // per request and not prerendered into the build, which in the Docker
+        // image would freeze the version at whatever the builder stage knew.
+        GW_VERSION: 'e2e',
       },
       // The root, not /api/health. Health is honest about needing a database --
       // it returns 503 without one -- while "is the server listening" and "can
