@@ -39,9 +39,10 @@ test('carries the attribution footer on every view', async ({ page }) => {
     'href',
     'https://github.com/roleALPHA/good-workshop/blob/main/LICENSE',
   )
-  // GW_VERSION reaches the page from the running process, not from the build.
-  // See the env block in playwright.config.ts.
-  await expect(footer).toContainText('e2e')
+  // A version number, and the build beside it -- which reaches the page from
+  // the running process, not from the build. See the env block in
+  // playwright.config.ts.
+  await expect(footer).toContainText(/· v\d+\.\d+\.\d+\+e2e$/)
 })
 
 test('never scrolls horizontally', async ({ page }) => {

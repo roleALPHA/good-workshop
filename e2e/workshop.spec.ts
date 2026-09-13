@@ -382,7 +382,7 @@ test('lets an LLM write into a day somebody has open', async ({ page, request })
   // leave the actual reason in a log nobody opens.
   const body = await response.text()
   expect(response.ok(), body).toBeTruthy()
-  expect(body, body).toContain('Block angelegt')
+  expect(body, body).toContain('Block created')
 
   // In the open editor, with no reload: the model joined the same room.
   await expect(page.getByRole('article', { name: 'Vom Modell' })).toBeVisible()
@@ -425,7 +425,7 @@ test('lets an LLM write into a day nobody has open', async ({ page, request }) =
         },
       },
     })
-    expect(await response.text()).toContain('Block angelegt')
+    expect(await response.text()).toContain('Block created')
   }).toPass({ timeout: 20_000 })
 
   await page.goto(`/w/${workshopId}/d/${dayId}`)

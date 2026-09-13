@@ -326,6 +326,17 @@ export async function createWorkshop(
     .limit(1)
   if (!memberships[0]) throw new Error('membership row missing for the current actor')
 
+  if (input.folderId) {
+    // Named rather than left to the composite foreign key, whose violation
+    // reaches a person -- or a model choosing an id -- as "the call failed".
+    const folders = await tx
+      .select({ id: folder.id })
+      .from(folder)
+      .where(eq(folder.id, input.folderId))
+      .limit(1)
+    if (!folders[0]) throw new WorkshopFolderError('folder.targetGone')
+  }
+
   const siblings = await tx
     .select({ id: workshop.id, position: workshop.position })
     .from(workshop)
@@ -699,6 +710,15 @@ export async function createFolder(
     if (!parents[0]) throw new NotFoundError()
     ancestors = [...parents[0].ancestors, parentId]
   }
+
+  // The same question moveFolder asks, for the same reason: folder_sibling_name_uq
+  // would otherwise answer with a unique violation nobody can read.
+  const clash = await tx
+    .select({ id: folder.id })
+    .from(folder)
+    .where(and(sameParent(parentId), sql`lower(${folder.name}) = lower(${name})`))
+    .limit(1)
+  if (clash[0]) throw new FolderMoveError('folder.nameTaken')
 
   const siblings = await tx
     .select({ id: folder.id, position: folder.position })

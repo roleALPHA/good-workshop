@@ -1,5 +1,5 @@
 import { LICENSE, LICENSE_URL, ROLEALPHA_URL } from '@/lib/attribution'
-import { appVersion } from '@/lib/version'
+import { displayVersion } from '@/lib/version'
 
 /**
  * Present on every top-level view: app shell, login, mobile reading view and
@@ -51,10 +51,10 @@ export function AppFooter({ className }: { className?: string }) {
         >
           {LICENSE}
         </a>{' '}
-        {/* nowrap because a build off main reads `main-414f9e2`, and a browser
-            is allowed to break a line after a hyphen -- half a commit hash at
-            the end of a line is worse than a slightly longer line. */}
-        · <span className="whitespace-nowrap">{appVersion()}</span>
+        {/* nowrap because a build off main reads `v0.4.1+main-414f9e2`, and a
+            browser is allowed to break a line after a hyphen -- half a commit
+            hash at the end of a line is worse than a slightly longer line. */}
+        · <span className="whitespace-nowrap">{displayVersion()}</span>
       </p>
     </footer>
   )

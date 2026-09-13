@@ -322,7 +322,8 @@ declare const messages: {
         "versionConflict": "Der Workshop wurde inzwischen geändert (erwartet {expected}, ist {actual}).",
         "unknownModuleType": "Diesen Modultyp gibt es nicht.",
         "unknownModuleTypeOptions": "Unbekannter Modultyp „{key}“. Verfügbar: {available}",
-        "descInvalid": "Ungültige Angaben: {issues}"
+        "descInvalid": "Ungültige Angaben: {issues}",
+        "lastDay": "Ein Workshop braucht mindestens einen Tag. Der letzte Tag lässt sich nicht löschen."
       },
       "oauth": {
         "noRedirectUri": "Dieser Client hat keine gültige Rücksprungadresse angegeben.",

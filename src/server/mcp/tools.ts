@@ -1,5 +1,5 @@
 import { z } from 'zod'
-import { desc, eq, isNull } from 'drizzle-orm'
+import { eq } from 'drizzle-orm'
 import type * as Y from 'yjs'
 import { uuidv7 } from 'uuidv7'
 import type { McpServer } from '@modelcontextprotocol/sdk/server/mcp.js'
@@ -10,7 +10,10 @@ import {
 } from '@/domain/agenda/access'
 import { loadDay } from '@/domain/agenda/repo'
 import { localiseModuleType } from '@/domain/moduleType/localise'
-import { publicToolError } from './errors'
+import { ModuleDescError, validateModuleDesc } from '@/domain/moduleType/validate'
+import { setDayDate } from '@/domain/workshop/days'
+import { CATEGORY_COLORS } from '@/lib/category-colors'
+import { fail, guarded, ok, toolError } from './respond'
 
 /**
  * MCP answers in English, always.
@@ -25,11 +28,14 @@ import {
   addModuleBlock,
   clearBlocks,
   moveBlock,
+  patchBlock,
   removeBlock,
   setDayFields,
+  type BlockPatch,
   type NewModuleBlock,
 } from '@/domain/collab/ops'
-import { createWorkshop, firstDayOf, listDays } from '@/domain/workshop/repo'
+import { blocksOf, dayOf } from '@/domain/collab/doc'
+import { firstDayOf } from '@/domain/workshop/repo'
 import { computeSchedule } from '@/domain/schedule/computeSchedule'
 import { formatDuration, formatTime } from '@/features/agenda/duration'
 import { flattenDay, toScheduleItems } from '@/features/agenda/flatten'
@@ -41,7 +47,8 @@ import { requireScope, type PatActor } from './auth'
 import { LOCALES } from '@/i18n/config'
 
 /**
- * The tools an LLM client gets.
+ * The tools an LLM client gets for the CONTENT of a day. The library -- folders,
+ * workshops, tags, the bin, adding and removing days -- is in ./library-tools.
  *
  * Four conventions run through all of them, and each exists because of a
  * specific way models fail:
@@ -66,12 +73,10 @@ import { LOCALES } from '@/i18n/config'
  */
 type Ctx = { actor: PatActor; authorization: string }
 
-const ok = (text: string, structured?: Record<string, unknown>) => ({
-  content: [{ type: 'text' as const, text }],
-  ...(structured ? { structuredContent: structured } : {}),
-})
-
-const fail = (text: string) => ({ content: [{ type: 'text' as const, text }], isError: true })
+const Id = z.string().uuid()
+const Version = z.string().regex(/^\d+$/).optional()
+const Minute = z.number().int().min(0).max(1439)
+const Duration = z.number().int().min(0).max(1440)
 
 export function registerTools(server: McpServer, ctx: Ctx): void {
   const { actor, authorization } = ctx
@@ -102,62 +107,33 @@ export function registerTools(server: McpServer, ctx: Ctx): void {
         'Every available block type with its field schema. Call this before creating blocks: the schemas say which values a type accepts.',
       inputSchema: {},
     },
-    async () => {
-      requireScope(actor, 'module_types:read')
-      // list_module_types reads the table directly rather than going through
-      // loadDay, so the localisation has to happen here too -- in English,
-      // like everything else this surface says.
-      const rows = await withTenant(actor, (tx) =>
-        tx.select().from(moduleType).where(eq(moduleType.isActive, true)),
-      )
-      const types = rows.map((row) => localiseModuleType(row, MCP_LOCALE))
+    async () =>
+      guarded(async () => {
+        requireScope(actor, 'module_types:read')
+        // list_module_types reads the table directly rather than going through
+        // loadDay, so the localisation has to happen here too -- in English,
+        // like everything else this surface says.
+        const rows = await withTenant(actor, (tx) =>
+          tx.select().from(moduleType).where(eq(moduleType.isActive, true)),
+        )
+        const types = rows.map((row) => localiseModuleType(row, MCP_LOCALE))
 
-      return ok(
-        types
-          .map((t) => `${t.key} — ${t.name} (${formatDuration(t.defaultDurationMinutes)})`)
-          .join('\n'),
-        {
-          moduleTypes: types.map((t) => ({
-            key: t.key,
-            name: t.name,
-            category: t.category,
-            defaultDurationMinutes: t.defaultDurationMinutes,
-            countsAsContent: t.countsAsContent,
-            jsonSchema: t.jsonSchema,
-          })),
-        },
-      )
-    },
-  )
-
-  server.registerTool(
-    'list_workshops',
-    {
-      title: 'List workshops',
-      description: 'The workshops this token has access to.',
-      inputSchema: { limit: z.number().int().min(1).max(100).default(25) },
-    },
-    async ({ limit }) => {
-      requireScope(actor, 'workshops:read')
-      const rows = await withTenant(actor, (tx) =>
-        tx
-          .select({
-            id: workshop.id,
-            title: workshop.title,
-            status: workshop.status,
-            updatedAt: workshop.updatedAt,
-          })
-          .from(workshop)
-          .where(isNull(workshop.deletedAt))
-          .orderBy(desc(workshop.updatedAt))
-          .limit(limit),
-      )
-
-      if (rows.length === 0) return ok('Noch keine Workshops.', { workshops: [] })
-      return ok(rows.map((w) => `${w.id}  ${w.title} (${w.status})`).join('\n'), {
-        workshops: rows.map((w) => ({ ...w, updatedAt: w.updatedAt.toISOString() })),
-      })
-    },
+        return ok(
+          types
+            .map((t) => `${t.key} — ${t.name} (${formatDuration(t.defaultDurationMinutes)})`)
+            .join('\n'),
+          {
+            moduleTypes: types.map((t) => ({
+              key: t.key,
+              name: t.name,
+              category: t.category,
+              defaultDurationMinutes: t.defaultDurationMinutes,
+              countsAsContent: t.countsAsContent,
+              jsonSchema: t.jsonSchema,
+            })),
+          },
+        )
+      }),
   )
 
   server.registerTool(
@@ -165,10 +141,11 @@ export function registerTools(server: McpServer, ctx: Ctx): void {
     {
       title: 'Read a workshop day',
       description:
-        'The agenda of a workshop day with computed start times. `view: markdown` returns the finished export.',
+        'The agenda of a workshop day with computed start times, block ids, cluster ids and parked blocks. ' +
+        'The structured `blocks` carry every field update_module can change. `view: markdown` returns the finished export.',
       inputSchema: {
-        workshopId: z.string().uuid(),
-        dayId: z.string().uuid().optional(),
+        workshopId: Id,
+        dayId: Id.optional(),
         view: z.enum(['outline', 'markdown']).default('outline'),
         /**
          * The one place this surface is not English.
@@ -184,101 +161,114 @@ export function registerTools(server: McpServer, ctx: Ctx): void {
           .describe('Language for `view: markdown`. Defaults to English.'),
       },
     },
-    async ({ workshopId, dayId, view, locale }) => {
-      requireScope(actor, 'workshops:read')
+    async ({ workshopId, dayId, view, locale }) =>
+      guarded(async () => {
+        requireScope(actor, 'workshops:read')
 
-      return withTenant(actor, async (tx) => {
-        const access = await assertWorkshopAccess(tx, actor, workshopId, 'workshop.read')
-        const resolvedDayId = dayId ?? (await firstDayOf(tx, workshopId))
-        if (!resolvedDayId) return fail('This workshop has no day yet.')
+        return withTenant(actor, async (tx) => {
+          const access = await assertWorkshopAccess(tx, actor, workshopId, 'workshop.read')
+          const resolvedDayId = dayId ?? (await firstDayOf(tx, workshopId))
+          if (!resolvedDayId) return fail('This workshop has no day yet.')
 
-        const { doc, contentVersion } = await loadDay(
-          tx,
-          access,
-          resolvedDayId,
-          locale ?? MCP_LOCALE,
-        )
-        const meta = await tx
-          .select({ title: workshop.title })
-          .from(workshop)
-          .where(eq(workshop.id, workshopId))
-          .limit(1)
-        const title = meta[0]?.title ?? 'Workshop'
+          const { doc, contentVersion } = await loadDay(
+            tx,
+            access,
+            resolvedDayId,
+            locale ?? MCP_LOCALE,
+          )
+          const meta = await tx
+            .select({ title: workshop.title })
+            .from(workshop)
+            .where(eq(workshop.id, workshopId))
+            .limit(1)
+          const title = meta[0]?.title ?? 'Workshop'
 
-        if (view === 'markdown') {
-          return ok(renderDayMarkdown({ title }, doc, { locale: locale ?? MCP_LOCALE }), {
-            contentVersion: contentVersion.toString(),
+          if (view === 'markdown') {
+            return ok(renderDayMarkdown({ title }, doc, { locale: locale ?? MCP_LOCALE }), {
+              contentVersion: contentVersion.toString(),
+            })
+          }
+
+          const rows = flattenDay(doc)
+          const schedule = computeSchedule(doc.startMinute, toScheduleItems(rows))
+          const typeKey = (id: string) => doc.moduleTypes[id]?.key ?? null
+          const startOf = (id: string) => schedule.entries.get(id)?.startMinute ?? null
+
+          const lines = rows.map((row, index) => {
+            const entry = schedule.entries.get(row.id)
+            const time = entry ? formatTime(entry.startMinute, MCP_LOCALE) : '--:--'
+            if (row.kind === 'cluster') {
+              return `${index}. [${time}] ## ${row.cluster.title} · cluster · id=${row.id}`
+            }
+            if (row.kind !== 'module') return `${index}. [${time}] (buffer)`
+            const pinned = row.module.pinnedStartMinute === null ? '' : ' · pinned'
+            return `${index}. [${time}] ${row.depth === 1 ? '  ' : ''}${row.module.title} · ${formatDuration(row.module.durationMinutes)} · ${typeKey(row.module.moduleTypeId) ?? '?'}${pinned} · id=${row.id}`
           })
-        }
 
-        const rows = flattenDay(doc)
-        const schedule = computeSchedule(doc.startMinute, toScheduleItems(rows))
+          // Parked blocks are out of the running order, so flattenDay leaves
+          // them out. A model that cannot see them cannot bring one back.
+          const parked = doc.modules.filter((m) => m.parked)
+          const note = typeof doc.desc?.text === 'string' ? doc.desc.text : ''
 
-        const lines = rows.map((row, index) => {
-          const entry = schedule.entries.get(row.id)
-          const time = entry ? formatTime(entry.startMinute, MCP_LOCALE) : '--:--'
-          if (row.kind === 'cluster') return `${index}. [${time}] ## ${row.cluster.title}`
-          if (row.kind !== 'module') return `${index}. [${time}] (Puffer)`
-          const type = doc.moduleTypes[row.module.moduleTypeId]
-          return `${index}. [${time}] ${row.depth === 1 ? '  ' : ''}${row.module.title} · ${formatDuration(row.module.durationMinutes)} · ${type?.key ?? '?'} · id=${row.id}`
+          const blocks = [
+            ...doc.clusters.map((c) => ({
+              id: c.id,
+              kind: 'cluster' as const,
+              parentId: null,
+              order: c.order,
+              title: c.title,
+              color: c.color,
+              pinnedStartMinute: c.pinnedStartMinute,
+              startMinute: startOf(c.id),
+            })),
+            ...doc.modules.map((m) => ({
+              id: m.id,
+              kind: 'module' as const,
+              parentId: m.clusterId,
+              order: m.order,
+              title: m.title,
+              typeKey: typeKey(m.moduleTypeId),
+              durationMinutes: m.durationMinutes,
+              pinnedStartMinute: m.pinnedStartMinute,
+              parked: m.parked,
+              desc: m.desc,
+              startMinute: m.parked ? null : startOf(m.id),
+            })),
+          ]
+
+          return ok(
+            [
+              `${title} — ${doc.title || 'Day'}${doc.date ? ` (${doc.date})` : ''}`,
+              `Day starts at ${formatTime(doc.startMinute, MCP_LOCALE)}`,
+              ...(note ? [`Note: ${note}`] : []),
+              `contentVersion: ${contentVersion} (send this back with any change)`,
+              '',
+              ...lines,
+              ...(parked.length > 0
+                ? [
+                    '',
+                    'Parked (kept with the day, not scheduled):',
+                    ...parked.map(
+                      (m) =>
+                        `- ${m.title} · ${formatDuration(m.durationMinutes)} · ${typeKey(m.moduleTypeId) ?? '?'} · id=${m.id}`,
+                    ),
+                  ]
+                : []),
+            ].join('\n'),
+            {
+              contentVersion: contentVersion.toString(),
+              dayId: resolvedDayId,
+              day: {
+                title: doc.title,
+                date: doc.date,
+                startMinute: doc.startMinute,
+                note,
+              },
+              blocks,
+            },
+          )
         })
-
-        return ok(
-          [
-            `${title} — ${doc.title || 'Tag'}`,
-            `contentVersion: ${contentVersion} (send this back with any change)`,
-            '',
-            ...lines,
-          ].join('\n'),
-          { contentVersion: contentVersion.toString(), dayId: resolvedDayId },
-        )
-      })
-    },
-  )
-
-  server.registerTool(
-    'list_days',
-    {
-      title: 'List days',
-      description: 'The days of a workshop.',
-      inputSchema: { workshopId: z.string().uuid() },
-    },
-    async ({ workshopId }) => {
-      requireScope(actor, 'workshops:read')
-      return withTenant(actor, async (tx) => {
-        await assertWorkshopAccess(tx, actor, workshopId, 'workshop.read')
-        const days = await listDays(tx, workshopId)
-        return ok(days.map((d, i) => `${i}. ${d.title || 'Tag'} — id=${d.id}`).join('\n'), { days })
-      })
-    },
-  )
-
-  // ── Write ───────────────────────────────────────────────────────────────
-
-  server.registerTool(
-    'create_workshop',
-    {
-      title: 'Create a workshop',
-      description: 'Creates a workshop with its first day and returns both ids.',
-      inputSchema: {
-        title: z.string().trim().min(1).max(300),
-        date: z
-          .string()
-          .regex(/^\d{4}-\d{2}-\d{2}$/)
-          .optional(),
-      },
-    },
-    async ({ title, date }) => {
-      requireScope(actor, 'workshops:write')
-      return withTenant(actor, async (tx) => {
-        const created = await createWorkshop(tx, actor, { title, date: date ?? null })
-        await audit(tx, 'workshop.create', created.workshopId, { title })
-        return ok(
-          `Angelegt: ${title}\nworkshopId=${created.workshopId}\ndayId=${created.dayId}`,
-          created,
-        )
-      })
-    },
+      }),
   )
 
   // ── Agenda writes ───────────────────────────────────────────────────────
@@ -337,23 +327,23 @@ export function registerTools(server: McpServer, ctx: Ctx): void {
         'Writes a complete day agenda in one go. `replace` replaces the day, `append` adds to it. ' +
         'Always use this tool to build an agenda -- not twenty separate calls.',
       inputSchema: {
-        workshopId: z.string().uuid(),
-        dayId: z.string().uuid(),
+        workshopId: Id,
+        dayId: Id,
         mode: z.enum(['replace', 'append']).default('append'),
-        expectedVersion: z.string().regex(/^\d+$/).optional(),
+        expectedVersion: Version,
         items: z.array(
           z.union([
             z.object({
               kind: z.literal('cluster'),
               title: z.string().min(1),
-              color: z.string().optional(),
+              color: z.enum(CATEGORY_COLORS).optional(),
               children: z
                 .array(
                   z.object({
                     typeKey: z.string(),
                     title: z.string().optional(),
-                    durationMinutes: z.number().int().min(0).max(1440).optional(),
-                    pinnedStartMinute: z.number().int().min(0).max(1439).nullable().optional(),
+                    durationMinutes: Duration.optional(),
+                    pinnedStartMinute: Minute.nullable().optional(),
                   }),
                 )
                 .optional(),
@@ -362,16 +352,16 @@ export function registerTools(server: McpServer, ctx: Ctx): void {
               kind: z.literal('module'),
               typeKey: z.string(),
               title: z.string().optional(),
-              durationMinutes: z.number().int().min(0).max(1440).optional(),
-              pinnedStartMinute: z.number().int().min(0).max(1439).nullable().optional(),
+              durationMinutes: Duration.optional(),
+              pinnedStartMinute: Minute.nullable().optional(),
             }),
           ]),
         ),
       },
     },
-    async ({ workshopId, dayId, mode, items, expectedVersion }) => {
-      requireScope(actor, 'workshops:write')
-      try {
+    async ({ workshopId, dayId, mode, items, expectedVersion }) =>
+      guarded(async () => {
+        requireScope(actor, 'workshops:write')
         const types = await preflight(workshopId, expectedVersion, (tx) => readTypes(tx))
         if (!types) return fail('The block types could not be read.')
 
@@ -422,10 +412,7 @@ export function registerTools(server: McpServer, ctx: Ctx): void {
             contentVersion: contentVersion.toString(),
           },
         )
-      } catch (error) {
-        return toolError(error)
-      }
-    },
+      }),
   )
 
   server.registerTool(
@@ -436,18 +423,18 @@ export function registerTools(server: McpServer, ctx: Ctx): void {
         'Appends a single block to the end of the day or of a cluster. ' +
         'Use apply_agenda for whole agendas.',
       inputSchema: {
-        workshopId: z.string().uuid(),
-        dayId: z.string().uuid(),
+        workshopId: Id,
+        dayId: Id,
         typeKey: z.string(),
         title: z.string().optional(),
-        durationMinutes: z.number().int().min(0).max(1440).optional(),
-        clusterId: z.string().uuid().nullable().default(null),
-        expectedVersion: z.string().regex(/^\d+$/).optional(),
+        durationMinutes: Duration.optional(),
+        clusterId: Id.nullable().default(null),
+        expectedVersion: Version,
       },
     },
-    async ({ workshopId, dayId, typeKey, title, durationMinutes, clusterId, expectedVersion }) => {
-      requireScope(actor, 'workshops:write')
-      try {
+    async ({ workshopId, dayId, typeKey, title, durationMinutes, clusterId, expectedVersion }) =>
+      guarded(async () => {
+        requireScope(actor, 'workshops:write')
         const types = await preflight(workshopId, expectedVersion, (tx) => readTypes(tx))
         if (!types) return fail('The block types could not be read.')
         if (!types.has(typeKey)) return fail(unknownTypes([typeKey], types))
@@ -461,11 +448,124 @@ export function registerTools(server: McpServer, ctx: Ctx): void {
         )
 
         await record('module.create', workshopId, { moduleId: id, typeKey })
-        return ok(`Block angelegt: ${id}`, { id, contentVersion: contentVersion.toString() })
-      } catch (error) {
-        return toolError(error)
-      }
+        return ok(`Block created: ${id}`, { id, contentVersion: contentVersion.toString() })
+      }),
+  )
+
+  server.registerTool(
+    'add_cluster',
+    {
+      title: 'Add a cluster',
+      description:
+        'Appends a cluster -- a titled section that groups blocks -- to the end of the day. ' +
+        'Put blocks into it with add_module (clusterId) or move_module.',
+      inputSchema: {
+        workshopId: Id,
+        dayId: Id,
+        title: z.string().trim().min(1).max(300),
+        color: z.enum(CATEGORY_COLORS).optional(),
+        expectedVersion: Version,
+      },
     },
+    async ({ workshopId, dayId, title, color, expectedVersion }) =>
+      guarded(async () => {
+        requireScope(actor, 'workshops:write')
+        await preflight(workshopId, expectedVersion)
+
+        const id = uuidv7()
+        const { contentVersion } = await inRoom(workshopId, dayId, (doc) =>
+          addClusterBlock(doc, id, { title, color: color ?? null }),
+        )
+
+        await record('cluster.create', workshopId, { clusterId: id })
+        return ok(`Cluster created: ${id}`, { id, contentVersion: contentVersion.toString() })
+      }),
+  )
+
+  server.registerTool(
+    'update_module',
+    {
+      title: 'Change a block or cluster',
+      description:
+        'Changes fields of one block or cluster; fields you leave out stay as they are. ' +
+        'A block takes title, durationMinutes, pinnedStartMinute (null unpins), desc and parked ' +
+        '(true sets it aside: kept with the day, out of the schedule). A cluster takes title, color ' +
+        'and pinnedStartMinute. `desc` replaces the whole description and must match the block ' +
+        "type's schema from list_module_types; read the current one from get_workshop.",
+      inputSchema: {
+        workshopId: Id,
+        dayId: Id,
+        moduleId: Id.describe('The id of a block or a cluster, from get_workshop.'),
+        title: z.string().trim().min(1).max(300).optional(),
+        durationMinutes: Duration.optional(),
+        pinnedStartMinute: Minute.nullable().optional(),
+        desc: z.record(z.string(), z.unknown()).optional(),
+        parked: z.boolean().optional(),
+        color: z.enum(CATEGORY_COLORS).nullable().optional(),
+        expectedVersion: Version,
+      },
+    },
+    async ({ workshopId, dayId, moduleId, expectedVersion, ...fields }) =>
+      guarded(async () => {
+        requireScope(actor, 'workshops:write')
+        const given = (Object.keys(fields) as (keyof typeof fields)[]).filter(
+          (key) => fields[key] !== undefined,
+        )
+        if (given.length === 0) return fail('Nothing to change: pass at least one field.')
+
+        // Schemas are read up front: the edit runs inside the room, where there
+        // is no database to ask, and a description is validated BEFORE it is
+        // written rather than refused by the materialiser afterwards.
+        const schemas = await preflight(workshopId, expectedVersion, (tx) =>
+          fields.desc === undefined ? Promise.resolve(new Map()) : readSchemas(tx),
+        )
+
+        const { result, contentVersion, rejected } = await inRoom(
+          workshopId,
+          dayId,
+          (doc): UpdateOutcome => {
+            const block = blocksOf(doc).get(moduleId)
+            if (!block) return { kind: 'missing' }
+
+            const isCluster = block.get('kind') === 'cluster'
+            const allowed = isCluster ? CLUSTER_FIELDS : MODULE_FIELDS
+            const wrong = given.filter((key) => !allowed.includes(key))
+            if (wrong.length > 0) return { kind: 'wrongKind', isCluster, fields: wrong }
+
+            const patch: BlockPatch = { ...fields }
+            if (fields.desc !== undefined) {
+              const type = schemas?.get(String(block.get('moduleTypeId') ?? ''))
+              if (type) {
+                const validated = validateModuleDesc(type, fields.desc)
+                if (!validated.ok)
+                  return { kind: 'invalid', error: new ModuleDescError(validated.errors) }
+                patch.desc = validated.value
+              }
+            }
+
+            patchBlock(doc, moduleId, patch)
+            return { kind: 'ok' }
+          },
+        )
+
+        if (result.kind === 'missing') {
+          return fail(`Block ${moduleId} is not on this day. Read the day again with get_workshop.`)
+        }
+        if (result.kind === 'wrongKind') {
+          return fail(
+            `${result.fields.join(', ')} cannot be set on a ${result.isCluster ? 'cluster' : 'block'}. ` +
+              `A ${result.isCluster ? 'cluster' : 'block'} takes: ` +
+              `${(result.isCluster ? CLUSTER_FIELDS : MODULE_FIELDS).join(', ')}.`,
+          )
+        }
+        if (result.kind === 'invalid') return toolError(result.error)
+
+        await record('module.update', workshopId, { moduleId, fields: given })
+        return ok(
+          rejected > 0 ? 'Updated, but the description was refused by the schema.' : 'Updated.',
+          { contentVersion: contentVersion.toString(), ...(rejected > 0 ? { rejected } : {}) },
+        )
+      }),
   )
 
   server.registerTool(
@@ -473,36 +573,34 @@ export function registerTools(server: McpServer, ctx: Ctx): void {
     {
       title: 'Move a block',
       description:
-        'Moves a block. `afterId` is the id of the block it should land after, or null for the top.',
+        'Moves a block or cluster. `clusterId` is the cluster it goes into (null = day level; clusters ' +
+        'always stay at day level). `afterId` is the id of the sibling it should land after, or null for the top.',
       inputSchema: {
-        workshopId: z.string().uuid(),
-        moduleId: z.string().uuid(),
-        dayId: z.string().uuid(),
-        clusterId: z.string().uuid().nullable().default(null),
-        afterId: z.string().uuid().nullable().default(null),
-        expectedVersion: z.string().regex(/^\d+$/).optional(),
+        workshopId: Id,
+        moduleId: Id,
+        dayId: Id,
+        clusterId: Id.nullable().default(null),
+        afterId: Id.nullable().default(null),
+        expectedVersion: Version,
       },
     },
-    async ({ workshopId, moduleId, dayId, clusterId, afterId, expectedVersion }) => {
-      requireScope(actor, 'workshops:write')
-      try {
+    async ({ workshopId, moduleId, dayId, clusterId, afterId, expectedVersion }) =>
+      guarded(async () => {
+        requireScope(actor, 'workshops:write')
         await preflight(workshopId, expectedVersion)
         const { result, contentVersion } = await inRoom(workshopId, dayId, (doc) =>
           moveBlock(doc, moduleId, clusterId, afterId),
         )
         if (!result) {
           return fail(
-            `Block ${moduleId} liegt nicht an diesem Tag, oder das Ziel-Cluster gibt es nicht. ` +
-              'Lies den Tag mit get_workshop neu.',
+            `Block ${moduleId} is not on this day, or the target cluster does not exist. ` +
+              'Read the day again with get_workshop.',
           )
         }
 
         await record('module.move', workshopId, { moduleId })
-        return ok('Verschoben.', { contentVersion: contentVersion.toString() })
-      } catch (error) {
-        return toolError(error)
-      }
-    },
+        return ok('Moved.', { contentVersion: contentVersion.toString() })
+      }),
   )
 
   server.registerTool(
@@ -511,15 +609,15 @@ export function registerTools(server: McpServer, ctx: Ctx): void {
       title: 'Delete a block',
       description: 'Deletes a block for good. Deleting a cluster deletes the blocks inside it.',
       inputSchema: {
-        workshopId: z.string().uuid(),
-        dayId: z.string().uuid(),
-        moduleId: z.string().uuid(),
-        expectedVersion: z.string().regex(/^\d+$/).optional(),
+        workshopId: Id,
+        dayId: Id,
+        moduleId: Id,
+        expectedVersion: Version,
       },
     },
-    async ({ workshopId, dayId, moduleId, expectedVersion }) => {
-      requireScope(actor, 'workshops:write')
-      try {
+    async ({ workshopId, dayId, moduleId, expectedVersion }) =>
+      guarded(async () => {
+        requireScope(actor, 'workshops:write')
         await preflight(workshopId, expectedVersion)
         const { result, contentVersion } = await inRoom(workshopId, dayId, (doc) =>
           removeBlock(doc, moduleId),
@@ -528,26 +626,91 @@ export function registerTools(server: McpServer, ctx: Ctx): void {
 
         await record('module.delete', workshopId, { moduleId, removed: result })
         return ok(`Deleted (${result}).`, { contentVersion: contentVersion.toString() })
-      } catch (error) {
-        return toolError(error)
-      }
+      }),
+  )
+
+  server.registerTool(
+    'update_day',
+    {
+      title: 'Change a day',
+      description:
+        'Changes the title, date, start time or note of a day; fields you leave out stay as they are. ' +
+        '`note` is free text about the day itself -- room, travel, what to bring; an empty string clears it. ' +
+        '`date: null` removes the date.',
+      inputSchema: {
+        workshopId: Id,
+        dayId: Id,
+        title: z.string().trim().min(1).max(300).optional(),
+        date: z
+          .string()
+          .regex(/^\d{4}-\d{2}-\d{2}$/, 'YYYY-MM-DD')
+          .nullable()
+          .optional(),
+        startMinute: Minute.optional().describe('Minutes since midnight, e.g. 540 = 09:00.'),
+        note: z.string().max(10_000).optional(),
+        expectedVersion: Version,
+      },
     },
+    async ({ workshopId, dayId, title, date, startMinute, note, expectedVersion }) =>
+      guarded(async () => {
+        requireScope(actor, 'workshops:write')
+        if ([title, date, startMinute, note].every((value) => value === undefined)) {
+          return fail('Nothing to change: pass at least one of title, date, startMinute, note.')
+        }
+        await preflight(workshopId, expectedVersion)
+
+        // Title, start time and note through the room: the materialiser reads
+        // them from the document, so a table write would be reverted. The date
+        // goes into the document too, to keep it honest for whoever has the
+        // day open -- but the materialiser does not carry it back, so the
+        // table is written as well.
+        let { contentVersion } = await inRoom(workshopId, dayId, (doc) => {
+          const current = (dayOf(doc).get('desc') as Record<string, unknown> | undefined) ?? {}
+          setDayFields(doc, {
+            title,
+            startMinute,
+            date,
+            desc: note === undefined ? undefined : { ...current, text: note },
+          })
+        })
+
+        if (date !== undefined) {
+          contentVersion = await withTenant(actor, async (tx) => {
+            const access = await assertWorkshopAccess(
+              tx,
+              actor,
+              workshopId,
+              'workshop.content.write',
+            )
+            return setDayDate(tx, access, dayId, date)
+          })
+        }
+
+        await record('day.update', workshopId, {
+          dayId,
+          fields: Object.entries({ title, date, startMinute, note })
+            .filter(([, value]) => value !== undefined)
+            .map(([key]) => key),
+        })
+        return ok('Day updated.', { contentVersion: contentVersion.toString() })
+      }),
   )
 
   server.registerTool(
     'set_day_start',
     {
       title: 'Set the day start',
-      description: 'Sets a day start time in minutes since midnight (e.g. 540 = 09:00).',
+      description:
+        'Sets a day start time in minutes since midnight (e.g. 540 = 09:00). update_day can do this too.',
       inputSchema: {
-        workshopId: z.string().uuid(),
-        dayId: z.string().uuid(),
-        startMinute: z.number().int().min(0).max(1439),
+        workshopId: Id,
+        dayId: Id,
+        startMinute: Minute,
       },
     },
-    async ({ workshopId, dayId, startMinute }) => {
-      requireScope(actor, 'workshops:write')
-      try {
+    async ({ workshopId, dayId, startMinute }) =>
+      guarded(async () => {
+        requireScope(actor, 'workshops:write')
         await preflight(workshopId, undefined)
         // Through the room like everything else. Writing start_time straight
         // to the table would have been reverted by the next materialisation,
@@ -560,12 +723,25 @@ export function registerTools(server: McpServer, ctx: Ctx): void {
         return ok(`Day starts at ${formatTime(startMinute, MCP_LOCALE)}`, {
           contentVersion: contentVersion.toString(),
         })
-      } catch (error) {
-        return toolError(error)
-      }
-    },
+      }),
   )
 }
+
+/** What update_module may set, by kind. The editor offers exactly these. */
+const MODULE_FIELDS: readonly string[] = [
+  'title',
+  'durationMinutes',
+  'pinnedStartMinute',
+  'desc',
+  'parked',
+]
+const CLUSTER_FIELDS: readonly string[] = ['title', 'color', 'pinnedStartMinute']
+
+type UpdateOutcome =
+  | { kind: 'ok' }
+  | { kind: 'missing' }
+  | { kind: 'wrongKind'; isCluster: boolean; fields: string[] }
+  | { kind: 'invalid'; error: ModuleDescError }
 
 type ResolvedType = { id: string; name: string; defaultDurationMinutes: number }
 
@@ -579,6 +755,20 @@ async function readTypes(tx: Tx): Promise<Map<string, ResolvedType>> {
     })
     .from(moduleType)
   return new Map(rows.map((row) => [row.key, row]))
+}
+
+type TypeSchema = { id: string; schemaVersion: number; jsonSchema: unknown }
+
+/** Keyed by id, because that is what a block in the document names. */
+async function readSchemas(tx: Tx): Promise<Map<string, TypeSchema>> {
+  const rows = await tx
+    .select({
+      id: moduleType.id,
+      schemaVersion: moduleType.schemaVersion,
+      jsonSchema: moduleType.jsonSchema,
+    })
+    .from(moduleType)
+  return new Map(rows.map((row) => [row.id, row]))
 }
 
 function moduleFrom(
@@ -612,27 +802,4 @@ function moduleFrom(
 /** Errors name the allowed values, so the next call can be right. */
 function unknownTypes(keys: string[], types: Map<string, ResolvedType>): string {
   return `Unknown block types: ${keys.join(', ')}. ` + `Available: ${[...types.keys()].join(', ')}`
-}
-
-/**
- * Errors as instructions.
- *
- * A stale-version failure in particular has to say what to do next, or a model
- * will retry the same call forever.
- */
-function toolError(error: unknown) {
-  // Every domain error -- not-found, forbidden, unknown block type -- is an
-  // answer to the request and reaches the caller intact; everything else is an
-  // internal failure and gets an id instead of its innards. See
-  // publicToolError, which now renders them all in English from the same
-  // catalog the interface uses.
-  const { message } = publicToolError(error)
-
-  if (error instanceof VersionConflictError) {
-    // The one error that has to say what to do next, or a model retries the
-    // same call forever.
-    return fail(`${message} Read it again with get_workshop and send the new contentVersion.`)
-  }
-
-  return fail(message)
 }

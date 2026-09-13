@@ -1,7 +1,8 @@
 import { McpServer } from '@modelcontextprotocol/sdk/server/mcp.js'
 import type { PatActor } from './auth'
+import { registerLibraryTools } from './library-tools'
 import { registerTools } from './tools'
-import { appVersion } from '@/lib/version'
+import { displayVersion } from '@/lib/version'
 
 /**
  * A fresh server per request.
@@ -13,7 +14,7 @@ import { appVersion } from '@/lib/version'
  */
 export function buildMcpServer(actor: PatActor, authorization: string): McpServer {
   const server = new McpServer(
-    { name: 'goodworkshop', version: appVersion() },
+    { name: 'goodworkshop', version: displayVersion() },
     {
       /**
        * English, always, and not from the message catalog.
@@ -31,20 +32,29 @@ export function buildMcpServer(actor: PatActor, authorization: string): McpServe
       instructions: [
         'GoodWorkshop plans workshop agendas.',
         '',
+        'The library holds folders, and folders hold workshops. A workshop has one or',
+        'more days; a day holds blocks, optionally grouped into clusters.',
+        '',
         'How to work:',
         '1. Call list_module_types to learn the available block types and their fields.',
-        '2. create_workshop creates the workshop and its first day.',
+        '2. create_workshop creates the workshop and its first day; create_day adds more.',
         '3. apply_agenda writes a whole day agenda in one go.',
+        '4. get_workshop reads a day with every id; update_module, move_module and',
+        '   delete_module change single blocks, update_day the day itself.',
         '',
         'Start times are computed from the day start and the durations, never set.',
         'A block can be pinned to a fixed clock time with pinnedStartMinute.',
         '',
         'Every change optionally takes expectedVersion. Send back the contentVersion',
         'you last read -- otherwise a concurrent edit can be overwritten.',
+        '',
+        'Sharing workshops or folders and managing members are not available here;',
+        'the person does that in the app.',
       ].join('\n'),
     },
   )
 
+  registerLibraryTools(server, { actor })
   registerTools(server, { actor, authorization })
   return server
 }
