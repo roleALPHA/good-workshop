@@ -1,6 +1,6 @@
-import { screen, within } from '@testing-library/react'
+import { act, screen, within } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
-import { afterEach, describe, expect, it, vi } from 'vitest'
+import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 import type { WorkshopSummary } from '@/domain/workshop/repo'
 import { renderWithIntl } from '@/test/intl'
 
@@ -166,6 +166,97 @@ describe('loading the next page', () => {
     await userEvent.click(screen.getByRole('button', { name: 'Mehr laden' }))
 
     expect(loadLibrary).toHaveBeenCalledWith({ cursor: 'cursor-1' })
+  })
+})
+
+/**
+ * Infinite scrolling: the next page arrives as the end of the list comes into
+ * view, without a click.
+ *
+ * jsdom has no IntersectionObserver, so the stub below stands in for the
+ * browser and "scrolls" by telling every observer that its target is visible.
+ * The button stays as well -- it is how a keyboard and a screen reader reach
+ * the next page, and what is left where no observer exists.
+ */
+describe('loading the next page as the end of the list comes into view', () => {
+  type Observed = { callback: IntersectionObserverCallback; targets: Element[]; live: boolean }
+  let observers: Observed[] = []
+
+  beforeEach(() => {
+    observers = []
+    vi.stubGlobal(
+      'IntersectionObserver',
+      class {
+        private observed: Observed
+        constructor(callback: IntersectionObserverCallback) {
+          this.observed = { callback, targets: [], live: true }
+          observers.push(this.observed)
+        }
+        observe(target: Element) {
+          this.observed.targets.push(target)
+        }
+        unobserve() {}
+        disconnect() {
+          this.observed.live = false
+        }
+        takeRecords() {
+          return []
+        }
+      },
+    )
+  })
+
+  afterEach(() => vi.unstubAllGlobals())
+
+  const scrollToEnd = () =>
+    act(() => {
+      for (const observed of observers) {
+        if (!observed.live || observed.targets.length === 0) continue
+        observed.callback(
+          observed.targets.map((target) => ({ isIntersecting: true, target })) as never,
+          {} as IntersectionObserver,
+        )
+      }
+    })
+
+  it('loads the next page without a click', async () => {
+    loadLibrary.mockResolvedValue({
+      ok: true,
+      data: { workshops: [workshop({ id: 'w-2', title: 'Zweiter Workshop' })], nextCursor: null },
+    })
+    show([workshop()], {}, 'cursor-1')
+
+    await scrollToEnd()
+
+    expect(loadLibrary).toHaveBeenCalledWith({ cursor: 'cursor-1' })
+    expect(await screen.findByRole('link', { name: /Zweiter Workshop/ })).toBeInTheDocument()
+  })
+
+  /**
+   * An observer fires again for every scroll event that keeps the end in view,
+   * and the page is not back yet. Each of those must not become a request --
+   * the same page twice would put every row in the list twice.
+   */
+  it('asks for a page only once while it is on its way', async () => {
+    loadLibrary.mockReturnValue(new Promise(() => {}))
+    show([workshop()], {}, 'cursor-1')
+
+    await scrollToEnd()
+    await scrollToEnd()
+
+    expect(loadLibrary).toHaveBeenCalledTimes(1)
+  })
+
+  it('watches nothing once there is no page left', () => {
+    show([workshop()], {}, null)
+
+    expect(observers.some((observed) => observed.live && observed.targets.length > 0)).toBe(false)
+  })
+
+  it('keeps the button, for a keyboard and a screen reader', () => {
+    show([workshop()], {}, 'cursor-1')
+
+    expect(screen.getByRole('button', { name: 'Mehr laden' })).toBeInTheDocument()
   })
 })
 
