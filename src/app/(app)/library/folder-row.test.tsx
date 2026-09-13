@@ -62,3 +62,52 @@ describe('a folder in the sidebar', () => {
     expect(screen.queryByRole('button', { name: /Kunden/ })).not.toBeInTheDocument()
   })
 })
+
+describe('a folder name too long for the sidebar', () => {
+  // jsdom lays nothing out, so the name is made to overflow by hand.
+  function overflow(by: number) {
+    const name = screen.getByText('Kunden', { selector: '[data-folder-name]' })
+    Object.defineProperty(name, 'clientWidth', { configurable: true, value: 100 })
+    Object.defineProperty(name, 'scrollWidth', { configurable: true, value: 100 + by })
+  }
+
+  it('shows the whole name on hover when it is cut off', async () => {
+    show()
+    overflow(40)
+
+    await userEvent.hover(screen.getByRole('link', { name: 'Kunden' }))
+    expect(screen.getByTestId('folder-name-tooltip')).toHaveTextContent('Kunden')
+
+    await userEvent.unhover(screen.getByRole('link', { name: 'Kunden' }))
+    expect(screen.queryByTestId('folder-name-tooltip')).not.toBeInTheDocument()
+  })
+
+  it('shows it on keyboard focus too', async () => {
+    show()
+    overflow(40)
+
+    await userEvent.tab()
+    expect(screen.getByRole('link', { name: 'Kunden' })).toHaveFocus()
+    expect(screen.getByTestId('folder-name-tooltip')).toHaveTextContent('Kunden')
+  })
+
+  it('shows it when the fitting name slides under the row buttons', async () => {
+    show()
+    overflow(0)
+    const name = screen.getByText('Kunden', { selector: '[data-folder-name]' })
+    const actions = screen.getByRole('button', { name: 'Ordner Kunden entfernen' }).parentElement!
+    name.getBoundingClientRect = () => DOMRect.fromRect({ x: 40, width: 100 })
+    actions.getBoundingClientRect = () => DOMRect.fromRect({ x: 110, width: 90 })
+
+    await userEvent.hover(screen.getByRole('link', { name: 'Kunden' }))
+    expect(screen.getByTestId('folder-name-tooltip')).toHaveTextContent('Kunden')
+  })
+
+  it('stays out of the way when the name fits', async () => {
+    show()
+    overflow(0)
+
+    await userEvent.hover(screen.getByRole('link', { name: 'Kunden' }))
+    expect(screen.queryByTestId('folder-name-tooltip')).not.toBeInTheDocument()
+  })
+})
