@@ -181,6 +181,12 @@
       "linkExpired": "Ce lien a expiré ou a déjà été utilisé. Demandes-en un nouveau.",
       "linkIncomplete": "Le lien était incomplet. Demandes-en un nouveau."
     },
+    "verify": {
+      "title": "Confirmer la connexion",
+      "intro": "Encore une étape : avec « Se connecter », tu es connecté·e, et le lien ne fonctionne plus ensuite. Cette étape empêche les filtres de messagerie d'utiliser le lien avant toi.",
+      "submit": "Se connecter",
+      "submitting": "Connexion …"
+    },
     "setup": {
       "title": "Configurer GoodWorkshop",
       "intro": "Cette installation n'a encore personne pour l'administrer. Inscris-toi comme première administratrice — tout le reste, y compris l'envoi d'e-mails, se fait ensuite dans l'interface.",

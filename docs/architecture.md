@@ -146,9 +146,14 @@ starts the flow again from the client.
 
 ## Access and invitations
 
-A membership starts as "invited"; only opening the sign-in link activates it. An admin cannot
+A membership starts as "invited"; only signing in through the link activates it. An admin cannot
 activate anybody by decree — otherwise they could invite a foreign address and take over the
 account that results.
+
+**Opening a sign-in link spends nothing.** `/verify` only checks the token and shows a button;
+the button consumes it. Mail scanners — Microsoft Defender's Safe Links above all — fetch every
+link before the recipient does, and while the GET consumed the token, those recipients only
+ever saw "expired".
 
 **Disabling and removing are different answers.** Disabling revokes access and keeps the row;
 removing deletes it, and a `disabled` row still holds a name and an address, which is precisely

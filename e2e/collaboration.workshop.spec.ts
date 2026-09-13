@@ -21,6 +21,8 @@ async function asColleague(browser: Browser, link: string) {
   const context = await browser.newContext()
   const page = await context.newPage()
   await page.goto(link)
+  await page.getByRole('button', { name: 'Anmelden', exact: true }).click()
+  await page.waitForURL((url) => !url.pathname.startsWith('/verify'))
   return { context, page }
 }
 

@@ -16,8 +16,9 @@ import { createGuestSession } from './share-session'
  * constant-time.
  *
  * Where this deliberately differs from a magic link: THE TOKEN IS NOT CONSUMED
- * ON USE. A magic link is single-use because it hands over an account, and a
- * prefetching mail client burning one is a feature. A share link is a durable
+ * ON USE. A magic link is single-use because it hands over an account -- and even
+ * so it is only spent by a button, never by opening it, because mail scanners
+ * open every link first. A share link is a durable
  * address for one agenda -- the guest will open it again tomorrow, from their
  * phone, in the room -- so single use would make it work exactly once, usually
  * inside the mail client's link preview.

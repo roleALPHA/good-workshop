@@ -184,6 +184,12 @@ declare const messages: {
       "linkExpired": "Dieser Link ist abgelaufen oder wurde schon benutzt. Fordere einen neuen an.",
       "linkIncomplete": "Der Link war unvollständig. Fordere einen neuen an."
     },
+    "verify": {
+      "title": "Anmeldung bestätigen",
+      "intro": "Noch ein Schritt: Mit „Anmelden“ bist du drin, danach gilt der Link nicht mehr. Der Schritt verhindert, dass Mailfilter den Link vor dir verbrauchen.",
+      "submit": "Anmelden",
+      "submitting": "Wird angemeldet …"
+    },
     "setup": {
       "title": "GoodWorkshop einrichten",
       "intro": "Diese Installation hat noch niemanden, der sie verwalten kann. Trag dich als erste Administratorin ein — alles Weitere, auch der Mailversand, geht danach in der Oberfläche.",
