@@ -42,6 +42,7 @@ export function buildMcpServer(actor: PatActor, authorization: string): McpServe
         '3. apply_agenda writes a whole day agenda in one go.',
         '4. get_workshop reads a day with every id; update_module, move_module and',
         '   delete_module change single blocks, update_day the day itself.',
+        '   update_modules changes the fields of many blocks in one call.',
         '',
         'Parking a block (update_module parked=true) takes it out of the schedule without',
         'deleting it. The parking area belongs to the whole workshop: get_workshop lists',

@@ -14,6 +14,7 @@ import { localiseModuleType } from '@/domain/moduleType/localise'
 import { ModuleDescError, validateModuleDesc, type FieldError } from '@/domain/moduleType/validate'
 import { setDayDate } from '@/domain/workshop/days'
 import { CATEGORY_COLORS } from '@/lib/category-colors'
+import { publicToolError } from './errors'
 import { fail, guarded, ok, toolError } from './respond'
 
 /**
@@ -79,6 +80,17 @@ const Id = z.string().uuid()
 const Version = z.string().regex(/^\d+$/).optional()
 const Minute = z.number().int().min(0).max(1439)
 const Duration = z.number().int().min(0).max(1440)
+
+/** What update_module and update_modules may change; which applies depends on the kind. */
+const UpdateFields = {
+  title: z.string().trim().min(1).max(300).optional(),
+  durationMinutes: Duration.optional(),
+  pinnedStartMinute: Minute.nullable().optional(),
+  desc: z.record(z.string(), z.unknown()).optional(),
+  parked: z.boolean().optional(),
+  color: z.enum(CATEGORY_COLORS).nullable().optional(),
+}
+type UpdateInput = z.infer<z.ZodObject<typeof UpdateFields>>
 
 export function registerTools(server: McpServer, ctx: Ctx): void {
   const { actor, authorization } = ctx
@@ -558,73 +570,148 @@ export function registerTools(server: McpServer, ctx: Ctx): void {
         workshopId: Id,
         dayId: Id,
         moduleId: Id.describe('The id of a block or a cluster, from get_workshop.'),
-        title: z.string().trim().min(1).max(300).optional(),
-        durationMinutes: Duration.optional(),
-        pinnedStartMinute: Minute.nullable().optional(),
-        desc: z.record(z.string(), z.unknown()).optional(),
-        parked: z.boolean().optional(),
-        color: z.enum(CATEGORY_COLORS).nullable().optional(),
+        ...UpdateFields,
         expectedVersion: Version,
       },
     },
     async ({ workshopId, dayId, moduleId, expectedVersion, ...fields }) =>
       guarded(async () => {
         requireScope(actor, 'workshops:write')
-        const given = (Object.keys(fields) as (keyof typeof fields)[]).filter(
-          (key) => fields[key] !== undefined,
-        )
+        const given = givenFields(fields)
         if (given.length === 0) return fail('Nothing to change: pass at least one field.')
 
         // Schemas are read up front: the edit runs inside the room, where there
         // is no database to ask, and a description is validated BEFORE it is
         // written rather than refused by the materialiser afterwards.
         const schemas = await preflight(workshopId, expectedVersion, (tx) =>
-          fields.desc === undefined ? Promise.resolve(new Map()) : readSchemas(tx),
+          fields.desc === undefined
+            ? Promise.resolve(new Map<string, TypeSchema>())
+            : readSchemas(tx),
         )
 
-        const { result, contentVersion, rejected } = await inRoom(
-          workshopId,
-          dayId,
-          (doc): UpdateOutcome => {
-            const block = blocksOf(doc).get(moduleId)
-            if (!block) return { kind: 'missing' }
+        const { result, contentVersion, rejected } = await inRoom(workshopId, dayId, (doc) => {
+          const plan = planUpdate(doc, moduleId, fields, schemas ?? new Map())
+          if (plan.kind === 'ok') patchBlock(doc, moduleId, plan.patch)
+          return plan
+        })
 
-            const isCluster = block.get('kind') === 'cluster'
-            const allowed = isCluster ? CLUSTER_FIELDS : MODULE_FIELDS
-            const wrong = given.filter((key) => !allowed.includes(key))
-            if (wrong.length > 0) return { kind: 'wrongKind', isCluster, fields: wrong }
-
-            const patch: BlockPatch = { ...fields }
-            if (fields.desc !== undefined) {
-              const type = schemas?.get(String(block.get('moduleTypeId') ?? ''))
-              if (type) {
-                const validated = validateModuleDesc(type, fields.desc)
-                if (!validated.ok)
-                  return { kind: 'invalid', error: new ModuleDescError(validated.errors) }
-                patch.desc = validated.value
-              }
-            }
-
-            patchBlock(doc, moduleId, patch)
-            return { kind: 'ok' }
-          },
-        )
-
-        if (result.kind === 'missing') {
-          return fail(`Block ${moduleId} is not on this day. Read the day again with get_workshop.`)
-        }
-        if (result.kind === 'wrongKind') {
-          return fail(
-            `${result.fields.join(', ')} cannot be set on a ${result.isCluster ? 'cluster' : 'block'}. ` +
-              `A ${result.isCluster ? 'cluster' : 'block'} takes: ` +
-              `${(result.isCluster ? CLUSTER_FIELDS : MODULE_FIELDS).join(', ')}.`,
-          )
-        }
         if (result.kind === 'invalid') return toolError(result.error)
+        if (result.kind === 'missing') {
+          return fail(`${problemText(result, moduleId)} Read the day again with get_workshop.`)
+        }
+        if (result.kind === 'wrongKind') return fail(problemText(result, moduleId))
 
         await record('module.update', workshopId, { moduleId, fields: given })
         return ok(
           rejected > 0 ? 'Updated, but the description was refused by the schema.' : 'Updated.',
+          { contentVersion: contentVersion.toString(), ...(rejected > 0 ? { rejected } : {}) },
+        )
+      }),
+  )
+
+  server.registerTool(
+    'update_modules',
+    {
+      title: 'Change many blocks at once',
+      description:
+        'Changes fields of many blocks and clusters of one day in a single call -- the way to fill in ' +
+        'or rework an existing agenda without one update_module per block. Each entry takes moduleId ' +
+        'plus the fields update_module takes; fields left out stay as they are, and ids stay the same. ' +
+        'All or nothing: if one entry names a block that is not on this day, a field its kind does not ' +
+        "take, or a desc that does not fit its type's schema, nothing is changed and every problem is named.",
+      inputSchema: {
+        workshopId: Id,
+        dayId: Id,
+        updates: z
+          .array(
+            z.object({
+              moduleId: Id.describe('The id of a block or a cluster, from get_workshop.'),
+              ...UpdateFields,
+            }),
+          )
+          .min(1)
+          .max(500),
+        expectedVersion: Version,
+      },
+    },
+    async ({ workshopId, dayId, updates, expectedVersion }) =>
+      guarded(async () => {
+        requireScope(actor, 'workshops:write')
+        const entries = updates.map(({ moduleId, ...fields }) => ({
+          moduleId,
+          fields,
+          given: givenFields(fields),
+        }))
+        const empty = entries.flatMap((entry, i) =>
+          entry.given.length === 0 ? [`updates[${i}]`] : [],
+        )
+        if (empty.length > 0) {
+          return fail(
+            `Nothing to change in ${empty.join(', ')}: pass at least one field per entry.`,
+          )
+        }
+
+        const schemas = await preflight(workshopId, expectedVersion, (tx) =>
+          entries.every((entry) => entry.fields.desc === undefined)
+            ? Promise.resolve(new Map<string, TypeSchema>())
+            : readSchemas(tx),
+        )
+
+        // Every entry is checked against the document before any is written: a
+        // day where the first nine blocks changed and the tenth did not is
+        // harder to recover from than a call that did nothing.
+        const { result, contentVersion, rejected } = await inRoom(workshopId, dayId, (doc) => {
+          const plans = entries.map((entry) =>
+            planUpdate(doc, entry.moduleId, entry.fields, schemas ?? new Map()),
+          )
+          const problems: string[] = []
+          const descIssues: FieldError[] = []
+          plans.forEach((plan, i) => {
+            if (plan.kind === 'ok') return
+            if (plan.kind === 'invalid') {
+              descIssues.push(
+                ...plan.error.issues.map((issue) => ({
+                  ...issue,
+                  path: issue.path ? `updates[${i}].desc.${issue.path}` : `updates[${i}].desc`,
+                })),
+              )
+              return
+            }
+            problems.push(`updates[${i}]: ${problemText(plan, entries[i]!.moduleId)}`)
+          })
+          if (problems.length > 0 || descIssues.length > 0) return { problems, descIssues }
+
+          doc.transact(() => {
+            plans.forEach((plan, i) => {
+              if (plan.kind === 'ok') patchBlock(doc, entries[i]!.moduleId, plan.patch)
+            })
+          })
+          return { problems, descIssues }
+        })
+
+        if (result.problems.length > 0 || result.descIssues.length > 0) {
+          return fail(
+            [
+              'Nothing was changed.',
+              ...result.problems,
+              ...(result.descIssues.length > 0
+                ? [publicToolError(new ModuleDescError(result.descIssues)).message]
+                : []),
+              ...(result.problems.some((p) => p.includes('is not on this day'))
+                ? ['Read the day again with get_workshop.']
+                : []),
+            ].join('\n'),
+          )
+        }
+
+        await record('module.update', workshopId, {
+          moduleIds: entries.map((entry) => entry.moduleId),
+          fields: [...new Set(entries.flatMap((entry) => entry.given))],
+        })
+        return ok(
+          rejected > 0
+            ? `${entries.length} updates applied, but ${rejected} description(s) were refused by the schema.`
+            : `${entries.length} updates applied.`,
           { contentVersion: contentVersion.toString(), ...(rejected > 0 ? { rejected } : {}) },
         )
       }),
@@ -836,10 +923,58 @@ const MODULE_FIELDS: readonly string[] = [
 const CLUSTER_FIELDS: readonly string[] = ['title', 'color', 'pinnedStartMinute']
 
 type UpdateOutcome =
-  | { kind: 'ok' }
+  | { kind: 'ok'; patch: BlockPatch }
   | { kind: 'missing' }
   | { kind: 'wrongKind'; isCluster: boolean; fields: string[] }
   | { kind: 'invalid'; error: ModuleDescError }
+
+function givenFields(fields: UpdateInput): string[] {
+  return (Object.keys(fields) as (keyof UpdateInput)[]).filter((key) => fields[key] !== undefined)
+}
+
+/**
+ * Checks one change against the document and says what it would write.
+ *
+ * Writes nothing itself, so update_modules can check every entry before it
+ * touches any of them.
+ */
+function planUpdate(
+  doc: Y.Doc,
+  moduleId: string,
+  fields: UpdateInput,
+  schemas: Map<string, TypeSchema>,
+): UpdateOutcome {
+  const block = blocksOf(doc).get(moduleId)
+  if (!block) return { kind: 'missing' }
+
+  const isCluster = block.get('kind') === 'cluster'
+  const allowed = isCluster ? CLUSTER_FIELDS : MODULE_FIELDS
+  const wrong = givenFields(fields).filter((key) => !allowed.includes(key))
+  if (wrong.length > 0) return { kind: 'wrongKind', isCluster, fields: wrong }
+
+  const patch: BlockPatch = { ...fields }
+  if (fields.desc !== undefined) {
+    const type = schemas.get(String(block.get('moduleTypeId') ?? ''))
+    if (type) {
+      const validated = validateModuleDesc(type, fields.desc)
+      if (!validated.ok) return { kind: 'invalid', error: new ModuleDescError(validated.errors) }
+      patch.desc = validated.value
+    }
+  }
+  return { kind: 'ok', patch }
+}
+
+function problemText(
+  outcome: Extract<UpdateOutcome, { kind: 'missing' | 'wrongKind' }>,
+  moduleId: string,
+): string {
+  if (outcome.kind === 'missing') return `Block ${moduleId} is not on this day.`
+  const kind = outcome.isCluster ? 'cluster' : 'block'
+  return (
+    `${outcome.fields.join(', ')} cannot be set on a ${kind}. ` +
+    `A ${kind} takes: ${(outcome.isCluster ? CLUSTER_FIELDS : MODULE_FIELDS).join(', ')}.`
+  )
+}
 
 type ResolvedType = TypeSchema & { name: string; defaultDurationMinutes: number }
 
