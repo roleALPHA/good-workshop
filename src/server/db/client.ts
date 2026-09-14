@@ -22,18 +22,33 @@ declare global {
   var __gwDb: ReturnType<typeof drizzle<typeof schema>> | undefined
 }
 
-function getPool(): pg.Pool {
-  if (globalThis.__gwPool) return globalThis.__gwPool
-
+function resolvedConnectionString(): string {
   const connectionString = process.env.DATABASE_URL
   if (!connectionString) {
     throw new Error(
       'DATABASE_URL is not set. It is only needed at runtime -- if you are seeing this during a build, something imported the database at module scope.',
     )
   }
+  return withPasswordFile(connectionString, process.env.DATABASE_PASSWORD_FILE)
+}
+
+/**
+ * A single connection outside the pool, for LISTEN.
+ *
+ * Outside because a listening connection is held for the life of the process
+ * and never runs a query in a transaction -- a pooled one would be handed to
+ * the next request with its LISTEN still attached, and taken away from the
+ * listener the moment the pool decided it was idle.
+ */
+export function createListenClient(): pg.Client {
+  return new pg.Client({ connectionString: resolvedConnectionString() })
+}
+
+function getPool(): pg.Pool {
+  if (globalThis.__gwPool) return globalThis.__gwPool
 
   const pool = new pg.Pool({
-    connectionString: withPasswordFile(connectionString, process.env.DATABASE_PASSWORD_FILE),
+    connectionString: resolvedConnectionString(),
     max: Number(process.env.GW_DB_POOL_MAX ?? 10),
     idleTimeoutMillis: 30_000,
     connectionTimeoutMillis: 5_000,

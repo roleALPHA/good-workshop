@@ -130,7 +130,11 @@ export async function editInRoom<T>(
       // always a token without workshops:write, and worth saying so.
       rejectClosed(new CollabUnavailableError(`HTTP ${response.statusCode}`)),
     )
-    socket.on('close', () => rejectClosed(new CollabUnavailableError('connection closed')))
+    socket.on('close', (code, reason) =>
+      // The code says which it was: 4401 access withdrawn, 4413 the day is full,
+      // 4429 too many messages (see limits.ts) -- or an ordinary close.
+      rejectClosed(new CollabUnavailableError(`connection closed (${code} ${reason.toString()})`)),
+    )
   })
   // Nothing awaits `closed` on its own; without this Node reports the
   // rejection as unhandled the moment the socket is closed normally.

@@ -52,11 +52,22 @@ export async function issueMagicLink(
   if (!/^[^@\s]+@[^@\s]+\.[^@\s]+$/.test(normalised)) return null
 
   return withAuth(async (tx) => {
+    // FOR UPDATE is what makes the limit below a limit. Counting and inserting
+    // are two statements, and without a lock twelve requests fired together
+    // all count the same "fewer than five" and all send a mail. With it they
+    // queue behind each other on this one row, and because every statement in
+    // READ COMMITTED takes a fresh snapshot, each count sees the tokens the
+    // requests before it committed.
+    //
+    // The identity row rather than an advisory lock: it exists exactly when a
+    // mail can go out at all, it names one address and no other, and an unknown
+    // address -- which never gets past the return below -- locks nothing.
     const rows = await tx
       .select({ identityId: identity.id, status: identity.status, locale: identity.locale })
       .from(identity)
       .where(eq(identity.email, normalised))
       .limit(1)
+      .for('update')
 
     const found = rows[0]
     if (!found || found.status !== 'active') return null
