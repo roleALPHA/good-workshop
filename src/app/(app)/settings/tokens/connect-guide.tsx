@@ -4,8 +4,14 @@ import { useId } from 'react'
 import { useTranslations } from 'next-intl'
 import { CopyBlock } from '@/components/copy-block'
 
-/** What stands in for the secret once it can no longer be shown. */
-const PLACEHOLDER = 'gwp_dein_token'
+/**
+ * What stands in for the secret once it can no longer be shown.
+ *
+ * The prefix and nothing else, in every language: the note above the commands
+ * says "put your token where gwp_… is" in all four catalogs, and a placeholder
+ * worded in one of them would leak that language into the other three.
+ */
+const PLACEHOLDER = 'gwp_…'
 
 /**
  * Ready-made connection instructions, one disclosure per client.

@@ -69,7 +69,12 @@ describe('the connection instructions', () => {
 
   it('shows a placeholder rather than a secret once there is none', () => {
     render(<ConnectGuide origin={ORIGIN} token={null} />)
-    expect(open('Claude Code').getByText(/^claude mcp add /)).toHaveTextContent('gwp_dein_token')
+    // The same `gwp_…` the note above the commands points at, in every
+    // language: a placeholder is not prose, so it has nothing to translate.
+    expect(open('Claude Code').getByText(/^claude mcp add /)).toHaveTextContent(
+      'Authorization: Bearer gwp_…"',
+    )
+    expect(open('Langdock').getByText('gwp_…')).toBeInTheDocument()
     expect(screen.queryByText(new RegExp(TOKEN))).not.toBeInTheDocument()
   })
 })
