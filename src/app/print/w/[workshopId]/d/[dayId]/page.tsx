@@ -165,6 +165,18 @@ export default async function PrintPage({
                     <span className="ml-2 text-sm font-normal text-neutral-500">{type.name}</span>
                   )}
                 </h3>
+                {row.module.responsible.length > 0 && (
+                  <p className="mt-0.5 text-[14px] text-neutral-700">
+                    <span className="font-medium">{tAgenda('responsible.label')}:</span>{' '}
+                    {row.module.responsible
+                      .map((person) =>
+                        person.memberId
+                          ? person.name
+                          : `${person.name} (${tAgenda('responsible.external')})`,
+                      )
+                      .join(', ')}
+                  </p>
+                )}
                 {description && <RichText value={description} className="mt-1 text-[15px]" />}
                 {facilitatorNotes && (
                   <div className="mt-1 border-l-2 border-neutral-300 pl-2 text-[14px] text-neutral-600">

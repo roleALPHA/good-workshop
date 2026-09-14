@@ -29,7 +29,13 @@ describe('snapshotModule', () => {
       pinnedStartMinute: 630,
       desc: { material: ['Flipchart'] },
     })
-    patchBlock(doc, 'm', { parked: true })
+    patchBlock(doc, 'm', {
+      parked: true,
+      responsible: [
+        { name: 'Mira', memberId: '0190a000-0000-7000-8000-000000000001' },
+        { name: 'Frau Berg', memberId: null },
+      ],
+    })
 
     expect(snapshotModule(doc, 'm')).toEqual({
       moduleTypeId: 't',
@@ -38,6 +44,10 @@ describe('snapshotModule', () => {
       pinnedStartMinute: 630,
       desc: { material: ['Flipchart'] },
       parked: true,
+      responsible: [
+        { name: 'Mira', memberId: '0190a000-0000-7000-8000-000000000001' },
+        { name: 'Frau Berg', memberId: null },
+      ],
     })
   })
 

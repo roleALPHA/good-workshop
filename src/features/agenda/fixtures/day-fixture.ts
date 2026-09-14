@@ -78,6 +78,7 @@ export function createDemoDay(): DayDoc {
       pinnedStartMinute: H(13),
       order: 0,
       parked: false,
+      responsible: [],
       desc: {
         description: richText(['Kurze Vorstellungsrunde, ein Satz pro Person.']),
         participation: 'plenary',
@@ -92,6 +93,7 @@ export function createDemoDay(): DayDoc {
       pinnedStartMinute: null,
       order: 1,
       parked: false,
+      responsible: [],
       desc: { description: richText(['Ablauf des Tages, Pausen, Umgang mit Handys.']) },
     },
     {
@@ -103,6 +105,7 @@ export function createDemoDay(): DayDoc {
       pinnedStartMinute: null,
       order: 2,
       parked: false,
+      responsible: [],
       desc: {
         description: richText(['Auflockerung vor dem inhaltlichen Einstieg.']),
         materials: ['Moderationskarten'],
@@ -117,6 +120,7 @@ export function createDemoDay(): DayDoc {
       pinnedStartMinute: null,
       order: 1,
       parked: false,
+      responsible: [],
       desc: {
         description: richText(
           ['Die drei Zielbilder und ihre jeweiligen Druckpunkte gegenüberstellen.'],
@@ -142,6 +146,7 @@ export function createDemoDay(): DayDoc {
       pinnedStartMinute: null,
       order: 0,
       parked: false,
+      responsible: [],
       desc: {
         description: richText([
           'Spannungsfelder sichtbar machen und einordnen: zentral vs. dezentral, stabil vs. fluide.',
@@ -160,6 +165,7 @@ export function createDemoDay(): DayDoc {
       pinnedStartMinute: null,
       order: 1,
       parked: false,
+      responsible: [],
       desc: {
         description: richText(['Konsolidierte Version per Konsent-Verfahren integrieren.']),
         method: 'consent',
@@ -174,6 +180,7 @@ export function createDemoDay(): DayDoc {
       pinnedStartMinute: H(14, 30),
       order: 3,
       parked: false,
+      responsible: [],
       desc: { catering_note: 'Vegetarische Option ist bestellt.' },
     },
     {
@@ -185,6 +192,7 @@ export function createDemoDay(): DayDoc {
       pinnedStartMinute: null,
       order: 4,
       parked: false,
+      responsible: [],
       desc: {
         description: richText(['Wo auf dem Zielbild ist das IT-Management zu verorten?']),
         participation: 'small_groups',
@@ -199,6 +207,7 @@ export function createDemoDay(): DayDoc {
       pinnedStartMinute: null,
       order: 5,
       parked: false,
+      responsible: [],
       desc: {},
     },
     {
@@ -210,6 +219,7 @@ export function createDemoDay(): DayDoc {
       pinnedStartMinute: null,
       order: 6,
       parked: false,
+      responsible: [],
       desc: {
         description: richText(
           ['Wie kommen wir von einem High-Level-Zielbild zu einem differenzierten Zielbild?'],
@@ -232,6 +242,7 @@ export function createDemoDay(): DayDoc {
       pinnedStartMinute: null,
       order: 7,
       parked: false,
+      responsible: [],
       desc: { description: richText(['Wer macht was bis wann?']) },
     },
     {
@@ -243,6 +254,7 @@ export function createDemoDay(): DayDoc {
       pinnedStartMinute: null,
       order: 8,
       parked: false,
+      responsible: [],
       desc: { description: richText(['Ein Wort zum Tag, Blitzlichtrunde.']), format: 'round' },
     },
   ]
@@ -334,6 +346,7 @@ export function createStressDay(rowCount = 150, seed = 42): DayDoc {
         ),
       },
       parked: false,
+      responsible: [],
     })
   }
 

@@ -1,0 +1,2 @@
+ALTER TABLE "module" ADD COLUMN "responsible" jsonb DEFAULT '[]'::jsonb NOT NULL;--> statement-breakpoint
+ALTER TABLE "module" ADD CONSTRAINT "module_responsible_shape" CHECK (jsonb_typeof("module"."responsible") = 'array' and octet_length("module"."responsible"::text) <= 16384);

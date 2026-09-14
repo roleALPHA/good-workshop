@@ -149,6 +149,15 @@
     "presence": "Autres personnes sur cette journée",
     "regionLabel": "Programme {title}",
     "removeTag": "Supprimer le tag {name}",
+    "responsible": {
+      "label": "Responsable",
+      "add": "Ajouter une personne responsable",
+      "remove": "Retirer {name} des responsables",
+      "placeholder": "+ responsable",
+      "external": "externe",
+      "externalHint": "Pas membre de cet espace de travail",
+      "memberHint": "Membre"
+    },
     "saving": "Enregistrement …",
     "searchType": "Rechercher un type de bloc",
     "tagPlaceholder": "+ tag",
@@ -384,7 +393,8 @@
     "details": "Détails",
     "split": "{content} de contenu, {breaks} de pauses",
     "yes": "oui",
-    "no": "non"
+    "no": "non",
+    "responsible": "Responsable"
   },
   "library": {
     "allWorkshops": "Tous les ateliers",

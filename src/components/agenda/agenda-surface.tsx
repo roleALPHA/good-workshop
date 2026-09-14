@@ -1,6 +1,7 @@
 'use client'
 
 import { useMemo, useState } from 'react'
+import type { AssignablePerson } from '@/domain/agenda/responsible'
 import type { DayDoc } from '@/domain/agenda/types'
 import { computeSchedule } from '@/domain/schedule/computeSchedule'
 import type { DayNav, ParkedElsewhere } from '@/features/agenda/days'
@@ -51,8 +52,18 @@ export function AgendaSurface({
   canEdit,
   collab,
   days,
+  people,
 }: {
   doc: DayDoc
+  /**
+   * Members who can be put in charge of a block.
+   *
+   * Left out for a guest, and not as an oversight: the directory names every
+   * colleague in the workspace, and a guest is invited to one agenda, not to
+   * the team. A guest still sees whoever is already assigned, by the name the
+   * block carries.
+   */
+  people?: AssignablePerson[]
   /**
    * Required rather than defaulted: a permission flag that says yes when
    * nobody set it is the wrong way round, and this is the one place that
@@ -80,13 +91,13 @@ export function AgendaSurface({
       <>
         {days && <DayTabs nav={days} activeTitle={doc.title} activeDate={doc.date} />}
         <DayHeader doc={doc} schedule={reading.schedule} />
-        <AgendaTable doc={doc} rows={reading.rows} schedule={reading.schedule} />
+        <AgendaTable doc={doc} rows={reading.rows} schedule={reading.schedule} people={people} />
         <ParkingArea doc={doc} elsewhere={days?.parkedElsewhere} />
       </>
     )
   }
 
-  return <EditorSurface doc={doc} collab={collab} days={days} />
+  return <EditorSurface doc={doc} collab={collab} days={days} people={people} />
 }
 
 /**
@@ -101,10 +112,12 @@ function EditorSurface({
   doc,
   collab,
   days,
+  people,
 }: {
   doc: DayDoc
   collab?: CollabTarget
   days?: DayNav
+  people?: AssignablePerson[]
 }) {
   const local = useLocalDocument(doc)
   const shared = useCollabDocument(doc, collab ?? IDLE_TARGET)
@@ -127,6 +140,7 @@ function EditorSurface({
         elsewhere={elsewhere.blocks}
         onBringHere={days?.canManage ? elsewhere.bringHere : undefined}
         parkingError={elsewhere.error}
+        people={people}
       />
     </>
   )

@@ -1,6 +1,7 @@
 import * as Y from 'yjs'
 import type { ClusterDto, DayDoc, ModuleDto } from '@/domain/agenda/types'
 import { keyBetween, sortByPosition } from '@/domain/agenda/ordering'
+import { normalizeResponsible, type Responsible } from '@/domain/agenda/responsible'
 
 /**
  * A workshop day as a CRDT.
@@ -46,6 +47,11 @@ export type BlockFields = {
   desc?: Record<string, unknown>
   /** Set aside: in the day, out of the schedule. */
   parked?: boolean
+  /**
+   * Modules only. One plain value, last write wins -- like materials, and for
+   * the same reason: the list is short and edited as a whole.
+   */
+  responsible?: Responsible[]
 }
 
 export function blocksOf(doc: Y.Doc): Y.Map<Y.Map<unknown>> {
@@ -133,6 +139,7 @@ export function seedFromDayDoc(doc: Y.Doc, source: DayDoc): void {
           pinnedStartMinute: mod.pinnedStartMinute,
           desc: mod.desc,
           parked: mod.parked ?? false,
+          responsible: normalizeResponsible(mod.responsible),
         }),
       )
     }
@@ -209,6 +216,7 @@ export function toDayDoc(doc: Y.Doc, moduleTypes: DayDoc['moduleTypes']): DayDoc
       pinnedStartMinute: (block.get('pinnedStartMinute') as number | null) ?? null,
       desc: (block.get('desc') as Record<string, unknown>) ?? {},
       parked: block.get('parked') === true,
+      responsible: normalizeResponsible(block.get('responsible')),
       order: (parentId === null ? dayOrder.get(blockId) : childOrder.get(blockId)) ?? 0,
     })
   })
@@ -239,6 +247,7 @@ export type RawBlock = {
   color: string | null
   desc: Record<string, unknown>
   parked: boolean
+  responsible: Responsible[]
 }
 
 /**
@@ -286,6 +295,9 @@ export function readBlocks(doc: Y.Doc): RawBlock[] {
       color: (block.get('color') as string | null) ?? null,
       desc: (block.get('desc') as Record<string, unknown>) ?? {},
       parked: block.get('parked') === true,
+      // Normalised here rather than trusted: the table has a CHECK on the
+      // shape, and one malformed list must not stop the day being written.
+      responsible: normalizeResponsible(block.get('responsible')),
     })
   })
 

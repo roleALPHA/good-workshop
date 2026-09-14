@@ -114,6 +114,11 @@ passkeys by cascade. What is left afterwards is no e-mail address.
 Two things the screen does **not** reach, and they are the same two as ever: names inside agenda
 content, and names inside the CRDT update history. Read on.
 
+Who is responsible for a block counts as agenda content. `module.responsible` stores a name next
+to each member id — for a member without a display name, the part of their address before the
+`@` — so that the agenda still reads correctly after the person has left. Removing a member
+therefore leaves that name on the blocks they were responsible for; take it off in the editor.
+
 The database route below still exists, for an installation being repaired from the outside or a
 person who was never a member of the workspace you are in. It has an order:
 

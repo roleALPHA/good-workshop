@@ -160,6 +160,7 @@ async function writeBlocks(
         pinnedStartTime: block.pinnedStartMinute === null ? null : toTime(block.pinnedStartMinute),
         jsonDesc: descs.get(block.id) ?? {},
         parked: block.parked,
+        responsible: block.responsible,
         position: block.position,
       })
       .onConflictDoUpdate({
@@ -174,6 +175,7 @@ async function writeBlocks(
           // row keeps the last value that did. See validatedDescs.
           ...(descs.has(block.id) ? { jsonDesc: descs.get(block.id) } : {}),
           parked: block.parked,
+          responsible: block.responsible,
           position: block.position,
           updatedAt: sql`now()`,
         },

@@ -30,6 +30,7 @@ const mod = (
   pinnedStartMinute: null,
   desc: {},
   parked: false,
+  responsible: [],
   order,
   ...extra,
 })

@@ -878,6 +878,20 @@ export const workshopModule = pgTable(
      * block nobody can find again.
      */
     parked: boolean('parked').notNull().default(false),
+    /**
+     * Who answers for this block: `[{ name, memberId }]`, memberId null for
+     * somebody outside the workspace.
+     *
+     * jsonb rather than a join table, and without a foreign key on the member
+     * ids, for the same reason as everything else a block holds: the day is
+     * written back from the shared document, which is the only write path, and
+     * a person being removed from the workspace must not be able to fail that
+     * write -- or take the name off every agenda they were on. The name is
+     * stored alongside for exactly that case; see domain/agenda/responsible.
+     */
+    responsible: jsonb('responsible')
+      .notNull()
+      .default(sql`'[]'::jsonb`),
     parentKind: text('parent_kind').generatedAlwaysAs(
       sql`case when cluster_id is null then 'day' else 'cluster' end`,
     ),
@@ -913,6 +927,10 @@ export const workshopModule = pgTable(
     check('module_duration', sql`${t.durationMinutes} between 0 and 1440`),
     check('module_position_format', sql`${t.position} ~ '^[0-9A-Za-z]{1,64}$'`),
     check('module_desc_size', sql`octet_length(${t.jsonDesc}::text) <= 262144`),
+    check(
+      'module_responsible_shape',
+      sql`jsonb_typeof(${t.responsible}) = 'array' and octet_length(${t.responsible}::text) <= 16384`,
+    ),
     index('module_parent_order_idx').on(t.tenantId, t.parentId, t.position),
     index('module_workshop_idx').on(t.tenantId, t.workshopId),
     index('module_day_idx').on(t.tenantId, t.dayId),

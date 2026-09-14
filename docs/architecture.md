@@ -279,6 +279,16 @@ block type's own fields — so filling in an agenda is not one `update_module` p
 `desc` is validated against its schema before anything is written, and the error names each
 item (`items[1].children[0].desc.presenter`).
 
+**Who is responsible for a block is a field of the block, not of its type.** Every block has
+somebody who answers for it — a break as much as a presentation — so `responsible` sits beside
+the title and the duration rather than in a `desc` a tenant can edit away. It holds one or more
+people, each `{ name, memberId }`; a member carries their id, somebody from outside the workspace
+only a name. The name is stored for members too: the print view, the export and a guest have no
+member directory, and a guest must not be handed one. Where a directory is at hand the editor
+shows a member under their current name. A model names people by `memberId` or by exact name;
+there is still no tool that lists the members, so a name that matches nobody is taken to be
+somebody from outside.
+
 Its counterpart for an agenda that already exists is `update_modules`: the fields of many blocks
 and clusters of one day in one call, ids unchanged. It follows the same rule — every entry is
 checked against the day before any is written, and the error names each one (`updates[2]`).

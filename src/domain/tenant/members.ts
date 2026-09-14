@@ -4,6 +4,7 @@ import type { Actor, Tx } from '@/server/db'
 import { withAuth, withTenant } from '@/server/db'
 import { folder, identity, member, workshop } from '@/server/db/schema'
 import { DomainError } from '@/domain/errors'
+import type { AssignablePerson } from '@/domain/agenda/responsible'
 import type { Locale } from '@/i18n/config'
 
 /**
@@ -123,6 +124,26 @@ export async function estatesOf(tx: Tx): Promise<Map<string, MemberEstate>> {
 export async function listDirectory(actor: Actor): Promise<MemberRow[]> {
   const rows = await readMembers(actor)
   return rows.filter((row) => row.status !== 'disabled')
+}
+
+/**
+ * The members somebody may put in charge of a block: an id and a name, and
+ * nothing more.
+ *
+ * The name is what gets written into the agenda, and the agenda travels -- into
+ * an export, onto paper, to a guest. So a member without a display name is
+ * offered under the part of their address before the @ rather than the whole
+ * of it: enough to recognise a colleague by, without putting their address
+ * into every document the block ends up in.
+ */
+export async function listAssignable(actor: Actor): Promise<AssignablePerson[]> {
+  const rows = await listDirectory(actor)
+  return rows
+    .map((row) => ({
+      id: row.id,
+      name: row.displayName.trim() || row.email.split('@')[0] || row.email,
+    }))
+    .filter((person) => person.name !== '')
 }
 
 async function readMembers(actor: Actor): Promise<MemberRow[]> {

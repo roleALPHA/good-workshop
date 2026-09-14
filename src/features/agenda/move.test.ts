@@ -34,6 +34,7 @@ function doc(clusters: [string, number][], modules: [string, number, string | nu
       pinnedStartMinute: null,
       desc: {},
       parked: false,
+      responsible: [],
       order,
     })),
     moduleTypes: MODULE_TYPES_BY_ID,

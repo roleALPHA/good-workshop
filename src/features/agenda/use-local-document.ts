@@ -77,6 +77,7 @@ export function useLocalDocument(initial: DayDoc): AgendaDocument {
           pinnedStartMinute: null,
           desc: {},
           parked: false,
+          responsible: [],
           order: Number.MAX_SAFE_INTEGER,
         },
       ],

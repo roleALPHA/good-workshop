@@ -1,3 +1,4 @@
+import type { Responsible } from '@/domain/agenda/responsible'
 import type { DayDoc } from '@/domain/agenda/types'
 import type { Projection } from './projection'
 
@@ -18,6 +19,8 @@ export type ModulePatch = {
   desc?: Record<string, unknown>
   /** Set aside, or brought back. See ModuleDto.parked. */
   parked?: boolean
+  /** The whole list of who answers for the block. */
+  responsible?: Responsible[]
 }
 
 /** The day itself: its note, its name, its date. `date: null` clears it. */

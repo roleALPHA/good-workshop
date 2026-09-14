@@ -1,5 +1,6 @@
 import * as Y from 'yjs'
 import { keyAtEnd, placeAfter, sortByPosition, type Ordered } from '@/domain/agenda/ordering'
+import { normalizeResponsible, type Responsible } from '@/domain/agenda/responsible'
 import { blocksOf, dayOf } from './doc'
 
 /**
@@ -25,6 +26,8 @@ export type BlockPatch = {
   parentId?: string | null
   /** Set aside: in the day, out of the schedule. */
   parked?: boolean
+  /** Who answers for the block. The whole list; an empty one clears it. */
+  responsible?: Responsible[]
 }
 
 export type NewModuleBlock = {
@@ -36,6 +39,7 @@ export type NewModuleBlock = {
   parentId?: string | null
   /** Straight onto the shelf -- a block arriving from another day's parking area. */
   parked?: boolean
+  responsible?: Responsible[]
 }
 
 /**
@@ -51,6 +55,8 @@ export type ModuleSnapshot = {
   pinnedStartMinute: number | null
   desc: Record<string, unknown>
   parked: boolean
+  /** The people go with the block: a block parked for tomorrow is still theirs. */
+  responsible: Responsible[]
 }
 
 export type NewClusterBlock = {
@@ -90,6 +96,7 @@ export function addModuleBlock(doc: Y.Doc, id: string, input: NewModuleBlock): v
         pinnedStartMinute: input.pinnedStartMinute ?? null,
         desc: input.desc ?? {},
         parked: input.parked,
+        responsible: input.responsible,
       }),
     )
   })
@@ -107,6 +114,7 @@ export function snapshotModule(doc: Y.Doc, blockId: string): ModuleSnapshot | nu
     pinnedStartMinute: (block.get('pinnedStartMinute') as number | null) ?? null,
     desc: (block.get('desc') as Record<string, unknown>) ?? {},
     parked: block.get('parked') === true,
+    responsible: normalizeResponsible(block.get('responsible')),
   }
 }
 
