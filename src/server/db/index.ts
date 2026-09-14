@@ -111,7 +111,20 @@ export function listen(
 
   const connect = async () => {
     if (closed) return
-    const next = createListenClient()
+
+    let next: ReturnType<typeof createListenClient>
+    try {
+      next = createListenClient()
+    } catch (error) {
+      // No DATABASE_URL, or an unreadable password file. Thrown from here it
+      // would be an unhandled rejection -- `connect` is fired and forgotten --
+      // and Node ends the process on one. A container starts before its
+      // database and has to wait for it, like the lazy pool does.
+      console.warn('db: listen not possible yet, retrying', { channel, error })
+      retry = setTimeout(() => void connect(), 5_000)
+      retry.unref()
+      return
+    }
     client = next
     next.on('notification', (message) => {
       if (message.channel === channel) onNotify()
