@@ -46,7 +46,13 @@ export default async function LibraryPage({
     // the list has to reach a folder row in the sidebar, and they are siblings.
     // Everything inside stays server-rendered.
     <LibraryDnd folders={folders}>
-      <div className="grid gap-6 md:grid-cols-[240px_1fr]">
+      {/*
+        minmax(0, 1fr), not 1fr or no template at all: a grid column's minimum
+        is its content's, and a truncated workshop title is one line that may
+        not wrap. The column took that line's full width, and on a phone the
+        whole page grew with it -- folder button, rows, toolbar.
+      */}
+      <div className="grid grid-cols-1 gap-6 md:grid-cols-[240px_minmax(0,1fr)]">
         {/*
         Shown on a phone as well, above the list rather than beside it.
         It used to be `hidden md:block`, which left the phone with no folders at
@@ -102,10 +108,11 @@ export default async function LibraryPage({
           </FolderPanel>
         </nav>
 
-        <section>
+        <section className="min-w-0">
           <div className="mb-4 flex flex-wrap items-center justify-between gap-3">
             <h1 className="text-xl font-semibold tracking-tight">{t('title')}</h1>
-            <div className="flex items-center gap-2">
+            {/* A row of its own on a phone, with the search taking what is left. */}
+            <div className="flex w-full flex-wrap items-center gap-2 sm:w-auto">
               <SearchBox />
               <CreateWorkshop folderId={folder ?? null} />
             </div>

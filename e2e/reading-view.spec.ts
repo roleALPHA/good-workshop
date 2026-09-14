@@ -32,6 +32,37 @@ import { STORAGE_STATE } from './paths'
 const editorReady = (page: Page) =>
   expect(page.getByRole('article', { name: 'Check-in & Start' }).getByLabel('Titel')).toBeVisible()
 
+/**
+ * The library is where a facilitator starts on a phone, so it must fit too.
+ *
+ * A long title is the case that broke it: the title is `truncate`, and a line
+ * that may not wrap has its full width as its minimum -- which the grid column
+ * holding the list took as its own. The whole page grew to that width, the
+ * folder button and every row with it, and the status chips slid off screen.
+ */
+test.describe('the library on a phone', () => {
+  test.skip(({ isMobile }) => !isMobile, 'Phone layout only')
+
+  test('never scrolls horizontally, however long a title is', async ({ page }) => {
+    const title = `Komptech LSC M1. Potenzialexpedition mit sehr langem Titel ${Date.now()}`
+
+    await page.goto('/library')
+    await page.getByRole('button', { name: 'Neuer Workshop' }).click()
+    await page.getByLabel('Titel des Workshops').fill(title)
+    await page.getByRole('button', { name: 'Anlegen', exact: true }).click()
+    await expect(page.getByRole('heading', { name: title })).toBeVisible()
+
+    await page.goto('/library')
+    await expect(page.getByRole('link', { name: new RegExp(title) })).toBeVisible()
+
+    const overflow = await page.evaluate(() => {
+      const el = document.documentElement
+      return el.scrollWidth - el.clientWidth
+    })
+    expect(overflow).toBeLessThanOrEqual(0)
+  })
+})
+
 test.describe('the day view on a phone', () => {
   test.skip(({ isMobile }) => !isMobile, 'Phone layout only')
 
