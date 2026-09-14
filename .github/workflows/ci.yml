@@ -298,7 +298,6 @@ jobs:
           cat > .env <<'ENV'
           GW_VERSION=ci
           GW_APP_URL=http://127.0.0.1:3000
-          GW_MAIL_TRANSPORT=console
           GW_OPS_TOKEN=ci-token
           GW_BOOTSTRAP_ADMIN_EMAIL=ci@example.test
           ENV

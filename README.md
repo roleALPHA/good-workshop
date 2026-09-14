@@ -1,180 +1,142 @@
 # GoodWorkshop
 
-Source-available workshop planning. Self-hosted, MCP-ready.
+**The workshop planner for people who run workshops.** Plan the day, not the spreadsheet.
 
-Build agendas out of blocks, clusters and workshop days, reorder them by drag and drop,
-export them as Markdown — and the data stays on your own machine.
+You know the moment: the client moves lunch, one exercise runs long, and suddenly every time on
+your agenda is wrong. GoodWorkshop takes that off your plate. Drag a block, and the day
+recalculates itself. Pin what must not move, park what you might still need, and walk into the
+room with an agenda that is always right, on your laptop and on your phone.
+
+![A workshop day in GoodWorkshop: blocks with times, durations, responsible people and material](docs/screenshots/agenda.png)
+
+## At a glance
+
+- **MCP-ready.** Let Claude, ChatGPT, Gemini or any other MCP client draft and rework your
+  agenda. It is a built-in MCP server, not an add-on.
+- **Lightweight.** One container image and one Postgres. No external services, no tracking, no
+  heavyweight setup. Up in minutes with Docker Compose.
+- **Free when you host it yourself.** Commercial use included: plan and run the workshops you
+  earn your money with, at no licence cost.
+- **Your data stays with you.** It runs on your server, and every agenda is exported as
+  Markdown whenever you want.
+- **Built for the room.** Works on a phone, survives bad wifi, and lets your co-facilitator edit
+  the same day live.
 
 > **Released and in use.** The current version is on the
 > [releases page](https://github.com/roleALPHA/good-workshop/releases); images are published to
 > `ghcr.io/rolealpha/good-workshop` for amd64 and arm64.
 
-## What GoodWorkshop does
+## Why facilitators love it
 
-**Builds agendas that do the arithmetic for you.** A workshop is made of days, a day of blocks
-— exercises, inputs, breaks — which can be grouped into clusters. Reorder by dragging; every
-following time moves with it. The header keeps the running totals apart: how much is content,
-how much is breaks, and how far the day runs over the end you set.
+**Your agenda does the arithmetic.** A workshop is made of days, and a day is made of blocks:
+check-ins, inputs, group work, breaks. Group them into clusters and reorder them by dragging.
+Every time that follows moves along with them. The header always shows how much is content, how
+much is breaks, and how far the day runs past the end you set.
 
-**Nails down what must not move.** Lunch at 12:30, the client's slot at 15:00. Pin a start time
-and it stays put while everything around it is rearranged. If a change would run into a pinned
-block, the row says so — _overlaps the previous block by 20m_ — and nothing is silently
-shortened. A day you have to argue with is worse than a day that tells you the truth.
+**What must not move stays put.** Lunch at 12:30, the client's slot at 15:00: pin a start time
+and it holds while you rearrange everything around it. If something collides with a pinned
+block, the row tells you, for example _overlaps the previous block by 20m_. Nothing is quietly
+shortened behind your back.
 
-**Runs over as many days as the workshop does.** Each day has its own start, its own agenda and
-its own note. Add a day, name and date it, put the days in order and switch between them from
-the tabs above the agenda.
+**Everybody knows who is on.** Every block has one or more responsible people, shown as chips
+with initials right under the title. Pick a member of your team, or just type the name of the
+guest speaker or client lead who is not in the system. The print view, the Markdown export and
+your AI client all know who does what.
 
-**Takes the pressure off the plan.** Cut an exercise without losing it: **park** it. It keeps
-its description and its material and stops counting toward the time. The parking area belongs
-to the whole workshop, not to one day — a block cut on the first day can go into the second
-from the day that is open. Deleting a day keeps what is parked on it.
+**Cut without losing.** Too much for one day? **Park** a block. It keeps its description and
+its material but stops counting toward the time. The parking area belongs to the whole
+workshop, so an exercise you cut on day one can go straight into day two.
 
-**Carries what a facilitator actually needs in the row.** Social form — plenary, small groups,
-pairs, individual — the material to bring, and whatever else the block type declares. All of it
-is edited where it stands: this product has no dialogs on purpose, because a dialog puts a mode
-between you and the agenda you are reading.
+**Everything the room needs, right in the row.** Social form (plenary, small groups, pairs,
+individual), the material to bring, and the fields each block type needs. You edit all of it
+where it stands. There are no dialogs, because a dialog gets between you and the agenda you are
+reading.
 
-**Keeps your own notes out of what you hand over.** Facilitation notes belong to the block and
-stay with you — neither the print view nor the Markdown export carries them by default. What the
-group receives and what you work from are the same agenda, minus the half that was never meant
-for the room.
+**Your notes stay yours.** Facilitation notes belong to the block and stay with you. The print
+view and the Markdown export leave them out by default, so the group gets the agenda and you
+keep the rest.
 
-**Understands how people type durations.** `45`, `45m`, `1h`, `1:30`, `1h30`, `90` — and
-`1 Stunde`, `1 heure`, `1 hora` in the language the person is working in. Something it cannot
-read is handed back rather than guessed at.
+**As many days as your workshop has.** Every day has its own start, its own agenda and its own
+note. Add a day, name and date it, and switch between days with the tabs above the agenda.
 
-**Reads on a phone, in the room, and stays editable there.** The day collapses into cards, body
-text never drops below 16px, every tap target is 44px, and the section you are in stays pinned to
-the top while you scroll through it. Dragging needs a long press, so a swipe still scrolls the
-page. The three things you change while standing in front of a group — the social form, the
-material, the clock — are one tap away, not behind an expander.
+**Fifteen block types, ready to go.** Check-in, input, group work, exercise, discussion,
+decision, energizer, reflection, break, lunch, buffer, next steps, check-out and more. Each one
+brings the fields it actually needs. Type in the picker and the list narrows as you go.
 
-**Survives a bad room.** Lost the wifi? The agenda says so and keeps taking your changes; they go
-across when the connection comes back.
+**Type durations the way you think.** `45`, `45m`, `1h`, `1:30`, `1h30`, `90`, or `1 Stunde`,
+`1 heure`, `1 hora` in your own language. If GoodWorkshop cannot read something, it asks
+instead of guessing.
 
-**Leaves the room with you.** A print view that fits on paper, and a Markdown export you can
-paste into a protocol, a wiki or a mail — in the language of whoever asked for it.
+<p align="center">
+  <img src="docs/screenshots/mobile.png" alt="The same workshop day on a phone, as cards" width="300">
+</p>
 
-**Comes with the blocks a workshop is made of.** Fifteen built-in types — check-in, impulse,
-group work, exercise, discussion, decision, energizer, reflection, break, lunch, buffer, next
-steps, check-out and the rest — each carrying the fields that type actually needs rather than one
-shape for everything. Search the picker by typing; the list narrows as you go.
+**Made for standing in front of a group.** On a phone, the day turns into cards: body text never
+smaller than 16px, tap targets of 44px, and the section you are in stays pinned to the top.
+Dragging needs a long press, so a swipe still scrolls. Social form, material and the clock are
+one tap away.
 
-**Forgives.** A workshop goes to the bin, not away. It stays there with the date it was
-discarded, comes back with one click, and is only really gone when somebody says so by name.
+**Survives a bad room.** The wifi drops out? The agenda says so, keeps accepting your changes
+and syncs them once the connection is back.
 
-**Lets two people work on the same day.** Several people can edit the same workshop day at
-once. Whoever is there is listed in the presence bar; changes appear immediately for
-everybody and merge rather than overwrite each other.
+**Plan together, live.** Several people can edit the same workshop day at once. The presence
+bar shows who is there, and changes appear instantly for everybody and merge instead of
+overwriting each other.
 
-**Speaks four languages.** German, English, French and Spanish — the interface, the error
-messages, the e-mails, the Markdown export and the built-in block types. Everybody picks
-their own under **Settings**; a workshop shared between a German and a French facilitator
-shows each of them their own language, and the text they wrote themselves stays exactly as
-they wrote it.
+**Leaves the room with you.** A print view that fits on paper, and a Markdown export for the
+protocol, the wiki or the follow-up mail, in the language of whoever exported it.
 
-**Finds things again.** Workshops live in folders and carry tags, both optional. The folder,
-the tag and the search are in the URL — so a filtered library is a link you can pass on and
-come back to. Tags appear as you type; a tag nothing points at any more disappears by itself.
+**Find anything again.** Workshops live in folders and carry tags, both optional. Folder, tag
+and search are part of the URL, so a filtered library is a link you can share.
 
-**Works for a team.** An admin invites people by e-mail address under **Members**. Access to
-a single workshop is granted by its owner under **Access**: edit or read, per member. A whole
-**folder** can be shared the same way, and that reaches everything beneath it — subfolders
-included, and workshops other people own. Whoever holds access may hand it on, but never more
-than they hold themselves.
+![The library: workshops in folders, with tags](docs/screenshots/library.png)
 
-**Shares with people who have no account.** Under **Access** you can also invite an e-mail
-address directly — read, or read and write. The invitation is a link that only works with that
-address: whoever opens it types the address it was sent to, and then sees the days of that one
-agenda. No account, no library, no folders, and nothing else from the installation. The link is
-valid until the last day of the agenda, and can be withdrawn at any time.
+**Built for teams.** An admin invites people by e-mail under **Members**. The owner of a
+workshop grants access under **Access**, to edit or to read. Share a whole **folder** and
+everything inside it comes along. Nobody can pass on more access than they have.
 
-**Signs in without a password.** A magic link by e-mail, or a passkey — Face ID, Touch ID, a
-hardware key — registered under **Settings**. There is no password to forget, to reuse, or to
-leak.
+**Share with clients who have no account.** Invite any e-mail address to one agenda, read-only
+or with editing. They see that one agenda and nothing else from your installation. The link
+works until the last day of the workshop, and you can withdraw it at any time.
 
-**Looks like you.** Under **Branding** you can set a logo and an accent colour; the server
-derives the light and dark steps itself. The footer stays `GoodWorkshop · powered by
-roleALPHA · Apache-2.0 + Commons Clause`, with the name pointing at
-[rolealpha.com](https://rolealpha.com) and the licence at its full text.
+**No passwords.** Sign in with a magic link by e-mail, or with a passkey: Face ID, Touch ID or
+a hardware key. There is no password to forget, reuse or leak.
 
-**Connects to an AI client.** GoodWorkshop is an MCP server: Claude Desktop, Claude Code or
-any other MCP client can do what the library and the day editor offer — folders, workshops,
-tags, the bin, days and their agendas. Sharing and user administration stay in the app. You create a token under **Tokens** in
-your settings; the page then prints the finished command or configuration for Claude Code,
-Claude Desktop, the Gemini CLI, Codex and Langdock, with this host and that token already in
-it. A token acts as the person who created it — it can never do more than that person can, and
-it cannot touch user administration at all.
+**Speaks your language.** German, English, French and Spanish: interface, e-mails, export and
+block types. Everybody picks their own language, and the text you write stays exactly as you
+wrote it.
 
-Clients that cannot hold a fixed token — ChatGPT's connectors, the connector UI in claude.ai —
-connect over **OAuth** instead: they discover this installation, register themselves, and you
-approve them once on a consent screen that says which client is asking and exactly what it will
-be able to do. Nothing is configured for that; it is there. The **Tokens** page walks through it for Claude,
-ChatGPT, Claude Code, the Gemini CLI and other clients — including the two things the flow does
-not tell you: the hosted clients need this installation reachable from the internet, and you
-should be signed in before you connect. A client connected this way may read and write workshops,
-exactly like a token with those two scopes.
+**Looks like you.** Add your logo and accent colour under **Branding**. The light and dark
+shades are derived automatically.
 
-How this is built on the inside, and why, is in [docs/architecture.md](docs/architecture.md).
+**Forgives mistakes.** A deleted workshop goes to the bin, not away. It comes back with one
+click, and it is only really gone when somebody deletes it for good, by name.
 
-## Contributing
+### Plan with your AI assistant
 
-```bash
-pnpm install
-pnpm db:up      # Postgres and a mail catcher for development
-pnpm dev
-```
+GoodWorkshop is an MCP server. Claude Desktop, Claude Code or any other MCP client can do what
+the library and the day editor do: folders, workshops, tags, the bin, days and whole agendas,
+including responsible people and parked blocks. Ask for "a two-day strategy offsite with a
+SWOT in four groups" and watch it appear. Sharing and user administration stay in the app.
 
-| Command               | Purpose                                                                                      |
-| --------------------- | -------------------------------------------------------------------------------------------- |
-| `pnpm lint`           | ESLint including the project guardrails                                                      |
-| `pnpm typecheck`      | `tsc --noEmit`                                                                               |
-| `pnpm test`           | Vitest (unit + component)                                                                    |
-| `pnpm test:coverage`  | with coverage thresholds on `src/domain`, `src/features`, `src/i18n`                         |
-| `pnpm test:db`        | tenant isolation and auth against a real database                                            |
-| `pnpm test:e2e`       | Playwright (desktop + Pixel 5) against the built standalone server                           |
-| `pnpm format`         | Prettier                                                                                     |
-| `pnpm build`          | production build (`output: 'standalone'`)                                                    |
-| `pnpm check:docs`     | checks that README, `.env.example` and `compose.yaml` still fit the code                     |
-| `pnpm check:licenses` | checks every dependency may ship under this project's licence, and that the index is current |
-| `pnpm licenses:write` | regenerates [`THIRD-PARTY-LICENSES.md`](THIRD-PARTY-LICENSES.md) after a dependency change   |
+Create a token under **Tokens** in your settings. The page prints the ready-made command or
+configuration for Claude Code, Claude Desktop, the Gemini CLI, Codex and Langdock, with your
+host and token already filled in. A token acts as the person who created it: it can never do
+more than that person, and it cannot touch user administration at all.
 
-The conventions below are also published as agent skills in
-[`.agents/skills/`](.agents/skills/), so a coding assistant picks up the same rules a person
-does. The skills carry no content of their own — each one points at the document, because two
-copies of a rule are one copy that drifts.
+![The Tokens page with the ready-made command for Claude Code](docs/screenshots/mcp.png)
 
-Three binding conventions, for every contribution:
+Clients that cannot hold a fixed token, such as ChatGPT's connectors or the connector UI in
+claude.ai, connect over **OAuth**. They discover your installation, register themselves, and
+you approve them once on a consent screen that says which client is asking and what it will be
+allowed to do. There is nothing to configure. The **Tokens** page walks you through it for
+Claude, ChatGPT, Claude Code, the Gemini CLI and other clients, including two things the flow
+does not tell you: hosted clients need your installation to be reachable from the internet, and
+you should be signed in before you connect. A client connected this way may read and write
+workshops, exactly like a token with those two scopes.
 
-- [UI and UX](docs/ui-conventions.md) — mobile-first, editing in place rather than in
-  dialogs, colour tokens, branding, accessibility
-- [Tests](docs/testing-conventions.md) — the test pyramid, tenant-isolation tests, flake policy
-- [CI/CD](docs/ci-conventions.md) — GitHub Actions, Docker build, release to `ghcr.io`
-
-Before your first pull request, read [CONTRIBUTING.md](CONTRIBUTING.md). It is short and it is
-the legal half: every commit needs a `Signed-off-by` line (`git commit -s`), which CI checks.
-
-Three guardrails are enforced by ESLint and are not a matter of style:
-
-- **No raw hex colours** in `src/components`, `src/features`, `src/app`. Category colours go
-  through the `.cat-*` OKLCH tokens, accents through `--brand-*`.
-- **No German prose** in those same directories. Every string a person reads lives in
-  `src/messages`; see [Languages](docs/languages.md).
-- **No import of the raw `db` handle** outside `src/server/db`. Every query runs through
-  `withTenant()` so that `app.tenant_id` is set — tenant isolation depends on it.
-
-If you work on the installation, the migrations or the documentation, the details are here:
-
-Found something that looks like a security problem? [SECURITY.md](SECURITY.md) says where it
-goes — privately, not into an issue — and which boundaries are worth attacking.
-
-- [Keeping the docs honest](docs/keeping-docs-honest.md) — what `pnpm check:docs` checks, what
-  it cannot, and what to update after which change
-- [Installation and upgrade](docs/installation-and-upgrade.md) — the startup chain, the
-  preflight, the database roles and what breaks easily when changing them
-- [Languages](docs/languages.md) — how the catalogs are cut, where the language comes from,
-  and what deliberately stays untranslated
+How GoodWorkshop is built on the inside, and why, is in
+[docs/architecture.md](docs/architecture.md).
 
 ## Installation (on-premise)
 
@@ -213,23 +175,25 @@ Then set `GW_VERSION=local` in the `.env`.
 
 ### 3. Fill in the `.env`
 
-Four values are required; without them the stack does not start and says which one is
+Three values are required; without them the stack does not start and says which one is
 missing:
 
 ```bash
 GW_APP_URL=https://workshop.example.com   # the address the app is reachable at
 GW_HOSTNAME=workshop.example.com          # the name in the certificate (profile `tls`)
-GW_MAIL_TRANSPORT=smtp                    # smtp | graph | console | none
 GW_VERSION=0.4.15                          # the image tag to run, without the "v", never a moving tag
 ```
 
-With `GW_MAIL_TRANSPORT=smtp` you also need `SMTP_URL` and `SMTP_FROM` — **or you leave them
-empty and enter them in the interface** afterwards, under **Mail**. The environment wins per
-field where it is set, and the screen says which fields it has already claimed; the transport
-itself comes from the `.env`, because `compose.yaml` refuses to start without it. If the `SMTP_URL`
-contains a password, it belongs in a file instead: `SMTP_URL_FILE=/run/secrets/smtp_url`. An
-environment variable shows up in `docker inspect`, in `/proc/<pid>/environ` and in every core
-dump.
+**Mail can wait.** The first start does not need it: the setup screen shows your sign-in link
+itself. Afterwards you set up mail delivery in the interface under **Mail delivery** — SMTP,
+Microsoft Graph, or nothing. If you would rather keep it in the `.env`, set
+`GW_MAIL_TRANSPORT` (`smtp`, `graph`, `console` or `none`) there; the environment then wins per
+field, and the screen says which fields it has already claimed.
+
+With `GW_MAIL_TRANSPORT=smtp` you also need `SMTP_URL` and `SMTP_FROM`, in the `.env` or in the
+interface. If the `SMTP_URL` contains a password, it belongs in a file instead:
+`SMTP_URL_FILE=/run/secrets/smtp_url`. An environment variable shows up in `docker inspect`, in
+`/proc/<pid>/environ` and in every core dump.
 
 **Microsoft 365 without SMTP:** many tenants have SMTP AUTH switched off — there
 `GW_MAIL_TRANSPORT=graph` is not the more convenient way but the only one. You need an app
@@ -276,6 +240,10 @@ whether it is the database or the migration state.
 
 A fresh installation announces itself in the log on every start, until somebody claims it:
 
+```bash
+docker compose logs app
+```
+
 ```
   This installation has no administrator yet.
 
@@ -287,6 +255,7 @@ A fresh installation announces itself in the log on every start, until somebody 
 
 Open that address, enter your e-mail address and the key, and the installation is yours.
 Everything after that — mail delivery, further people, branding — happens in the interface.
+Cannot find the key or the link? See [Troubleshooting](#troubleshooting).
 
 **The key is the whole access control on that screen**, and it is deliberate: a first-run page
 that hands out the administrator account to whoever loads it is a takeover waiting for the gap
@@ -430,14 +399,14 @@ ssh -L 3000:127.0.0.1:3000 server
 | -------------------------------------------------------- | ------------ | -------------------------------------------------------------------------------------------------------------------------------------------- |
 | `GW_APP_URL`                                             | yes          | Address the app is reachable at. Sign-in links and the WebAuthn origin are derived from it.                                                  |
 | `GW_HOSTNAME`                                            | for `tls`    | Name in the certificate. Passed through to Caddy.                                                                                            |
-| `GW_MAIL_TRANSPORT`                                      | yes          | `smtp`, `graph`, `console` or `none`.                                                                                                        |
+| `GW_VERSION`                                             | yes          | Image tag. Deliberately without a default — a moving tag is not a deployment. Shown in the page footer and by `/api/health`.                 |
+| `GW_MAIL_TRANSPORT`                                      | no           | `smtp`, `graph`, `console` or `none`. Empty: mail follows the settings under **Mail delivery** in the interface.                             |
+| `SMTP_URL` / `SMTP_URL_FILE`                             | with `smtp`  | Relay URL, directly or from a file.                                                                                                          |
+| `SMTP_FROM`                                              | with `smtp`  | Sender address.                                                                                                                              |
 | `GW_GRAPH_TENANT_ID`                                     | with `graph` | Microsoft 365 tenant, as a domain or a directory id.                                                                                         |
 | `GW_GRAPH_CLIENT_ID`                                     | with `graph` | Application id of the app registration.                                                                                                      |
 | `GW_GRAPH_CLIENT_SECRET` / `GW_GRAPH_CLIENT_SECRET_FILE` | with `graph` | The registration's secret, directly or from a file.                                                                                          |
 | `GW_GRAPH_SENDER`                                        | with `graph` | Mailbox to send from.                                                                                                                        |
-| `GW_VERSION`                                             | yes          | Image tag. Deliberately without a default — a moving tag is not a deployment. Shown in the page footer and by `/api/health`.                 |
-| `SMTP_URL` / `SMTP_URL_FILE`                             | with `smtp`  | Relay URL, directly or from a file.                                                                                                          |
-| `SMTP_FROM`                                              | with `smtp`  | Sender address.                                                                                                                              |
 | `GW_RP_ID`                                               | no           | WebAuthn relying party id. Empty = host from `GW_APP_URL`. Changing it afterwards invalidates every passkey.                                 |
 | `GW_TIMEZONE`                                            | no           | Time zone for dates in the interface (default `Europe/Berlin`). Set explicitly so server and browser format the same instant identically.    |
 | `GW_BOOTSTRAP_ADMIN_EMAIL`                               | no           | Creates an admin on the very first start and prints their link.                                                                              |
@@ -463,6 +432,60 @@ still gets you in: sign-in links are printed to stdout. But anybody who can read
 `docker logs` — the docker group, a log aggregator, an excerpt sent to support — can have a
 link issued for **any** address. The application says so again at startup.
 
+## Troubleshooting
+
+### I cannot find the link for the admin account
+
+The first administrator is claimed on `/setup` with a **setup key**. Work through these in order:
+
+**Look in the right log.** The key is printed by `app`, not by `migrate`:
+
+```bash
+docker compose logs app | grep -A 4 'no administrator yet'
+```
+
+**Nothing there? Restart `app`.** The key is only printed when the database was reachable as
+`app` started. A restart prints the address and a fresh key again:
+
+```bash
+docker compose restart app
+docker compose logs app
+```
+
+**The key is refused.** It lives in memory and changes with every restart. Use the **newest**
+key in the log, not one you copied earlier.
+
+**`/setup` is not there any more.** An administrator already exists, so the setup route is gone
+for good. That happens when `GW_BOOTSTRAP_ADMIN_EMAIL` was set on the first start: the one-time
+link was then printed by `migrate`, exactly once, and was valid for an hour:
+
+```bash
+docker compose logs migrate
+```
+
+**The link has expired, was already used, or you closed the page.** Have a new one issued for
+the admin address. It is valid for 15 minutes and works once:
+
+```bash
+docker compose exec app node scripts/cli.mjs login-link --email you@example.com
+```
+
+**You can sign in, but you are not an admin.** Make your existing account one:
+
+```bash
+docker compose exec app node scripts/cli.mjs admin promote --email you@example.com
+```
+
+**The link opens the wrong address.** Sign-in links are built from `GW_APP_URL`. If it does not
+match the address in your browser, fix it in the `.env` and run
+`docker compose --profile tls up -d` again.
+
+### No sign-in mail arrives
+
+Mail is not configured until somebody configures it. Check **Mail delivery** in the interface
+and `GW_MAIL_TRANSPORT` in the `.env` — the `.env` wins. With `console` the link is in
+`docker compose logs app`. Without any mail, `cli.mjs login-link` above always gets you in.
+
 ### When it does not run
 
 | Symptom                                         | Cause                                                                                                                                                                   |
@@ -473,7 +496,8 @@ link issued for **any** address. The application says so again at startup.
 | `/api/health` answers 503 with `database`       | Database unreachable or still starting.                                                                                                                                 |
 | `/api/health` answers 503 with `migrations`     | `migrate` did not come through: `docker compose logs migrate`.                                                                                                          |
 | `migrate` stops with "MIGRATION STOPPED"        | The preflight found rows standing in the way of a migration. The database is unchanged; the message names the rows and the decision.                                    |
-| No sign-in link in the inbox                    | Check `GW_MAIL_TRANSPORT`. With `console` it is in `docker compose logs app`.                                                                                           |
+| No setup key in the log                         | See [I cannot find the link for the admin account](#i-cannot-find-the-link-for-the-admin-account).                                                                      |
+| No sign-in link in the inbox                    | Mail is not configured yet, see above. With `GW_MAIL_TRANSPORT=console` it is in `docker compose logs app`.                                                             |
 | Graph answers `403` or `invalid_client`         | The app registration does not have the **application permission** `Mail.Send` with admin consent, or the secret has expired. The message is in `app`'s log.             |
 | Sign-in works, no passkey offered               | No HTTPS — expected behaviour, see above.                                                                                                                               |
 | The editor permanently shows "offline"          | The collaboration service is unreachable, or `GW_APP_URL` does not match the address in the browser: the socket refuses a foreign origin and writes that to the log.    |
@@ -521,3 +545,61 @@ docker buildx imagetools inspect ghcr.io/rolealpha/good-workshop:0.4.15 --format
 **Running it for other people.** If you host this for anyone but yourself, you are the
 controller for their data. [docs/data-protection.md](docs/data-protection.md) says what is
 stored, what leaves the server, and — plainly — what the software does not clean up for you.
+
+## Contributing
+
+```bash
+pnpm install
+pnpm db:up      # Postgres and a mail catcher for development
+pnpm dev
+```
+
+| Command               | Purpose                                                                                      |
+| --------------------- | -------------------------------------------------------------------------------------------- |
+| `pnpm lint`           | ESLint including the project guardrails                                                      |
+| `pnpm typecheck`      | `tsc --noEmit`                                                                               |
+| `pnpm test`           | Vitest (unit + component)                                                                    |
+| `pnpm test:coverage`  | with coverage thresholds on `src/domain`, `src/features`, `src/i18n`                         |
+| `pnpm test:db`        | tenant isolation and auth against a real database                                            |
+| `pnpm test:e2e`       | Playwright (desktop + Pixel 5) against the built standalone server                           |
+| `pnpm format`         | Prettier                                                                                     |
+| `pnpm build`          | production build (`output: 'standalone'`)                                                    |
+| `pnpm check:docs`     | checks that README, `.env.example` and `compose.yaml` still fit the code                     |
+| `pnpm check:licenses` | checks every dependency may ship under this project's licence, and that the index is current |
+| `pnpm licenses:write` | regenerates [`THIRD-PARTY-LICENSES.md`](THIRD-PARTY-LICENSES.md) after a dependency change   |
+
+The conventions below are also published as agent skills in
+[`.agents/skills/`](.agents/skills/), so a coding assistant picks up the same rules a person
+does. The skills carry no content of their own — each one points at the document, because two
+copies of a rule are one copy that drifts.
+
+Three binding conventions, for every contribution:
+
+- [UI and UX](docs/ui-conventions.md) — mobile-first, editing in place rather than in
+  dialogs, colour tokens, branding, accessibility
+- [Tests](docs/testing-conventions.md) — the test pyramid, tenant-isolation tests, flake policy
+- [CI/CD](docs/ci-conventions.md) — GitHub Actions, Docker build, release to `ghcr.io`
+
+Before your first pull request, read [CONTRIBUTING.md](CONTRIBUTING.md). It is short and it is
+the legal half: every commit needs a `Signed-off-by` line (`git commit -s`), which CI checks.
+
+Three guardrails are enforced by ESLint and are not a matter of style:
+
+- **No raw hex colours** in `src/components`, `src/features`, `src/app`. Category colours go
+  through the `.cat-*` OKLCH tokens, accents through `--brand-*`.
+- **No German prose** in those same directories. Every string a person reads lives in
+  `src/messages`; see [Languages](docs/languages.md).
+- **No import of the raw `db` handle** outside `src/server/db`. Every query runs through
+  `withTenant()` so that `app.tenant_id` is set — tenant isolation depends on it.
+
+Found something that looks like a security problem? [SECURITY.md](SECURITY.md) says where it
+goes — privately, not into an issue — and which boundaries are worth attacking.
+
+If you work on the installation, the migrations or the documentation, the details are here:
+
+- [Keeping the docs honest](docs/keeping-docs-honest.md) — what `pnpm check:docs` checks, what
+  it cannot, and what to update after which change
+- [Installation and upgrade](docs/installation-and-upgrade.md) — the startup chain, the
+  preflight, the database roles and what breaks easily when changing them
+- [Languages](docs/languages.md) — how the catalogs are cut, where the language comes from,
+  and what deliberately stays untranslated

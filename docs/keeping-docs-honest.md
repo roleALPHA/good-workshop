@@ -42,7 +42,8 @@ addition the value has to actually appear in `compose.yaml`.
 ## Where what belongs
 
 The README answers two questions: **what does this do?** and **how do I install it?** In that
-order, followed by the things that trip people up.
+order, followed by the things that trip people up, troubleshooting, the licence, and — last,
+because it addresses the fewest readers — contributing.
 
 Everything that justifies a design decision — why the visibility rule is in the SQL, why an SVG
 is refused rather than cleaned, how the materialiser works, why a domain error carries a key
