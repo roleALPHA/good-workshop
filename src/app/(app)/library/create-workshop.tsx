@@ -43,7 +43,7 @@ export function CreateWorkshop({ folderId }: { folderId: string | null }) {
       <button
         type="button"
         onClick={() => setOpen(true)}
-        className="inline-flex items-center gap-1.5 rounded bg-[var(--brand)] px-3 py-1.5 text-[15px] font-medium text-[var(--brand-fg)] hover:bg-[var(--brand-hover)]"
+        className="inline-flex shrink-0 items-center gap-1.5 rounded bg-[var(--brand)] px-3 py-1.5 text-[15px] font-medium text-[var(--brand-fg)] hover:bg-[var(--brand-hover)]"
       >
         <Plus aria-hidden className="size-4" />
         {t('newWorkshop')}
@@ -52,13 +52,15 @@ export function CreateWorkshop({ folderId }: { folderId: string | null }) {
   }
 
   return (
-    <div className="flex items-start gap-2">
-      <div>
+    // Full width on a phone, so it drops below the search instead of pushing
+    // "Anlegen" off the edge of the screen.
+    <div className="flex w-full items-start gap-2 sm:w-auto">
+      <div className="min-w-0 flex-1">
         <input
           autoFocus
           aria-label={t('workshopTitle')}
           placeholder={t('workshopTitleExample')}
-          className="w-56 rounded border border-[var(--border-strong)] bg-[var(--surface)] px-2.5 py-1.5 text-[16px]"
+          className="w-full rounded border border-[var(--border-strong)] bg-[var(--surface)] px-2.5 py-1.5 text-[16px] sm:w-56"
           value={title}
           onChange={(e) => {
             setTitle(e.target.value)

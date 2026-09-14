@@ -46,7 +46,7 @@ export function SearchBox() {
   }, [value, current, params, router])
 
   return (
-    <div className="relative">
+    <div className="relative min-w-0 flex-1 sm:flex-none">
       <Search
         aria-hidden
         className="pointer-events-none absolute top-1/2 left-2.5 size-4 -translate-y-1/2 text-[var(--fg-subtle)]"
@@ -55,7 +55,7 @@ export function SearchBox() {
         type="search"
         aria-label={t('searchLabel')}
         placeholder={t('search')}
-        className="w-44 rounded border border-[var(--border-strong)] bg-[var(--surface)] py-1.5 pr-2.5 pl-8 text-[16px]"
+        className="w-full rounded border border-[var(--border-strong)] bg-[var(--surface)] py-1.5 pr-2.5 pl-8 text-[16px] sm:w-44"
         value={value}
         onChange={(e) => setValue(e.target.value)}
       />
