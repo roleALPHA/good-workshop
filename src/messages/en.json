@@ -149,6 +149,15 @@
     "presence": "Other people on this day",
     "regionLabel": "Agenda {title}",
     "removeTag": "Remove tag {name}",
+    "responsible": {
+      "label": "Responsible",
+      "add": "Add a responsible person",
+      "remove": "Remove {name} as responsible",
+      "placeholder": "+ responsible",
+      "external": "external",
+      "externalHint": "Not a member of this workspace",
+      "memberHint": "Member"
+    },
     "saving": "Saving …",
     "searchType": "Search block types",
     "tagPlaceholder": "+ tag",
@@ -384,7 +393,8 @@
     "details": "Details",
     "split": "{content} content, {breaks} breaks",
     "yes": "yes",
-    "no": "no"
+    "no": "no",
+    "responsible": "Responsible"
   },
   "library": {
     "allWorkshops": "All workshops",

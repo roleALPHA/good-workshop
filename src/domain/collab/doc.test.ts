@@ -66,6 +66,31 @@ describe('seeding', () => {
     expect(readBlocks(doc).find((b) => b.id === pinned.id)?.pinnedStartMinute).toBe(600)
   })
 
+  it('carries who is responsible for a block, members and outsiders alike', () => {
+    const source = createDemoDay()
+    const responsible = [
+      { name: 'Mira Schulz', memberId: '0190a000-0000-7000-8000-000000000001' },
+      { name: 'Frau Berg', memberId: null },
+    ]
+    source.modules = source.modules.map((m) => (m.id === 'm-5' ? { ...m, responsible } : m))
+
+    const doc = new Y.Doc()
+    seedFromDayDoc(doc, source)
+
+    expect(read(doc).modules.find((m) => m.id === 'm-5')!.responsible).toEqual(responsible)
+    expect(readBlocks(doc).find((b) => b.id === 'm-5')!.responsible).toEqual(responsible)
+    expect(read(doc).modules.find((m) => m.id === 'm-1')!.responsible).toEqual([])
+  })
+
+  it('reads a malformed list of people as nobody rather than failing the day', () => {
+    const doc = new Y.Doc()
+    seedFromDayDoc(doc, createDemoDay())
+    block(doc, 'm-5').set('responsible', 'Mira')
+
+    expect(read(doc).modules.find((m) => m.id === 'm-5')!.responsible).toEqual([])
+    expect(readBlocks(doc).find((b) => b.id === 'm-5')!.responsible).toEqual([])
+  })
+
   it('refuses to seed twice, so two clients arriving together cannot double the day', () => {
     const doc = new Y.Doc()
     const source = createDemoDay()

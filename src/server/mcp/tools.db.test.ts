@@ -481,10 +481,58 @@ describe('blocks', () => {
     expect(wrongKind.isError).toBe(true)
     expect(wrongKind.text).toContain('durationMinutes')
 
+    // Members by id or by exact name, anybody else by name.
+    const adminName = `mcp-tools-${admin.identityId}`
+    const myName = `mcp-tools-${me.identityId}`
+    await must('update_module', {
+      workshopId,
+      dayId,
+      moduleId: block.data.id,
+      responsible: [{ memberId: admin.memberId }, { name: myName }, { name: 'Frau Berg' }],
+    })
+    const assigned = await ops.query('select responsible from module where id = $1', [
+      block.data.id,
+    ])
+    expect(assigned.rows[0].responsible).toEqual([
+      { name: adminName, memberId: admin.memberId },
+      { name: myName, memberId: me.memberId },
+      { name: 'Frau Berg', memberId: null },
+    ])
+
+    const stranger = await call('update_module', {
+      workshopId,
+      dayId,
+      moduleId: block.data.id,
+      responsible: [{ memberId: randomUUID() }],
+    })
+    expect(stranger.isError).toBe(true)
+    expect(stranger.text).toContain('responsible[0]')
+    expect(stranger.text).toContain('not an active member')
+
+    // Nobody assigned to a section: it is not a block anybody answers for.
+    const onCluster = await call('update_module', {
+      workshopId,
+      dayId,
+      moduleId: section.data.id,
+      responsible: [{ name: 'Frau Berg' }],
+    })
+    expect(onCluster.isError).toBe(true)
+    expect(onCluster.text).toContain('responsible')
+
+    const read = await must('get_workshop', { workshopId, dayId })
+    expect(read.text).toContain(`responsible: ${adminName}, ${myName}, Frau Berg`)
+
     await must('update_module', { workshopId, dayId, moduleId: block.data.id, parked: true })
     const outline = await must('get_workshop', { workshopId, dayId })
     const blocks = outline.data.blocks as { id: string; kind: string; parked?: boolean }[]
-    expect(blocks.find((b) => b.id === block.data.id)).toMatchObject({ parked: true })
+    expect(blocks.find((b) => b.id === block.data.id)).toMatchObject({
+      parked: true,
+      responsible: [
+        { name: adminName, memberId: admin.memberId },
+        { name: myName, memberId: me.memberId },
+        { name: 'Frau Berg', memberId: null },
+      ],
+    })
     expect(blocks.find((b) => b.id === section.data.id)).toMatchObject({ kind: 'cluster' })
     expect(outline.text).toContain('Parked')
   })
@@ -617,6 +665,7 @@ describe('apply_agenda', () => {
               typeKey: 'presentation',
               title: 'Input',
               desc: { presenter: 'Alex' },
+              responsible: [{ name: 'Alex' }, { memberId: me.memberId }],
             },
             { typeKey: 'break', title: 'Reserve', parked: true },
           ],
@@ -625,13 +674,22 @@ describe('apply_agenda', () => {
     })
 
     const rows = await ops.query(
-      `select m.title, m.json_desc, m.parked, c.title as cluster
+      `select m.title, m.json_desc, m.parked, m.responsible, c.title as cluster
          from module m left join cluster c on c.id = m.cluster_id
         where m.workshop_id = $1 order by m.title`,
       [workshopId],
     )
     expect(rows.rows).toMatchObject([
-      { title: 'Input', json_desc: { presenter: 'Alex' }, parked: false, cluster: 'Arbeitsphase' },
+      {
+        title: 'Input',
+        json_desc: { presenter: 'Alex' },
+        parked: false,
+        responsible: [
+          { name: 'Alex', memberId: null },
+          { name: `mcp-tools-${me.identityId}`, memberId: me.memberId },
+        ],
+        cluster: 'Arbeitsphase',
+      },
       {
         title: 'Kick-off',
         json_desc: {

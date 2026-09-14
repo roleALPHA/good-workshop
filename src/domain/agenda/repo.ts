@@ -11,6 +11,7 @@ import {
   type WorkshopAccess,
 } from './access'
 import { keyAtEnd, placeAfter, sortByPosition } from './ordering'
+import { normalizeResponsible } from './responsible'
 import type { Locale } from '@/i18n/config'
 import { localiseModuleType } from '@/domain/moduleType/localise'
 
@@ -140,6 +141,7 @@ export async function loadDay(
         pinnedStartMinute: m.pinnedStartTime ? timeToMinutes(m.pinnedStartTime) : null,
         desc: m.jsonDesc as Record<string, unknown>,
         parked: m.parked,
+        responsible: normalizeResponsible(m.responsible),
         order: (m.clusterId === null ? dayOrder.get(m.id) : childOrder.get(m.id)) ?? 0,
       })),
       /**

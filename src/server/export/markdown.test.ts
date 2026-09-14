@@ -49,6 +49,24 @@ describe('renderDayMarkdown', () => {
     )
   })
 
+  it('names who is responsible for a block, in the table and in the outline', () => {
+    const day = createDemoDay()
+    const target = day.modules.find((m) => m.id === 'm-5')!
+    target.responsible = [
+      { name: 'Mira Schulz', memberId: '0190a000-0000-7000-8000-000000000001' },
+      { name: 'Frau Berg', memberId: null },
+    ]
+
+    const agenda = renderDayMarkdown(meta, day)
+    const row = agenda.split('\n').find((line) => line.includes(target.title))!
+    expect(row).toContain('Verantwortlich: Mira Schulz, Frau Berg')
+
+    const outline = renderDayMarkdown(meta, day, { flavor: 'outline' })
+    expect(outline).toContain('**Verantwortlich:** Mira Schulz, Frau Berg')
+    // Whether somebody is a member is the workspace's business, not the reader's.
+    expect(agenda + outline).not.toContain('extern')
+  })
+
   it('keeps facilitator notes out by default', () => {
     const output = renderDayMarkdown(meta, createDemoDay())
     // The common case for an export is handing it to participants, and notes

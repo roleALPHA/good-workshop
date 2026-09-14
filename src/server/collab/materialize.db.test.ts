@@ -110,6 +110,7 @@ async function seedLog() {
         pinnedStartMinute: null,
         desc: {},
         parked: false,
+        responsible: [],
         order: 0,
       },
       {
@@ -121,6 +122,7 @@ async function seedLog() {
         pinnedStartMinute: null,
         desc: {},
         parked: false,
+        responsible: [],
         order: 1,
       },
     ],
@@ -139,6 +141,43 @@ const relationalShape = () =>
   })
 
 const materialize = () => withTenant(actor(), (tx) => materializeDay(tx, workshopId, dayId))
+
+describe('who is responsible for a block', () => {
+  it('reaches the record, and comes back out of it, for members and outsiders', async () => {
+    const doc = await seedLog()
+    const responsible = [
+      { name: 'Kollegin', memberId },
+      { name: 'Frau Berg', memberId: null },
+    ]
+    patchBlock(doc, firstId, { responsible })
+    await withTenant(actor(), (tx) => appendUpdate(tx, dayId, Y.encodeStateAsUpdate(doc)))
+    await materialize()
+
+    const { rows } = await ops.query('select responsible from module where id = $1', [firstId])
+    expect(rows[0]?.responsible).toEqual(responsible)
+
+    const loaded = await withTenant(actor(), async (tx) => {
+      const access = await assertWorkshopAccess(tx, actor(), workshopId, 'workshop.read')
+      return (await loadDay(tx, access, dayId, 'de')).doc
+    })
+    expect(loaded.modules.find((m) => m.id === firstId)?.responsible).toEqual(responsible)
+    expect(loaded.modules.find((m) => m.id === secondId)?.responsible).toEqual([])
+  })
+
+  it('writes the day even when a client put something malformed into the list', async () => {
+    const doc = await seedLog()
+    blocksOf(doc).get(firstId)!.set('responsible', { not: 'a list' })
+    patchBlock(doc, secondId, { responsible: [{ name: '  ', memberId: null }] })
+    await withTenant(actor(), (tx) => appendUpdate(tx, dayId, Y.encodeStateAsUpdate(doc)))
+
+    await expect(materialize()).resolves.toMatchObject({ status: 'written' })
+    const { rows } = await ops.query(
+      'select responsible from module where id = any($1::uuid[]) order by title',
+      [[firstId, secondId]],
+    )
+    expect(rows.map((row) => row.responsible)).toEqual([[], []])
+  })
+})
 
 describe('what the document is allowed to write into json_desc', () => {
   it('accepts a desc that matches the module type', async () => {

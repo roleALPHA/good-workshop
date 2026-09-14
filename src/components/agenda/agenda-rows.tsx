@@ -13,7 +13,13 @@ import { isRichTextValue } from '@/lib/richtext/schema'
 import { toPlainText } from '@/lib/richtext/plain'
 import { RichText } from '@/lib/richtext/render'
 import { ChipsInput } from './chips-input'
+import {
+  resolveResponsible,
+  type AssignablePerson,
+  type Responsible,
+} from '@/domain/agenda/responsible'
 import { ParticipationBadge, ParticipationControl } from './participation-control'
+import { ResponsibleInput, ResponsibleList } from './responsible'
 import { PeerMarks } from './presence'
 import { DescriptionInput, TitleInput } from './inline-inputs'
 import { OverlapWarning, TimeCell } from './time-cell'
@@ -58,6 +64,8 @@ export type RowEditing = {
   onDescChange: (desc: Record<string, unknown>) => void
   /** Nails the block to a wall-clock time, or lets it float again. */
   onPinChange: (minute: number | null) => void
+  /** Who answers for the block. Absent where the list cannot be changed. */
+  onResponsibleChange?: (responsible: Responsible[]) => void
   expanded: boolean
   /** Sets the block aside without deleting it. Absent where parking is not offered. */
   onPark?: () => void
@@ -106,6 +114,7 @@ export function ModuleRow({
   nested,
   chrome,
   editing,
+  people,
 }: {
   module: ModuleDto
   type: ModuleTypeDto | undefined
@@ -113,6 +122,8 @@ export function ModuleRow({
   nested: boolean
   chrome?: RowChrome
   editing?: RowEditing
+  /** The workspace's members, to show them under their current names. */
+  people?: AssignablePerson[]
 }) {
   const t = useTranslations('agenda')
   const description = isRichTextValue(mod.desc.description) ? mod.desc.description : null
@@ -201,6 +212,24 @@ export function ModuleRow({
           <h3 id={titleId} className="font-semibold text-[var(--fg)]">
             {mod.title}
           </h3>
+        )}
+        {/*
+          Straight under the title, before the description: "whose is this?" is
+          asked of every row, and a closed row answers it without a click.
+        */}
+        {editing?.onResponsibleChange ? (
+          <div className="mt-0.5 mb-1">
+            <ResponsibleInput
+              value={mod.responsible}
+              people={people}
+              onChange={editing.onResponsibleChange}
+            />
+          </div>
+        ) : (
+          <ResponsibleList
+            people={resolveResponsible(mod.responsible, people)}
+            className="mt-1 mb-1"
+          />
         )}
         {editing && descriptionField ? (
           <>

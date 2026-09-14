@@ -14,6 +14,14 @@ import { localiseModuleType } from '@/domain/moduleType/localise'
 import { ModuleDescError, validateModuleDesc, type FieldError } from '@/domain/moduleType/validate'
 import { setDayDate } from '@/domain/workshop/days'
 import { CATEGORY_COLORS } from '@/lib/category-colors'
+import {
+  MAX_RESPONSIBLE,
+  MAX_RESPONSIBLE_NAME,
+  normalizeResponsible,
+  responsibleFromInput,
+  type Responsible,
+} from '@/domain/agenda/responsible'
+import { listAssignable } from '@/domain/tenant/members'
 import { publicToolError } from './errors'
 import { fail, guarded, ok, toolError } from './respond'
 
@@ -81,6 +89,34 @@ const Version = z.string().regex(/^\d+$/).optional()
 const Minute = z.number().int().min(0).max(1439)
 const Duration = z.number().int().min(0).max(1440)
 
+/**
+ * Who answers for a block, as a model names them.
+ *
+ * A member by `memberId` (get_workshop shows the ids of people already
+ * assigned) or by their exact name; anybody else by name alone. There is
+ * deliberately no tool that lists the workspace's members -- see the note on
+ * members in docs/architecture.md -- so a name that matches nobody is taken to
+ * be somebody from outside, which is what it most likely is.
+ */
+const PeopleInput = z
+  .array(
+    z
+      .object({
+        name: z.string().trim().min(1).max(MAX_RESPONSIBLE_NAME).optional(),
+        memberId: Id.optional(),
+      })
+      .refine((entry) => entry.name !== undefined || entry.memberId !== undefined, {
+        message: 'Give a name, a memberId, or both.',
+      }),
+  )
+  .max(MAX_RESPONSIBLE)
+  .describe(
+    'Who is responsible for the block -- the whole list, [] clears it. Each entry is ' +
+      '{ memberId } for a member of the workspace, or { name } for anybody; a name that is exactly ' +
+      "a member's name is linked to that member.",
+  )
+type PeopleInput = z.infer<typeof PeopleInput>
+
 /** What update_module and update_modules may change; which applies depends on the kind. */
 const UpdateFields = {
   title: z.string().trim().min(1).max(300).optional(),
@@ -88,9 +124,12 @@ const UpdateFields = {
   pinnedStartMinute: Minute.nullable().optional(),
   desc: z.record(z.string(), z.unknown()).optional(),
   parked: z.boolean().optional(),
+  responsible: PeopleInput.optional(),
   color: z.enum(CATEGORY_COLORS).nullable().optional(),
 }
 type UpdateInput = z.infer<z.ZodObject<typeof UpdateFields>>
+/** An update whose people have been looked up, ready to be written. */
+type PlannedInput = Omit<UpdateInput, 'responsible'> & { responsible?: Responsible[] }
 
 export function registerTools(server: McpServer, ctx: Ctx): void {
   const { actor, authorization } = ctx
@@ -218,7 +257,9 @@ export function registerTools(server: McpServer, ctx: Ctx): void {
             }
             if (row.kind !== 'module') return `${index}. [${time}] (buffer)`
             const pinned = row.module.pinnedStartMinute === null ? '' : ' · pinned'
-            return `${index}. [${time}] ${row.depth === 1 ? '  ' : ''}${row.module.title} · ${formatDuration(row.module.durationMinutes)} · ${typeKey(row.module.moduleTypeId) ?? '?'}${pinned} · id=${row.id}`
+            const who = row.module.responsible.map((person) => person.name).join(', ')
+            const responsible = who ? ` · responsible: ${who}` : ''
+            return `${index}. [${time}] ${row.depth === 1 ? '  ' : ''}${row.module.title} · ${formatDuration(row.module.durationMinutes)} · ${typeKey(row.module.moduleTypeId) ?? '?'}${pinned}${responsible} · id=${row.id}`
           })
 
           // Parked blocks are out of the running order, so flattenDay leaves
@@ -249,6 +290,7 @@ export function registerTools(server: McpServer, ctx: Ctx): void {
               durationMinutes: m.durationMinutes,
               pinnedStartMinute: m.pinnedStartMinute,
               parked: m.parked,
+              responsible: m.responsible,
               desc: m.desc,
               startMinute: m.parked ? null : startOf(m.id),
             })),
@@ -347,6 +389,48 @@ export function registerTools(server: McpServer, ctx: Ctx): void {
       return prepare ? prepare(tx, access) : undefined
     })
 
+  /**
+   * Turns the people a model named into what a block stores.
+   *
+   * The directory is read only when somebody is actually named, and every
+   * problem is reported at once under its path, like a description that does
+   * not fit its schema.
+   */
+  const lookUpPeople = async (
+    inputs: { at: string; people: PeopleInput | undefined }[],
+  ): Promise<{ values: Map<string, Responsible[]>; problems: string[] }> => {
+    const directory = inputs.some((input) => input.people?.length)
+      ? await listAssignable(actor)
+      : []
+    const values = new Map<string, Responsible[]>()
+    const problems: string[] = []
+
+    for (const { at, people } of inputs) {
+      if (people === undefined) continue
+      const found: Responsible[] = []
+      people.forEach((entry, j) => {
+        const path = `${at ? `${at}.` : ''}responsible[${j}]`
+        if (entry.memberId !== undefined) {
+          const member = directory.find((person) => person.id === entry.memberId)
+          if (!member) {
+            problems.push(
+              `${path}: ${entry.memberId} is not an active member of this workspace. ` +
+                'Leave memberId out to name somebody from outside it.',
+            )
+            return
+          }
+          found.push({ name: member.name, memberId: member.id })
+          return
+        }
+        const person = responsibleFromInput(entry.name ?? '', directory)
+        if (person) found.push(person)
+      })
+      values.set(at, normalizeResponsible(found))
+    }
+
+    return { values, problems }
+  }
+
   /** Bookkeeping, and it never fails a tool call. */
   const record = (action: string, entityId: string | null, data: Record<string, unknown> = {}) =>
     withTenant(actor, (tx) => audit(tx, action, entityId, data)).then(
@@ -369,6 +453,7 @@ export function registerTools(server: McpServer, ctx: Ctx): void {
           'shaped by its schema from list_module_types. Left out, the block starts empty.',
       ),
     parked: z.boolean().optional().describe('true puts the block straight into the parking area.'),
+    responsible: PeopleInput.optional(),
   }
 
   server.registerTool(
@@ -377,7 +462,8 @@ export function registerTools(server: McpServer, ctx: Ctx): void {
       title: 'Write a day agenda',
       description:
         'Writes a complete day agenda in one go, every block with all its fields: title, duration, ' +
-        "pinned start, parked and `desc` -- the block type's own fields such as presenter, materials " +
+        'pinned start, parked, responsible (who answers for the block, members and outsiders) and ' +
+        "`desc` -- the block type's own fields such as presenter, materials " +
         'or description, matching its schema from list_module_types. `replace` replaces the day, ' +
         '`append` adds to it. All or nothing: if one block names an unknown type or a `desc` that ' +
         'does not fit its schema, nothing is written. ' +
@@ -438,6 +524,20 @@ export function registerTools(server: McpServer, ctx: Ctx): void {
         })
         if (issues.length > 0) return toolError(new ModuleDescError(issues))
 
+        const people = await lookUpPeople(
+          items.flatMap((item, i) =>
+            item.kind === 'module'
+              ? [{ at: `items[${i}]`, people: item.responsible }]
+              : (item.children ?? []).map((child, j) => ({
+                  at: `items[${i}].children[${j}]`,
+                  people: child.responsible,
+                })),
+          ),
+        )
+        if (people.problems.length > 0) {
+          return fail(['Nothing was written.', ...people.problems].join('\n'))
+        }
+
         const { result, contentVersion, rejected } = await inRoom(workshopId, dayId, (doc) => {
           let created = 0
           doc.transact(() => {
@@ -448,6 +548,7 @@ export function registerTools(server: McpServer, ctx: Ctx): void {
                 addModuleBlock(doc, uuidv7(), {
                   ...moduleFrom(item, types),
                   desc: descs.get(`items[${i}]`),
+                  responsible: people.values.get(`items[${i}]`),
                 })
                 created += 1
                 return
@@ -463,6 +564,7 @@ export function registerTools(server: McpServer, ctx: Ctx): void {
                 addModuleBlock(doc, uuidv7(), {
                   ...moduleFrom(child, types),
                   desc: descs.get(`items[${i}].children[${j}]`),
+                  responsible: people.values.get(`items[${i}].children[${j}]`),
                   parentId: clusterId,
                 })
                 created += 1
@@ -562,8 +664,9 @@ export function registerTools(server: McpServer, ctx: Ctx): void {
       title: 'Change a block or cluster',
       description:
         'Changes fields of one block or cluster; fields you leave out stay as they are. ' +
-        'A block takes title, durationMinutes, pinnedStartMinute (null unpins), desc and parked ' +
-        '(true sets it aside: kept with the day, out of the schedule). A cluster takes title, color ' +
+        'A block takes title, durationMinutes, pinnedStartMinute (null unpins), desc, parked ' +
+        '(true sets it aside: kept with the day, out of the schedule) and responsible (the whole list ' +
+        'of who answers for it; [] clears it). A cluster takes title, color ' +
         'and pinnedStartMinute. `desc` replaces the whole description and must match the block ' +
         "type's schema from list_module_types; read the current one from get_workshop.",
       inputSchema: {
@@ -588,9 +691,12 @@ export function registerTools(server: McpServer, ctx: Ctx): void {
             ? Promise.resolve(new Map<string, TypeSchema>())
             : readSchemas(tx),
         )
+        const people = await lookUpPeople([{ at: '', people: fields.responsible }])
+        if (people.problems.length > 0) return fail(people.problems.join('\n'))
+        const planned: PlannedInput = { ...fields, responsible: people.values.get('') }
 
         const { result, contentVersion, rejected } = await inRoom(workshopId, dayId, (doc) => {
-          const plan = planUpdate(doc, moduleId, fields, schemas ?? new Map())
+          const plan = planUpdate(doc, moduleId, planned, schemas ?? new Map())
           if (plan.kind === 'ok') patchBlock(doc, moduleId, plan.patch)
           return plan
         })
@@ -656,13 +762,23 @@ export function registerTools(server: McpServer, ctx: Ctx): void {
             ? Promise.resolve(new Map<string, TypeSchema>())
             : readSchemas(tx),
         )
+        const people = await lookUpPeople(
+          entries.map((entry, i) => ({ at: `updates[${i}]`, people: entry.fields.responsible })),
+        )
+        if (people.problems.length > 0) {
+          return fail(['Nothing was changed.', ...people.problems].join('\n'))
+        }
+        const planned = entries.map((entry, i): PlannedInput => ({
+          ...entry.fields,
+          responsible: people.values.get(`updates[${i}]`),
+        }))
 
         // Every entry is checked against the document before any is written: a
         // day where the first nine blocks changed and the tenth did not is
         // harder to recover from than a call that did nothing.
         const { result, contentVersion, rejected } = await inRoom(workshopId, dayId, (doc) => {
-          const plans = entries.map((entry) =>
-            planUpdate(doc, entry.moduleId, entry.fields, schemas ?? new Map()),
+          const plans = entries.map((entry, i) =>
+            planUpdate(doc, entry.moduleId, planned[i]!, schemas ?? new Map()),
           )
           const problems: string[] = []
           const descIssues: FieldError[] = []
@@ -919,6 +1035,7 @@ const MODULE_FIELDS: readonly string[] = [
   'pinnedStartMinute',
   'desc',
   'parked',
+  'responsible',
 ]
 const CLUSTER_FIELDS: readonly string[] = ['title', 'color', 'pinnedStartMinute']
 
@@ -928,8 +1045,10 @@ type UpdateOutcome =
   | { kind: 'wrongKind'; isCluster: boolean; fields: string[] }
   | { kind: 'invalid'; error: ModuleDescError }
 
-function givenFields(fields: UpdateInput): string[] {
-  return (Object.keys(fields) as (keyof UpdateInput)[]).filter((key) => fields[key] !== undefined)
+function givenFields(fields: UpdateInput | PlannedInput): string[] {
+  return Object.entries(fields)
+    .filter(([, value]) => value !== undefined)
+    .map(([key]) => key)
 }
 
 /**
@@ -941,7 +1060,7 @@ function givenFields(fields: UpdateInput): string[] {
 function planUpdate(
   doc: Y.Doc,
   moduleId: string,
-  fields: UpdateInput,
+  fields: PlannedInput,
   schemas: Map<string, TypeSchema>,
 ): UpdateOutcome {
   const block = blocksOf(doc).get(moduleId)

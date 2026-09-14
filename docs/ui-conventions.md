@@ -195,8 +195,10 @@ Concretely:
   following block and nobody notices.
 - **Extra fields open in the same row**, not in a side panel. The calm of the collapsed table is
   what makes that affordable: closed, a row shows the handful a facilitator reads while running
-  the day — time, duration, title, description, the participation format, the material, and the
-  lock on the start time — plus whatever the type flags `x-gw.summary`. Everything else appears
+  the day — time, duration, title, who is responsible, description, the participation format, the
+  material, and the lock on the start time — plus whatever the type flags `x-gw.summary`. Who is
+  responsible sits directly under the title, as named chips with initials; somebody from outside
+  the workspace says "extern" in words. Everything else appears
   on request and folds away again.
 - **What a closed row carries is a decision, not a default.** A field earns its place there by
   being consulted mid-workshop, and the list is named in `e2e/agenda.spec.ts` so that adding to

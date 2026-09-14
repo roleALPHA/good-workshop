@@ -32,6 +32,7 @@ const moduleWith = (desc: Record<string, unknown> = {}): ModuleDto => ({
   pinnedStartMinute: null,
   desc,
   parked: false,
+  responsible: [],
   order: 0,
 })
 

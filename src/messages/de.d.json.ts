@@ -152,6 +152,15 @@ declare const messages: {
     "presence": "Weitere Personen an diesem Tag",
     "regionLabel": "Agenda {title}",
     "removeTag": "Tag {name} entfernen",
+    "responsible": {
+      "label": "Verantwortlich",
+      "add": "Verantwortliche Person hinzufügen",
+      "remove": "{name} als verantwortlich entfernen",
+      "placeholder": "+ Verantwortlich",
+      "external": "extern",
+      "externalHint": "Kein Mitglied dieses Arbeitsbereichs",
+      "memberHint": "Mitglied"
+    },
     "saving": "Wird gespeichert …",
     "searchType": "Blocktyp suchen",
     "tagPlaceholder": "+ Tag",
@@ -387,7 +396,8 @@ declare const messages: {
     "details": "Details",
     "split": "{content} Inhalt, {breaks} Pausen",
     "yes": "ja",
-    "no": "nein"
+    "no": "nein",
+    "responsible": "Verantwortlich"
   },
   "library": {
     "allWorkshops": "Alle Workshops",

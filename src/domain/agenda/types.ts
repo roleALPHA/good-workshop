@@ -1,4 +1,5 @@
 import type { CategoryColor } from '@/lib/category-colors'
+import type { Responsible } from './responsible'
 
 /**
  * The client-side view of a workshop day. Deliberately a plain DTO: no class,
@@ -67,6 +68,8 @@ export type ModuleDto = {
    * thing that used to be on offer.
    */
   parked: boolean
+  /** Who answers for the block, members and outsiders. See ./responsible. */
+  responsible: Responsible[]
   order: number
 }
 

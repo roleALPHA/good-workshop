@@ -20,6 +20,7 @@ import {
 import { restrictToWindowEdges } from '@dnd-kit/modifiers'
 import { SortableContext, useSortable, verticalListSortingStrategy } from '@dnd-kit/sortable'
 import { CSS } from '@dnd-kit/utilities'
+import type { AssignablePerson } from '@/domain/agenda/responsible'
 import type { DayDoc } from '@/domain/agenda/types'
 import { computeSchedule } from '@/domain/schedule/computeSchedule'
 import { formatDuration, formatTime } from '@/features/agenda/duration'
@@ -93,8 +94,11 @@ export function AgendaEditor({
   elsewhere,
   onBringHere,
   parkingError,
+  people,
 }: {
   document: AgendaDocument
+  /** Members who can be put in charge of a block. Absent for a guest. */
+  people?: AssignablePerson[]
   /** What is parked on the other days of the workshop. */
   elsewhere?: ParkedElsewhere[]
   /** Brings one of those into this day. Absent for anyone who cannot reach another day. */
@@ -244,6 +248,7 @@ export function AgendaEditor({
       pinnedStartMinute: patch.pinnedStartMinute,
       desc: patch.desc,
       parked: patch.parked,
+      responsible: patch.responsible,
     })
   }
 
@@ -361,8 +366,11 @@ export function AgendaEditor({
                         type={doc.moduleTypes[row.module.moduleTypeId]}
                         entry={entry}
                         nested={row.depth === 1}
+                        people={people}
                         chrome={{ ...chrome, presence: presenceByBlock.get(row.id) }}
                         editing={{
+                          onResponsibleChange: (responsible) =>
+                            patchModule(row.id, { responsible }),
                           expanded: expandedId === row.id,
                           onToggleExpanded: () =>
                             setExpandedId((current) => (current === row.id ? null : row.id)),

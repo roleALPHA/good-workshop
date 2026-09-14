@@ -146,7 +146,12 @@ function renderTable(
 
     const type = day.moduleTypes[row.module.moduleTypeId]
     const title = row.depth === 1 ? `↳ ${cell(row.module.title)}` : cell(row.module.title)
-    const info = [type?.name, entry.conflict?.kind === 'overlap' ? t('overlap') : null]
+    const people = namesOf(row.module)
+    const info = [
+      people ? `${t('responsible')}: ${people}` : null,
+      type?.name,
+      entry.conflict?.kind === 'overlap' ? t('overlap') : null,
+    ]
       .filter(Boolean)
       .join(' · ')
 
@@ -186,6 +191,10 @@ function renderOutline(
       `### ${formatTime(entry.startMinute, opts.locale)}${entry.pinned ? ' 🔒' : ''} · ${text(row.module.title)}`,
       `\`${formatDuration(entry.durationMinutes)}\`${type ? ` · ${type.name}` : ''}`,
     )
+    const people = namesOf(row.module)
+    if (people) {
+      lines.push('', `**${translator(opts.locale, 'export')('responsible')}:** ${text(people)}`)
+    }
     lines.push(...describeModule(row.module.desc, type, opts))
   }
 
@@ -335,6 +344,16 @@ const text = (value: string) => value.replaceAll('<', '&lt;').replaceAll('>', '&
 const cell = (value: string) => text(value).replaceAll('|', '\\|').replaceAll('\n', ' ')
 
 const yaml = (value: string) => JSON.stringify(value)
+
+/**
+ * Who answers for a block, by name.
+ *
+ * Without the "external" mark the screen carries: an export is most often
+ * handed to people outside the workspace, for whom that distinction is the
+ * workspace's business rather than theirs.
+ */
+const namesOf = (mod: DayDoc['modules'][number]) =>
+  (mod.responsible ?? []).map((person) => person.name).join(', ')
 
 function contentSplit(day: DayDoc, locale: Locale): string {
   let content = 0

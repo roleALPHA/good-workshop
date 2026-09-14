@@ -291,12 +291,13 @@ test.describe('inline editing in the day view', () => {
     // The guardrail against the agenda turning into a wall of forms.
     //
     // What a closed row carries is a decision, not an accident, so it is named
-    // here in full: time, duration, title, description, the participation
-    // format, the material, and the lock. Everything else the type declares
-    // waits behind "Mehr Felder" -- the long-form task among it.
+    // here in full: time, duration, title, who is responsible, description,
+    // the participation format, the material, and the lock. Everything else
+    // the type declares waits behind "Mehr Felder" -- the long-form task among it.
     const row = block(page, 'Spannungsfelder sammeln')
 
     await expect(row.getByLabel('Titel')).toBeVisible()
+    await expect(row.getByLabel('Verantwortliche Person hinzufügen')).toBeVisible()
     await expect(row.getByLabel('Beschreibung')).toBeVisible()
     await expect(row.getByLabel('Dauer')).toBeVisible()
     await expect(row.getByRole('button', { name: /^Sozialform:/ })).toBeVisible()

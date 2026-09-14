@@ -1,3 +1,4 @@
+import type { AssignablePerson } from '@/domain/agenda/responsible'
 import type { DayDoc } from '@/domain/agenda/types'
 import type { Schedule } from '@/domain/schedule/types'
 import type { FlatRow } from '@/features/agenda/flatten'
@@ -15,10 +16,12 @@ export function AgendaTable({
   doc,
   rows,
   schedule,
+  people,
 }: {
   doc: DayDoc
   rows: FlatRow[]
   schedule: Schedule
+  people?: AssignablePerson[]
 }) {
   return (
     <section aria-label={`Agenda ${doc.title}`} className="gw-agenda">
@@ -45,6 +48,7 @@ export function AgendaTable({
               type={doc.moduleTypes[row.module.moduleTypeId]}
               entry={entry}
               nested={row.depth === 1}
+              people={people}
             />
           )
         })}

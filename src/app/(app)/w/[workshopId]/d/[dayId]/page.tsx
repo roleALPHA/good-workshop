@@ -9,6 +9,7 @@ import { ReadOnlyBadge } from '@/components/read-only-badge'
 import { assertWorkshopAccess } from '@/domain/agenda/access'
 import { presenceHue } from '@/domain/collab/presence'
 import { loadDay } from '@/domain/agenda/repo'
+import { listAssignable } from '@/domain/tenant/members'
 import { tagsOf } from '@/domain/workshop/tags'
 import { listDays } from '@/domain/workshop/repo'
 import { currentActor } from '@/server/actions/context'
@@ -69,6 +70,9 @@ export default async function DayPage({
 
   if (!data) notFound()
 
+  // Only for somebody who can assign: a reader sees the names the blocks carry.
+  const people = data.canEdit ? await listAssignable(actor).catch(() => []) : undefined
+
   return (
     <div>
       <header className="mb-5">
@@ -115,6 +119,7 @@ export default async function DayPage({
       <AgendaSurface
         doc={data.doc}
         canEdit={data.canEdit}
+        people={people}
         days={{
           workshopId,
           activeDayId: dayId,
