@@ -73,6 +73,24 @@ or, for an invited guest, with theirs. Nothing in the socket decides whether a g
 it demands `workshop.content.write` before the upgrade, so a guest invited only to read is
 refused at the handshake by the capability table alone.
 
+**The handshake is not the last word.** A socket stays open for hours, and access is withdrawn
+in the web process, which has no line to this one. The shared line is Postgres: triggers on every
+table that decides access (sessions, members, tokens, invitations, collaborators, folders,
+workshops, days — `drizzle/0009_access_changed_notify.sql`) send an empty `NOTIFY`, and the
+collaboration server asks every open socket's credential again through the normal access check.
+The notification carries nothing to trust; it is only a reason to ask. Because a notification can
+be lost, every socket is also checked on a timer, and a message on a check that has grown old
+waits for a fresh one before it is applied — so a late notification cannot let a withdrawn guest
+write into the record. A "no" closes the socket with code 4401.
+
+**Being allowed in is not a blank cheque.** The frame limit bounds one message; `limits.ts` bounds
+the rest: messages and bytes per socket (token buckets, close code 4429), messages waiting to be
+handled, bytes buffered towards a socket that stopped reading, connections per room, and the
+encoded size of a day's document (close code 4413). The document limit is checked _before_ an
+update is applied, because afterwards it has already been broadcast and queued for the log.
+Tombstones count towards it, so a document churned to its limit stays there — which locks one
+day, and not the service.
+
 ## The library
 
 The visibility rule is in the SQL and not a filter afterwards. That is why pages work at all:

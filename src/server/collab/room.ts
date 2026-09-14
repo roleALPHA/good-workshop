@@ -104,6 +104,16 @@ export class Room {
    */
   private generation = 0
   private loaded = false
+  /**
+   * The encoded size of the document, as an upper bound.
+   *
+   * Exact after loading; afterwards every applied update is added on top. An
+   * update never grows the encoded state by more than its own size, so the sum
+   * can only overestimate -- which makes it safe to compare against a limit
+   * and cheap enough to do on every write. Only when it says "too large" is
+   * the real size worth encoding the whole document for.
+   */
+  private approxBytes = 0
 
   constructor(
     readonly workshopId: string,
@@ -118,6 +128,7 @@ export class Room {
 
     this.doc.on('update', (update: Uint8Array, origin: unknown) => {
       // Updates that came from replaying the log are already persisted.
+      this.approxBytes += update.byteLength
       if (origin === 'load') return
       this.pendingUpdates.push(update)
       this.schedulePersist()
@@ -137,7 +148,17 @@ export class Room {
    * The guard inside `seedFromDayDoc` is what makes this safe to call on every
    * load: a day that already has state keeps it.
    */
-  async load(): Promise<void> {
+  load(): Promise<void> {
+    // One load, however many people arrive while it runs. Returning early on a
+    // flag let the second arrival skip the wait and be handed a document that
+    // did not have the day in it yet.
+    this.loading ??= this.loadOnce()
+    return this.loading
+  }
+
+  private loading: Promise<void> | null = null
+
+  private async loadOnce(): Promise<void> {
     if (this.loaded) return
 
     await withTenant(this.actor, async (tx) => {
@@ -165,6 +186,21 @@ export class Room {
     })
 
     this.loaded = true
+    this.approxBytes = Y.encodeStateAsUpdate(this.doc).byteLength
+  }
+
+  /**
+   * Whether `incoming` more bytes would take the document past `maxBytes`.
+   *
+   * Asked BEFORE an update is applied, because afterwards it is too late: the
+   * update event has already broadcast it to every peer and queued it for the
+   * log. The incoming message size stands in for the growth it causes, which
+   * errs on the side of refusing a write that would just have fitted.
+   */
+  wouldExceed(incoming: number, maxBytes: number): boolean {
+    if (this.approxBytes + incoming <= maxBytes) return false
+    this.approxBytes = Y.encodeStateAsUpdate(this.doc).byteLength
+    return this.approxBytes + incoming > maxBytes
   }
 
   add(connection: Connection): void {

@@ -1,5 +1,5 @@
 import { sql } from 'drizzle-orm'
-import { getDb, type Database } from './client'
+import { createListenClient, getDb, type Database } from './client'
 
 export * as schema from './schema'
 export type { Actor, TenantContext } from './actor'
@@ -88,6 +88,61 @@ export async function withAuth<T>(fn: (tx: Tx) => Promise<T>): Promise<T> {
  */
 export async function withoutTenant<T>(fn: (tx: Tx) => Promise<T>): Promise<T> {
   return getDb().transaction(async (tx) => fn(tx))
+}
+
+/**
+ * Calls `onNotify` for every NOTIFY on `channel`, for as long as it is open.
+ *
+ * Carries no data into a tenant context: a notification here is a nudge to go
+ * and ask again through withTenant, never an answer in itself. That is also why
+ * a lost connection is not an error -- it reconnects, and then calls
+ * `onReconnect`, because whatever was notified while it was away is gone and
+ * the caller has to assume it missed something.
+ */
+export function listen(
+  channel: string,
+  onNotify: () => void,
+  onReconnect: () => void,
+): { close: () => Promise<void> } {
+  let client: ReturnType<typeof createListenClient> | null = null
+  let closed = false
+  let retry: NodeJS.Timeout | null = null
+  let connectedOnce = false
+
+  const connect = async () => {
+    if (closed) return
+    const next = createListenClient()
+    client = next
+    next.on('notification', (message) => {
+      if (message.channel === channel) onNotify()
+    })
+    next.on('error', () => void next.end().catch(() => {}))
+    next.on('end', () => {
+      if (closed || client !== next) return
+      client = null
+      retry = setTimeout(() => void connect(), 1_000)
+    })
+
+    try {
+      await next.connect()
+      await next.query(`listen ${next.escapeIdentifier(channel)}`)
+      if (connectedOnce) onReconnect()
+      connectedOnce = true
+    } catch (error) {
+      console.warn('db: listen failed, retrying', { channel, error })
+      await next.end().catch(() => {})
+    }
+  }
+
+  void connect()
+
+  return {
+    close: async () => {
+      closed = true
+      if (retry) clearTimeout(retry)
+      await client?.end().catch(() => {})
+    },
+  }
 }
 
 /**

@@ -144,6 +144,27 @@ describe('magic links', () => {
     expect(results.filter(Boolean).length).toBeLessThan(12)
   })
 
+  it('holds the limit when the requests arrive at the same moment', async () => {
+    // Counting and inserting are two statements. Without something that makes
+    // the second request wait for the first, twelve requests fired together all
+    // count the same "fewer than five" and every one of them sends a mail. The
+    // per-address limit then only ever held for somebody polite enough to wait.
+    const address = `race-${randomUUID()}@example.test`
+    const id = randomUUID()
+    await ops.query('insert into identity (id, email, status) values ($1, $2, $3)', [
+      id,
+      address,
+      'active',
+    ])
+
+    try {
+      const results = await Promise.all(Array.from({ length: 12 }, () => issueMagicLink(address)))
+      expect(results.filter(Boolean)).toHaveLength(5)
+    } finally {
+      await ops.query('delete from identity where id = $1', [id])
+    }
+  })
+
   it('stores only a hash, so a stolen dump yields no working links', async () => {
     const issued = await issueMagicLink(email)
     const token = tokenOf(issued!.link)
