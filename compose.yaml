@@ -149,12 +149,13 @@ services:
       <<: *app-db
       GW_APP_URL: ${GW_APP_URL:?GW_APP_URL must be set}
       GW_RP_ID: ${GW_RP_ID:-}
-      # No default. `console` prints complete, valid sign-in links to stdout --
-      # the right decision for an installation with no relay,
-      # und eine, die man trifft, statt sie zu bekommen, weil man nichts gesagt
-      # has. Anybody who can read `docker logs` could otherwise have a link
-      # Adresse einen Link ausstellen lassen und abholen.
-      GW_MAIL_TRANSPORT: ${GW_MAIL_TRANSPORT:?GW_MAIL_TRANSPORT must be set -- smtp, graph, console or none}
+      # Optional. Empty means: mail follows what an admin configures under
+      # **Mail** in the interface -- the first run needs none, the setup screen
+      # shows the sign-in link itself. Never defaults to `console`: that prints
+      # complete, valid sign-in links to stdout, and anybody who can read
+      # `docker logs` could have one issued for any address. A decision one
+      # makes, not one that happens because nothing was said.
+      GW_MAIL_TRANSPORT: ${GW_MAIL_TRANSPORT:-}
       # Entweder die URL direkt -- oder, besser, SMTP_URL_FILE auf ein Docker
       # Secret. Eine Environment-Variable mit Passwort steht in `docker
       # inspect`, in /proc/<pid>/environ und in jedem Core-Dump; ein Secret
