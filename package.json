@@ -1,6 +1,6 @@
 {
   "name": "goodworkshop",
-  "version": "0.4.11",
+  "version": "0.4.12",
   "private": true,
   "license": "SEE LICENSE IN LICENSE",
   "packageManager": "pnpm@10.32.1",

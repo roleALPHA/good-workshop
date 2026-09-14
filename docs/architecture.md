@@ -279,6 +279,10 @@ block type's own fields — so filling in an agenda is not one `update_module` p
 `desc` is validated against its schema before anything is written, and the error names each
 item (`items[1].children[0].desc.presenter`).
 
+Its counterpart for an agenda that already exists is `update_modules`: the fields of many blocks
+and clusters of one day in one call, ids unchanged. It follows the same rule — every entry is
+checked against the day before any is written, and the error names each one (`updates[2]`).
+
 Every change optionally takes `expectedVersion`. Without it a client with a five-minute-old
 state silently overwrites live editing — which is then reported as "the AI deleted my
 workshop".

@@ -166,6 +166,7 @@ describe('the tool list', () => {
         'delete_day',
         'add_cluster',
         'update_module',
+        'update_modules',
       ]),
     )
     // Held on purpose: an MCP client must never hand out access.
@@ -486,6 +487,99 @@ describe('blocks', () => {
     expect(blocks.find((b) => b.id === block.data.id)).toMatchObject({ parked: true })
     expect(blocks.find((b) => b.id === section.data.id)).toMatchObject({ kind: 'cluster' })
     expect(outline.text).toContain('Parked')
+  })
+})
+
+describe('update_modules', () => {
+  /** A day with a cluster holding two presentations, and a break after it. */
+  async function dayWithBlocks() {
+    const { must, call } = await connect(me)
+    const { data } = await must('create_workshop', { title: unique('Viele') })
+    const workshopId = data.workshopId as string
+    const dayId = data.dayId as string
+    await must('apply_agenda', {
+      workshopId,
+      dayId,
+      items: [
+        {
+          kind: 'cluster',
+          title: 'Teil 1',
+          children: [
+            { typeKey: 'presentation', title: 'Eins' },
+            { typeKey: 'presentation', title: 'Zwei' },
+          ],
+        },
+        { kind: 'module', typeKey: 'break', title: 'Pause' },
+      ],
+    })
+    const outline = await must('get_workshop', { workshopId, dayId })
+    const blocks = outline.data.blocks as { id: string; title: string }[]
+    const id = (title: string) => blocks.find((b) => b.title === title)!.id
+    return { must, call, workshopId, dayId, id }
+  }
+
+  it('changes the fields of many blocks and clusters in one call, keeping their ids', async () => {
+    const { must, workshopId, dayId, id } = await dayWithBlocks()
+
+    await must('update_modules', {
+      workshopId,
+      dayId,
+      updates: [
+        { moduleId: id('Teil 1'), title: 'Einstieg', color: 'teal' },
+        {
+          moduleId: id('Eins'),
+          durationMinutes: 15,
+          desc: { presenter: 'Linh', materials: ['Beamer'] },
+        },
+        { moduleId: id('Zwei'), title: 'Input', desc: { key_points: ['Ziel'] } },
+        { moduleId: id('Pause'), parked: true },
+      ],
+    })
+
+    const modules = await ops.query(
+      'select id, title, duration_minutes, json_desc, parked from module where workshop_id = $1 order by title',
+      [workshopId],
+    )
+    expect(modules.rows).toMatchObject([
+      {
+        id: id('Eins'),
+        title: 'Eins',
+        duration_minutes: 15,
+        json_desc: { presenter: 'Linh', materials: ['Beamer'] },
+      },
+      { id: id('Zwei'), title: 'Input', json_desc: { key_points: ['Ziel'] } },
+      { id: id('Pause'), title: 'Pause', parked: true },
+    ])
+    const cluster = await ops.query('select title, color from cluster where id = $1', [
+      id('Teil 1'),
+    ])
+    expect(cluster.rows[0]).toEqual({ title: 'Einstieg', color: 'teal' })
+  })
+
+  it('changes nothing when one update is wrong, and names every problem', async () => {
+    const { must, call, workshopId, dayId, id } = await dayWithBlocks()
+    const missing = uuidv7()
+
+    const result = await call('update_modules', {
+      workshopId,
+      dayId,
+      updates: [
+        { moduleId: id('Eins'), title: 'Geändert' },
+        { moduleId: id('Zwei'), desc: { presenter: 42 } },
+        { moduleId: id('Teil 1'), durationMinutes: 10 },
+        { moduleId: missing, title: 'Nirgends' },
+      ],
+    })
+    expect(result.isError).toBe(true)
+    expect(result.text).toContain('updates[1].desc.presenter')
+    expect(result.text).toContain('updates[2]')
+    expect(result.text).toContain('durationMinutes')
+    expect(result.text).toContain(`updates[3]`)
+    expect(result.text).toContain(missing)
+
+    const outline = await must('get_workshop', { workshopId, dayId })
+    const titles = (outline.data.blocks as { title: string }[]).map((b) => b.title).sort()
+    expect(titles).toEqual(['Eins', 'Pause', 'Teil 1', 'Zwei'])
   })
 })
 
