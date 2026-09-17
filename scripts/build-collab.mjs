@@ -11,6 +11,7 @@ import { build } from 'esbuild'
 import { dirname, join } from 'node:path'
 import { fileURLToPath } from 'node:url'
 import { writeEdition } from './edition.mjs'
+import { billingAdaptersPath } from './edition-aliases.mjs'
 
 const root = join(dirname(fileURLToPath(import.meta.url)), '..')
 // Same decision as next.config.ts, recorded for the scripts that run later.
@@ -53,8 +54,10 @@ if (edition === 'cloud') {
     alias: {
       '@': join(root, 'src'),
       '@gw/edition': join(root, 'src/server/edition/cloud.ts'),
-      '@gw/billing-adapters':
-        process.env.GW_BILLING_ADAPTERS ?? join(root, 'src/cloud/billing/adapters/unavailable.ts'),
+      '@gw/billing-adapters': billingAdaptersPath(
+        process.env,
+        join(root, 'src/cloud/billing/adapters/unavailable.ts'),
+      ),
     },
     banner: {
       js: "import { createRequire } from 'node:module'; const require = createRequire(import.meta.url);",

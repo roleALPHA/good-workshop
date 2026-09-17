@@ -87,7 +87,12 @@ that names the state it expects, and the invoice reference is the idempotency ke
 accounting and payments, so a repeated or interrupted run neither invoices nor charges twice.
 Accounting and payments are ports (`src/cloud/billing/ports.ts`): the real adapters come from the
 private build through `@gw/billing-adapters`; every other build gets adapters that refuse, and the
-worker then only closes months and moves trials. `GW_BILLING_MODE` is a dry run unless it is
+worker then only closes months and moves trials. The private build names its adapters with the
+`GW_BILLING_ADAPTERS` build argument, which points at a file it copied into the build context;
+left empty, as every public build leaves it, the alias falls back to the adapters that refuse.
+CI builds the cloud edition against a stub outside `src/` and checks that the stub is what ends
+up in the bundle, because a build that ignored the argument would silently ship adapters that
+cannot bill. `GW_BILLING_MODE` is a dry run unless it is
 exactly `live`. Anything the run cannot decide -- a VAT number still pending, contradicting
 evidence, an invoice whose tax is not what was billed, an amount above the limit -- is held for an
 operator rather than guessed. The payment provider's webhook only verifies and stores; the worker
