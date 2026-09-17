@@ -24,8 +24,15 @@ import { applyOperatorAction, listTenants, tenantDetail } from './console'
  */
 
 const ops = new pg.Client({ connectionString: process.env.OPS_DATABASE_URL })
+/** The same database the suite runs against, as the console's role. */
 const operatorUrl =
-  process.env.OPERATOR_DATABASE_URL ?? 'postgres://gw_operator@127.0.0.1:5433/goodworkshop_cloud'
+  process.env.OPERATOR_DATABASE_URL ??
+  (() => {
+    const url = new URL(process.env.OPS_DATABASE_URL!)
+    url.username = 'gw_operator'
+    url.password = ''
+    return url.toString()
+  })()
 const console_ = new pg.Pool({ connectionString: operatorUrl, max: 2 })
 const tenants: string[] = []
 const identities: string[] = []
