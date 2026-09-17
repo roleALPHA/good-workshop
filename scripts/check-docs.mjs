@@ -68,6 +68,9 @@ const INTERNAL = {
   GW_BILLING_INTERVAL_MS: 'Cloud billing worker: time between runs. Tuning knob.',
   GW_BILLING_MAX_INVOICE_CENTS:
     'Cloud billing worker: invoices above this net amount are held for an operator.',
+  GW_OPERATOR_CONSOLE:
+    'Cloud only: `1` in the operator console container. The public web container never sets it.',
+  GW_OPERATOR_URL: 'Cloud only: where the operator console is served; passkeys are bound to it.',
   GW_BUILD:
     'Baked into the image by the Dockerfile from the build argument. Names the build the ' +
     'footer shows; an operator setting it would make the footer lie.',
@@ -124,6 +127,9 @@ const DB_URLS = [
   'MIGRATION_DATABASE_PASSWORD_FILE',
   'ADMIN_DATABASE_PASSWORD_FILE',
   'OPS_DATABASE_PASSWORD_FILE',
+  // Cloud only: the operator console's own role, never in a self-hosted .env.
+  'OPERATOR_DATABASE_URL',
+  'OPERATOR_DATABASE_PASSWORD_FILE',
 ]
 
 const problems = []

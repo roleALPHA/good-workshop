@@ -106,6 +106,17 @@ billing page's writes are SECURITY DEFINER functions that act on the current ten
 anybody who is not its admin; a refused write under row level security reaches the person as
 "this workspace is read-only", not as a failure.
 
+**The operator console** is the cloud's own administration, and it is built so that the people
+using it cannot read a customer's work. It runs in a container started with
+`GW_OPERATOR_CONSOLE=1` (every other process answers 404 under `/operator`) and connects as
+`gw_operator`, a role with no grant on any tenant table: what it sees and does is the `app.op_*`
+functions in `drizzle-cloud/sql/956_operator_functions.sql`, which return names, states, counts and
+invoices -- never content -- and write `operator_audit` with the operator and the reason for every
+change. Operators are not identities; they sign in with a passkey only, against tables of their
+own, with a session of eight hours and thirty minutes idle, and their first passkey is enrolled
+through a one-time link that `scripts/operator.mjs` prints on the server. The proxy should route
+the operator host to that container alone and restrict it by address.
+
 **OAuth clients in the cloud** register into a registry tenant, because registration happens
 before anybody has signed in. The consent screen copies the client into the tenant of the person
 consenting (`app.cloud_adopt_oauth_client`, which can only write into the tenant the caller

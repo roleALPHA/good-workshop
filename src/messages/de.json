@@ -960,5 +960,79 @@
       "invalid": "Dieser Link ist abgelaufen oder wurde schon verwendet. Registriere dich einfach noch einmal.",
       "exists": "Zu dieser Adresse gibt es schon ein Konto. Bitte melde dich an."
     }
+  },
+  "operator": {
+    "signOut": "Abmelden",
+    "signIn": {
+      "title": "Operator-Konsole",
+      "intro": "Anmeldung nur mit Passkey.",
+      "button": "Mit Passkey anmelden",
+      "failed": "Anmeldung fehlgeschlagen.",
+      "enrollTitle": "Passkey einrichten",
+      "enrollIntro": "Richte den Passkey für {email} ein.",
+      "enroll": "Passkey einrichten",
+      "enrollInvalid": "Dieser Link ist ungültig oder abgelaufen. Einen neuen erzeugt scripts/operator.mjs enroll auf dem Server."
+    },
+    "tenants": {
+      "title": "Workspaces",
+      "search": "Suche nach Name oder E-Mail",
+      "filter": "Status",
+      "all": "Alle",
+      "apply": "Anzeigen",
+      "count": "{count, plural, one {# Workspace} other {# Workspaces}}",
+      "name": "Workspace",
+      "state": "Status",
+      "plan": "Modell",
+      "members": "Mitglieder",
+      "workshops": "Workshops",
+      "attention": "Offen",
+      "created": "Angelegt",
+      "held": "{count} in Prüfung",
+      "failed": "{count} Zahlung fehlgeschlagen",
+      "noPayment": "keine Zahlungsmethode"
+    },
+    "state": {
+      "trial": "Testphase",
+      "active": "Aktiv",
+      "read_only": "Schreibgeschützt",
+      "paused": "Pausiert",
+      "deleting": "Wird gelöscht",
+      "blocked": "Gesperrt"
+    },
+    "plan": {
+      "per_user": "pro Nutzer",
+      "per_workshop": "pro Workshop"
+    },
+    "detail": {
+      "state": "Status",
+      "trialEndsAt": "Testphase bis",
+      "deleteAfter": "Löschung am",
+      "plan": "Modell",
+      "country": "Land · UID",
+      "payment": "Zahlungsmethode",
+      "yes": "ja",
+      "no": "nein",
+      "periods": "Abrechnungsperioden",
+      "audit": "Protokoll"
+    },
+    "actions": {
+      "title": "Aktionen",
+      "reason": "Begründung (Pflicht, landet im Protokoll)",
+      "pause": "Pausieren",
+      "unpause": "Pause beenden",
+      "block": "Sperren",
+      "unblock": "Entsperren",
+      "scheduleDeletion": "Löschung in {days} Tagen",
+      "cancelDeletion": "Löschung zurücknehmen",
+      "days": "Tage",
+      "extendTrial": "Testphase um {days} Tage verlängern",
+      "bill": "Abrechnen",
+      "void": "Verwerfen",
+      "error": {
+        "input": "Eingabe ungültig.",
+        "unauthenticated": "Bitte neu anmelden.",
+        "failed": "Das hat nicht geklappt."
+      }
+    }
   }
 }

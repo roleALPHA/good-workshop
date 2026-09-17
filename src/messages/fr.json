@@ -960,5 +960,79 @@
       "invalid": "Ce lien a expiré ou a déjà servi. Inscris-toi simplement à nouveau.",
       "exists": "Un compte existe déjà pour cette adresse. Connecte-toi."
     }
+  },
+  "operator": {
+    "signOut": "Se déconnecter",
+    "signIn": {
+      "title": "Console opérateur",
+      "intro": "Connexion uniquement par passkey.",
+      "button": "Se connecter avec une passkey",
+      "failed": "Échec de la connexion.",
+      "enrollTitle": "Configurer la passkey",
+      "enrollIntro": "Configure la passkey pour {email}.",
+      "enroll": "Configurer la passkey",
+      "enrollInvalid": "Ce lien est invalide ou a expiré. scripts/operator.mjs enroll sur le serveur en crée un nouveau."
+    },
+    "tenants": {
+      "title": "Espaces de travail",
+      "search": "Rechercher par nom ou e-mail",
+      "filter": "Statut",
+      "all": "Tous",
+      "apply": "Afficher",
+      "count": "{count, plural, one {# espace} many {# espaces} other {# espaces}}",
+      "name": "Espace",
+      "state": "Statut",
+      "plan": "Modèle",
+      "members": "Membres",
+      "workshops": "Ateliers",
+      "attention": "À traiter",
+      "created": "Créé",
+      "held": "{count} en vérification",
+      "failed": "{count} paiement échoué",
+      "noPayment": "pas de moyen de paiement"
+    },
+    "state": {
+      "trial": "Essai",
+      "active": "Actif",
+      "read_only": "Lecture seule",
+      "paused": "En pause",
+      "deleting": "En suppression",
+      "blocked": "Bloqué"
+    },
+    "plan": {
+      "per_user": "par utilisateur",
+      "per_workshop": "par atelier"
+    },
+    "detail": {
+      "state": "Statut",
+      "trialEndsAt": "Essai jusqu’au",
+      "deleteAfter": "Suppression le",
+      "plan": "Modèle",
+      "country": "Pays · TVA",
+      "payment": "Moyen de paiement",
+      "yes": "oui",
+      "no": "non",
+      "periods": "Périodes de facturation",
+      "audit": "Journal"
+    },
+    "actions": {
+      "title": "Actions",
+      "reason": "Motif (obligatoire, inscrit au journal)",
+      "pause": "Mettre en pause",
+      "unpause": "Terminer la pause",
+      "block": "Bloquer",
+      "unblock": "Débloquer",
+      "scheduleDeletion": "Supprimer dans {days} jours",
+      "cancelDeletion": "Annuler la suppression",
+      "days": "Jours",
+      "extendTrial": "Prolonger l’essai de {days} jours",
+      "bill": "Facturer",
+      "void": "Écarter",
+      "error": {
+        "input": "Saisie invalide.",
+        "unauthenticated": "Merci de te reconnecter.",
+        "failed": "Cela n’a pas fonctionné."
+      }
+    }
   }
 }

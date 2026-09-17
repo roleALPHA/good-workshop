@@ -960,5 +960,79 @@
       "invalid": "This link has expired or was already used. Just register again.",
       "exists": "There already is an account for this address. Please sign in."
     }
+  },
+  "operator": {
+    "signOut": "Sign out",
+    "signIn": {
+      "title": "Operator console",
+      "intro": "Sign-in with a passkey only.",
+      "button": "Sign in with passkey",
+      "failed": "Sign-in failed.",
+      "enrollTitle": "Set up passkey",
+      "enrollIntro": "Set up the passkey for {email}.",
+      "enroll": "Set up passkey",
+      "enrollInvalid": "This link is invalid or has expired. scripts/operator.mjs enroll on the server creates a new one."
+    },
+    "tenants": {
+      "title": "Workspaces",
+      "search": "Search by name or e-mail",
+      "filter": "Status",
+      "all": "All",
+      "apply": "Show",
+      "count": "{count, plural, one {# workspace} other {# workspaces}}",
+      "name": "Workspace",
+      "state": "Status",
+      "plan": "Model",
+      "members": "Members",
+      "workshops": "Workshops",
+      "attention": "Open",
+      "created": "Created",
+      "held": "{count} under review",
+      "failed": "{count} payment failed",
+      "noPayment": "no payment method"
+    },
+    "state": {
+      "trial": "Trial",
+      "active": "Active",
+      "read_only": "Read-only",
+      "paused": "Paused",
+      "deleting": "Being deleted",
+      "blocked": "Blocked"
+    },
+    "plan": {
+      "per_user": "per user",
+      "per_workshop": "per workshop"
+    },
+    "detail": {
+      "state": "Status",
+      "trialEndsAt": "Trial until",
+      "deleteAfter": "Deletion on",
+      "plan": "Model",
+      "country": "Country · VAT",
+      "payment": "Payment method",
+      "yes": "yes",
+      "no": "no",
+      "periods": "Billing periods",
+      "audit": "Audit log"
+    },
+    "actions": {
+      "title": "Actions",
+      "reason": "Reason (required, goes into the audit log)",
+      "pause": "Pause",
+      "unpause": "End pause",
+      "block": "Block",
+      "unblock": "Unblock",
+      "scheduleDeletion": "Delete in {days} days",
+      "cancelDeletion": "Take back deletion",
+      "days": "Days",
+      "extendTrial": "Extend trial by {days} days",
+      "bill": "Bill",
+      "void": "Drop",
+      "error": {
+        "input": "Invalid input.",
+        "unauthenticated": "Please sign in again.",
+        "failed": "That did not work."
+      }
+    }
   }
 }
