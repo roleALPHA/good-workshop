@@ -163,7 +163,13 @@ export async function sendWelcome(
   await sendMail(mail, PLATFORM_TENANT)
 }
 
-const stripComments = (source: string) => source.replace(/<!--[\s\S]*?-->\s*/g, '').trim()
+/** Notes for editors are whole lines, the same rule the page renderer applies. */
+const stripComments = (source: string) =>
+  source
+    .split('\n')
+    .filter((line) => !(line.trim().startsWith('<!--') && line.trim().endsWith('-->')))
+    .join('\n')
+    .trim()
 
 function confirmSignupMail(to: string, link: string, locale: Locale): Mail {
   const t = translator(locale, 'mail.signupConfirm')
