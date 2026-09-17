@@ -30,7 +30,7 @@ export function protectedResourceMetadata() {
     // left Claude and ChatGPT unable to write anything; see OAUTH_SCOPES.
     scopes_supported: [...OAUTH_SCOPES],
     bearer_methods_supported: ['header'],
-    resource_documentation: new URL('/settings/tokens', authConfig.appUrl).href,
+    resource_documentation: new URL('/settings/ai-connection', authConfig.appUrl).href,
   }
 }
 

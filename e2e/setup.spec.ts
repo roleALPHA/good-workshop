@@ -23,6 +23,8 @@ test('refuses to hand out the installation without the setup key', async ({ page
     return
   }
 
+  await page.getByLabel('Vorname').fill('Ein')
+  await page.getByLabel('Nachname').fill('Dringling')
   await page.getByLabel('Deine E-Mail-Adresse').fill('eindringling@example.test')
   await page.getByLabel('Einrichtungsschlüssel').fill('geraten')
   await page.getByRole('button', { name: 'Installation einrichten' }).click()

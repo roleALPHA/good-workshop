@@ -15,8 +15,8 @@ Everything lives in one Postgres database. Nothing personal is written to a seco
 
 | Table                                    | Personal data                                                          | Where it comes from                  |
 | ---------------------------------------- | ---------------------------------------------------------------------- | ------------------------------------ |
-| `identity`                               | email, display name, locale, `avatar_url` (unused)                     | sign-up or invitation                |
-| `member`                                 | display name per tenant, role, status, who invited                     | the admin who invited them           |
+| `identity`                               | email, locale, `display_name` and `avatar_url` (both unused)           | sign-up or invitation                |
+| `member`                                 | first and last name per tenant, role, status, who invited              | the admin who invited them           |
 | `webauthn_credential`                    | passkey public key, nickname, counter                                  | the person registering a passkey     |
 | `email_token`                            | email, **requesting IP**, purpose, expiry                              | every login link and invitation      |
 | `auth_session`                           | **IP, user agent**, session secret hash, timestamps                    | every sign-in                        |
@@ -115,7 +115,7 @@ Two things the screen does **not** reach, and they are the same two as ever: nam
 content, and names inside the CRDT update history. Read on.
 
 Who is responsible for a block counts as agenda content. `module.responsible` stores a name next
-to each member id — for a member without a display name, the part of their address before the
+to each member id — for a member without a name yet, the part of their address before the
 `@` — so that the agenda still reads correctly after the person has left. Removing a member
 therefore leaves that name on the blocks they were responsible for; take it off in the editor.
 
@@ -154,8 +154,9 @@ than to edit them: deleting a workshop row cascades through its days to `module`
 `collab_update` and `collab_state`, so the update history goes with it. In the interface that is
 the second step of deleting a workshop — move it to the bin, then empty the bin.
 
-**Rectification (Art. 16).** A person changes their own display name and language in the
-interface. An email change goes through a verification token.
+**Rectification (Art. 16).** A person changes their own first and last name and their language
+under _Profile & settings_; a tenant admin can correct a member's name in the member list. An
+email change goes through a verification token.
 
 ## What the operator has to do themselves
 

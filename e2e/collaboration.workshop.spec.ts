@@ -30,6 +30,8 @@ test('invites a colleague, shares a workshop, and edits it together', async ({ p
   // ── Invite ────────────────────────────────────────────────────────────
   await page.goto('/admin/members')
   await page.getByRole('button', { name: 'Mitglied einladen' }).click()
+  await page.getByLabel('Vorname').fill('Kora')
+  await page.getByLabel('Nachname').fill('Kollegin')
   await page.getByLabel('E-Mail-Adresse').fill(colleague)
   await page.getByRole('button', { name: 'Einladen', exact: true }).click()
 
@@ -77,9 +79,10 @@ test('invites a colleague, shares a workshop, and edits it together', async ({ p
     .click()
 
   await expect(second.page.getByRole('article', { name: 'Energizer' })).toBeVisible()
-  // Named, not merely counted: the point of presence is recognising who it is.
+  // Named, not merely counted: the point of presence is recognising who it is
+  // -- by the name the admin gave at invitation, not by an address.
   await expect(page.getByRole('list', { name: 'Weitere Personen an diesem Tag' })).toContainText(
-    colleague,
+    'Kora Kollegin',
   )
 
   // ── Downgraded to reading: the agenda, and no way into it ─────────────

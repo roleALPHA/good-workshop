@@ -93,7 +93,7 @@ const Duration = z.number().int().min(0).max(1440)
  * Who answers for a block, as a model names them.
  *
  * A member by `memberId` (get_workshop shows the ids of people already
- * assigned) or by their exact name; anybody else by name alone. There is
+ * assigned) or by their exact full name, first and last; anybody else by name alone. There is
  * deliberately no tool that lists the workspace's members -- see the note on
  * members in docs/architecture.md -- so a name that matches nobody is taken to
  * be somebody from outside, which is what it most likely is.
@@ -113,7 +113,7 @@ const PeopleInput = z
   .describe(
     'Who is responsible for the block -- the whole list, [] clears it. Each entry is ' +
       '{ memberId } for a member of the workspace, or { name } for anybody; a name that is exactly ' +
-      "a member's name is linked to that member.",
+      "a member's full name (first and last name) is linked to that member.",
   )
 type PeopleInput = z.infer<typeof PeopleInput>
 

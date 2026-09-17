@@ -223,7 +223,14 @@ export const member = pgTable(
       .references(() => identity.id, { onDelete: 'cascade' }),
     role: text('role').notNull().default('member'),
     status: text('status').notNull().default('invited'),
-    displayName: text('display_name'),
+    /**
+     * The name colleagues see. Tenant data rather than a column on the global
+     * identity: an admin may correct it, and gw_app reads it without crossing
+     * into the auth role. Empty for members who joined before it was asked for
+     * -- see src/domain/tenant/person-name.ts.
+     */
+    firstName: text('first_name').notNull().default(''),
+    lastName: text('last_name').notNull().default(''),
     invitedBy: uuid('invited_by'),
     ...timestamps,
   },
@@ -233,6 +240,8 @@ export const member = pgTable(
     unique('member_tenant_identity_uq').on(t.tenantId, t.identityId),
     check('member_role', sql`${t.role} in ('member','admin')`),
     check('member_status', sql`${t.status} in ('invited','active','disabled')`),
+    check('member_first_name_length', sql`length(${t.firstName}) <= 100`),
+    check('member_last_name_length', sql`length(${t.lastName}) <= 100`),
     index('member_tenant_role_idx').on(t.tenantId, t.role),
     index('member_identity_idx').on(t.identityId),
     pgPolicy('member_tenant_isolation', {

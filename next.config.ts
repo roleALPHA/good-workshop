@@ -28,6 +28,19 @@ const nextConfig: NextConfig = {
 
   reactStrictMode: true,
   poweredByHeader: false,
+
+  /**
+   * The two settings pages were renamed from what they are made of to what they
+   * are for: "Passkeys" became Security, "Token" became AI Connection. The old
+   * addresses live on in bookmarks, in the README of older releases and in
+   * OAuth metadata that a client may have cached, so they keep working.
+   */
+  async redirects() {
+    return [
+      { source: '/settings/passkeys', destination: '/settings/security', permanent: true },
+      { source: '/settings/tokens', destination: '/settings/ai-connection', permanent: true },
+    ]
+  },
   typedRoutes: true,
 }
 

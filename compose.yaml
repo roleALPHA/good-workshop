@@ -131,6 +131,8 @@ services:
       # Legt beim allerersten Lauf einen Admin an und druckt einen einmaligen
       # sign-in link to stdout -- independently of the mail configuration.
       GW_BOOTSTRAP_ADMIN_EMAIL: ${GW_BOOTSTRAP_ADMIN_EMAIL:-}
+      GW_BOOTSTRAP_ADMIN_FIRST_NAME: ${GW_BOOTSTRAP_ADMIN_FIRST_NAME:-}
+      GW_BOOTSTRAP_ADMIN_LAST_NAME: ${GW_BOOTSTRAP_ADMIN_LAST_NAME:-}
     # Three, because this service needs three roles: superuser for the roles
     # themselves, gw_owner for the schema, gw_app for provisioning through the
     # same door as the application. It does not get gw_ops.

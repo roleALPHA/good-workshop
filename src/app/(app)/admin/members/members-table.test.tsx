@@ -5,10 +5,12 @@ import type { MemberRow } from '@/domain/tenant/members'
 import { renderWithIntl } from '@/test/intl'
 
 const removeMemberAction = vi.fn()
+const setMemberNameAction = vi.fn()
 
 vi.mock('next/navigation', () => ({ useRouter: () => ({ refresh: vi.fn() }) }))
 vi.mock('@/server/actions/members', () => ({
   removeMemberAction: (...args: unknown[]) => removeMemberAction(...args),
+  setMemberNameAction: (...args: unknown[]) => setMemberNameAction(...args),
   setMemberRoleAction: vi.fn(),
   setMemberStatusAction: vi.fn(),
 }))
@@ -19,6 +21,8 @@ function person(overrides: Partial<MemberRow> = {}): MemberRow {
   return {
     id: 'm-leaving',
     email: 'weg@example.test',
+    firstName: 'Wanda',
+    lastName: 'Weg',
     displayName: 'Wanda Weg',
     role: 'member',
     status: 'active',
@@ -28,7 +32,13 @@ function person(overrides: Partial<MemberRow> = {}): MemberRow {
   }
 }
 
-const successor = person({ id: 'm-stay', email: 'bleibt@example.test', displayName: 'Bea Bleibt' })
+const successor = person({
+  id: 'm-stay',
+  email: 'bleibt@example.test',
+  firstName: 'Bea',
+  lastName: 'Bleibt',
+  displayName: 'Bea Bleibt',
+})
 
 async function openRemoval(user: ReturnType<typeof userEvent.setup>, name = 'Wanda Weg') {
   const row = screen.getByText(name).closest('li')!
@@ -39,6 +49,60 @@ async function openRemoval(user: ReturnType<typeof userEvent.setup>, name = 'Wan
 beforeEach(() => {
   removeMemberAction.mockReset()
   removeMemberAction.mockResolvedValue({ ok: true, data: {} })
+  setMemberNameAction.mockReset()
+  setMemberNameAction.mockResolvedValue({ ok: true, data: null })
+})
+
+describe('names', () => {
+  it('shows the address under the name', () => {
+    renderWithIntl(<MembersTable members={[person()]} />)
+    const row = screen.getByText('Wanda Weg').closest('li')!
+    expect(within(row).getByText('weg@example.test')).toBeInTheDocument()
+  })
+
+  it('says so when somebody has no name yet', () => {
+    renderWithIntl(
+      <MembersTable
+        members={[
+          person({ firstName: '', lastName: '', displayName: '', email: 'neu@example.test' }),
+        ]}
+      />,
+    )
+    const row = screen.getByText('neu@example.test').closest('li')!
+    expect(within(row).getByText(/noch ohne Namen/)).toBeInTheDocument()
+  })
+
+  it('lets an admin correct a name in place', async () => {
+    const user = userEvent.setup()
+    renderWithIntl(<MembersTable members={[person()]} />)
+    await user.click(screen.getByRole('button', { name: 'Namen von weg@example.test ändern' }))
+
+    const first = screen.getByRole('textbox', { name: 'Vorname' })
+    const last = screen.getByRole('textbox', { name: 'Nachname' })
+    expect(first).toHaveValue('Wanda')
+    expect(last).toHaveValue('Weg')
+
+    await user.clear(last)
+    await user.type(last, 'Wegener')
+    await user.click(screen.getByRole('button', { name: 'Speichern' }))
+
+    expect(setMemberNameAction).toHaveBeenCalledWith({
+      memberId: 'm-leaving',
+      firstName: 'Wanda',
+      lastName: 'Wegener',
+    })
+  })
+
+  it('shows a refusal next to the row', async () => {
+    setMemberNameAction.mockResolvedValue({ ok: false, message: 'Bitte einen Nachnamen angeben.' })
+    const user = userEvent.setup()
+    renderWithIntl(<MembersTable members={[person()]} />)
+    await user.click(screen.getByRole('button', { name: 'Namen von weg@example.test ändern' }))
+    await user.clear(screen.getByRole('textbox', { name: 'Nachname' }))
+    await user.click(screen.getByRole('button', { name: 'Speichern' }))
+
+    expect(await screen.findByRole('alert')).toHaveTextContent('Bitte einen Nachnamen angeben.')
+  })
 })
 
 describe('removing a member', () => {
@@ -118,6 +182,8 @@ describe('removing a member', () => {
           person({
             id: 'm-off',
             email: 'aus@example.test',
+            firstName: 'Otto',
+            lastName: 'Aus',
             displayName: 'Otto Aus',
             status: 'disabled',
           }),

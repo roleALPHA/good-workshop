@@ -40,12 +40,12 @@ Two rules that are easy to break:
 | Namespace     | Reaches the browser | Contents                                                |
 | ------------- | ------------------- | ------------------------------------------------------- |
 | `common`      | yes                 | labels used in three or more places                     |
-| `nav`         | yes                 | the app shell header                                    |
+| `nav`         | yes                 | the app shell header and its profile menu               |
 | `auth`        | yes                 | login, setup                                            |
 | `library`     | yes                 | library, folders, bin                                   |
 | `workshop`    | yes                 | the workshop and access screens                         |
 | `agenda`      | yes                 | agenda, inspector, drag announcements                   |
-| `settings`    | yes                 | language, passkeys, tokens                              |
+| `settings`    | yes                 | profile, language, security (passkeys), AI connection   |
 | `admin`       | yes                 | branding, members, mail                                 |
 | `errors`      | yes                 | `ActionError` codes, domain and field error keys        |
 | `enums`       | yes                 | values that come out of the database                    |

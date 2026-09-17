@@ -11,7 +11,7 @@ import { middleware } from './middleware'
  * and is one endpoint.
  *
  * Clickjacking needs no XSS to work, and /admin/members, /admin/branding and
- * /settings/tokens put role changes, invitations and token creation behind
+ * /settings/ai-connection put role changes, invitations and token creation behind
  * ordinary buttons. That is the finding; CSP is the second line behind it.
  */
 

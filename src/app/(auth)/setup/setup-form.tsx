@@ -50,6 +50,35 @@ export function SetupForm() {
         </p>
       )}
 
+      <div className="grid gap-4 sm:grid-cols-2">
+        <div>
+          <label htmlFor="setup-first-name" className="text-[14px] font-medium">
+            {t('firstName')}
+          </label>
+          <input
+            id="setup-first-name"
+            name="firstName"
+            required
+            maxLength={100}
+            autoComplete="given-name"
+            className={field}
+          />
+        </div>
+        <div>
+          <label htmlFor="setup-last-name" className="text-[14px] font-medium">
+            {t('lastName')}
+          </label>
+          <input
+            id="setup-last-name"
+            name="lastName"
+            required
+            maxLength={100}
+            autoComplete="family-name"
+            className={field}
+          />
+        </div>
+      </div>
+
       <div>
         <label htmlFor="setup-email" className="text-[14px] font-medium">
           {t('email')}

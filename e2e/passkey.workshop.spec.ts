@@ -32,8 +32,9 @@ test('creates a passkey and lists it, then removes it again', async ({ page, bro
     },
   })
 
-  await page.goto('/settings/passkeys')
-  await expect(page.getByRole('heading', { name: 'Passkeys' })).toBeVisible()
+  await page.goto('/settings/security')
+  await expect(page.getByRole('heading', { level: 1, name: 'Sicherheit' })).toBeVisible()
+  await expect(page.getByRole('heading', { level: 2, name: 'Passkeys' })).toBeVisible()
 
   await page.getByLabel('Name (optional)').fill('Testgerät')
   await page.getByRole('button', { name: 'Passkey anlegen' }).click()

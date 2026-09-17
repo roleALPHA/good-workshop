@@ -303,7 +303,8 @@ the title and the duration rather than in a `desc` a tenant can edit away. It ho
 people, each `{ name, memberId }`; a member carries their id, somebody from outside the workspace
 only a name. The name is stored for members too: the print view, the export and a guest have no
 member directory, and a guest must not be handed one. Where a directory is at hand the editor
-shows a member under their current name. A model names people by `memberId` or by exact name;
+shows a member under their current name. A model names people by `memberId` or by their exact
+full name, first and last;
 there is still no tool that lists the members, so a name that matches nobody is taken to be
 somebody from outside.
 

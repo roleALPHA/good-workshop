@@ -6,6 +6,7 @@ import {
   inviteMember,
   listMembers,
   removeMember,
+  setMemberName,
   setMemberRole,
   setMemberStatus,
   type MemberRow,
@@ -63,12 +64,21 @@ export type InviteOutcome = {
 export async function inviteMemberAction(raw: {
   email: string
   role: 'member' | 'admin'
+  firstName: string
+  lastName: string
 }): Promise<ActionResult<InviteOutcome>> {
   const actor = await currentActor()
   if (!actor) return fail('unauthenticated', 'unauthenticated')
 
   const parsed = z
-    .object({ email: z.string().trim().min(3).max(320), role: z.enum(['member', 'admin']) })
+    .object({
+      email: z.string().trim().min(3).max(320),
+      role: z.enum(['member', 'admin']),
+      // Checked in the domain, where the rule and its message keys live; here
+      // only that something string-shaped arrived.
+      firstName: z.string().max(1000),
+      lastName: z.string().max(1000),
+    })
     .safeParse(raw)
   if (!parsed.success) return fail('invalid_input', 'member.checkEmailAndRole')
 
@@ -77,7 +87,10 @@ export async function inviteMemberAction(raw: {
     // its own yet, and starting them in a language somebody nearby actually
     // speaks beats starting everybody in German.
     const locale = await getLocale()
-    const invited = await inviteMember(actor, parsed.data.email, parsed.data.role, locale)
+    const invited = await inviteMember(actor, parsed.data.email, parsed.data.role, locale, {
+      firstName: parsed.data.firstName,
+      lastName: parsed.data.lastName,
+    })
     const issued = await issueMagicLink(invited.email, actor.tenantId)
 
     let mailed = false
@@ -123,6 +136,37 @@ export async function setMemberRoleAction(raw: {
   try {
     await setMemberRole(actor, raw.memberId, raw.role)
     revalidatePath('/admin/members')
+    return { ok: true, data: null }
+  } catch (error) {
+    return toResult(error)
+  }
+}
+
+export async function setMemberNameAction(raw: {
+  memberId: string
+  firstName: string
+  lastName: string
+}): Promise<ActionResult<null>> {
+  const actor = await currentActor()
+  if (!actor) return fail('unauthenticated', 'unauthenticated')
+
+  const input = z
+    .object({
+      memberId: z.string().uuid(),
+      firstName: z.string().max(1000),
+      lastName: z.string().max(1000),
+    })
+    .safeParse(raw)
+  if (!input.success) return fail('invalid_input', 'member.gone')
+
+  try {
+    await setMemberName(actor, input.data.memberId, {
+      firstName: input.data.firstName,
+      lastName: input.data.lastName,
+    })
+    // A name shows up in the header, in the sharing lists and in presence,
+    // so everything under the layout is stale, not only this page.
+    revalidatePath('/', 'layout')
     return { ok: true, data: null }
   } catch (error) {
     return toResult(error)

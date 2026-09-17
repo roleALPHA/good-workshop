@@ -55,8 +55,8 @@ beforeAll(async () => {
     ])
   }
   await ops.query(
-    `insert into member (id, tenant_id, identity_id, role, status)
-     values ($1, $2, $3, 'member', 'active')`,
+    `insert into member (id, tenant_id, identity_id, role, status, first_name, last_name)
+     values ($1, $2, $3, 'member', 'active', 'Mia', 'Nowak')`,
     [memberId, TENANT, identityId],
   )
   await ops.query(
@@ -77,6 +77,11 @@ describe('session lifetime', () => {
   it('accepts a session that was used recently', async () => {
     const cookie = await makeSession('1 hour')
     expect(await verifySessionCookie(cookie)).not.toBeNull()
+  })
+
+  it('names the person from their membership', async () => {
+    const session = await verifySessionCookie(await makeSession('1 minute'))
+    expect(session).toMatchObject({ firstName: 'Mia', lastName: 'Nowak', displayName: 'Mia Nowak' })
   })
 
   it('refuses a session that has been idle too long', async () => {

@@ -71,6 +71,13 @@
       "when": 1789400838369,
       "tag": "0009_access_changed_notify",
       "breakpoints": true
+    },
+    {
+      "idx": 10,
+      "version": "7",
+      "when": 1789640733604,
+      "tag": "0010_member_names",
+      "breakpoints": true
     }
   ]
 }

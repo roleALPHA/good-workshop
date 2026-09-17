@@ -14,7 +14,7 @@ export const dynamic = 'force-dynamic'
  * lives in their own settings. Minting a credential that acts as a colleague
  * is not a power a tenant admin needs, so there is no screen for it.
  */
-export default async function TokensPage() {
+export default async function AiConnectionPage() {
   const [result, t] = await Promise.all([loadTokens(), getTranslations('settings.tokens')])
 
   return (

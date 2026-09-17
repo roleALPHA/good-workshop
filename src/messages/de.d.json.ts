@@ -24,6 +24,8 @@ declare const messages: {
       "title": "Mitglieder",
       "invite": "Mitglied einladen",
       "email": "E-Mail-Adresse",
+      "firstName": "Vorname",
+      "lastName": "Nachname",
       "emailPlaceholder": "kollegin@example.com",
       "role": "Rolle",
       "roleOf": "Rolle von {email}",
@@ -46,7 +48,12 @@ declare const messages: {
       "successor": "Übernimmt",
       "successorPlaceholder": "Bitte wählen …",
       "removeTypeLabel": "Zum Bestätigen die E-Mail-Adresse eintippen: {email}",
-      "removed": "{name} wurde entfernt."
+      "removed": "{name} wurde entfernt.",
+      "editName": "Namen ändern",
+      "editNameOf": "Namen von {email} ändern",
+      "saveName": "Speichern",
+      "cancelName": "Abbrechen",
+      "noName": "noch ohne Namen"
     },
     "mail": {
       "title": "Mailversand",
@@ -202,6 +209,8 @@ declare const messages: {
     "setup": {
       "title": "GoodWorkshop einrichten",
       "intro": "Diese Installation hat noch niemanden, der sie verwalten kann. Trag dich als erste Administratorin ein — alles Weitere, auch der Mailversand, geht danach in der Oberfläche.",
+      "firstName": "Vorname",
+      "lastName": "Nachname",
       "email": "Deine E-Mail-Adresse",
       "emailHint": "Damit meldest du dich künftig an. Weitere Personen lädst du danach in der Oberfläche ein.",
       "key": "Einrichtungsschlüssel",
@@ -304,6 +313,11 @@ declare const messages: {
         "successorIsLeaver": "Das Mitglied kann nicht selbst übernehmen, was es abgibt.",
         "successorGone": "Wer übernehmen sollte, ist kein Mitglied mehr. Bitte neu auswählen.",
         "successorDisabled": "Wer übernehmen soll, ist abgeschaltet und könnte sich nicht anmelden. Lass die Person erst wieder zu oder wähle jemand anderen."
+      },
+      "person": {
+        "firstNameRequired": "Bitte einen Vornamen angeben.",
+        "lastNameRequired": "Bitte einen Nachnamen angeben.",
+        "nameTooLong": "Vor- und Nachname dürfen je höchstens {max} Zeichen lang sein."
       },
       "setup": {
         "wrongKey": "Der Einrichtungsschlüssel stimmt nicht.",
@@ -497,18 +511,31 @@ declare const messages: {
     "branding": "Branding",
     "members": "Mitglieder",
     "mail": "Mailversand",
-    "passkeys": "Passkeys",
-    "tokens": "Token",
+    "administration": "Verwaltung",
+    "profile": "Profil & Einstellungen",
+    "security": "Sicherheit",
+    "aiConnection": "KI-Verbindung",
     "signOut": "Abmelden",
-    "account": "Konto"
+    "account": "Konto",
+    "openMenu": "Menü öffnen"
   },
   "settings": {
-    "intro": "Dein Konto: Sprache, Passkeys und Zugangstoken.",
+    "intro": "Dein Konto: Name, Sprache, Sicherheit und KI-Verbindung.",
     "language": {
       "title": "Sprache",
       "intro": "Gilt für die Oberfläche, deine Exporte und die E-Mails, die du bekommst.",
       "label": "Sprache",
       "apply": "Übernehmen"
+    },
+    "profile": {
+      "title": "Profil",
+      "intro": "So sehen dich andere in Workshops, Freigaben und bei der gemeinsamen Bearbeitung.",
+      "firstName": "Vorname",
+      "lastName": "Nachname",
+      "save": "Speichern",
+      "saving": "Speichern …",
+      "saved": "Gespeichert.",
+      "missing": "Bitte trag deinen Vor- und Nachnamen ein, damit dich andere erkennen."
     },
     "passkeys": {
       "added": "Passkey angelegt.",
@@ -526,13 +553,16 @@ declare const messages: {
       "removeLabel": "{name} entfernen",
       "requestRejected": "Die Anfrage wurde abgelehnt.",
       "synced": "synchronisiert",
-      "title": "Passkeys",
+      "title": "Sicherheit",
+      "heading": "Passkeys",
+      "summary": "Anmelden ohne Passwort: mit Passkeys auf deinen Geräten.",
       "unavailable": "Diese Installation läuft auf <code>{origin}</code>. Browser erlauben Passkeys nur über HTTPS (oder auf <code>localhost</code>) — anlegen lässt sich hier keiner. Der Anmeldelink per E-Mail bleibt der Weg hinein.",
       "waiting": "Warte auf das Gerät …"
     },
     "title": "Einstellungen",
     "tokens": {
-      "title": "Zugangstoken",
+      "title": "KI-Verbindung",
+      "summary": "Claude, ChatGPT und andere KI-Clients mit deinen Workshops verbinden.",
       "intro": "Für MCP-Clients wie Claude Code, Claude Desktop, Gemini CLI, Codex oder Langdock. Ein Token handelt als du — es kann nie mehr, als du selbst darfst. Claude, ChatGPT und andere können sich stattdessen ohne Token per OAuth anmelden, unten auf dieser Seite.",
       "freshLabel": "Dein neues Token",
       "freshHint": "Es wird nur einmal angezeigt — gespeichert ist nur sein Hash.",
@@ -670,7 +700,7 @@ declare const messages: {
     "approve": "Zugriff erlauben",
     "approving": "Einen Moment …",
     "deny": "Ablehnen",
-    "revokeHint": "Du kannst den Zugriff jederzeit in den Einstellungen unter Zugangstoken zurückziehen.",
+    "revokeHint": "Du kannst den Zugriff jederzeit in den Einstellungen unter KI-Verbindung zurückziehen.",
     "unknownClient": "Diesen Client kennt diese Installation nicht.",
     "badRedirect": "Die Rücksprungadresse gehört nicht zu diesem Client.",
     "badResponseType": "Diese Anfrage hat einen Antworttyp, den dieser Server nicht anbietet.",

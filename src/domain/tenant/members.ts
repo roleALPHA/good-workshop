@@ -1,11 +1,12 @@
 import { randomUUID } from 'node:crypto'
 import { and, asc, eq, inArray, ne, sql } from 'drizzle-orm'
 import type { Actor, Tx } from '@/server/db'
-import { withAuth, withTenant } from '@/server/db'
+import { memberIdOf, withAuth, withTenant } from '@/server/db'
 import { folder, identity, member, workshop } from '@/server/db/schema'
 import { DomainError } from '@/domain/errors'
 import type { AssignablePerson } from '@/domain/agenda/responsible'
 import type { Locale } from '@/i18n/config'
+import { fullName, normalisePersonName, type PersonName } from './person-name'
 
 /**
  * Who belongs to this tenant.
@@ -23,6 +24,9 @@ export type MemberStatus = 'invited' | 'active' | 'disabled'
 export type MemberRow = {
   id: string
   email: string
+  firstName: string
+  lastName: string
+  /** First and last name joined; '' for somebody who has no name yet. */
   displayName: string
   role: TenantRole
   status: MemberStatus
@@ -131,7 +135,7 @@ export async function listDirectory(actor: Actor): Promise<MemberRow[]> {
  * nothing more.
  *
  * The name is what gets written into the agenda, and the agenda travels -- into
- * an export, onto paper, to a guest. So a member without a display name is
+ * an export, onto paper, to a guest. So a member without a name yet is
  * offered under the part of their address before the @ rather than the whole
  * of it: enough to recognise a colleague by, without putting their address
  * into every document the block ends up in.
@@ -154,7 +158,8 @@ async function readMembers(actor: Actor): Promise<MemberRow[]> {
         identityId: member.identityId,
         role: member.role,
         status: member.status,
-        displayName: member.displayName,
+        firstName: member.firstName,
+        lastName: member.lastName,
       })
       .from(member)
       .orderBy(asc(member.createdAt)),
@@ -163,7 +168,7 @@ async function readMembers(actor: Actor): Promise<MemberRow[]> {
 
   const identities = await withAuth((tx) =>
     tx
-      .select({ id: identity.id, email: identity.email, displayName: identity.displayName })
+      .select({ id: identity.id, email: identity.email })
       .from(identity)
       .where(
         inArray(
@@ -179,7 +184,9 @@ async function readMembers(actor: Actor): Promise<MemberRow[]> {
     return {
       id: row.id,
       email: person?.email ?? '',
-      displayName: row.displayName || person?.displayName || '',
+      firstName: row.firstName,
+      lastName: row.lastName,
+      displayName: fullName(row),
       role: row.role === 'admin' ? 'admin' : 'member',
       status: row.status as MemberStatus,
       isSelf: row.id === actor.memberId,
@@ -215,8 +222,11 @@ export async function inviteMember(
    * invited you.
    */
   locale: Locale,
+  /** Asked for on invitation, so that nobody appears under their address. */
+  name: PersonName,
 ): Promise<InviteResult> {
   assertTenantAdmin(actor)
+  const { firstName, lastName } = normalisePersonName(name)
 
   const email = emailAddress.trim().toLowerCase()
   if (!/^[^@\s]+@[^@\s]+\.[^@\s]+$/.test(email)) {
@@ -260,11 +270,58 @@ export async function inviteMember(
         identityId,
         role,
         status: 'invited',
+        firstName,
+        lastName,
         invitedBy: actor.memberId,
       })
       .returning({ id: member.id })
 
     return { memberId: created[0]!.id, email, alreadyMember: false }
+  })
+}
+
+/**
+ * An admin correcting a colleague's name.
+ *
+ * Admin-only because a name is how everybody else recognises a person in the
+ * agenda; letting any member rename a colleague would let them put words in
+ * somebody else's mouth.
+ */
+export async function setMemberName(
+  actor: Actor,
+  memberId: string,
+  name: PersonName,
+): Promise<void> {
+  assertTenantAdmin(actor)
+  const { firstName, lastName } = normalisePersonName(name)
+
+  await withTenant(actor, async (tx) => {
+    const updated = await tx
+      .update(member)
+      .set({ firstName, lastName, updatedAt: sql`now()` })
+      .where(eq(member.id, memberId))
+      .returning({ id: member.id })
+
+    if (!updated[0]) throw new MemberError('member.gone')
+  })
+}
+
+/**
+ * Anybody changing their own name. The member id comes from the session, never
+ * from the request, so there is nothing to point at somebody else.
+ */
+export async function setOwnName(actor: Actor, name: PersonName): Promise<void> {
+  const memberId = memberIdOf(actor)
+  const { firstName, lastName } = normalisePersonName(name)
+
+  await withTenant(actor, async (tx) => {
+    const updated = await tx
+      .update(member)
+      .set({ firstName, lastName, updatedAt: sql`now()` })
+      .where(eq(member.id, memberId))
+      .returning({ id: member.id })
+
+    if (!updated[0]) throw new MemberError('member.gone')
   })
 }
 

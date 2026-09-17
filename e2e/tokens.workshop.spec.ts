@@ -13,7 +13,8 @@ test.describe.configure({ mode: 'serial' })
 test('makes a token that works, and can take it back', async ({ page, request }) => {
   const name = `E2E ${Date.now()}`
 
-  await page.goto('/settings/tokens')
+  await page.goto('/settings/ai-connection')
+  await expect(page.getByRole('heading', { level: 1, name: 'KI-Verbindung' })).toBeVisible()
   await page.getByRole('button', { name: 'Token anlegen' }).click()
   await page.getByLabel('Wofür ist es?').fill(name)
   await page.getByLabel('Workshops schreiben').check()
@@ -82,7 +83,7 @@ test('makes a token that works, and can take it back', async ({ page, request })
 })
 
 test('offers no way to grant member management', async ({ page }) => {
-  await page.goto('/settings/tokens')
+  await page.goto('/settings/ai-connection')
   await page.getByRole('button', { name: 'Token anlegen' }).click()
 
   // A decision to hold even when somebody asks for it: there is no scope to

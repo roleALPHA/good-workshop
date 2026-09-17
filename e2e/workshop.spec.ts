@@ -508,7 +508,9 @@ test('names the other people on the day, and says which one is not a person', as
   // A colleague, by name rather than by colour: a coloured dot alone tells a
   // colour-blind reader nothing, and tells anybody else nothing either.
   const presence = page.getByRole('list', { name: 'Weitere Personen an diesem Tag' })
-  await expect(presence).toContainText(process.env.E2E_EMAIL ?? 'e2e@example.test')
+  // The first name is what e2e/auth.setup.ts creates the account with; the last
+  // name is left out because e2e/profile.workshop.spec.ts changes it.
+  await expect(presence).toContainText('Erika')
 
   // Focus a field and let the other window show where this person is.
   await page.getByRole('article', { name: 'Gruppenarbeit' }).getByLabel('Titel').focus()

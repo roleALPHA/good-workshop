@@ -12,6 +12,7 @@ import { authConfig } from '@/server/auth/config'
  * somebody owns the installation.
  */
 
+const NAME = { firstName: 'Rosa', lastName: 'Setup' }
 const ops = new pg.Client({ connectionString: process.env.OPS_DATABASE_URL })
 const TENANT = authConfig.defaultTenantId
 
@@ -72,37 +73,54 @@ describe('a fresh installation', () => {
   })
 
   it('refuses a wrong key before looking at anything else', async () => {
-    await expect(claimInstallation('setup-a@example.test', 'falsch')).rejects.toThrow(SetupError)
+    await expect(claimInstallation('setup-a@example.test', 'falsch', NAME)).rejects.toThrow(
+      SetupError,
+    )
     expect(await needsSetup()).toBe(true)
   })
 
   it('refuses an address that is not one', async () => {
-    await expect(claimInstallation('kein-email', currentSetupToken())).rejects.toThrow(
+    await expect(claimInstallation('kein-email', currentSetupToken(), NAME)).rejects.toThrow(
       'setup.invalidEmail',
     )
   })
 
   it('makes the first caller an admin and then closes', async () => {
-    const email = await claimInstallation('setup-b@example.test', currentSetupToken())
+    const email = await claimInstallation('setup-b@example.test', currentSetupToken(), NAME)
     expect(email).toBe('setup-b@example.test')
 
     const { rows } = await ops.query(
-      `select m.role, m.status from member m
+      `select m.role, m.status, m.first_name, m.last_name from member m
          join identity i on i.id = m.identity_id
         where i.email = $1 and m.tenant_id = $2`,
       ['setup-b@example.test', TENANT],
     )
-    expect(rows[0]).toMatchObject({ role: 'admin', status: 'active' })
+    expect(rows[0]).toMatchObject({
+      role: 'admin',
+      status: 'active',
+      first_name: 'Rosa',
+      last_name: 'Setup',
+    })
 
     // The whole point: no second claim, and the page is gone.
     expect(await needsSetup()).toBe(false)
-    await expect(claimInstallation('setup-c@example.test', currentSetupToken())).rejects.toThrow(
-      'setup.alreadyClaimed',
-    )
+    await expect(
+      claimInstallation('setup-c@example.test', currentSetupToken(), NAME),
+    ).rejects.toThrow('setup.alreadyClaimed')
+  })
+
+  it('refuses a claim without a name', async () => {
+    await expect(
+      claimInstallation('setup-e@example.test', currentSetupToken(), {
+        firstName: 'Rosa',
+        lastName: '',
+      }),
+    ).rejects.toThrow('person.lastNameRequired')
+    expect(await needsSetup()).toBe(true)
   })
 
   it('normalises the address, so Setup-B and setup-b are one account', async () => {
-    await claimInstallation('  Setup-B@Example.Test  ', currentSetupToken())
+    await claimInstallation('  Setup-B@Example.Test  ', currentSetupToken(), NAME)
     const { rows } = await ops.query(`select email from identity where email = $1`, [
       'setup-b@example.test',
     ])
@@ -114,7 +132,7 @@ describe('a fresh installation', () => {
       'setup-d@example.test',
     ])
 
-    await claimInstallation('setup-d@example.test', currentSetupToken())
+    await claimInstallation('setup-d@example.test', currentSetupToken(), NAME)
     expect(await needsSetup()).toBe(false)
   })
 })
