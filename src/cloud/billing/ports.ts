@@ -1,3 +1,4 @@
+import type { PlanKey } from '@/cloud/billing/plans'
 import type { TaxTreatment } from '@/cloud/tax/treatment'
 
 /**
@@ -24,7 +25,17 @@ export type BillingCustomer = {
   vatId: string | null
 }
 
-export type InvoiceLine = { description: string; quantity: number; unitNetCents: number }
+export type InvoiceLine = {
+  description: string
+  quantity: number
+  unitNetCents: number
+  /**
+   * Which plan the line bills. The accounting adapter picks its article from
+   * this, never from the description -- a reworded line must not change what
+   * gets invoiced.
+   */
+  plan: PlanKey
+}
 
 export type IssuedInvoice = {
   id: string

@@ -201,6 +201,7 @@ export async function invoicePeriods(db: Db, adapters: BillingAdapters, options:
               description: `GoodWorkshop ${period.plan} ${String(period.month).slice(0, 7)}`,
               quantity: Number(period.quantity),
               unitNetCents: period.unit_net_cents,
+              plan: period.plan,
             },
           ],
           tax: {

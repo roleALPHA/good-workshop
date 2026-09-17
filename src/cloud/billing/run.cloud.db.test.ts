@@ -317,6 +317,17 @@ describe('invoicing and collecting', () => {
     ])
   })
 
+  it('names the plan on the line, so accounting knows which product it is', async () => {
+    // The accounting adapter has to pick a product, and a human-readable
+    // description is the wrong thing to parse for that: a reworded line would
+    // silently invoice against the wrong article.
+    const id = await computed()
+    const fake = fakeAdapters()
+    await invoicePeriods(ops, fake.adapters, options())
+    const invoice = fake.invoices.get((await period(id)).invoice_ref)
+    expect(invoice?.lines).toEqual([expect.objectContaining({ plan: 'per_user', quantity: 1 })])
+  })
+
   it('finds an invoice already issued instead of issuing a second one', async () => {
     const id = await computed()
     const fake = fakeAdapters()
@@ -324,7 +335,7 @@ describe('invoicing and collecting', () => {
     await fake.adapters.invoicing.issueInvoice({
       customerRef: 'x',
       ref,
-      lines: [{ description: 'earlier run', quantity: 1, unitNetCents: 100 }],
+      lines: [{ description: 'earlier run', quantity: 1, unitNetCents: 100, plan: 'per_user' }],
       tax: { kind: 'domestic', country: 'AT', rate: 0.2 },
       collectedAfter: APRIL_2,
     })
