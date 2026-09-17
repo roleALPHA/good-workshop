@@ -4,7 +4,7 @@ import { cookies } from 'next/headers'
 import { and, eq, gt, isNull, sql } from 'drizzle-orm'
 import { withTenantOnly } from '@/server/db'
 import type { Actor } from '@/server/db'
-import { shareSession, workshopShareLink } from '@/server/db/schema'
+import { shareSession, tenant, workshopShareLink } from '@/server/db/schema'
 import { lastDayOf } from '@/domain/workshop/share-links'
 import { isExpired } from '@/domain/workshop/share-rules'
 import { authConfig } from './config'
@@ -172,6 +172,8 @@ export async function verifyGuestCookie(raw: string): Promise<GuestUser | null> 
           isNull(workshopShareLink.revokedAt),
         ),
       )
+      // Guests of a suspended tenant are out too, like its members.
+      .innerJoin(tenant, and(eq(tenant.id, shareSession.tenantId), eq(tenant.status, 'active')))
       .where(
         and(
           eq(shareSession.id, sessionId),

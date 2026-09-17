@@ -2,6 +2,7 @@ import { cache } from 'react'
 import { eq } from 'drizzle-orm'
 import { brandCss, readBrand } from '@/domain/tenant/branding'
 import { readSessionCached } from '@/server/auth/session'
+import { readGuestSessionCached } from '@/server/auth/share-session'
 import { edition } from '@/server/edition'
 import { withTenantOnly } from '@/server/db'
 import { tenant } from '@/server/db/schema'
@@ -24,10 +25,12 @@ export type TenantBrand = { name: string; hex: string | null; hasLogo: boolean }
  * anywhere except in the database's own metrics.
  */
 export const loadTenantBrand = cache(async (): Promise<TenantBrand> => {
-  // Signed in, it is the brand of the tenant you are in. Signed out -- the login
-  // page -- the edition decides; with no tenant to show, the product's own mark.
+  // Signed in, it is the brand of the tenant you are in; a guest sees the brand
+  // of the tenant that invited them. Nobody at all -- the login page -- and the
+  // edition decides; with no tenant to show, the product's own mark.
   const session = await readSessionCached().catch(() => null)
-  const tenantId = session?.tenantId ?? (await edition.tenantForAnonymousBrand())
+  const guest = session ? null : await readGuestSessionCached().catch(() => null)
+  const tenantId = session?.tenantId ?? guest?.tenantId ?? (await edition.tenantForAnonymousBrand())
   if (!tenantId) return NO_BRAND
 
   const rows = await withTenantOnly(tenantId, (tx) =>

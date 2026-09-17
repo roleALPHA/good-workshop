@@ -45,6 +45,15 @@ export const cloudEdition: Edition = {
 
   // Tenants come from registration, not from claiming an installation.
   tenantForSetup: async () => null,
+
+  tenantWritable: async (tx) => {
+    const result = await tx.execute(sql`select app.cloud_tenant_writable() as writable`)
+    return (result as unknown as { rows: { writable: boolean }[] }).rows[0]?.writable ?? true
+  },
+
+  adoptRegisteredClient: async (tx, clientKey) => {
+    await tx.execute(sql`select app.cloud_adopt_oauth_client(${clientKey})`)
+  },
 }
 
 /** What `@gw/edition` resolves to in a cloud build. */

@@ -27,6 +27,14 @@ describe('the community edition', () => {
   ])('answers %s with the one fixed tenant', async (_, ask) => {
     await expect(ask()).resolves.toBe(authConfig.defaultTenantId)
   })
+
+  it('never restricts writing, and has no client registry to adopt from', async () => {
+    // No transaction is passed because none is touched: the community edition
+    // answers without a query.
+    const noTx = undefined as never
+    await expect(communityEdition.tenantWritable(noTx)).resolves.toBe(true)
+    await expect(communityEdition.adoptRegisteredClient(noTx, 'any')).resolves.toBeUndefined()
+  })
 })
 
 describe('the fixed tenant id', () => {

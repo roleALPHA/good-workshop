@@ -1,3 +1,5 @@
+import type { Tx } from '@/server/db'
+
 /**
  * The questions whose answer depends on how many tenants an installation has.
  *
@@ -42,4 +44,16 @@ export type Edition = {
    * claimed through /setup at all.
    */
   tenantForSetup(): Promise<string | null>
+
+  /**
+   * Whether the tenant the transaction acts in may change its content. A tenant
+   * that may not keeps reading and exporting; every write capability is withheld.
+   */
+  tenantWritable(tx: Tx): Promise<boolean>
+
+  /**
+   * Makes a self-registered OAuth client known in the tenant the transaction acts
+   * in, before the consent screen looks it up there.
+   */
+  adoptRegisteredClient(tx: Tx, clientKey: string): Promise<void>
 }
