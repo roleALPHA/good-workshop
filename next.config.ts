@@ -38,8 +38,26 @@ const nextConfig: NextConfig = {
   poweredByHeader: false,
 
   turbopack: {
-    resolveAlias: { '@gw/edition': `./src/server/edition/${edition}.ts` },
+    resolveAlias: {
+      '@gw/edition': `./src/server/edition/${edition}.ts`,
+      '@gw/home':
+        edition === 'cloud'
+          ? './src/cloud/site/home.tsx'
+          : './src/components/home/community-home.tsx',
+    },
   },
+
+  // The cloud's website -- pricing, legal texts, registration -- lives in
+  // `page.cloud.tsx` files. Only a cloud build counts them as routes; in a
+  // community build they are ordinary modules nothing imports, and the routes
+  // do not exist.
+  pageExtensions: edition === 'cloud' ? ['cloud.tsx', 'cloud.ts', 'tsx', 'ts'] : ['tsx', 'ts'],
+
+  // Read from disk at request time (src/cloud/legal/documents.ts), so they have
+  // to be named for the standalone output to carry them.
+  ...(edition === 'cloud'
+    ? { outputFileTracingIncludes: { '/*': ['./src/cloud/legal/*.md'] } }
+    : {}),
 
   /**
    * The two settings pages were renamed from what they are made of to what they

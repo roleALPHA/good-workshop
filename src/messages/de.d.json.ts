@@ -360,9 +360,25 @@ declare const messages: {
         "unknownClient": "Diesen Client kennt diese Installation nicht.",
         "badRedirect": "Die Rücksprungadresse gehört nicht zu diesem Client.",
         "badResource": "Dieser Zugriff wurde für einen anderen Server angefragt."
+      },
+      "signup": {
+        "customerType": "Bitte wähle, ob du dich als Unternehmen oder als Privatperson registrierst.",
+        "invalidEmail": "Das ist keine gültige E-Mail-Adresse.",
+        "country": "Bitte wähle ein Land.",
+        "companyName": "Bitte gib den Firmennamen an.",
+        "address": "Bitte gib die vollständige Rechnungsadresse an.",
+        "tooLong": "Eine Angabe ist zu lang.",
+        "vatIdRequired": "Für Unternehmen in diesem Land brauchen wir die UID-Nummer.",
+        "vatIdFormat": "Das ist keine gültige UID-Nummer.",
+        "vatIdCountry": "Die UID-Nummer passt nicht zum gewählten Land.",
+        "plan": "Bitte wähle ein Abrechnungsmodell.",
+        "terms": "Bitte akzeptiere die AGB.",
+        "dpa": "Bitte schließe die Auftragsverarbeitungsvereinbarung ab.",
+        "earlyStart": "Ohne diese Zustimmung können wir den Dienst während der Rücktrittsfrist nicht bereitstellen."
       }
     },
     "failed": "Das hat nicht geklappt. Versuch es noch einmal.",
+    "tooManyRequests": "Zu viele Versuche. Bitte versuch es später noch einmal.",
     "field": {
       "desc": {
         "notObject": "desc muss ein Objekt sein."
@@ -502,6 +518,18 @@ declare const messages: {
     "test": {
       "subject": "GoodWorkshop: Testnachricht",
       "body": "Diese Nachricht bestätigt, dass der Mailversand funktioniert.\n\nAnmeldelinks und Einladungen gehen ab jetzt denselben Weg."
+    },
+    "signupConfirm": {
+      "subject": "Bestätige deine Registrierung bei GoodWorkshop",
+      "body": "Hallo,\n\nfast geschafft. Mit diesem Link legst du deinen Workspace an:\n{link}\n\nEr gilt {hours} Stunden und lässt sich einmal verwenden.\n\nWenn du dich nicht registriert hast, ignoriere diese Nachricht — ohne den Link wird nichts angelegt."
+    },
+    "signupExists": {
+      "subject": "Du hast schon ein Konto bei GoodWorkshop",
+      "body": "Hallo,\n\njemand wollte sich mit dieser Adresse bei GoodWorkshop registrieren. Zu dieser Adresse gibt es bereits ein Konto — melde dich einfach an:\n{link}\n\nWenn das nicht du warst, musst du nichts tun."
+    },
+    "signupWelcome": {
+      "subject": "Willkommen bei GoodWorkshop",
+      "body": "Hallo,\n\ndein Workspace ist angelegt. Die ersten {days} Tage sind kostenlos.\n\nHier geht es los:\n{link}\n\nUnten findest du die Vertragsbedingungen, die bei deiner Registrierung gegolten haben — bewahre diese Nachricht auf."
     }
   },
   "meta": {
@@ -708,6 +736,112 @@ declare const messages: {
     "badChallenge": "Diese Anfrage kommt ohne gültiges PKCE. Dieser Server verlangt es.",
     "badResource": "Dieser Zugriff wurde für einen anderen Server angefragt.",
     "problemHint": "Nichts wurde freigegeben. Starte den Vorgang im Client noch einmal — wenn es wieder scheitert, liegt es an dessen Konfiguration."
+  },
+  "site": {
+    "nav": {
+      "pricing": "Preise",
+      "signIn": "Anmelden",
+      "register": "Kostenlos testen",
+      "impressum": "Impressum",
+      "agb": "AGB",
+      "datenschutz": "Datenschutz",
+      "avv": "AVV",
+      "widerruf": "Widerruf"
+    },
+    "home": {
+      "title": "Workshops planen, die funktionieren.",
+      "lead": "GoodWorkshop ist die Agenda für Moderation und Facilitation: Tagesabläufe mit Zeiten, Methoden und Verantwortlichen, gemeinsam bearbeitet – und mit deiner KI verbunden.",
+      "cta": "14 Tage kostenlos testen",
+      "ctaSecondary": "Preise ansehen",
+      "featuresTitle": "Was GoodWorkshop kann",
+      "plan": {
+        "title": "Agenda mit Uhrzeit",
+        "body": "Blöcke, Pausen und Cluster verschieben – Start- und Endzeiten rechnen sich selbst."
+      },
+      "together": {
+        "title": "Gemeinsam in Echtzeit",
+        "body": "Mehrere Personen arbeiten gleichzeitig am selben Tag, ohne sich gegenseitig zu überschreiben."
+      },
+      "ai": {
+        "title": "Mit deiner KI verbunden",
+        "body": "Claude, ChatGPT und andere Assistenten planen über MCP direkt in deinen Workshops."
+      },
+      "share": {
+        "title": "Teilen ohne Konto",
+        "body": "Kundinnen und Co-Trainer bekommen eine Agenda per Link – lesend oder bearbeitend."
+      },
+      "print": {
+        "title": "Drucken und exportieren",
+        "body": "Druckansicht und Markdown-Export für den Raum, das Handout und die Dokumentation."
+      },
+      "trialNote": "Keine Zahlungsdaten nötig. Nach 14 Tagen entscheidest du."
+    },
+    "pricing": {
+      "title": "Preise",
+      "intro": "Ein Modell pro Workspace, bei der Registrierung gewählt und jeden Monat wechselbar.",
+      "business": "Unternehmen",
+      "consumer": "Privat",
+      "perUser": {
+        "name": "Pro Nutzer",
+        "unit": "pro aktivem Mitglied pro Monat",
+        "body": "Tagesgenau abgerechnet: Wer nur einen Teil des Monats aktiv ist, zählt anteilig. Gäste zählen nicht."
+      },
+      "perWorkshop": {
+        "name": "Pro Workshop",
+        "unit": "pro angelegtem Workshop",
+        "body": "Beliebig viele Mitglieder. Abgerechnet wird jeder neu angelegte Workshop, einmal."
+      },
+      "net": "zzgl. USt.",
+      "gross": "inkl. 20 % USt.",
+      "vatNote": "Für Privatkundinnen und Privatkunden außerhalb Österreichs gilt die Umsatzsteuer ihres Wohnsitzlandes. Unternehmen in der EU mit gültiger UID-Nummer zahlen netto (Reverse Charge).",
+      "trial": "Die ersten 14 Tage sind kostenlos, ohne Zahlungsdaten.",
+      "cta": "Kostenlos testen"
+    },
+    "legal": {
+      "germanOnly": "Rechtlich verbindlich ist die deutsche Fassung."
+    },
+    "meta": {
+      "description": "Workshopplanung für Moderation und Facilitation, gemeinsam in Echtzeit und mit KI verbunden. 14 Tage kostenlos testen."
+    },
+    "register": {
+      "title": "Kostenlos testen",
+      "intro": "14 Tage kostenlos und ohne Zahlungsdaten. Danach entscheidest du, ob du weitermachst.",
+      "customerType": "Du registrierst dich als",
+      "business": "Unternehmen",
+      "consumer": "Privatperson",
+      "firstName": "Vorname",
+      "lastName": "Nachname",
+      "email": "E-Mail-Adresse",
+      "companyName": "Firmenname",
+      "street": "Straße und Hausnummer",
+      "postalCode": "PLZ",
+      "city": "Ort",
+      "country": "Land",
+      "vatId": "UID-Nummer",
+      "vatIdHint": "Für Unternehmen in einem anderen EU-Land Pflicht, damit ohne Umsatzsteuer abgerechnet werden kann (Reverse Charge).",
+      "plan": "Abrechnungsmodell",
+      "perUser": "1 € pro Nutzer/Monat",
+      "perWorkshop": "1 € pro Workshop",
+      "planHintBusiness": "Netto zzgl. USt.; jeden Monat wechselbar.",
+      "planHintConsumer": "Brutto 1,20 € inkl. 20 % USt.; jeden Monat wechselbar.",
+      "acceptTerms": "Ich akzeptiere die <terms>AGB</terms> und habe die <privacy>Datenschutzerklärung</privacy> gelesen.",
+      "acceptDpa": "Ich schließe die <dpa>Auftragsverarbeitungsvereinbarung</dpa> ab.",
+      "earlyStart": "Ich verlange ausdrücklich, dass GoodWorkshop sofort bereitgestellt wird, noch vor Ablauf der Rücktrittsfrist. Mir ist bekannt, dass ich bei einem Rücktritt einen anteiligen Betrag für die bis dahin erbrachte Leistung zahle (während der kostenlosen Testphase fällt keiner an).",
+      "withdrawalNote": "Als Privatperson hast du ein Rücktrittsrecht von 14 Tagen — siehe <withdrawal>Widerrufsbelehrung</withdrawal>.",
+      "submit": "Registrieren",
+      "submitting": "Einen Moment …",
+      "sentTitle": "Schau in dein Postfach.",
+      "sentBody": "Wir haben dir einen Link an {email} geschickt. Mit ihm legst du deinen Workspace an; er gilt 24 Stunden.",
+      "haveAccount": "Schon ein Konto? <login>Anmelden</login>"
+    },
+    "confirm": {
+      "title": "Workspace anlegen",
+      "intro": "Ein Klick noch, dann ist dein Workspace bereit.",
+      "button": "Workspace anlegen",
+      "working": "Wird angelegt …",
+      "invalid": "Dieser Link ist abgelaufen oder wurde schon verwendet. Registriere dich einfach noch einmal.",
+      "exists": "Zu dieser Adresse gibt es schon ein Konto. Bitte melde dich an."
+    }
   }
 };
 export default messages;

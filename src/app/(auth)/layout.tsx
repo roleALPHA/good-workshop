@@ -3,6 +3,8 @@ import { AppFooter } from '@/components/layout/app-footer'
 import { BrandMark, BrandStyle } from '@/components/layout/tenant-brand'
 import { LanguageSwitcher } from '@/components/settings/language-switcher'
 import { getClientMessages } from '@/i18n/client-messages'
+import { LegalLinks } from '@/cloud/site/site-shell'
+import { edition } from '@/server/edition'
 
 // The sign-in page reads the tenant row for its branding, so it cannot be
 // prerendered. That is the right trade: a login page that shows the default
@@ -29,6 +31,13 @@ export default async function AuthLayout({ children }: { children: React.ReactNo
       <div className="flex justify-center px-4 pb-4">
         <LanguageSwitcher compact />
       </div>
+      {/* The cloud's sign-in page is part of its website, and every page of an
+          Austrian website has to reach the imprint in one click. */}
+      {edition.name === 'cloud' && (
+        <nav className="flex flex-wrap justify-center gap-x-4 px-4 text-[14px] text-[var(--fg-muted)]">
+          <LegalLinks />
+        </nav>
+      )}
       <AppFooter />
     </div>
   )

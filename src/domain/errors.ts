@@ -110,6 +110,20 @@ export const DOMAIN_ERROR_KEYS = [
   'mail.graphMissing',
   // Live collaboration
   'collab.unavailable',
+  // Cloud registration
+  'signup.customerType',
+  'signup.invalidEmail',
+  'signup.country',
+  'signup.companyName',
+  'signup.address',
+  'signup.tooLong',
+  'signup.vatIdRequired',
+  'signup.vatIdFormat',
+  'signup.vatIdCountry',
+  'signup.plan',
+  'signup.terms',
+  'signup.dpa',
+  'signup.earlyStart',
   // First-run setup
   'setup.wrongKey',
   'setup.invalidEmail',

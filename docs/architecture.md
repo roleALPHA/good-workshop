@@ -60,6 +60,19 @@ there nor named with the reason it is not — a table added to the community sch
 not quietly stay writable. A read-only tenant's workshop is also read without a row lock, because
 row level security treats `FOR UPDATE` as an update.
 
+**The cloud's website and registration** are routes that only a cloud build has: `page.cloud.tsx`
+files, which `pageExtensions` counts as pages only when `GW_EDITION=cloud`, and a front page chosen
+through the `@gw/home` alias. A community image contains none of it — CI checks the image for the
+routes and for `src/cloud`. Registration writes nothing but a `pending_signup` row until the
+address is confirmed; the confirmation link runs `app.cloud_complete_signup`, which creates the
+identity, the tenant, the admin membership, the trial and the billing account in one transaction,
+so a double click creates one workspace. The form answers the same whether or not an address is
+known, and a known address gets a mail pointing to the sign-in instead. The welcome mail carries
+the terms (and for consumers the withdrawal information) as text, because a consumer contract has
+to be confirmed on a durable medium, not behind a link. The legal texts are Markdown in
+`src/cloud/legal/`, rendered without passing any HTML through, and prices live in exactly one
+place, `src/cloud/billing/plans.ts`, which the pricing page and billing both read.
+
 **OAuth clients in the cloud** register into a registry tenant, because registration happens
 before anybody has signed in. The consent screen copies the client into the tenant of the person
 consenting (`app.cloud_adopt_oauth_client`, which can only write into the tenant the caller

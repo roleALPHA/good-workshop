@@ -12,8 +12,14 @@ import type { Edition } from './types'
  * image does not contain this file.
  */
 
-/** Created by drizzle-cloud/0001_one_tenant_per_person.sql. */
-export const CLIENT_REGISTRY_TENANT = '00000000-0000-0000-0000-00000000c10d'
+/**
+ * The platform's own tenant, created by drizzle-cloud/0001_one_tenant_per_person.sql.
+ * Nobody signs into it. OAuth clients register into it, and mail that belongs to
+ * no workspace yet -- a registration's confirmation link -- is sent with its
+ * (environment-configured) mail settings.
+ */
+export const PLATFORM_TENANT = '00000000-0000-0000-0000-00000000c10d'
+export const CLIENT_REGISTRY_TENANT = PLATFORM_TENANT
 
 async function ask(query: ReturnType<typeof sql>): Promise<string | null> {
   const result = await withoutTenant((tx) => tx.execute(query))

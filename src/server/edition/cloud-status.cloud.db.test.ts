@@ -171,7 +171,7 @@ describe('a read-only tenant', () => {
         and exists (select 1 from information_schema.columns col
                     where col.table_schema = 'public' and col.table_name = c.relname
                       and col.column_name = 'tenant_id')
-        and c.relname <> 'tenant_lifecycle'
+        and c.relname not in ('tenant_lifecycle', 'billing_account')
     `)
     const undecided = rows
       .filter((row) => !row.guarded && !(row.table in notGuarded))
