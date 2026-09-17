@@ -171,6 +171,17 @@ describe('verifyGuestCookie', () => {
     expect((await verifyGuestCookie(cookie(session.id, session.secret)))?.role).toBe('viewer')
   })
 
+  it('refuses every guest of a suspended tenant, and lets them back in afterwards', async () => {
+    const session = await makeSession(linkId)
+    await ops.query(`update tenant set status = 'suspended' where id = $1`, [TENANT])
+    try {
+      expect(await verifyGuestCookie(cookie(session.id, session.secret))).toBeNull()
+    } finally {
+      await ops.query(`update tenant set status = 'active' where id = $1`, [TENANT])
+    }
+    expect(await verifyGuestCookie(cookie(session.id, session.secret))).not.toBeNull()
+  })
+
   it('refuses a revoked session', async () => {
     const session = await makeSession(linkId)
     await ops.query('update share_session set revoked_at = now() where id = $1', [session.id])

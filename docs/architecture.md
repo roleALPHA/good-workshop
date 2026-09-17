@@ -48,6 +48,24 @@ migrate and provision read that file. Only a cloud build applies `drizzle-cloud/
 membership per person, and the SECURITY DEFINER functions that find the tenant behind an
 identity, a share link, an authorization code or an OAuth token.
 
+**Suspended and read-only tenants.** `tenant.status = 'suspended'` is part of the community
+schema and now holds everywhere a credential is checked: web sessions and guest sessions join the
+tenant row, as the token resolvers always did, so a suspension signs everybody out at their next
+request. Read-only is cloud-only (`tenant_lifecycle`, for a trial that ran out or a payment that
+failed). It is enforced twice, on purpose: `assertWorkshopAccess` withholds every write
+capability, so screens and MCP tools show a read view instead of an editor whose saves fail; and
+restrictive policies in `drizzle-cloud/sql/951_read_only.sql` refuse writes to library content in
+the database, whatever path they take. A cloud test fails when a tenant table is neither guarded
+there nor named with the reason it is not — a table added to the community schema next year does
+not quietly stay writable. A read-only tenant's workshop is also read without a row lock, because
+row level security treats `FOR UPDATE` as an update.
+
+**OAuth clients in the cloud** register into a registry tenant, because registration happens
+before anybody has signed in. The consent screen copies the client into the tenant of the person
+consenting (`app.cloud_adopt_oauth_client`, which can only write into the tenant the caller
+already acts as), with the same public `client_id`, and from there code, tokens and revocation
+work exactly as in the community edition.
+
 ## Database roles
 
 | Role       | For what                         | Particularity                      |

@@ -20,6 +20,9 @@ export const communityEdition: Edition = {
   tenantForOAuthToken: always,
   tenantForAnonymousBrand: always,
   tenantForSetup: always,
+  tenantWritable: async () => true,
+  // Clients register in the one tenant there is; there is nothing to bring over.
+  adoptRegisteredClient: async () => {},
 }
 
 /** What `@gw/edition` resolves to in a community build. */

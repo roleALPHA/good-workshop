@@ -2,6 +2,7 @@ import { and, eq, isNull, sql } from 'drizzle-orm'
 import type { Actor, Tx } from '@/server/db'
 import { workshop, workshopCollaborator } from '@/server/db/schema'
 import { DomainError } from '@/domain/errors'
+import { edition } from '@/server/edition'
 import {
   folderPathSql,
   folderRoleFromPath,
@@ -86,6 +87,9 @@ declare const brand: unique symbol
  * compile error rather than a security incident. That is the entire point --
  * a convention that relies on remembering will eventually not be remembered.
  */
+/** What a tenant that may not write keeps. */
+const READ_ONLY_CAPABILITIES: readonly Capability[] = ['workshop.read', 'workshop.export']
+
 export type WorkshopAccess = {
   readonly [brand]: true
   workshopId: string
@@ -158,8 +162,12 @@ export async function assertWorkshopAccess(
 ): Promise<WorkshopAccess> {
   const wantsWrite = capability !== 'workshop.read' && capability !== 'workshop.export'
   const lock = options.forUpdate ?? wantsWrite
+  // Asked first, because it decides whether the row may be locked at all: a
+  // row lock is an UPDATE in the eyes of row level security, and a tenant that
+  // may not write would not find its own workshop behind one.
+  const writable = await edition.tenantWritable(tx)
 
-  const rows = await tx
+  const query = tx
     .select({
       ownerId: workshop.ownerId,
       contentVersion: workshop.contentVersion,
@@ -192,7 +200,10 @@ export async function assertWorkshopAccess(
       ),
     )
     .limit(1)
-    .for(lock ? 'update' : 'no key update', { of: workshop })
+
+  const rows = await (writable
+    ? query.for(lock ? 'update' : 'no key update', { of: workshop })
+    : query)
 
   const row = rows[0]
   // RLS already filtered other tenants out, so "no row" here means exactly
@@ -208,7 +219,14 @@ export async function assertWorkshopAccess(
   })
   if (!role) throw new NotFoundError()
 
-  const allowed = CAPABILITIES[role]
+  // A tenant that may not change its content keeps what reading gives -- the
+  // agenda, the print view, the export -- and loses everything else, whatever
+  // the role. Withheld here rather than only refused by the database, so every
+  // screen and every MCP tool that asks `can()` shows a read view instead of an
+  // editor whose saves fail.
+  const allowed = writable
+    ? CAPABILITIES[role]
+    : CAPABILITIES[role].filter((c) => READ_ONLY_CAPABILITIES.includes(c))
   if (!allowed.includes(capability)) throw new ForbiddenError(capability)
 
   return {

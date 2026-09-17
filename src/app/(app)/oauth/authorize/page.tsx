@@ -10,6 +10,7 @@ import {
 } from '@/domain/oauth/rules'
 import { mcpResource } from '@/server/oauth/metadata'
 import { ConsentForm } from './consent-form'
+import { edition } from '@/server/edition'
 
 export const dynamic = 'force-dynamic'
 
@@ -52,7 +53,10 @@ export default async function AuthorizePage({
           tenantRole: session.tenantRole,
           source: 'web',
         },
-        (tx) => findClient(tx, clientKey),
+        async (tx) => {
+          await edition.adoptRegisteredClient(tx, clientKey)
+          return findClient(tx, clientKey)
+        },
       )
     : null
 

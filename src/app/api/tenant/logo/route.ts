@@ -1,6 +1,7 @@
 import { eq } from 'drizzle-orm'
 import { NextResponse } from 'next/server'
 import { readSession } from '@/server/auth/session'
+import { readGuestSession } from '@/server/auth/share-session'
 import { edition } from '@/server/edition'
 import { withTenantOnly } from '@/server/db'
 import { tenant } from '@/server/db/schema'
@@ -24,7 +25,8 @@ export async function GET(request: Request) {
   // The same rule as loadTenantBrand in src/components/layout/tenant-brand.tsx:
   // your own tenant when signed in, the edition's answer when not.
   const session = await readSession().catch(() => null)
-  const tenantId = session?.tenantId ?? (await edition.tenantForAnonymousBrand())
+  const guest = session ? null : await readGuestSession().catch(() => null)
+  const tenantId = session?.tenantId ?? guest?.tenantId ?? (await edition.tenantForAnonymousBrand())
   if (!tenantId) return new NextResponse(null, { status: 404 })
 
   const row = await withTenantOnly(tenantId, (tx) =>

@@ -3,7 +3,7 @@ import { cache } from 'react'
 import { cookies } from 'next/headers'
 import { and, eq, gt, isNull, sql } from 'drizzle-orm'
 import { withAuth, withTenantOnly } from '@/server/db'
-import { authSession, identity, member } from '@/server/db/schema'
+import { authSession, identity, member, tenant } from '@/server/db/schema'
 import { authConfig } from './config'
 import { generateSecret, hashSecret, verifySecret } from './tokens'
 import { fullName } from '@/domain/tenant/person-name'
@@ -192,6 +192,9 @@ export async function verifySessionCookie(raw: string): Promise<SessionUser | nu
         lastName: member.lastName,
       })
       .from(member)
+      // A suspended tenant signs everybody out at the next request -- the same
+      // rule the token resolvers in drizzle/sql/900 and 901 already apply.
+      .innerJoin(tenant, and(eq(tenant.id, member.tenantId), eq(tenant.status, 'active')))
       .where(eq(member.identityId, account.identityId))
       .limit(1)
     return rows[0] ?? null

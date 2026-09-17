@@ -6,6 +6,7 @@ import { createAuthorizationCode, findClient } from '@/domain/oauth/repo'
 import { audienceMatches, redirectUriAllowed } from '@/domain/oauth/rules'
 import { issuer, mcpResource } from '@/server/oauth/metadata'
 import type { Scope } from '@/domain/tenant/tokens'
+import { edition } from '@/server/edition'
 
 export type ConsentRequest = {
   clientKey: string
@@ -30,6 +31,7 @@ async function validated(request: ConsentRequest) {
   if (!actor?.memberId) return null
 
   return withTenant(actor, async (tx) => {
+    await edition.adoptRegisteredClient(tx, request.clientKey)
     const client = await findClient(tx, request.clientKey)
     if (!client) return null
     if (!redirectUriAllowed(request.redirectUri, client.redirectUris)) return null
@@ -54,6 +56,7 @@ export async function approveAuthorization(request: ConsentRequest): Promise<Out
   if (!actor?.memberId) return { error: 'unauthenticated' }
 
   const code = await withTenant(actor, async (tx) => {
+    await edition.adoptRegisteredClient(tx, request.clientKey)
     const client = await findClient(tx, request.clientKey)
     if (!client) return null
     if (!redirectUriAllowed(request.redirectUri, client.redirectUris)) return null

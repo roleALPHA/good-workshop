@@ -84,6 +84,17 @@ describe('session lifetime', () => {
     expect(session).toMatchObject({ firstName: 'Mia', lastName: 'Nowak', displayName: 'Mia Nowak' })
   })
 
+  it('refuses a session while its tenant is suspended', async () => {
+    const cookie = await makeSession('1 minute')
+    await ops.query(`update tenant set status = 'suspended' where id = $1`, [TENANT])
+    try {
+      expect(await verifySessionCookie(cookie)).toBeNull()
+    } finally {
+      await ops.query(`update tenant set status = 'active' where id = $1`, [TENANT])
+    }
+    expect(await verifySessionCookie(cookie)).not.toBeNull()
+  })
+
   it('refuses a session that has been idle too long', async () => {
     // Thirty days of absolute lifetime with no idle window means a cookie
     // copied off a shared machine keeps working for a month after the person
