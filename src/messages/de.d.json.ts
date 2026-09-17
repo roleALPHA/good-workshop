@@ -198,7 +198,8 @@ declare const messages: {
       "sentTitle": "Schau in dein Postfach.",
       "sentBody": "Falls es zu dieser Adresse ein Konto gibt, ist ein Anmeldelink unterwegs. Er gilt {minutes, plural, one {eine Minute} other {# Minuten}}.",
       "linkExpired": "Dieser Link ist abgelaufen oder wurde schon benutzt. Fordere einen neuen an.",
-      "linkIncomplete": "Der Link war unvollständig. Fordere einen neuen an."
+      "linkIncomplete": "Der Link war unvollständig. Fordere einen neuen an.",
+      "accountDeleted": "Dein Konto wurde gelöscht."
     },
     "verify": {
       "title": "Anmeldung bestätigen",
@@ -681,6 +682,21 @@ declare const messages: {
         "copyClaudeCode": "Befehl für Claude Code kopieren",
         "copyGemini": "Befehl für Gemini CLI kopieren"
       }
+    },
+    "deleteAccount": {
+      "title": "Konto löschen",
+      "intro": "Entfernt dich aus diesem Workspace. Gehört deine E-Mail-Adresse zu keinem anderen Workspace, wird auch dein Konto gelöscht.",
+      "open": "Konto löschen",
+      "heading": "Dein Konto löschen",
+      "warning": "Das lässt sich nicht rückgängig machen. Deine Zugänge, Tokens und Freigaben verschwinden sofort, und du wirst abgemeldet.",
+      "ownsNothing": "Dir gehören keine Workshops und keine Ordner.",
+      "owns": "Zu übergeben: {workshops, plural, =0 {keine Workshops} one {# Workshop} other {# Workshops}} und {folders, plural, =0 {keine Ordner} one {# Ordner} other {# Ordner}}.",
+      "successor": "Übernimmt",
+      "successorPlaceholder": "Bitte wählen …",
+      "noColleague": "Es gibt niemanden, der übernehmen könnte. Lade zuerst jemanden ein oder lösche deine Workshops.",
+      "typeEmail": "Zum Bestätigen die E-Mail-Adresse eintippen: {email}",
+      "cancel": "Doch nicht",
+      "confirm": "Konto endgültig löschen"
     }
   },
   "workshop": {

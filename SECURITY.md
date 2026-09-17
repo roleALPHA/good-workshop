@@ -80,7 +80,7 @@ You do not have to take our word for what a version contains:
   pulling it:
 
   ```bash
-  docker buildx imagetools inspect ghcr.io/rolealpha/good-workshop:0.5.2 --format '{{ json .SBOM }}'
+  docker buildx imagetools inspect ghcr.io/rolealpha/good-workshop:0.5.3 --format '{{ json .SBOM }}'
   ```
 
 - **`THIRD-PARTY-LICENSES.txt`** ships inside the image and is attached to every release.
@@ -92,16 +92,16 @@ and carries a GitHub build attestation. Both name the workflow and the commit th
 an image pushed by anybody else — with a stolen registry token, say — fails the check:
 
 ```bash
-cosign verify ghcr.io/rolealpha/good-workshop:0.5.2 \
+cosign verify ghcr.io/rolealpha/good-workshop:0.5.3 \
   --certificate-identity-regexp '^https://github\.com/roleALPHA/good-workshop/\.github/workflows/publish\.yml@' \
   --certificate-oidc-issuer https://token.actions.githubusercontent.com
 
-gh attestation verify oci://ghcr.io/rolealpha/good-workshop:0.5.2 --repo roleALPHA/good-workshop
+gh attestation verify oci://ghcr.io/rolealpha/good-workshop:0.5.3 --repo roleALPHA/good-workshop
 ```
 
 `cosign` needs to be version 3 or later: the signatures are stored in the Sigstore bundle
 format, which version 2 does not look for and reports as "no signatures found". Releases before
-0.5.2 carry neither a signature nor an attestation.
+0.5.3 carry neither a signature nor an attestation.
 
 Dependabot, CodeQL (`security-extended`), dependency review and secret scanning with push
 protection run on this repository. So do gitleaks over the whole git history, zizmor over the

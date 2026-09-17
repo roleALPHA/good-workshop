@@ -4,6 +4,8 @@ import { afterAll, beforeAll, describe, expect, it } from 'vitest'
 import type { Actor } from '@/server/db'
 import {
   MemberError,
+  deleteOwnAccount,
+  ownEstate,
   inviteMember,
   listAssignable,
   listDirectory,
@@ -423,5 +425,106 @@ describe('removeMember', () => {
       leaving.memberId,
     ])
     expect(tokens.rowCount).toBe(0)
+  })
+})
+
+describe('deleteOwnAccount', () => {
+  const selfOf = (memberId: string, role: 'member' | 'admin' = 'member'): Actor => ({
+    tenantId: TENANT,
+    memberId,
+    tenantRole: role,
+    source: 'web',
+  })
+  const activate = (memberId: string) =>
+    ops.query(`update member set status = 'active' where id = $1`, [memberId])
+
+  it('removes the membership and forgets an account nobody else holds', async () => {
+    const email = address()
+    const leaving = await invite(email)
+    await activate(leaving.memberId)
+
+    const result = await deleteOwnAccount(selfOf(leaving.memberId), null)
+
+    expect(result.identityForgotten).toBe(true)
+    const member = await ops.query('select 1 from member where id = $1', [leaving.memberId])
+    const identity = await ops.query('select 1 from identity where email = $1', [email])
+    expect(member.rowCount).toBe(0)
+    expect(identity.rowCount).toBe(0)
+  })
+
+  it('hands what it owns to a colleague, and asks for one first', async () => {
+    const leaving = await invite(address())
+    const staying = await invite(address())
+    await activate(leaving.memberId)
+    const workshopId = randomUUID()
+    await ops.query(
+      `insert into workshop (id, tenant_id, title, owner_id, created_by, position)
+       values ($1, $2, 'Eigenes', $3, $3, 'a0')`,
+      [workshopId, TENANT, leaving.memberId],
+    )
+
+    expect(await ownEstate(selfOf(leaving.memberId))).toEqual({ workshops: 1, folders: 0 })
+    await expect(deleteOwnAccount(selfOf(leaving.memberId), null)).rejects.toThrow(
+      'member.successorRequired',
+    )
+    await expect(deleteOwnAccount(selfOf(leaving.memberId), leaving.memberId)).rejects.toThrow(
+      'member.successorIsLeaver',
+    )
+
+    await deleteOwnAccount(selfOf(leaving.memberId), staying.memberId)
+    const rows = await ops.query('select owner_id from workshop where id = $1', [workshopId])
+    expect(rows.rows[0].owner_id).toBe(staying.memberId)
+  })
+
+  it('is refused to the last admin, who would leave a workspace nobody can administer', async () => {
+    // A tenant of its own: the one above has gained admins in earlier tests.
+    const lonely = randomUUID()
+    const identityId = randomUUID()
+    const memberId = randomUUID()
+    await ops.query(`insert into tenant (id, slug, name) values ($1, $2, 'Allein')`, [
+      lonely,
+      `t-${lonely.slice(0, 8)}`,
+    ])
+    await ops.query('insert into identity (id, email) values ($1, $2)', [identityId, address()])
+    try {
+      await ops.query(
+        `insert into member (id, tenant_id, identity_id, role, status) values ($1, $2, $3, 'admin', 'active')`,
+        [memberId, lonely, identityId],
+      )
+      const self: Actor = { tenantId: lonely, memberId, tenantRole: 'admin', source: 'web' }
+      await expect(deleteOwnAccount(self, null)).rejects.toThrow('member.lastAdmin')
+      const rows = await ops.query('select 1 from member where id = $1', [memberId])
+      expect(rows.rowCount).toBe(1)
+    } finally {
+      await ops.query('delete from tenant where id = $1', [lonely])
+      await ops.query('delete from identity where id = $1', [identityId])
+    }
+  })
+
+  it('keeps the account when another workspace still holds it', async () => {
+    const other = randomUUID()
+    await ops.query(`insert into tenant (id, slug, name) values ($1, $2, 'Anderswo')`, [
+      other,
+      `t-${other.slice(0, 8)}`,
+    ])
+    try {
+      const email = address()
+      const leaving = await invite(email)
+      await activate(leaving.memberId)
+      const row = await ops.query('select identity_id from member where id = $1', [
+        leaving.memberId,
+      ])
+      await ops.query(
+        `insert into member (id, tenant_id, identity_id, role, status) values ($1, $2, $3, 'member', 'active')`,
+        [randomUUID(), other, row.rows[0].identity_id],
+      )
+
+      const result = await deleteOwnAccount(selfOf(leaving.memberId), null)
+      expect(result.identityForgotten).toBe(false)
+      const identity = await ops.query('select 1 from identity where email = $1', [email])
+      expect(identity.rowCount).toBe(1)
+    } finally {
+      await ops.query('delete from tenant where id = $1', [other])
+    }
   })
 })

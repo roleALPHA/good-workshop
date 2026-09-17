@@ -444,6 +444,39 @@ export async function removeMember(
     throw new MemberError('member.successorIsLeaver')
   }
 
+  return dropMembership(actor, memberId, successorId)
+}
+
+/**
+ * Somebody deleting their own account in this workspace.
+ *
+ * The same consequences as an admin removing them -- work handed to a
+ * successor, tokens and grants gone, the account forgotten once no workspace
+ * holds it any more -- and the same last-admin rule, because a workspace nobody
+ * can administer is as stuck when its admin leaves as when they are removed.
+ * What is not the same is who may ask: only the person themselves, identified
+ * by the session, never by a parameter.
+ */
+export async function deleteOwnAccount(
+  actor: Actor,
+  successorId: string | null,
+): Promise<RemoveMemberResult> {
+  const memberId = memberIdOf(actor)
+  if (successorId === memberId) throw new MemberError('member.successorIsLeaver')
+  return dropMembership(actor, memberId, successorId)
+}
+
+/** What a member owns, for their own account page. */
+export async function ownEstate(actor: Actor): Promise<MemberEstate> {
+  const memberId = memberIdOf(actor)
+  return withTenant(actor, async (tx) => (await estatesOf(tx)).get(memberId) ?? EMPTY_ESTATE)
+}
+
+async function dropMembership(
+  actor: Actor,
+  memberId: string,
+  successorId: string | null,
+): Promise<RemoveMemberResult> {
   const removed = await withTenant(actor, async (tx) => {
     const leaving = await tx
       .select({ identityId: member.identityId })

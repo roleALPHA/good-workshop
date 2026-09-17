@@ -3,6 +3,9 @@ import { Bot, Fingerprint } from 'lucide-react'
 import { getTranslations } from 'next-intl/server'
 import { LanguageSwitcher } from '@/components/settings/language-switcher'
 import { ProfileForm } from '@/components/settings/profile-form'
+import { DeleteAccount } from '@/components/settings/delete-account'
+import { listDirectory, ownEstate } from '@/domain/tenant/members'
+import { fullName } from '@/domain/tenant/person-name'
 import { readSessionCached } from '@/server/auth/session'
 
 export const dynamic = 'force-dynamic'
@@ -18,6 +21,20 @@ export const dynamic = 'force-dynamic'
  */
 export default async function SettingsPage() {
   const [t, session] = await Promise.all([getTranslations('settings'), readSessionCached()])
+  const actor = session
+    ? {
+        tenantId: session.tenantId,
+        memberId: session.memberId,
+        tenantRole: session.tenantRole,
+        source: 'web' as const,
+      }
+    : null
+  const [owns, directory] = actor
+    ? await Promise.all([ownEstate(actor), listDirectory(actor)])
+    : [{ workshops: 0, folders: 0 }, []]
+  const colleagues = directory
+    .filter((person) => !person.isSelf && person.status === 'active')
+    .map((person) => ({ id: person.id, name: fullName(person) || person.email }))
 
   return (
     <div className="max-w-2xl">
@@ -66,6 +83,12 @@ export default async function SettingsPage() {
           </Link>
         </li>
       </ul>
+
+      <section className="mt-10">
+        <h2 className="mb-1 text-[17px] font-medium">{t('deleteAccount.title')}</h2>
+        <p className="mb-3 text-[15px] text-[var(--fg-muted)]">{t('deleteAccount.intro')}</p>
+        {session && <DeleteAccount email={session.email} owns={owns} colleagues={colleagues} />}
+      </section>
     </div>
   )
 }

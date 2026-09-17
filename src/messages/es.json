@@ -195,7 +195,8 @@
       "sentTitle": "Mira en tu bandeja de entrada.",
       "sentBody": "Si existe una cuenta para esa dirección, un enlace de acceso va de camino. Es válido durante {minutes, plural, one {un minuto} many {# minutos} other {# minutos}}.",
       "linkExpired": "Este enlace ha caducado o ya se ha usado. Pide uno nuevo.",
-      "linkIncomplete": "El enlace estaba incompleto. Pide uno nuevo."
+      "linkIncomplete": "El enlace estaba incompleto. Pide uno nuevo.",
+      "accountDeleted": "Tu cuenta se ha eliminado."
     },
     "verify": {
       "title": "Confirmar el acceso",
@@ -678,6 +679,21 @@
         "copyClaudeCode": "Copiar comando para Claude Code",
         "copyGemini": "Copiar comando para Gemini CLI"
       }
+    },
+    "deleteAccount": {
+      "title": "Eliminar cuenta",
+      "intro": "Te elimina de este espacio de trabajo. Si tu dirección de correo no pertenece a ningún otro espacio, también se elimina tu cuenta.",
+      "open": "Eliminar cuenta",
+      "heading": "Eliminar tu cuenta",
+      "warning": "No se puede deshacer. Tus accesos, tokens y permisos desaparecen de inmediato y se cierra tu sesión.",
+      "ownsNothing": "No tienes talleres ni carpetas.",
+      "owns": "Por traspasar: {workshops, plural, =0 {ningún taller} one {# taller} many {# talleres} other {# talleres}} y {folders, plural, =0 {ninguna carpeta} one {# carpeta} many {# carpetas} other {# carpetas}}.",
+      "successor": "Se hace cargo",
+      "successorPlaceholder": "Elige …",
+      "noColleague": "No hay nadie que pueda hacerse cargo. Invita primero a alguien o elimina tus talleres.",
+      "typeEmail": "Escribe la dirección de correo para confirmar: {email}",
+      "cancel": "Mejor no",
+      "confirm": "Eliminar cuenta definitivamente"
     }
   },
   "workshop": {
