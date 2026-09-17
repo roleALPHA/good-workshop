@@ -14,6 +14,7 @@ export default defineConfig({
     alias: {
       '@': fileURLToPath(new URL('./src', import.meta.url)),
       '@gw/edition': fileURLToPath(new URL('./src/server/edition/cloud.ts', import.meta.url)),
+      '@gw/home': fileURLToPath(new URL('./src/cloud/site/home.tsx', import.meta.url)),
     },
   },
   test: {

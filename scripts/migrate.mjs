@@ -192,7 +192,13 @@ async function regrant(db) {
     'webauthn_challenge',
     'email_token',
     'auth_session',
+    // Cloud only: a registration waiting for its confirmation link.
+    'pending_signup',
   ]) {
+    const exists = await db.execute(
+      sql`select to_regclass(${`public.${table}`}) is not null as found`,
+    )
+    if (!exists.rows[0].found) continue
     await db.execute(sql.raw(`revoke all on table "${table}" from gw_app`))
     await db.execute(sql.raw(`grant select, insert, update, delete on table "${table}" to gw_auth`))
   }

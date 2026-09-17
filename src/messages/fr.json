@@ -357,9 +357,25 @@
         "unknownClient": "Cette installation ne connaît pas ce client.",
         "badRedirect": "Cette adresse de retour n'appartient pas à ce client.",
         "badResource": "Cet accès a été demandé pour un autre serveur."
+      },
+      "signup": {
+        "customerType": "Choisis si tu t’inscris en tant qu’entreprise ou particulier.",
+        "invalidEmail": "Ce n’est pas une adresse e-mail valide.",
+        "country": "Choisis un pays.",
+        "companyName": "Indique le nom de l’entreprise.",
+        "address": "Indique l’adresse de facturation complète.",
+        "tooLong": "Une des informations est trop longue.",
+        "vatIdRequired": "Les entreprises de ce pays doivent indiquer leur numéro de TVA.",
+        "vatIdFormat": "Ce n’est pas un numéro de TVA valide.",
+        "vatIdCountry": "Le numéro de TVA ne correspond pas au pays choisi.",
+        "plan": "Choisis un modèle de facturation.",
+        "terms": "Accepte les conditions.",
+        "dpa": "Conclus l’accord de sous-traitance.",
+        "earlyStart": "Sans ce consentement, nous ne pouvons pas fournir le service pendant le délai de rétractation."
       }
     },
     "failed": "Ça n'a pas marché. Réessaie.",
+    "tooManyRequests": "Trop de tentatives. Réessaie plus tard.",
     "field": {
       "desc": {
         "notObject": "desc doit être un objet."
@@ -499,6 +515,18 @@
     "test": {
       "subject": "GoodWorkshop : message de test",
       "body": "Ce message confirme que l'envoi d'e-mails fonctionne.\n\nLes liens de connexion et les invitations passeront désormais par là."
+    },
+    "signupConfirm": {
+      "subject": "Confirme ton inscription à GoodWorkshop",
+      "body": "Bonjour,\n\nc’est presque fini. Ce lien crée ton espace de travail :\n{link}\n\nIl est valable {hours} heures et ne peut servir qu’une fois.\n\nSi tu ne t’es pas inscrit·e, ignore ce message — rien n’est créé sans le lien."
+    },
+    "signupExists": {
+      "subject": "Tu as déjà un compte GoodWorkshop",
+      "body": "Bonjour,\n\nquelqu’un a voulu s’inscrire à GoodWorkshop avec cette adresse. Un compte existe déjà pour elle — connecte-toi simplement :\n{link}\n\nSi ce n’était pas toi, tu n’as rien à faire."
+    },
+    "signupWelcome": {
+      "subject": "Bienvenue sur GoodWorkshop",
+      "body": "Bonjour,\n\nton espace de travail est prêt. Les {days} premiers jours sont gratuits.\n\nC’est par ici :\n{link}\n\nCi-dessous figurent les conditions en vigueur lors de ton inscription — conserve ce message."
     }
   },
   "meta": {
@@ -705,5 +733,111 @@
     "badChallenge": "Cette requête arrive sans PKCE valide. Ce serveur en exige un.",
     "badResource": "Cet accès a été demandé pour un autre serveur.",
     "problemHint": "Rien n'a été accordé. Recommence depuis le client — si cela échoue encore, le défaut est dans sa configuration."
+  },
+  "site": {
+    "nav": {
+      "pricing": "Tarifs",
+      "signIn": "Se connecter",
+      "register": "Essai gratuit",
+      "impressum": "Mentions légales",
+      "agb": "Conditions",
+      "datenschutz": "Confidentialité",
+      "avv": "Sous-traitance",
+      "widerruf": "Rétractation"
+    },
+    "home": {
+      "title": "Planifier des ateliers qui fonctionnent.",
+      "lead": "GoodWorkshop est l’agenda de la facilitation : des déroulés avec horaires, méthodes et responsables, édités ensemble – et connectés à ton IA.",
+      "cta": "Essai gratuit de 14 jours",
+      "ctaSecondary": "Voir les tarifs",
+      "featuresTitle": "Ce que fait GoodWorkshop",
+      "plan": {
+        "title": "Un agenda qui tient l’heure",
+        "body": "Déplace blocs, pauses et groupes – les heures de début et de fin suivent toutes seules."
+      },
+      "together": {
+        "title": "Ensemble, en temps réel",
+        "body": "Plusieurs personnes travaillent sur la même journée sans s’écraser mutuellement."
+      },
+      "ai": {
+        "title": "Connecté à ton IA",
+        "body": "Claude, ChatGPT et d’autres assistants planifient directement dans tes ateliers via MCP."
+      },
+      "share": {
+        "title": "Partager sans compte",
+        "body": "Clients et co-animateurs reçoivent un agenda par lien – en lecture ou en édition."
+      },
+      "print": {
+        "title": "Imprimer et exporter",
+        "body": "Vue d’impression et export Markdown pour la salle, le support et le compte rendu."
+      },
+      "trialNote": "Aucune donnée de paiement. Tu décides après 14 jours."
+    },
+    "pricing": {
+      "title": "Tarifs",
+      "intro": "Un modèle par espace de travail, choisi à l’inscription et modifiable chaque mois.",
+      "business": "Entreprises",
+      "consumer": "Particuliers",
+      "perUser": {
+        "name": "Par utilisateur",
+        "unit": "par membre actif par mois",
+        "body": "Facturé au jour près : une personne active une partie du mois compte au prorata. Les invités ne comptent pas."
+      },
+      "perWorkshop": {
+        "name": "Par atelier",
+        "unit": "par atelier créé",
+        "body": "Nombre de membres illimité. Chaque nouvel atelier est facturé une fois."
+      },
+      "net": "HT",
+      "gross": "TTC (TVA 20 %)",
+      "vatNote": "Les particuliers hors d’Autriche paient la TVA de leur pays de résidence. Les entreprises de l’UE avec un numéro de TVA valide paient hors taxes (autoliquidation).",
+      "trial": "Les 14 premiers jours sont gratuits, sans données de paiement.",
+      "cta": "Essai gratuit"
+    },
+    "legal": {
+      "germanOnly": "Seule la version allemande fait foi."
+    },
+    "meta": {
+      "description": "Planification d’ateliers pour la facilitation, ensemble en temps réel et connectée à l’IA. Essai gratuit de 14 jours."
+    },
+    "register": {
+      "title": "Essai gratuit",
+      "intro": "14 jours gratuits, sans données de paiement. Ensuite, tu décides de continuer ou non.",
+      "customerType": "Tu t’inscris en tant que",
+      "business": "Entreprise",
+      "consumer": "Particulier",
+      "firstName": "Prénom",
+      "lastName": "Nom",
+      "email": "Adresse e-mail",
+      "companyName": "Nom de l’entreprise",
+      "street": "Rue et numéro",
+      "postalCode": "Code postal",
+      "city": "Ville",
+      "country": "Pays",
+      "vatId": "Numéro de TVA",
+      "vatIdHint": "Obligatoire pour les entreprises d’un autre pays de l’UE, afin de facturer hors TVA (autoliquidation).",
+      "plan": "Modèle de facturation",
+      "perUser": "1 € par utilisateur/mois",
+      "perWorkshop": "1 € par atelier",
+      "planHintBusiness": "HT ; modifiable chaque mois.",
+      "planHintConsumer": "1,20 € TTC (TVA 20 %) ; modifiable chaque mois.",
+      "acceptTerms": "J’accepte les <terms>conditions</terms> et j’ai lu la <privacy>politique de confidentialité</privacy>.",
+      "acceptDpa": "Je conclus l’<dpa>accord de sous-traitance</dpa>.",
+      "earlyStart": "Je demande expressément que GoodWorkshop soit fourni immédiatement, avant la fin du délai de rétractation. Je sais qu’en cas de rétractation je paierai un montant proportionnel au service fourni jusque-là (rien pendant l’essai gratuit).",
+      "withdrawalNote": "En tant que particulier, tu disposes d’un droit de rétractation de 14 jours — voir les <withdrawal>informations sur la rétractation</withdrawal>.",
+      "submit": "S’inscrire",
+      "submitting": "Un instant …",
+      "sentTitle": "Regarde ta boîte de réception.",
+      "sentBody": "Nous avons envoyé un lien à {email}. Il crée ton espace de travail et reste valable 24 heures.",
+      "haveAccount": "Déjà un compte ? <login>Se connecter</login>"
+    },
+    "confirm": {
+      "title": "Créer l’espace de travail",
+      "intro": "Encore un clic et ton espace de travail est prêt.",
+      "button": "Créer l’espace de travail",
+      "working": "Création …",
+      "invalid": "Ce lien a expiré ou a déjà servi. Inscris-toi simplement à nouveau.",
+      "exists": "Un compte existe déjà pour cette adresse. Connecte-toi."
+    }
   }
 }

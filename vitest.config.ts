@@ -8,6 +8,9 @@ export default defineConfig({
     alias: {
       '@': fileURLToPath(new URL('./src', import.meta.url)),
       '@gw/edition': fileURLToPath(new URL('./src/server/edition/community.ts', import.meta.url)),
+      '@gw/home': fileURLToPath(
+        new URL('./src/components/home/community-home.tsx', import.meta.url),
+      ),
       /**
        * What the next-intl plugin does in a Next build, done by hand here.
        *

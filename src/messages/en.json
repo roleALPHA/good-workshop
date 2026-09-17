@@ -357,9 +357,25 @@
         "unknownClient": "This installation does not know that client.",
         "badRedirect": "That redirect address does not belong to this client.",
         "badResource": "This access was requested for a different server."
+      },
+      "signup": {
+        "customerType": "Please choose whether you register as a business or a private person.",
+        "invalidEmail": "That is not a valid e-mail address.",
+        "country": "Please choose a country.",
+        "companyName": "Please enter the company name.",
+        "address": "Please enter the full billing address.",
+        "tooLong": "One of the entries is too long.",
+        "vatIdRequired": "Businesses in this country need to enter their VAT number.",
+        "vatIdFormat": "That is not a valid VAT number.",
+        "vatIdCountry": "The VAT number does not match the country.",
+        "plan": "Please choose a billing model.",
+        "terms": "Please accept the terms.",
+        "dpa": "Please enter into the data processing agreement.",
+        "earlyStart": "Without this consent we cannot provide the service during the withdrawal period."
       }
     },
     "failed": "That did not work. Try again.",
+    "tooManyRequests": "Too many attempts. Please try again later.",
     "field": {
       "desc": {
         "notObject": "desc must be an object."
@@ -499,6 +515,18 @@
     "test": {
       "subject": "GoodWorkshop: test message",
       "body": "This message confirms that mail delivery works.\n\nSign-in links and invitations now go the same way."
+    },
+    "signupConfirm": {
+      "subject": "Confirm your GoodWorkshop registration",
+      "body": "Hello,\n\nalmost there. This link creates your workspace:\n{link}\n\nIt is valid for {hours} hours and can be used once.\n\nIf you did not register, ignore this message — nothing is created without the link."
+    },
+    "signupExists": {
+      "subject": "You already have a GoodWorkshop account",
+      "body": "Hello,\n\nsomebody tried to register with this address at GoodWorkshop. There already is an account for it — just sign in:\n{link}\n\nIf that was not you, there is nothing to do."
+    },
+    "signupWelcome": {
+      "subject": "Welcome to GoodWorkshop",
+      "body": "Hello,\n\nyour workspace is ready. The first {days} days are free.\n\nStart here:\n{link}\n\nBelow are the terms that applied when you registered — keep this message."
     }
   },
   "meta": {
@@ -705,5 +733,111 @@
     "badChallenge": "This request arrives without valid PKCE. This server requires it.",
     "badResource": "This access was requested for a different server.",
     "problemHint": "Nothing was granted. Start again from the client — if it fails again, the fault is in its configuration."
+  },
+  "site": {
+    "nav": {
+      "pricing": "Pricing",
+      "signIn": "Sign in",
+      "register": "Try it free",
+      "impressum": "Imprint",
+      "agb": "Terms",
+      "datenschutz": "Privacy",
+      "avv": "DPA",
+      "widerruf": "Withdrawal"
+    },
+    "home": {
+      "title": "Plan workshops that work.",
+      "lead": "GoodWorkshop is the agenda for facilitators: day plans with times, methods and the people responsible, edited together – and connected to your AI.",
+      "cta": "Try it free for 14 days",
+      "ctaSecondary": "See pricing",
+      "featuresTitle": "What GoodWorkshop does",
+      "plan": {
+        "title": "An agenda that keeps time",
+        "body": "Move blocks, breaks and clusters – start and end times follow on their own."
+      },
+      "together": {
+        "title": "Together, in real time",
+        "body": "Several people work on the same day at once without overwriting each other."
+      },
+      "ai": {
+        "title": "Connected to your AI",
+        "body": "Claude, ChatGPT and other assistants plan directly in your workshops over MCP."
+      },
+      "share": {
+        "title": "Share without an account",
+        "body": "Clients and co-facilitators get an agenda by link – to read or to edit."
+      },
+      "print": {
+        "title": "Print and export",
+        "body": "A print view and Markdown export for the room, the handout and the write-up."
+      },
+      "trialNote": "No payment details needed. Decide after 14 days."
+    },
+    "pricing": {
+      "title": "Pricing",
+      "intro": "One model per workspace, chosen at sign-up and changeable every month.",
+      "business": "Business",
+      "consumer": "Personal",
+      "perUser": {
+        "name": "Per user",
+        "unit": "per active member per month",
+        "body": "Billed by the day: somebody active for part of the month counts pro rata. Guests do not count."
+      },
+      "perWorkshop": {
+        "name": "Per workshop",
+        "unit": "per workshop created",
+        "body": "Any number of members. Every new workshop is billed once."
+      },
+      "net": "excl. VAT",
+      "gross": "incl. 20% VAT",
+      "vatNote": "Private customers outside Austria pay the VAT of their country of residence. Businesses in the EU with a valid VAT number pay net (reverse charge).",
+      "trial": "The first 14 days are free, with no payment details.",
+      "cta": "Try it free"
+    },
+    "legal": {
+      "germanOnly": "The German version is legally binding."
+    },
+    "meta": {
+      "description": "Workshop planning for facilitators, together in real time and connected to AI. Try it free for 14 days."
+    },
+    "register": {
+      "title": "Try it free",
+      "intro": "14 days free, no payment details. Then decide whether to continue.",
+      "customerType": "You are registering as",
+      "business": "A business",
+      "consumer": "A private person",
+      "firstName": "First name",
+      "lastName": "Last name",
+      "email": "E-mail address",
+      "companyName": "Company name",
+      "street": "Street and number",
+      "postalCode": "Postal code",
+      "city": "City",
+      "country": "Country",
+      "vatId": "VAT number",
+      "vatIdHint": "Required for businesses in another EU country, so invoices can be issued without VAT (reverse charge).",
+      "plan": "Billing model",
+      "perUser": "€1 per user/month",
+      "perWorkshop": "€1 per workshop",
+      "planHintBusiness": "Net, plus VAT; can be changed every month.",
+      "planHintConsumer": "€1.20 gross incl. 20% VAT; can be changed every month.",
+      "acceptTerms": "I accept the <terms>terms</terms> and have read the <privacy>privacy policy</privacy>.",
+      "acceptDpa": "I enter into the <dpa>data processing agreement</dpa>.",
+      "earlyStart": "I expressly request that GoodWorkshop is provided immediately, before the withdrawal period ends. I understand that if I withdraw, I pay a proportionate amount for the service provided until then (nothing during the free trial).",
+      "withdrawalNote": "As a private person you have a 14-day right of withdrawal — see the <withdrawal>withdrawal information</withdrawal>.",
+      "submit": "Register",
+      "submitting": "One moment …",
+      "sentTitle": "Check your inbox.",
+      "sentBody": "We sent a link to {email}. It creates your workspace and is valid for 24 hours.",
+      "haveAccount": "Already have an account? <login>Sign in</login>"
+    },
+    "confirm": {
+      "title": "Create workspace",
+      "intro": "One more click and your workspace is ready.",
+      "button": "Create workspace",
+      "working": "Creating …",
+      "invalid": "This link has expired or was already used. Just register again.",
+      "exists": "There already is an account for this address. Please sign in."
+    }
   }
 }
