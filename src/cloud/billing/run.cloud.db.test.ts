@@ -41,7 +41,6 @@ const options = (overrides: Partial<RunOptions> = {}): RunOptions => ({
 
 type Setup = {
   plan?: 'per_user' | 'per_workshop'
-  customerType?: 'business' | 'consumer'
   country?: string
   vatStatus?: string
   vatId?: string | null
@@ -70,7 +69,7 @@ async function tenant(setup: Setup = {}) {
        $8, $9)`,
     [
       id,
-      setup.customerType ?? 'business',
+      'business',
       setup.country ?? 'AT',
       setup.vatId ?? null,
       setup.vatStatus ?? 'none',
@@ -467,7 +466,6 @@ describe('the trial', () => {
     const id = await tenant({
       state: 'read_only',
       trialEndsAt: '2026-03-01T00:00:00Z',
-      customerType: 'consumer',
     })
     const eventId = `evt-${randomUUID()}`
     await ops.query(`select app.cloud_record_payment_event($1, 'payment_method_ready', $2)`, [

@@ -9,7 +9,7 @@ import { rateLimiter } from '@/server/auth/ratelimit'
 import { createSession } from '@/server/auth/session'
 import { withTenantOnly } from '@/server/db'
 import type { Translate } from '@/i18n/translator'
-import { parseSignup, type CustomerType } from '@/cloud/registration/rules'
+import { parseSignup } from '@/cloud/registration/rules'
 import { completeSignup, requestSignup, sendWelcome } from '@/cloud/registration/signup'
 import { checkVatId } from '@/cloud/tax/vies'
 import { SignupError } from '@/cloud/registration/rules'
@@ -67,13 +67,11 @@ export async function confirmSignup(token: string): Promise<ConfirmResult> {
   // still on the website.
   try {
     const rows = await withTenantOnly(completed.tenantId, (tx) =>
-      tx.execute(sql`select billing_email, customer_type from billing_account`),
+      tx.execute(sql`select billing_email from billing_account`),
     )
-    const account = (
-      rows as unknown as { rows: { billing_email: string; customer_type: CustomerType }[] }
-    ).rows[0]
+    const account = (rows as unknown as { rows: { billing_email: string }[] }).rows[0]
     if (account) {
-      await sendWelcome(account.billing_email, account.customer_type, (await getLocale()) as never)
+      await sendWelcome(account.billing_email, (await getLocale()) as never)
     }
   } catch (error) {
     console.error('welcome mail failed', { error, tenantId: completed.tenantId })

@@ -14,7 +14,7 @@ import type { TaxTreatment } from '@/cloud/tax/treatment'
 export type BillingCustomer = {
   tenantId: string
   customerRef: string | null
-  customerType: 'business' | 'consumer'
+  customerType: 'business'
   name: string
   email: string
   street: string
@@ -65,7 +65,7 @@ export type PaymentEvent =
       type: 'payment_method_ready'
       tenantId: string
       customerRef: string
-      /** Country of the card or bank account: evidence of where a consumer is. */
+      /** Country of the card or bank account, kept as evidence alongside the billing address. */
       country: string | null
     }
   | { id: string; type: 'ignored' }

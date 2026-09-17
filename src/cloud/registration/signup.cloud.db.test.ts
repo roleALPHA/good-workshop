@@ -22,7 +22,7 @@ const address = () => {
 
 const signup = (email: string, overrides: Record<string, unknown> = {}) =>
   parseSignup({
-    customerType: 'business',
+    confirmedBusiness: true,
     firstName: 'Rita',
     lastName: 'Register',
     email,
@@ -119,7 +119,7 @@ describe('completing a registration', () => {
     const { rows: billing } = await ops.query(
       `select customer_type, company_name, country, vat_id, plan, billing_email,
               terms_accepted_at is not null as terms, dpa_accepted_at is not null as dpa,
-              early_start_requested_at is null as no_early_start
+              business_confirmed_at is not null as business
          from billing_account where tenant_id = $1`,
       [done.tenantId],
     )
@@ -132,7 +132,7 @@ describe('completing a registration', () => {
       billing_email: email,
       terms: true,
       dpa: true,
-      no_early_start: true,
+      business: true,
     })
 
     const { rows: types } = await ops.query(
@@ -146,28 +146,26 @@ describe('completing a registration', () => {
     expect((await completeSignup(token)).outcome).toBe('invalid')
   })
 
-  it('records a consumer’s request to start before the withdrawal period ends', async () => {
-    const email = address()
-    const token = await pending(email, '1 hour', {
-      customerType: 'consumer',
-      companyName: '',
-      vatId: '',
-      acceptedDpa: false,
-      requestedEarlyStart: true,
-    })
-    const done = await completeSignup(token)
+  it('records that the person confirmed ordering as a business', async () => {
+    const done = await completeSignup(await pending(address()))
     if (done.outcome !== 'created') throw new Error(done.outcome)
     const { rows } = await ops.query(
-      `select customer_type, dpa_accepted_at, early_start_requested_at is not null as early, t.name
-         from billing_account b join tenant t on t.id = b.tenant_id where b.tenant_id = $1`,
+      `select customer_type, business_confirmed_at is not null as confirmed
+         from billing_account where tenant_id = $1`,
       [done.tenantId],
     )
-    expect(rows[0]).toMatchObject({
-      customer_type: 'consumer',
-      dpa_accepted_at: null,
-      early: true,
-      name: 'Rita Register',
-    })
+    expect(rows[0]).toEqual({ customer_type: 'business', confirmed: true })
+  })
+
+  it('cannot store a consumer', async () => {
+    await expect(
+      ops.query(
+        `insert into billing_account (tenant_id, customer_type, street, postal_code, city, country,
+           billing_email, plan, plan_from, terms_accepted_at)
+         values ($1, 'consumer', 'x', '1', 'x', 'AT', 'c@example.test', 'per_user', current_date, now())`,
+        [randomUUID()],
+      ),
+    ).rejects.toThrow(/billing_account_business_only/)
   })
 
   it('creates exactly one workspace when the link is clicked twice at once', async () => {

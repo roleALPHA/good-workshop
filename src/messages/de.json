@@ -359,7 +359,7 @@
         "badResource": "Dieser Zugriff wurde für einen anderen Server angefragt."
       },
       "signup": {
-        "customerType": "Bitte wähle, ob du dich als Unternehmen oder als Privatperson registrierst.",
+        "business": "Die Registrierung ist nur für Unternehmen möglich. Bitte bestätige, dass du als Unternehmer bestellst.",
         "invalidEmail": "Das ist keine gültige E-Mail-Adresse.",
         "country": "Bitte wähle ein Land.",
         "companyName": "Bitte gib den Firmennamen an.",
@@ -371,8 +371,7 @@
         "vatIdInvalid": "Diese UID-Nummer ist laut dem EU-Register (VIES) nicht gültig. Bitte prüfe sie.",
         "plan": "Bitte wähle ein Abrechnungsmodell.",
         "terms": "Bitte akzeptiere die AGB.",
-        "dpa": "Bitte schließe die Auftragsverarbeitungsvereinbarung ab.",
-        "earlyStart": "Ohne diese Zustimmung können wir den Dienst während der Rücktrittsfrist nicht bereitstellen."
+        "dpa": "Bitte schließe die Auftragsverarbeitungsvereinbarung ab."
       }
     },
     "failed": "Das hat nicht geklappt. Versuch es noch einmal.",
@@ -763,8 +762,7 @@
       "impressum": "Impressum",
       "agb": "AGB",
       "datenschutz": "Datenschutz",
-      "avv": "AVV",
-      "widerruf": "Widerruf"
+      "avv": "AVV"
     },
     "home": {
       "title": "Workshops planen, die funktionieren.",
@@ -797,8 +795,6 @@
     "pricing": {
       "title": "Preise",
       "intro": "Ein Modell pro Workspace, bei der Registrierung gewählt und jeden Monat wechselbar.",
-      "business": "Unternehmen",
-      "consumer": "Privat",
       "perUser": {
         "name": "Pro Nutzer",
         "unit": "pro aktivem Mitglied pro Monat",
@@ -810,10 +806,10 @@
         "body": "Beliebig viele Mitglieder. Abgerechnet wird jeder neu angelegte Workshop, einmal."
       },
       "net": "zzgl. USt.",
-      "gross": "inkl. 20 % USt.",
-      "vatNote": "Für Privatkundinnen und Privatkunden außerhalb Österreichs gilt die Umsatzsteuer ihres Wohnsitzlandes. Unternehmen in der EU mit gültiger UID-Nummer zahlen netto (Reverse Charge).",
+      "vatNote": "Unternehmen in Österreich zahlen 20 % USt. Unternehmen in anderen EU-Ländern mit gültiger UID-Nummer zahlen netto (Reverse Charge), Unternehmen außerhalb der EU ohne österreichische USt.",
       "trial": "Die ersten 14 Tage sind kostenlos, ohne Zahlungsdaten.",
-      "cta": "Kostenlos testen"
+      "cta": "Kostenlos testen",
+      "businessOnly": "Nur für Unternehmen: GoodWorkshop Cloud wird ausschließlich an Unternehmer im Sinne des § 1 UGB verkauft. Alle Preise netto zzgl. Umsatzsteuer."
     },
     "legal": {
       "germanOnly": "Rechtlich verbindlich ist die deutsche Fassung."
@@ -824,9 +820,9 @@
     "register": {
       "title": "Kostenlos testen",
       "intro": "14 Tage kostenlos und ohne Zahlungsdaten. Danach entscheidest du, ob du weitermachst.",
-      "customerType": "Du registrierst dich als",
-      "business": "Unternehmen",
-      "consumer": "Privatperson",
+      "businessOnlyTitle": "Nur für Unternehmen",
+      "businessOnlyBody": "GoodWorkshop Cloud richtet sich ausschließlich an Unternehmen. Du registrierst dich und bestellst als Unternehmer im Sinne des § 1 UGB; ein Vertragsschluss mit Verbraucherinnen und Verbrauchern ist nicht möglich.",
+      "confirmBusiness": "Ich bestelle als Unternehmer für mein Unternehmen, nicht als Verbraucher.",
       "firstName": "Vorname",
       "lastName": "Nachname",
       "email": "E-Mail-Adresse",
@@ -836,21 +832,18 @@
       "city": "Ort",
       "country": "Land",
       "vatId": "UID-Nummer",
-      "vatIdHint": "Für Unternehmen in einem anderen EU-Land Pflicht, damit ohne Umsatzsteuer abgerechnet werden kann (Reverse Charge).",
+      "vatIdHint": "Für Unternehmen in einem anderen EU-Land Pflicht: Abgerechnet wird ohne Umsatzsteuer (Reverse Charge).",
       "plan": "Abrechnungsmodell",
       "perUser": "1 € pro Nutzer/Monat",
       "perWorkshop": "1 € pro Workshop",
-      "planHintBusiness": "Netto zzgl. USt.; jeden Monat wechselbar.",
-      "planHintConsumer": "Brutto 1,20 € inkl. 20 % USt.; jeden Monat wechselbar.",
       "acceptTerms": "Ich akzeptiere die <terms>AGB</terms> und habe die <privacy>Datenschutzerklärung</privacy> gelesen.",
       "acceptDpa": "Ich schließe die <dpa>Auftragsverarbeitungsvereinbarung</dpa> ab.",
-      "earlyStart": "Ich verlange ausdrücklich, dass GoodWorkshop sofort bereitgestellt wird, noch vor Ablauf der Rücktrittsfrist. Mir ist bekannt, dass ich bei einem Rücktritt einen anteiligen Betrag für die bis dahin erbrachte Leistung zahle (während der kostenlosen Testphase fällt keiner an).",
-      "withdrawalNote": "Als Privatperson hast du ein Rücktrittsrecht von 14 Tagen — siehe <withdrawal>Widerrufsbelehrung</withdrawal>.",
       "submit": "Registrieren",
       "submitting": "Einen Moment …",
       "sentTitle": "Schau in dein Postfach.",
       "sentBody": "Wir haben dir einen Link an {email} geschickt. Mit ihm legst du deinen Workspace an; er gilt 24 Stunden.",
-      "haveAccount": "Schon ein Konto? <login>Anmelden</login>"
+      "haveAccount": "Schon ein Konto? <login>Anmelden</login>",
+      "planHint": "Netto zzgl. USt.; jeden Monat wechselbar."
     },
     "confirm": {
       "title": "Workspace anlegen",

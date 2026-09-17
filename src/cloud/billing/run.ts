@@ -60,7 +60,7 @@ export async function closeMonth(db: Db, month: string, options: RunOptions): Pr
   const monthEnd = new Date(new Date(`${days.at(-1)}T23:59:59Z`).getTime() + DAY)
 
   const { rows: accounts } = await db.query(
-    `select b.tenant_id, b.customer_type, b.country, b.vat_status, b.plan,
+    `select b.tenant_id, b.country, b.vat_status, b.plan,
             l.trial_ends_at
        from billing_account b
        join tenant_lifecycle l on l.tenant_id = b.tenant_id
@@ -102,15 +102,9 @@ export async function closeMonth(db: Db, month: string, options: RunOptions): Pr
       }).length
     }
 
-    const { rows: evidence } = await db.query(
-      `select country from tax_evidence where tenant_id = $1`,
-      [account.tenant_id],
-    )
     const tax = taxTreatment({
-      customerType: account.customer_type,
       country: account.country,
       vatStatus: account.vat_status as VatStatus,
-      evidence: evidence.map((row) => row.country),
     })
     const net = netCents(quantity, plan.netCents)
 
@@ -252,8 +246,7 @@ export function implausible(
   if (invoice.netCents !== period.net_cents) {
     return `net ${invoice.netCents} instead of ${period.net_cents}`
   }
-  const rate =
-    period.tax_kind === 'domestic' || period.tax_kind === 'oss' ? Number(period.tax_rate) : 0
+  const rate = period.tax_kind === 'domestic' ? Number(period.tax_rate) : 0
   const expected = Math.round(period.net_cents * rate)
   if (Math.abs(invoice.taxCents - expected) > 1)
     return `tax ${invoice.taxCents} instead of ${expected}`

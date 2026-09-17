@@ -32,16 +32,3 @@ export function isPlanKey(value: unknown): value is PlanKey {
 
 /** Days a new tenant may use the service before it has to pay. */
 export const TRIAL_DAYS = 14
-
-/**
- * Austrian VAT, for the gross price shown to consumers on the pricing page.
- *
- * Only for display: a consumer elsewhere in the EU pays the VAT of their own
- * country (OSS), and the invoice's tax is computed by the accounting system,
- * not here. The page says so next to the number.
- */
-export const DISPLAY_VAT_RATE = 0.2
-
-export function grossCents(netCents: number, rate = DISPLAY_VAT_RATE): number {
-  return Math.round(netCents * (1 + rate))
-}

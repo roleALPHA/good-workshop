@@ -359,7 +359,7 @@
         "badResource": "Cet accès a été demandé pour un autre serveur."
       },
       "signup": {
-        "customerType": "Choisis si tu t’inscris en tant qu’entreprise ou particulier.",
+        "business": "L’inscription est réservée aux entreprises. Confirme que tu commandes en tant que professionnel.",
         "invalidEmail": "Ce n’est pas une adresse e-mail valide.",
         "country": "Choisis un pays.",
         "companyName": "Indique le nom de l’entreprise.",
@@ -371,8 +371,7 @@
         "vatIdInvalid": "Selon le registre de l’UE (VIES), ce numéro de TVA n’est pas valide. Vérifie-le.",
         "plan": "Choisis un modèle de facturation.",
         "terms": "Accepte les conditions.",
-        "dpa": "Conclus l’accord de sous-traitance.",
-        "earlyStart": "Sans ce consentement, nous ne pouvons pas fournir le service pendant le délai de rétractation."
+        "dpa": "Conclus l’accord de sous-traitance."
       }
     },
     "failed": "Ça n'a pas marché. Réessaie.",
@@ -763,8 +762,7 @@
       "impressum": "Mentions légales",
       "agb": "Conditions",
       "datenschutz": "Confidentialité",
-      "avv": "Sous-traitance",
-      "widerruf": "Rétractation"
+      "avv": "Sous-traitance"
     },
     "home": {
       "title": "Planifier des ateliers qui fonctionnent.",
@@ -797,8 +795,6 @@
     "pricing": {
       "title": "Tarifs",
       "intro": "Un modèle par espace de travail, choisi à l’inscription et modifiable chaque mois.",
-      "business": "Entreprises",
-      "consumer": "Particuliers",
       "perUser": {
         "name": "Par utilisateur",
         "unit": "par membre actif par mois",
@@ -810,10 +806,10 @@
         "body": "Nombre de membres illimité. Chaque nouvel atelier est facturé une fois."
       },
       "net": "HT",
-      "gross": "TTC (TVA 20 %)",
-      "vatNote": "Les particuliers hors d’Autriche paient la TVA de leur pays de résidence. Les entreprises de l’UE avec un numéro de TVA valide paient hors taxes (autoliquidation).",
+      "vatNote": "Les entreprises en Autriche paient 20 % de TVA. Les entreprises d’autres pays de l’UE disposant d’un numéro de TVA valide paient hors taxes (autoliquidation) ; les entreprises hors UE ne paient pas de TVA autrichienne.",
       "trial": "Les 14 premiers jours sont gratuits, sans données de paiement.",
-      "cta": "Essai gratuit"
+      "cta": "Essai gratuit",
+      "businessOnly": "Réservé aux entreprises : GoodWorkshop Cloud est vendu exclusivement aux professionnels. Tous les prix sont HT."
     },
     "legal": {
       "germanOnly": "Seule la version allemande fait foi."
@@ -824,9 +820,9 @@
     "register": {
       "title": "Essai gratuit",
       "intro": "14 jours gratuits, sans données de paiement. Ensuite, tu décides de continuer ou non.",
-      "customerType": "Tu t’inscris en tant que",
-      "business": "Entreprise",
-      "consumer": "Particulier",
+      "businessOnlyTitle": "Réservé aux entreprises",
+      "businessOnlyBody": "GoodWorkshop Cloud s’adresse exclusivement aux entreprises. Tu t’inscris et commandes en tant que professionnel (§ 1 du Code de commerce autrichien) ; aucun contrat n’est possible avec des consommateurs.",
+      "confirmBusiness": "Je commande en tant que professionnel pour mon entreprise, et non en tant que consommateur.",
       "firstName": "Prénom",
       "lastName": "Nom",
       "email": "Adresse e-mail",
@@ -836,21 +832,18 @@
       "city": "Ville",
       "country": "Pays",
       "vatId": "Numéro de TVA",
-      "vatIdHint": "Obligatoire pour les entreprises d’un autre pays de l’UE, afin de facturer hors TVA (autoliquidation).",
+      "vatIdHint": "Obligatoire pour les entreprises d’un autre pays de l’UE : la facture est émise hors TVA (autoliquidation).",
       "plan": "Modèle de facturation",
       "perUser": "1 € par utilisateur/mois",
       "perWorkshop": "1 € par atelier",
-      "planHintBusiness": "HT ; modifiable chaque mois.",
-      "planHintConsumer": "1,20 € TTC (TVA 20 %) ; modifiable chaque mois.",
       "acceptTerms": "J’accepte les <terms>conditions</terms> et j’ai lu la <privacy>politique de confidentialité</privacy>.",
       "acceptDpa": "Je conclus l’<dpa>accord de sous-traitance</dpa>.",
-      "earlyStart": "Je demande expressément que GoodWorkshop soit fourni immédiatement, avant la fin du délai de rétractation. Je sais qu’en cas de rétractation je paierai un montant proportionnel au service fourni jusque-là (rien pendant l’essai gratuit).",
-      "withdrawalNote": "En tant que particulier, tu disposes d’un droit de rétractation de 14 jours — voir les <withdrawal>informations sur la rétractation</withdrawal>.",
       "submit": "S’inscrire",
       "submitting": "Un instant …",
       "sentTitle": "Regarde ta boîte de réception.",
       "sentBody": "Nous avons envoyé un lien à {email}. Il crée ton espace de travail et reste valable 24 heures.",
-      "haveAccount": "Déjà un compte ? <login>Se connecter</login>"
+      "haveAccount": "Déjà un compte ? <login>Se connecter</login>",
+      "planHint": "HT ; modifiable chaque mois."
     },
     "confirm": {
       "title": "Créer l’espace de travail",

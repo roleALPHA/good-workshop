@@ -283,7 +283,7 @@ jobs:
           GW_EDITION: cloud
       - name: The cloud build has its website
         run: |
-          for route in preise registrieren registrieren/bestaetigen impressum agb widerruf datenschutz avv; do
+          for route in preise registrieren registrieren/bestaetigen impressum agb datenschutz avv; do
             test -e ".next/server/app/(site)/${route}/page.js" || { echo "missing: /${route}"; exit 1; }
           done
           test -e .next/standalone/src/cloud/legal/agb.md

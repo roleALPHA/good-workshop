@@ -111,7 +111,7 @@ export const DOMAIN_ERROR_KEYS = [
   // Live collaboration
   'collab.unavailable',
   // Cloud registration
-  'signup.customerType',
+  'signup.business',
   'signup.invalidEmail',
   'signup.country',
   'signup.companyName',
@@ -124,7 +124,6 @@ export const DOMAIN_ERROR_KEYS = [
   'signup.plan',
   'signup.terms',
   'signup.dpa',
-  'signup.earlyStart',
   // First-run setup
   'setup.wrongKey',
   'setup.invalidEmail',

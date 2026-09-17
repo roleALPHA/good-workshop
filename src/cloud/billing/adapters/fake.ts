@@ -28,7 +28,7 @@ export function fakeAdapters(
           (sum, line) => sum + Math.round(line.quantity * line.unitNetCents),
           0,
         )
-        const rate = tax.kind === 'domestic' || tax.kind === 'oss' ? tax.rate : 0
+        const rate = tax.kind === 'domestic' ? tax.rate : 0
         const taxCents = Math.round(net * rate)
         const invoice = {
           id: `move-${invoices.size + 1}`,

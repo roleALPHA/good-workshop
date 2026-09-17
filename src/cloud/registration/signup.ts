@@ -143,19 +143,12 @@ export async function completeSignup(token: string): Promise<CompletedSignup> {
 }
 
 /**
- * The confirmation of the contract, on a durable medium (§ 7 FAGG): the terms
- * and, for consumers, the withdrawal information travel with the mail rather
- * than behind a link that can change.
+ * The confirmation of the contract, with the terms as they were agreed: in the
+ * mail as text rather than behind a link to a page that can change.
  */
-export async function sendWelcome(
-  to: string,
-  customerType: Signup['customerType'],
-  locale: Locale,
-): Promise<void> {
+export async function sendWelcome(to: string, locale: Locale): Promise<void> {
   const t = translator(locale, 'mail.signupWelcome')
-  const documents =
-    customerType === 'consumer' ? (['agb', 'widerruf'] as const) : (['agb'] as const)
-  const texts = await Promise.all(documents.map((document) => readLegalDocument(document)))
+  const texts = [await readLegalDocument('agb')]
   const mail: Mail = {
     to,
     subject: t('subject'),

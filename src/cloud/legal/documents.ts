@@ -9,7 +9,7 @@ import { join } from 'node:path'
  * in `outputFileTracingIncludes` for a cloud build, which is what puts them into
  * the standalone output and therefore into the image.
  */
-export const LEGAL_DOCUMENTS = ['impressum', 'agb', 'widerruf', 'datenschutz', 'avv'] as const
+export const LEGAL_DOCUMENTS = ['impressum', 'agb', 'datenschutz', 'avv'] as const
 export type LegalDocument = (typeof LEGAL_DOCUMENTS)[number]
 
 export async function readLegalDocument(document: LegalDocument): Promise<string> {
