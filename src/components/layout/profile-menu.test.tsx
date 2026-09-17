@@ -16,14 +16,14 @@ import { ProfileMenu } from './profile-menu'
 const open = async (isAdmin = false) => {
   const user = userEvent.setup()
   render(<ProfileMenu name="Anna Berger" email="anna@example.com" isAdmin={isAdmin} />)
-  await user.click(screen.getByRole('button', { name: 'Konto', exact: true }))
+  await user.click(screen.getByRole('button', { name: 'Konto' }))
   return user
 }
 
 describe('the profile menu', () => {
   it('starts closed and shows the initials', () => {
     render(<ProfileMenu name="Anna Berger" email="anna@example.com" isAdmin={false} />)
-    const trigger = screen.getByRole('button', { name: 'Konto', exact: true })
+    const trigger = screen.getByRole('button', { name: 'Konto' })
     expect(trigger).toHaveAttribute('aria-expanded', 'false')
     expect(trigger).toHaveTextContent('AB')
     expect(screen.queryByRole('link', { name: 'Sicherheit' })).not.toBeInTheDocument()
@@ -31,10 +31,7 @@ describe('the profile menu', () => {
 
   it('offers profile, security, AI connection and sign-out to everybody', async () => {
     await open()
-    expect(screen.getByRole('button', { name: 'Konto', exact: true })).toHaveAttribute(
-      'aria-expanded',
-      'true',
-    )
+    expect(screen.getByRole('button', { name: 'Konto' })).toHaveAttribute('aria-expanded', 'true')
     expect(screen.getByRole('link', { name: 'Profil & Einstellungen' })).toHaveAttribute(
       'href',
       '/settings',
@@ -77,7 +74,7 @@ describe('the profile menu', () => {
     expect(screen.getByRole('link', { name: 'Profil & Einstellungen' })).toHaveFocus()
 
     await user.keyboard('{Escape}')
-    const trigger = screen.getByRole('button', { name: 'Konto', exact: true })
+    const trigger = screen.getByRole('button', { name: 'Konto' })
     expect(trigger).toHaveAttribute('aria-expanded', 'false')
     expect(trigger).toHaveFocus()
   })
@@ -99,7 +96,7 @@ describe('the profile menu', () => {
 
   it('falls back to the address for somebody without a name', async () => {
     render(<ProfileMenu name="" email="neu@example.com" isAdmin={false} />)
-    expect(screen.getByRole('button', { name: 'Konto', exact: true })).toHaveAttribute(
+    expect(screen.getByRole('button', { name: 'Konto' })).toHaveAttribute(
       'title',
       'neu@example.com',
     )
