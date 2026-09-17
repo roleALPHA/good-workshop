@@ -1,4 +1,8 @@
 version: 2
+# A week of cooldown on every ecosystem. The supply-chain attacks of the last
+# years published a malicious version and were caught within days; a
+# dependency that has been out for a week has had those days. Security updates
+# are not delayed by this -- Dependabot applies cooldown to version updates only.
 updates:
   # Actions are pinned to full-length commit SHAs, which means they can only be
   # updated by a bot that understands the pin. Without this file the pinning
@@ -7,6 +11,8 @@ updates:
     directory: /
     schedule:
       interval: weekly
+    cooldown:
+      default-days: 7
     groups:
       actions:
         patterns: ['*']
@@ -15,6 +21,8 @@ updates:
     directory: /
     schedule:
       interval: weekly
+    cooldown:
+      default-days: 7
     open-pull-requests-limit: 5
     groups:
       dev-dependencies:
@@ -27,3 +35,5 @@ updates:
     directory: /
     schedule:
       interval: weekly
+    cooldown:
+      default-days: 7

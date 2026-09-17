@@ -36,8 +36,10 @@ jobs:
 
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
 
-      - uses: github/codeql-action/init@977e6ceaea7361825998245d787fa3b4d6b9e5df # v2.27.0
+      - uses: github/codeql-action/init@b96794f015dfd88f77b49b1c93e0fa7110f94c63 # v4.38.0
         with:
           languages: ${{ matrix.language }}
           # More than the default set. The extra queries are the ones that find
@@ -48,6 +50,6 @@ jobs:
       # No build step: this project is TypeScript, and CodeQL reads it without
       # one. Adding `next build` here would double the pipeline's slowest job
       # to tell CodeQL something it already knows.
-      - uses: github/codeql-action/analyze@977e6ceaea7361825998245d787fa3b4d6b9e5df # v2.27.0
+      - uses: github/codeql-action/analyze@b96794f015dfd88f77b49b1c93e0fa7110f94c63 # v4.38.0
         with:
           category: /language:${{ matrix.language }}

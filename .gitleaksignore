@@ -1,0 +1,6 @@
+# Findings gitleaks reports that are not credentials, by fingerprint.
+# Every line needs a reason; a fingerprint without one is a secret waved through.
+
+# `x-ops-token: ci-token` in the image smoke test: a value made up for that test,
+# set on a container that exists for the length of one CI job.
+54861be22935f26258d4d807906b18a39ea11a4a:.github/workflows/ci.yml:curl-auth-header:234
