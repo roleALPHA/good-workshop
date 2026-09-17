@@ -3,6 +3,7 @@ import { fileURLToPath } from 'node:url'
 import createNextIntlPlugin from 'next-intl/plugin'
 import type { NextConfig } from 'next'
 import { requestedEdition } from './scripts/edition.mjs'
+import { billingAdaptersPath } from './scripts/edition-aliases.mjs'
 
 /**
  * Which edition this build is. Read from the build environment here and in
@@ -42,8 +43,10 @@ const nextConfig: NextConfig = {
       '@gw/edition': `./src/server/edition/${edition}.ts`,
       // The private cloud build points this at the real accounting and payment
       // adapters; every other build refuses to bill.
-      '@gw/billing-adapters':
-        process.env.GW_BILLING_ADAPTERS ?? './src/cloud/billing/adapters/unavailable.ts',
+      '@gw/billing-adapters': billingAdaptersPath(
+        process.env,
+        './src/cloud/billing/adapters/unavailable.ts',
+      ),
       '@gw/home':
         edition === 'cloud'
           ? './src/cloud/site/home.tsx'

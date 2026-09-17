@@ -274,6 +274,39 @@ jobs:
       - name: Cloud edition, two tenants
         run: pnpm test:db:cloud
 
+      # The private cloud image builds with its own accounting and payment
+      # adapters, copied into the build context and named by
+      # GW_BILLING_ADAPTERS. That path is the only way in; a build that quietly
+      # ignored it would ship the adapters that refuse to bill, and nobody would
+      # notice until the first invoice was due. The stub stands in for the
+      # private ones, which this repository never sees.
+      - name: An adapter from outside the repository
+        run: |
+          mkdir -p private-adapters
+          cat > private-adapters/index.ts <<'TS'
+          import { BillingUnavailableError, type BillingAdapters } from '@/cloud/billing/ports'
+
+          const refuse = async (): Promise<never> => {
+            throw new BillingUnavailableError()
+          }
+          export const configured = false
+          export const adapters: BillingAdapters = {
+            invoicing: {
+              upsertCustomer: refuse,
+              findInvoice: refuse,
+              issueInvoice: refuse,
+              recordPayment: refuse,
+            },
+            payments: {
+              charge: refuse,
+              createSetupSession: refuse,
+              parseWebhook: () => {
+                throw new Error('adapters-from-the-private-build')
+              },
+            },
+          }
+          TS
+
       # The cloud's pages only exist in a cloud build (`page.cloud.tsx`), so only
       # a cloud build finds a route that does not compile or collides with one of
       # the community's.
@@ -281,6 +314,7 @@ jobs:
         run: pnpm build
         env:
           GW_EDITION: cloud
+          GW_BILLING_ADAPTERS: ./private-adapters/index.ts
       - name: The cloud build has its website
         run: |
           for route in preise registrieren registrieren/bestaetigen impressum agb datenschutz avv; do
@@ -291,6 +325,7 @@ jobs:
           test -e ".next/server/app/(app)/admin/billing/page.js"
           test -e .next/server/app/operator/page.js
           test -e ".next/server/app/api/billing/webhook/route.js"
+          grep -q "adapters-from-the-private-build" dist/billing-worker.mjs
 
   build:
     name: Docker Build
