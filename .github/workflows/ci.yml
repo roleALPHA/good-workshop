@@ -287,6 +287,8 @@ jobs:
             test -e ".next/server/app/(site)/${route}/page.js" || { echo "missing: /${route}"; exit 1; }
           done
           test -e .next/standalone/src/cloud/legal/agb.md
+          test -e dist/billing-worker.mjs
+          test -e ".next/server/app/api/billing/webhook/route.js"
 
   build:
     name: Docker Build

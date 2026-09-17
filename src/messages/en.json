@@ -528,6 +528,26 @@
     "signupWelcome": {
       "subject": "Welcome to GoodWorkshop",
       "body": "Hello,\n\nyour workspace is ready. The first {days} days are free.\n\nStart here:\n{link}\n\nBelow are the terms that applied when you registered — keep this message."
+    },
+    "billing": {
+      "trial_ending": {
+        "subject": "Your GoodWorkshop trial ends soon",
+        "body": "Hello,\n\nyour free trial ends in {days, plural, one {one day} other {# days}}. To keep working afterwards, add a payment method:\n{link}\n\nWithout one, everything stays readable and exportable but can no longer be changed."
+      },
+      "payment_failed": {
+        "subject": "GoodWorkshop payment failed",
+        "body": "Hello,\n\nwe could not collect the invoice amount. {retry, select, none {We will not try again.} other {We will try again on {retry}.}}\n\nPlease check your payment method:\n{link}"
+      },
+      "readOnly": {
+        "trial_ended": {
+          "subject": "Your workspace is now read-only",
+          "body": "Hello,\n\nyour trial has ended. Your workshops stay readable and exportable. Add a payment method to continue working:\n{link}"
+        },
+        "payment_failed": {
+          "subject": "Your workspace is read-only",
+          "body": "Hello,\n\nwe could not collect an invoice even after several attempts, so your workspace is read-only; reading and exporting still work. Please settle the payment:\n{link}"
+        }
+      }
     }
   },
   "meta": {

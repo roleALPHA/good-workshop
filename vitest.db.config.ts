@@ -12,6 +12,9 @@ export default defineConfig({
     alias: {
       '@': fileURLToPath(new URL('./src', import.meta.url)),
       '@gw/edition': fileURLToPath(new URL('./src/server/edition/community.ts', import.meta.url)),
+      '@gw/billing-adapters': fileURLToPath(
+        new URL('./src/cloud/billing/adapters/unavailable.ts', import.meta.url),
+      ),
       '@gw/home': fileURLToPath(
         new URL('./src/components/home/community-home.tsx', import.meta.url),
       ),
