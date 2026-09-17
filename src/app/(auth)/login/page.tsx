@@ -14,17 +14,26 @@ const ERRORS = {
 export default async function LoginPage({
   searchParams,
 }: {
-  searchParams: Promise<{ error?: string }>
+  searchParams: Promise<{ error?: string; deleted?: string }>
 }) {
   if (await readSessionCached()) redirect('/')
 
-  const [{ error }, t] = await Promise.all([searchParams, getTranslations('auth.login')])
+  const [{ error, deleted }, t] = await Promise.all([searchParams, getTranslations('auth.login')])
   const key = error && error in ERRORS ? ERRORS[error as keyof typeof ERRORS] : null
 
   return (
     <div>
       <h1 className="text-xl font-semibold tracking-tight">{t('title')}</h1>
       <p className="mt-1 text-[15px] text-[var(--fg-muted)]">{t('intro')}</p>
+
+      {deleted === '1' && (
+        <p
+          role="status"
+          className="mt-4 rounded border border-[var(--border)] px-3 py-2 text-[14px]"
+        >
+          {t('accountDeleted')}
+        </p>
+      )}
 
       {key && (
         <p

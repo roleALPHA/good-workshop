@@ -195,7 +195,8 @@
       "sentTitle": "Regarde dans ta boîte mail.",
       "sentBody": "S'il existe un compte pour cette adresse, un lien de connexion est en route. Il est valable {minutes, plural, one {une minute} many {# minutes} other {# minutes}}.",
       "linkExpired": "Ce lien a expiré ou a déjà été utilisé. Demandes-en un nouveau.",
-      "linkIncomplete": "Le lien était incomplet. Demandes-en un nouveau."
+      "linkIncomplete": "Le lien était incomplet. Demandes-en un nouveau.",
+      "accountDeleted": "Ton compte a été supprimé."
     },
     "verify": {
       "title": "Confirmer la connexion",
@@ -678,6 +679,21 @@
         "copyClaudeCode": "Copier la commande pour Claude Code",
         "copyGemini": "Copier la commande pour Gemini CLI"
       }
+    },
+    "deleteAccount": {
+      "title": "Supprimer le compte",
+      "intro": "Te retire de cet espace de travail. Si ton adresse e-mail n’appartient à aucun autre espace, ton compte est aussi supprimé.",
+      "open": "Supprimer le compte",
+      "heading": "Supprimer ton compte",
+      "warning": "C’est irréversible. Tes accès, jetons et partages disparaissent immédiatement et tu es déconnecté·e.",
+      "ownsNothing": "Tu ne possèdes ni atelier ni dossier.",
+      "owns": "À transmettre : {workshops, plural, =0 {aucun atelier} one {# atelier} many {# ateliers} other {# ateliers}} et {folders, plural, =0 {aucun dossier} one {# dossier} many {# dossiers} other {# dossiers}}.",
+      "successor": "Reprend",
+      "successorPlaceholder": "Choisir …",
+      "noColleague": "Personne ne peut reprendre. Invite d’abord quelqu’un ou supprime tes ateliers.",
+      "typeEmail": "Tape l’adresse e-mail pour confirmer : {email}",
+      "cancel": "Annuler",
+      "confirm": "Supprimer définitivement le compte"
     }
   },
   "workshop": {

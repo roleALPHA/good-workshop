@@ -195,7 +195,8 @@
       "sentTitle": "Check your inbox.",
       "sentBody": "If there is an account for that address, a sign-in link is on its way. It is valid for {minutes, plural, one {one minute} other {# minutes}}.",
       "linkExpired": "This link has expired or has already been used. Ask for a new one.",
-      "linkIncomplete": "The link was incomplete. Ask for a new one."
+      "linkIncomplete": "The link was incomplete. Ask for a new one.",
+      "accountDeleted": "Your account has been deleted."
     },
     "verify": {
       "title": "Confirm sign-in",
@@ -678,6 +679,21 @@
         "copyClaudeCode": "Copy command for Claude Code",
         "copyGemini": "Copy command for Gemini CLI"
       }
+    },
+    "deleteAccount": {
+      "title": "Delete account",
+      "intro": "Removes you from this workspace. If your e-mail address belongs to no other workspace, your account is deleted too.",
+      "open": "Delete account",
+      "heading": "Delete your account",
+      "warning": "This cannot be undone. Your access, tokens and shares disappear immediately, and you are signed out.",
+      "ownsNothing": "You own no workshops and no folders.",
+      "owns": "To hand over: {workshops, plural, =0 {no workshops} one {# workshop} other {# workshops}} and {folders, plural, =0 {no folders} one {# folder} other {# folders}}.",
+      "successor": "Takes over",
+      "successorPlaceholder": "Please choose …",
+      "noColleague": "There is nobody who could take over. Invite somebody first or delete your workshops.",
+      "typeEmail": "Type the e-mail address to confirm: {email}",
+      "cancel": "Keep it",
+      "confirm": "Delete account for good"
     }
   },
   "workshop": {

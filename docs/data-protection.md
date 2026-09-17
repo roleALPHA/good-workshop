@@ -104,7 +104,10 @@ and these statements are meant to sweep all of them.
 wrote is not attributed to them per field — the CRDT log records authorship of edits, the
 relational tables do not.
 
-**Erasure (Art. 17).** An admin removes somebody under **Administration → Members**. The screen
+**Erasure (Art. 17).** A person deletes their own account under **Profile & settings → Delete
+account**, with the same consequences and the same successor question as below; the last active
+admin cannot, because nobody could administer the workspace afterwards. An admin removes somebody
+under **Administration → Members**. The screen
 asks which colleague takes over their workshops and folders, says how many there are before it
 asks, and needs the address typed to confirm. Removing deletes the membership together with
 their tokens, OAuth grants and every collaboration grant — and if that was the person's last

@@ -14,7 +14,7 @@ test('reaches every account page through the menu, on a phone', async ({ page })
   await page.setViewportSize({ width: 375, height: 667 })
   await page.goto('/library')
 
-  const menu = page.getByRole('button', { name: 'Konto' })
+  const menu = page.getByRole('button', { name: 'Konto', exact: true })
   await menu.click()
   // The signed-in e2e user is the tenant admin, so the administration is there.
   await expect(page.getByRole('navigation', { name: 'Verwaltung' })).toBeVisible()
@@ -56,7 +56,10 @@ test('shows the name saved in the profile in the header', async ({ page }) => {
   await expect(page.getByRole('status')).toHaveText('Gespeichert.')
 
   await page.reload()
-  await expect(page.getByRole('button', { name: 'Konto' })).toHaveAttribute('title', expected)
+  await expect(page.getByRole('button', { name: 'Konto', exact: true })).toHaveAttribute(
+    'title',
+    expected,
+  )
 
   // Put back what e2e/auth.setup.ts gave the account, for the tests that follow.
   await page.getByLabel('Nachname').fill('Ende')
