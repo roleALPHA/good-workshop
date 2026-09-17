@@ -6,6 +6,8 @@ import { BrandMark, BrandStyle } from '@/components/layout/tenant-brand'
 import { ProfileMenu } from '@/components/layout/profile-menu'
 import { getClientMessages } from '@/i18n/client-messages'
 import { readSessionCached } from '@/server/auth/session'
+import { edition } from '@/server/edition'
+import { WorkspaceNoticeBanner } from '@/components/layout/workspace-notice'
 
 export const dynamic = 'force-dynamic'
 
@@ -22,7 +24,10 @@ export default async function AppLayout({ children }: { children: React.ReactNod
 
   // Not in the root layout: src/app/print/layout.tsx nests inside that one, and
   // the print view deliberately ships no client JavaScript at all.
-  const messages = await getClientMessages()
+  const [messages, notice] = await Promise.all([
+    getClientMessages(),
+    edition.workspaceNotice(session.tenantId).catch(() => null),
+  ])
 
   return (
     <NextIntlClientProvider messages={messages}>
@@ -41,9 +46,13 @@ export default async function AppLayout({ children }: { children: React.ReactNod
               name={session.displayName}
               email={session.email}
               isAdmin={session.tenantRole === 'admin'}
+              hasBilling={edition.hasBilling}
             />
           </div>
         </header>
+        {notice && (
+          <WorkspaceNoticeBanner notice={notice} isAdmin={session.tenantRole === 'admin'} />
+        )}
 
         <main className="mx-auto w-full max-w-5xl flex-1 px-4 py-6">{children}</main>
         <AppFooter />

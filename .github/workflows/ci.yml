@@ -288,6 +288,7 @@ jobs:
           done
           test -e .next/standalone/src/cloud/legal/agb.md
           test -e dist/billing-worker.mjs
+          test -e ".next/server/app/(app)/admin/billing/page.js"
           test -e ".next/server/app/api/billing/webhook/route.js"
 
   build:

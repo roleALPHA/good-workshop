@@ -34,6 +34,8 @@ describe('the community edition', () => {
     const noTx = undefined as never
     await expect(communityEdition.tenantWritable(noTx)).resolves.toBe(true)
     await expect(communityEdition.adoptRegisteredClient(noTx, 'any')).resolves.toBeUndefined()
+    await expect(communityEdition.workspaceNotice('any-tenant')).resolves.toBeNull()
+    expect(communityEdition.hasBilling).toBe(false)
   })
 })
 

@@ -86,6 +86,86 @@ declare const messages: {
       "testTo": "An",
       "testSend": "Schicken",
       "testSent": "Verschickt an {email}. Wenn nichts ankommt: Spam-Ordner."
+    },
+    "billing": {
+      "title": "Abrechnung",
+      "intro": "Plan, Rechnungsdaten, Zahlungsmethode und Rechnungen dieses Workspaces.",
+      "status": {
+        "label": "Status",
+        "trial": "Testphase bis {date}",
+        "active": "Aktiv",
+        "read_only": "Schreibgeschützt",
+        "paused": "Pausiert",
+        "deleting": "Wird am {date} gelöscht"
+      },
+      "plan": {
+        "title": "Abrechnungsmodell",
+        "per_user": "1 € pro Nutzer/Monat",
+        "per_workshop": "1 € pro Workshop",
+        "next": "Ab dem nächsten Monat: {plan}",
+        "hint": "Ein Wechsel gilt ab dem nächsten Monatsersten.",
+        "save": "Übernehmen"
+      },
+      "usage": {
+        "title": "Dieser Monat bisher",
+        "per_user": "{quantity} Nutzer-Monate",
+        "per_workshop": "{quantity, plural, one {# Workshop} other {# Workshops}}",
+        "net": "{amount} netto"
+      },
+      "details": {
+        "title": "Rechnungsdaten",
+        "companyName": "Firmenname",
+        "street": "Straße und Hausnummer",
+        "postalCode": "PLZ",
+        "city": "Ort",
+        "country": "Land",
+        "vatId": "UID-Nummer",
+        "billingEmail": "Rechnungs-E-Mail",
+        "save": "Speichern",
+        "saving": "Speichern …",
+        "saved": "Gespeichert.",
+        "vat": {
+          "none": "keine UID-Nummer",
+          "valid": "UID-Nummer gültig (VIES)",
+          "invalid": "UID-Nummer ungültig",
+          "pending": "UID-Prüfung ausstehend"
+        }
+      },
+      "payment": {
+        "title": "Zahlungsmethode",
+        "ready": "Eine Zahlungsmethode ist hinterlegt.",
+        "missing": "Noch keine Zahlungsmethode hinterlegt. Nach der Testphase ist der Workspace ohne Zahlungsmethode schreibgeschützt.",
+        "add": "Zahlungsmethode hinterlegen",
+        "change": "Zahlungsmethode ändern",
+        "unavailable": "Zahlungen sind in dieser Installation noch nicht eingerichtet."
+      },
+      "invoices": {
+        "title": "Rechnungen",
+        "none": "Noch keine Rechnungen.",
+        "month": "Monat",
+        "amount": "Betrag",
+        "status": "Status",
+        "open": "Rechnung öffnen",
+        "state": {
+          "computed": "in Vorbereitung",
+          "held": "in Prüfung",
+          "invoiced": "gestellt",
+          "charging": "wird eingezogen",
+          "paid": "bezahlt",
+          "failed": "Zahlung fehlgeschlagen"
+        }
+      },
+      "delete": {
+        "title": "Workspace löschen",
+        "intro": "Beendet den Vertrag und löscht alle Workshops, Mitglieder und Freigaben.",
+        "open": "Workspace löschen",
+        "warning": "Der Workspace wird sofort schreibgeschützt und nach {days} Tagen endgültig gelöscht. Bis dahin können alle Workshops noch exportiert werden, und du kannst die Löschung zurücknehmen. Der laufende Monat wird noch anteilig abgerechnet.",
+        "typeName": "Zum Bestätigen den Namen des Workspaces eintippen: {name}",
+        "confirm": "Löschung beantragen",
+        "cancel": "Doch nicht",
+        "scheduled": "Dieser Workspace wird am {date} gelöscht.",
+        "undo": "Löschung zurücknehmen"
+      }
     }
   },
   "agenda": {
@@ -376,6 +456,9 @@ declare const messages: {
         "plan": "Bitte wähle ein Abrechnungsmodell.",
         "terms": "Bitte akzeptiere die AGB.",
         "dpa": "Bitte schließe die Auftragsverarbeitungsvereinbarung ab."
+      },
+      "workspace": {
+        "readOnly": "Dieser Workspace ist schreibgeschützt. Inhalte lassen sich lesen und exportieren, aber nicht ändern."
       }
     },
     "failed": "Das hat nicht geklappt. Versuch es noch einmal.",
@@ -567,7 +650,15 @@ declare const messages: {
     "aiConnection": "KI-Verbindung",
     "signOut": "Abmelden",
     "account": "Konto",
-    "openMenu": "Menü öffnen"
+    "openMenu": "Menü öffnen",
+    "billing": "Abrechnung",
+    "notice": {
+      "trial": "Testphase: noch {days, plural, one {ein Tag} other {# Tage}}.",
+      "read_only": "Dieser Workspace ist schreibgeschützt: Lesen und Exportieren geht, Ändern nicht.",
+      "paused": "Dieser Workspace ist pausiert. Inhalte lassen sich lesen, aber nicht ändern.",
+      "deleting": "Dieser Workspace wird am {date} gelöscht. Bis dahin lässt er sich lesen und exportieren.",
+      "toBilling": "Zur Abrechnung"
+    }
   },
   "settings": {
     "intro": "Dein Konto: Name, Sprache, Sicherheit und KI-Verbindung.",

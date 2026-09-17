@@ -3,7 +3,7 @@
 import Link from 'next/link'
 import { useEffect, useId, useRef, useState } from 'react'
 import { useTranslations } from 'next-intl'
-import { Bot, Fingerprint, LogOut, Mail, Palette, UserRound, Users } from 'lucide-react'
+import { Bot, Fingerprint, LogOut, Mail, Palette, Receipt, UserRound, Users } from 'lucide-react'
 import { initials } from '@/domain/agenda/responsible'
 
 /**
@@ -29,11 +29,14 @@ export function ProfileMenu({
   name,
   email,
   isAdmin,
+  hasBilling = false,
 }: {
   /** First and last name; '' for somebody who has none yet. */
   name: string
   email: string
   isAdmin: boolean
+  /** The cloud: tenant admins also reach billing from here. */
+  hasBilling?: boolean
 }) {
   const t = useTranslations('nav')
   const [open, setOpen] = useState(false)
@@ -143,6 +146,11 @@ export function ProfileMenu({
                 <Entry href="/admin/mail" icon={Mail} onPick={() => setOpen(false)}>
                   {t('mail')}
                 </Entry>
+                {hasBilling && (
+                  <Entry href="/admin/billing" icon={Receipt} onPick={() => setOpen(false)}>
+                    {t('billing')}
+                  </Entry>
+                )}
               </ul>
             </nav>
           )}

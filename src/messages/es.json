@@ -83,6 +83,86 @@
       "testTo": "Para",
       "testSend": "Enviar",
       "testSent": "Enviado a {email}. Si no llega nada: carpeta de spam."
+    },
+    "billing": {
+      "title": "Facturación",
+      "intro": "Plan, datos de facturación, método de pago y facturas de este espacio de trabajo.",
+      "status": {
+        "label": "Estado",
+        "trial": "Prueba hasta el {date}",
+        "active": "Activo",
+        "read_only": "Solo lectura",
+        "paused": "En pausa",
+        "deleting": "Se eliminará el {date}"
+      },
+      "plan": {
+        "title": "Modelo de facturación",
+        "per_user": "1 € por usuario/mes",
+        "per_workshop": "1 € por taller",
+        "next": "A partir del mes que viene: {plan}",
+        "hint": "Un cambio se aplica a partir del día 1 del mes siguiente.",
+        "save": "Aplicar"
+      },
+      "usage": {
+        "title": "Este mes hasta ahora",
+        "per_user": "{quantity} usuarios-mes",
+        "per_workshop": "{quantity, plural, one {# taller} many {# talleres} other {# talleres}}",
+        "net": "{amount} netos"
+      },
+      "details": {
+        "title": "Datos de facturación",
+        "companyName": "Nombre de la empresa",
+        "street": "Calle y número",
+        "postalCode": "Código postal",
+        "city": "Ciudad",
+        "country": "País",
+        "vatId": "Número de IVA",
+        "billingEmail": "Correo de facturación",
+        "save": "Guardar",
+        "saving": "Guardando …",
+        "saved": "Guardado.",
+        "vat": {
+          "none": "sin número de IVA",
+          "valid": "número de IVA válido (VIES)",
+          "invalid": "número de IVA no válido",
+          "pending": "comprobación de IVA pendiente"
+        }
+      },
+      "payment": {
+        "title": "Método de pago",
+        "ready": "Hay un método de pago registrado.",
+        "missing": "Todavía no hay método de pago. Tras la prueba, un espacio sin método de pago queda en solo lectura.",
+        "add": "Añadir método de pago",
+        "change": "Cambiar método de pago",
+        "unavailable": "Los pagos aún no están configurados en esta instalación."
+      },
+      "invoices": {
+        "title": "Facturas",
+        "none": "Todavía no hay facturas.",
+        "month": "Mes",
+        "amount": "Importe",
+        "status": "Estado",
+        "open": "Abrir factura",
+        "state": {
+          "computed": "en preparación",
+          "held": "en revisión",
+          "invoiced": "emitida",
+          "charging": "cobrándose",
+          "paid": "pagada",
+          "failed": "pago fallido"
+        }
+      },
+      "delete": {
+        "title": "Eliminar espacio de trabajo",
+        "intro": "Termina el contrato y elimina todos los talleres, miembros y permisos.",
+        "open": "Eliminar espacio de trabajo",
+        "warning": "El espacio de trabajo pasa de inmediato a solo lectura y se elimina definitivamente tras {days} días. Hasta entonces todos los talleres se pueden exportar y puedes anular la eliminación. El mes en curso se sigue facturando de forma proporcional.",
+        "typeName": "Escribe el nombre del espacio de trabajo para confirmar: {name}",
+        "confirm": "Solicitar eliminación",
+        "cancel": "Mejor no",
+        "scheduled": "Este espacio de trabajo se eliminará el {date}.",
+        "undo": "Anular eliminación"
+      }
     }
   },
   "agenda": {
@@ -373,6 +453,9 @@
         "plan": "Elige un modelo de facturación.",
         "terms": "Acepta las condiciones.",
         "dpa": "Suscribe el contrato de encargo de tratamiento."
+      },
+      "workspace": {
+        "readOnly": "Este espacio de trabajo es de solo lectura. El contenido se puede leer y exportar, pero no modificar."
       }
     },
     "failed": "No ha funcionado. Inténtalo de nuevo.",
@@ -564,7 +647,15 @@
     "aiConnection": "Conexión IA",
     "signOut": "Cerrar sesión",
     "account": "Cuenta",
-    "openMenu": "Abrir menú"
+    "openMenu": "Abrir menú",
+    "billing": "Facturación",
+    "notice": {
+      "trial": "Prueba: {days, plural, one {queda un día} many {quedan # días} other {quedan # días}}.",
+      "read_only": "Este espacio de trabajo es de solo lectura: se puede leer y exportar, pero no modificar.",
+      "paused": "Este espacio de trabajo está en pausa. El contenido se puede leer, pero no modificar.",
+      "deleting": "Este espacio de trabajo se eliminará el {date}. Hasta entonces se puede leer y exportar.",
+      "toBilling": "Ir a facturación"
+    }
   },
   "settings": {
     "intro": "Tu cuenta: nombre, idioma, seguridad y conexión IA.",

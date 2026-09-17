@@ -115,6 +115,37 @@ export function parseSignup(raw: Record<string, unknown>): Signup {
   const email = text(raw.email, 320).toLowerCase()
   if (!EMAIL.test(email) || email.length > 320) throw new SignupError('signup.invalidEmail')
 
+  const details = parseBillingDetails(raw)
+
+  if (!isPlanKey(raw.plan)) throw new SignupError('signup.plan')
+  if (raw.acceptedTerms !== true) throw new SignupError('signup.terms')
+  if (raw.acceptedDpa !== true) throw new SignupError('signup.dpa')
+
+  return {
+    customerType: 'business',
+    firstName,
+    lastName,
+    email,
+    workspaceName: details.companyName,
+    ...details,
+    plan: raw.plan,
+    confirmedBusiness: true,
+    acceptedTerms: true,
+    acceptedDpa: true,
+  }
+}
+
+export type BillingDetails = {
+  companyName: string
+  street: string
+  postalCode: string
+  city: string
+  country: SignupCountry
+  vatId: string | null
+}
+
+/** Who is invoiced, at registration and whenever an admin corrects it. */
+export function parseBillingDetails(raw: Record<string, unknown>): BillingDetails {
   const country = text(raw.country, 2).toUpperCase()
   if (!(SIGNUP_COUNTRIES as readonly string[]).includes(country)) {
     throw new SignupError('signup.country')
@@ -140,25 +171,12 @@ export function parseSignup(raw: Record<string, unknown>): Signup {
     throw new SignupError('signup.vatIdCountry')
   }
 
-  if (!isPlanKey(raw.plan)) throw new SignupError('signup.plan')
-  if (raw.acceptedTerms !== true) throw new SignupError('signup.terms')
-  if (raw.acceptedDpa !== true) throw new SignupError('signup.dpa')
+  return { companyName, street, postalCode, city, country: typedCountry, vatId }
+}
 
-  return {
-    customerType: 'business',
-    firstName,
-    lastName,
-    email,
-    workspaceName: companyName,
-    companyName,
-    street,
-    postalCode,
-    city,
-    country: typedCountry,
-    vatId,
-    plan: raw.plan,
-    confirmedBusiness: true,
-    acceptedTerms: true,
-    acceptedDpa: true,
-  }
+/** A billing address, checked like the one at registration. */
+export function parseBillingEmail(value: unknown): string {
+  const email = text(value, 320).toLowerCase()
+  if (!EMAIL.test(email) || email.length > 320) throw new SignupError('signup.invalidEmail')
+  return email
 }

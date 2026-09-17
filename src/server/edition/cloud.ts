@@ -1,5 +1,5 @@
 import { sql } from 'drizzle-orm'
-import { withoutTenant } from '@/server/db'
+import { withTenantOnly, withoutTenant } from '@/server/db'
 import type { Edition } from './types'
 
 /**
@@ -60,6 +60,25 @@ export const cloudEdition: Edition = {
   adoptRegisteredClient: async (tx, clientKey) => {
     await tx.execute(sql`select app.cloud_adopt_oauth_client(${clientKey})`)
   },
+
+  workspaceNotice: async (tenantId) => {
+    const result = await withTenantOnly(tenantId, (tx) =>
+      tx.execute(sql`select state, trial_ends_at, delete_after from tenant_lifecycle`),
+    )
+    const row = (
+      result as unknown as {
+        rows: { state: string; trial_ends_at: string | null; delete_after: string | null }[]
+      }
+    ).rows[0]
+    if (!row || row.state === 'active') return null
+    return {
+      state: row.state as 'trial' | 'read_only' | 'paused' | 'deleting',
+      trialEndsAt: row.trial_ends_at ? new Date(row.trial_ends_at) : null,
+      deleteAfter: row.delete_after ? new Date(row.delete_after) : null,
+    }
+  },
+
+  hasBilling: true,
 }
 
 /** What `@gw/edition` resolves to in a cloud build. */

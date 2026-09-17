@@ -83,6 +83,86 @@
       "testTo": "To",
       "testSend": "Send",
       "testSent": "Sent to {email}. If nothing arrives: check the spam folder."
+    },
+    "billing": {
+      "title": "Billing",
+      "intro": "Plan, billing details, payment method and invoices of this workspace.",
+      "status": {
+        "label": "Status",
+        "trial": "Trial until {date}",
+        "active": "Active",
+        "read_only": "Read-only",
+        "paused": "Paused",
+        "deleting": "Will be deleted on {date}"
+      },
+      "plan": {
+        "title": "Billing model",
+        "per_user": "€1 per user/month",
+        "per_workshop": "€1 per workshop",
+        "next": "From next month: {plan}",
+        "hint": "A change applies from the first of next month.",
+        "save": "Apply"
+      },
+      "usage": {
+        "title": "This month so far",
+        "per_user": "{quantity} user-months",
+        "per_workshop": "{quantity, plural, one {# workshop} other {# workshops}}",
+        "net": "{amount} net"
+      },
+      "details": {
+        "title": "Billing details",
+        "companyName": "Company name",
+        "street": "Street and number",
+        "postalCode": "Postal code",
+        "city": "City",
+        "country": "Country",
+        "vatId": "VAT number",
+        "billingEmail": "Billing e-mail",
+        "save": "Save",
+        "saving": "Saving …",
+        "saved": "Saved.",
+        "vat": {
+          "none": "no VAT number",
+          "valid": "VAT number valid (VIES)",
+          "invalid": "VAT number invalid",
+          "pending": "VAT check pending"
+        }
+      },
+      "payment": {
+        "title": "Payment method",
+        "ready": "A payment method is on file.",
+        "missing": "No payment method yet. After the trial, a workspace without one is read-only.",
+        "add": "Add payment method",
+        "change": "Change payment method",
+        "unavailable": "Payments are not set up on this installation yet."
+      },
+      "invoices": {
+        "title": "Invoices",
+        "none": "No invoices yet.",
+        "month": "Month",
+        "amount": "Amount",
+        "status": "Status",
+        "open": "Open invoice",
+        "state": {
+          "computed": "being prepared",
+          "held": "under review",
+          "invoiced": "issued",
+          "charging": "being collected",
+          "paid": "paid",
+          "failed": "payment failed"
+        }
+      },
+      "delete": {
+        "title": "Delete workspace",
+        "intro": "Ends the contract and deletes all workshops, members and shares.",
+        "open": "Delete workspace",
+        "warning": "The workspace becomes read-only at once and is deleted for good after {days} days. Until then every workshop can still be exported, and you can take the deletion back. The current month is still billed pro rata.",
+        "typeName": "Type the workspace name to confirm: {name}",
+        "confirm": "Request deletion",
+        "cancel": "Keep it",
+        "scheduled": "This workspace will be deleted on {date}.",
+        "undo": "Take back deletion"
+      }
     }
   },
   "agenda": {
@@ -373,6 +453,9 @@
         "plan": "Please choose a billing model.",
         "terms": "Please accept the terms.",
         "dpa": "Please enter into the data processing agreement."
+      },
+      "workspace": {
+        "readOnly": "This workspace is read-only. Content can be read and exported but not changed."
       }
     },
     "failed": "That did not work. Try again.",
@@ -564,7 +647,15 @@
     "aiConnection": "AI Connection",
     "signOut": "Sign out",
     "account": "Account",
-    "openMenu": "Open menu"
+    "openMenu": "Open menu",
+    "billing": "Billing",
+    "notice": {
+      "trial": "Trial: {days, plural, one {one day} other {# days}} left.",
+      "read_only": "This workspace is read-only: reading and exporting work, changing does not.",
+      "paused": "This workspace is paused. Content can be read but not changed.",
+      "deleting": "This workspace will be deleted on {date}. Until then it can be read and exported.",
+      "toBilling": "Go to billing"
+    }
   },
   "settings": {
     "intro": "Your account: name, language, security and AI connection.",

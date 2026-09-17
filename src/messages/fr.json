@@ -83,6 +83,86 @@
       "testTo": "À",
       "testSend": "Envoyer",
       "testSent": "Envoyé à {email}. Si rien n'arrive : dossier indésirables."
+    },
+    "billing": {
+      "title": "Facturation",
+      "intro": "Formule, coordonnées de facturation, moyen de paiement et factures de cet espace de travail.",
+      "status": {
+        "label": "Statut",
+        "trial": "Essai jusqu’au {date}",
+        "active": "Actif",
+        "read_only": "Lecture seule",
+        "paused": "En pause",
+        "deleting": "Sera supprimé le {date}"
+      },
+      "plan": {
+        "title": "Modèle de facturation",
+        "per_user": "1 € par utilisateur/mois",
+        "per_workshop": "1 € par atelier",
+        "next": "À partir du mois prochain : {plan}",
+        "hint": "Un changement s’applique à partir du 1er du mois suivant.",
+        "save": "Appliquer"
+      },
+      "usage": {
+        "title": "Ce mois-ci jusqu’à présent",
+        "per_user": "{quantity} utilisateurs-mois",
+        "per_workshop": "{quantity, plural, one {# atelier} many {# ateliers} other {# ateliers}}",
+        "net": "{amount} HT"
+      },
+      "details": {
+        "title": "Coordonnées de facturation",
+        "companyName": "Nom de l’entreprise",
+        "street": "Rue et numéro",
+        "postalCode": "Code postal",
+        "city": "Ville",
+        "country": "Pays",
+        "vatId": "Numéro de TVA",
+        "billingEmail": "E-mail de facturation",
+        "save": "Enregistrer",
+        "saving": "Enregistrement …",
+        "saved": "Enregistré.",
+        "vat": {
+          "none": "pas de numéro de TVA",
+          "valid": "numéro de TVA valide (VIES)",
+          "invalid": "numéro de TVA non valide",
+          "pending": "vérification de TVA en attente"
+        }
+      },
+      "payment": {
+        "title": "Moyen de paiement",
+        "ready": "Un moyen de paiement est enregistré.",
+        "missing": "Pas encore de moyen de paiement. Après l’essai, un espace sans moyen de paiement passe en lecture seule.",
+        "add": "Ajouter un moyen de paiement",
+        "change": "Changer de moyen de paiement",
+        "unavailable": "Les paiements ne sont pas encore configurés sur cette installation."
+      },
+      "invoices": {
+        "title": "Factures",
+        "none": "Pas encore de factures.",
+        "month": "Mois",
+        "amount": "Montant",
+        "status": "Statut",
+        "open": "Ouvrir la facture",
+        "state": {
+          "computed": "en préparation",
+          "held": "en vérification",
+          "invoiced": "émise",
+          "charging": "en cours de prélèvement",
+          "paid": "payée",
+          "failed": "paiement échoué"
+        }
+      },
+      "delete": {
+        "title": "Supprimer l’espace de travail",
+        "intro": "Met fin au contrat et supprime tous les ateliers, membres et partages.",
+        "open": "Supprimer l’espace de travail",
+        "warning": "L’espace de travail passe immédiatement en lecture seule et est supprimé définitivement après {days} jours. D’ici là, tous les ateliers peuvent encore être exportés et tu peux annuler la suppression. Le mois en cours est encore facturé au prorata.",
+        "typeName": "Tape le nom de l’espace de travail pour confirmer : {name}",
+        "confirm": "Demander la suppression",
+        "cancel": "Annuler",
+        "scheduled": "Cet espace de travail sera supprimé le {date}.",
+        "undo": "Annuler la suppression"
+      }
     }
   },
   "agenda": {
@@ -373,6 +453,9 @@
         "plan": "Choisis un modèle de facturation.",
         "terms": "Accepte les conditions.",
         "dpa": "Conclus l’accord de sous-traitance."
+      },
+      "workspace": {
+        "readOnly": "Cet espace de travail est en lecture seule. Le contenu peut être lu et exporté, mais pas modifié."
       }
     },
     "failed": "Ça n'a pas marché. Réessaie.",
@@ -564,7 +647,15 @@
     "aiConnection": "Connexion IA",
     "signOut": "Se déconnecter",
     "account": "Compte",
-    "openMenu": "Ouvrir le menu"
+    "openMenu": "Ouvrir le menu",
+    "billing": "Facturation",
+    "notice": {
+      "trial": "Essai : {days, plural, one {encore un jour} many {encore # jours} other {encore # jours}}.",
+      "read_only": "Cet espace de travail est en lecture seule : lecture et export possibles, modification non.",
+      "paused": "Cet espace de travail est en pause. Le contenu peut être lu mais pas modifié.",
+      "deleting": "Cet espace de travail sera supprimé le {date}. D’ici là, il peut être lu et exporté.",
+      "toBilling": "Vers la facturation"
+    }
   },
   "settings": {
     "intro": "Ton compte : nom, langue, sécurité et connexion IA.",
