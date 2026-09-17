@@ -67,6 +67,6 @@ export async function removePasskey(raw: { id: string }): Promise<ActionResult<n
   const removed = await deletePasskey(session.identityId, parsed.data.id)
   if (!removed) return fail('not_found', 'passkey.notYours')
 
-  revalidatePath('/settings/passkeys')
+  revalidatePath('/settings/security')
   return { ok: true, data: null }
 }

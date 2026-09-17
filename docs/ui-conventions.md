@@ -79,8 +79,11 @@ Clusters become `position: sticky` section headers with a running clock time.
   it **names** an element outside the control; that is the keyboard's way out, and the naming is
   what tells the two apart.
 
-  `ParticipationControl` is the only hand-rolled popover here; every other dropdown is a native
-  `<select>`, which iOS operates itself. Think twice before adding a second one.
+  `ParticipationControl` and the profile menu in the header (`components/layout/profile-menu.tsx`)
+  are the only hand-rolled popovers here; every other dropdown is a native `<select>`, which iOS
+  operates itself. Think twice before adding a third one. The profile menu is a disclosure — a
+  button with `aria-expanded` and a `<nav>` of links — not `role="menu"`: its entries are
+  navigation, and menu semantics would promise keyboard behaviour it has no reason to have.
 
 - **Nothing is revealed by hover alone.** A control that appears on `group-hover` is invisible
   for the whole life of a touch session, so every one of them carries

@@ -86,7 +86,9 @@ export default async function AuthorizePage({
   return (
     <ConsentForm
       clientName={client!.name}
-      email={session.email ?? ''}
+      // The name first when there is one: "Anna Berger (anna@…)" is who the
+      // person recognises themselves as, the address is what disambiguates.
+      email={session.displayName ? `${session.displayName}, ${session.email}` : session.email}
       scopes={scopes}
       offline={wantsRefreshToken(one('scope'))}
       request={{

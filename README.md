@@ -119,18 +119,18 @@ the library and the day editor do: folders, workshops, tags, the bin, days and w
 including responsible people and parked blocks. Ask for "a two-day strategy offsite with a
 SWOT in four groups" and watch it appear. Sharing and user administration stay in the app.
 
-Create a token under **Tokens** in your settings. The page prints the ready-made command or
-configuration for Claude Code, Claude Desktop, the Gemini CLI, Codex and Langdock, with your
-host and token already filled in. A token acts as the person who created it: it can never do
+Create a token under **AI Connection** in the profile menu at the top right. The page prints the
+ready-made command or configuration for Claude Code, Claude Desktop, the Gemini CLI, Codex and
+Langdock, with your host and token already filled in. A token acts as the person who created it: it can never do
 more than that person, and it cannot touch user administration at all.
 
-![The Tokens page with the ready-made command for Claude Code](docs/screenshots/mcp.png)
+![The AI Connection page with the ready-made command for Claude Code](docs/screenshots/mcp.png)
 
 Clients that cannot hold a fixed token, such as ChatGPT's connectors or the connector UI in
 claude.ai, connect over **OAuth**. They discover your installation, register themselves, and
 you approve them once on a consent screen that says which client is asking and what it will be
-allowed to do. There is nothing to configure. The **Tokens** page walks you through it for
-Claude, ChatGPT, Claude Code, the Gemini CLI and other clients, including two things the flow
+allowed to do. There is nothing to configure. The **AI Connection** page walks you through it
+for Claude, ChatGPT, Claude Code, the Gemini CLI and other clients, including two things the flow
 does not tell you: hosted clients need your installation to be reachable from the internet, and
 you should be signed in before you connect. A client connected this way may read and write
 workshops, exactly like a token with those two scopes.
@@ -162,8 +162,8 @@ cp .env.example .env
 
 The releases are published to the GitHub Container Registry, and `compose.yaml` pulls the one
 `GW_VERSION` names when the stack first comes up. `latest` always points at the newest stable
-release (currently `v0.4.16`). Every release is also published under its own tag, without the
-`v` (`0.4.16`) — set that instead to stay on one version until you decide to update. There is
+release (currently `v0.5.0`). Every release is also published under its own tag, without the
+`v` (`0.5.0`) — set that instead to stay on one version until you decide to update. There is
 nothing to build.
 
 To run a state that carries no tag of its own, build it and give it the name `compose.yaml`
@@ -183,7 +183,7 @@ missing:
 ```bash
 GW_APP_URL=https://workshop.example.com   # the address the app is reachable at
 GW_HOSTNAME=workshop.example.com          # the name in the certificate (profile `tls`)
-GW_VERSION=latest                         # the newest stable release, or e.g. 0.4.16 to pin one
+GW_VERSION=latest                         # the newest stable release, or e.g. 0.5.0 to pin one
 ```
 
 **Mail can wait.** The first start does not need it: the setup screen shows your sign-in link
@@ -275,7 +275,8 @@ is the ordinary case at this point, and the reason this screen does not need mai
 **Through the CLI**, which needs a shell on the server:
 
 ```bash
-docker compose exec app node scripts/cli.mjs admin create --email you@example.com
+docker compose exec app node scripts/cli.mjs admin create \
+  --email you@example.com --first-name Anna --last-name Berger
 ```
 
 **Or on the very first start:** put `GW_BOOTSTRAP_ADMIN_EMAIL=you@example.com` into the `.env`
@@ -398,27 +399,29 @@ ssh -L 3000:127.0.0.1:3000 server
 
 ### Configuration
 
-| Variable                                                 | Required     | Meaning                                                                                                                                        |
-| -------------------------------------------------------- | ------------ | ---------------------------------------------------------------------------------------------------------------------------------------------- |
-| `GW_APP_URL`                                             | yes          | Address the app is reachable at. Sign-in links and the WebAuthn origin are derived from it.                                                    |
-| `GW_HOSTNAME`                                            | for `tls`    | Name in the certificate. Passed through to Caddy.                                                                                              |
-| `GW_VERSION`                                             | yes          | Image tag: `latest` for the newest stable release, or a release such as `0.4.16` to stay on it. Shown in the page footer and by `/api/health`. |
-| `GW_MAIL_TRANSPORT`                                      | no           | `smtp`, `graph`, `console` or `none`. Empty: mail follows the settings under **Mail delivery** in the interface.                               |
-| `SMTP_URL` / `SMTP_URL_FILE`                             | with `smtp`  | Relay URL, directly or from a file.                                                                                                            |
-| `SMTP_FROM`                                              | with `smtp`  | Sender address.                                                                                                                                |
-| `GW_GRAPH_TENANT_ID`                                     | with `graph` | Microsoft 365 tenant, as a domain or a directory id.                                                                                           |
-| `GW_GRAPH_CLIENT_ID`                                     | with `graph` | Application id of the app registration.                                                                                                        |
-| `GW_GRAPH_CLIENT_SECRET` / `GW_GRAPH_CLIENT_SECRET_FILE` | with `graph` | The registration's secret, directly or from a file.                                                                                            |
-| `GW_GRAPH_SENDER`                                        | with `graph` | Mailbox to send from.                                                                                                                          |
-| `GW_RP_ID`                                               | no           | WebAuthn relying party id. Empty = host from `GW_APP_URL`. Changing it afterwards invalidates every passkey.                                   |
-| `GW_TIMEZONE`                                            | no           | Time zone for dates in the interface (default `Europe/Berlin`). Set explicitly so server and browser format the same instant identically.      |
-| `GW_BOOTSTRAP_ADMIN_EMAIL`                               | no           | Creates an admin on the very first start and prints their link.                                                                                |
-| `GW_OPS_TOKEN`                                           | no           | Makes `/api/health` verbose with the header `x-ops-token` (version, migration state, driver error). Without it the public endpoint is terse.   |
-| `GW_SECRET_KEY` / `GW_SECRET_KEY_FILE`                   | no           | Encrypts the mail credentials entered in the interface. Leave empty: the stack generates it. **Belongs in the backup** — see "Backing up".     |
-| `GW_TRUSTED_PROXIES`                                     | no           | Number of proxies in front (default 1). Only for throttling and logs, never for a permission.                                                  |
-| `GW_SESSION_IDLE_DAYS`                                   | no           | After how many unused days a session expires (default 14).                                                                                     |
-| `GW_PORT`, `GW_COLLAB_PORT`                              | no           | Ports on `127.0.0.1`, in case the defaults are taken.                                                                                          |
-| `GW_COLLAB_URL`, `GW_COLLAB_INTERNAL_URL`                | no           | Only needed if the collaboration service is not at `/collab` on the same host.                                                                 |
+| Variable                                                 | Required     | Meaning                                                                                                                                       |
+| -------------------------------------------------------- | ------------ | --------------------------------------------------------------------------------------------------------------------------------------------- |
+| `GW_APP_URL`                                             | yes          | Address the app is reachable at. Sign-in links and the WebAuthn origin are derived from it.                                                   |
+| `GW_HOSTNAME`                                            | for `tls`    | Name in the certificate. Passed through to Caddy.                                                                                             |
+| `GW_VERSION`                                             | yes          | Image tag: `latest` for the newest stable release, or a release such as `0.5.0` to stay on it. Shown in the page footer and by `/api/health`. |
+| `GW_MAIL_TRANSPORT`                                      | no           | `smtp`, `graph`, `console` or `none`. Empty: mail follows the settings under **Mail delivery** in the interface.                              |
+| `SMTP_URL` / `SMTP_URL_FILE`                             | with `smtp`  | Relay URL, directly or from a file.                                                                                                           |
+| `SMTP_FROM`                                              | with `smtp`  | Sender address.                                                                                                                               |
+| `GW_GRAPH_TENANT_ID`                                     | with `graph` | Microsoft 365 tenant, as a domain or a directory id.                                                                                          |
+| `GW_GRAPH_CLIENT_ID`                                     | with `graph` | Application id of the app registration.                                                                                                       |
+| `GW_GRAPH_CLIENT_SECRET` / `GW_GRAPH_CLIENT_SECRET_FILE` | with `graph` | The registration's secret, directly or from a file.                                                                                           |
+| `GW_GRAPH_SENDER`                                        | with `graph` | Mailbox to send from.                                                                                                                         |
+| `GW_RP_ID`                                               | no           | WebAuthn relying party id. Empty = host from `GW_APP_URL`. Changing it afterwards invalidates every passkey.                                  |
+| `GW_TIMEZONE`                                            | no           | Time zone for dates in the interface (default `Europe/Berlin`). Set explicitly so server and browser format the same instant identically.     |
+| `GW_BOOTSTRAP_ADMIN_EMAIL`                               | no           | Creates an admin on the very first start and prints their link.                                                                               |
+| `GW_BOOTSTRAP_ADMIN_FIRST_NAME`                          | no           | First name of that admin. Optional; without it they are asked in their profile.                                                               |
+| `GW_BOOTSTRAP_ADMIN_LAST_NAME`                           | no           | Last name of that admin. Optional, like the first name.                                                                                       |
+| `GW_OPS_TOKEN`                                           | no           | Makes `/api/health` verbose with the header `x-ops-token` (version, migration state, driver error). Without it the public endpoint is terse.  |
+| `GW_SECRET_KEY` / `GW_SECRET_KEY_FILE`                   | no           | Encrypts the mail credentials entered in the interface. Leave empty: the stack generates it. **Belongs in the backup** — see "Backing up".    |
+| `GW_TRUSTED_PROXIES`                                     | no           | Number of proxies in front (default 1). Only for throttling and logs, never for a permission.                                                 |
+| `GW_SESSION_IDLE_DAYS`                                   | no           | After how many unused days a session expires (default 14).                                                                                    |
+| `GW_PORT`, `GW_COLLAB_PORT`                              | no           | Ports on `127.0.0.1`, in case the defaults are taken.                                                                                         |
+| `GW_COLLAB_URL`, `GW_COLLAB_INTERNAL_URL`                | no           | Only needed if the collaboration service is not at `/collab` on the same host.                                                                |
 
 ## Things that trip people up
 
@@ -542,7 +545,7 @@ exact versions that went into it. The published image additionally carries an SP
 generated by BuildKit, which you can read without pulling the image:
 
 ```bash
-docker buildx imagetools inspect ghcr.io/rolealpha/good-workshop:0.4.16 --format '{{ json .SBOM }}'
+docker buildx imagetools inspect ghcr.io/rolealpha/good-workshop:0.5.0 --format '{{ json .SBOM }}'
 ```
 
 **Running it for other people.** If you host this for anyone but yourself, you are the

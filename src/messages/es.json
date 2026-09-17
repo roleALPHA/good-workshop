@@ -21,6 +21,8 @@
       "title": "Miembros",
       "invite": "Invitar a un miembro",
       "email": "Dirección de correo",
+      "firstName": "Nombre",
+      "lastName": "Apellido",
       "emailPlaceholder": "companera@example.com",
       "role": "Rol",
       "roleOf": "Rol de {email}",
@@ -43,7 +45,12 @@
       "successor": "Los asume",
       "successorPlaceholder": "Elige una persona …",
       "removeTypeLabel": "Escribe la dirección de correo para confirmar: {email}",
-      "removed": "Se ha eliminado a {name}."
+      "removed": "Se ha eliminado a {name}.",
+      "editName": "Cambiar nombre",
+      "editNameOf": "Cambiar el nombre de {email}",
+      "saveName": "Guardar",
+      "cancelName": "Cancelar",
+      "noName": "todavía sin nombre"
     },
     "mail": {
       "title": "Envío de correo",
@@ -199,6 +206,8 @@
     "setup": {
       "title": "Configurar GoodWorkshop",
       "intro": "Esta instalación todavía no tiene a nadie que pueda administrarla. Regístrate como primera administradora — todo lo demás, incluido el envío de correo, se hace después en la interfaz.",
+      "firstName": "Nombre",
+      "lastName": "Apellido",
       "email": "Tu dirección de correo",
       "emailHint": "Con ella iniciarás sesión a partir de ahora. A las demás personas las invitarás después en la interfaz.",
       "key": "Clave de instalación",
@@ -301,6 +310,11 @@
         "successorIsLeaver": "El miembro no puede asumir lo que está cediendo.",
         "successorGone": "La persona que iba a asumirlos ya no es miembro. Elige de nuevo.",
         "successorDisabled": "La persona que debe asumirlos está desactivada y no podría iniciar sesión. Vuelve a habilitarla o elige a otra."
+      },
+      "person": {
+        "firstNameRequired": "Indica un nombre.",
+        "lastNameRequired": "Indica un apellido.",
+        "nameTooLong": "El nombre y el apellido pueden tener como máximo {max} caracteres cada uno."
       },
       "setup": {
         "wrongKey": "La clave de instalación no es correcta.",
@@ -494,18 +508,31 @@
     "branding": "Identidad visual",
     "members": "Miembros",
     "mail": "Envío de correo",
-    "passkeys": "Passkeys",
-    "tokens": "Tokens",
+    "administration": "Administración",
+    "profile": "Perfil y ajustes",
+    "security": "Seguridad",
+    "aiConnection": "Conexión IA",
     "signOut": "Cerrar sesión",
-    "account": "Cuenta"
+    "account": "Cuenta",
+    "openMenu": "Abrir menú"
   },
   "settings": {
-    "intro": "Tu cuenta: idioma, passkeys y tokens de acceso.",
+    "intro": "Tu cuenta: nombre, idioma, seguridad y conexión IA.",
     "language": {
       "title": "Idioma",
       "intro": "Se aplica a la interfaz, a tus exportaciones y a los correos que recibes.",
       "label": "Idioma",
       "apply": "Aplicar"
+    },
+    "profile": {
+      "title": "Perfil",
+      "intro": "Así te ven los demás en los talleres, al compartir y en la edición conjunta.",
+      "firstName": "Nombre",
+      "lastName": "Apellido",
+      "save": "Guardar",
+      "saving": "Guardando …",
+      "saved": "Guardado.",
+      "missing": "Añade tu nombre y apellido para que los demás te reconozcan."
     },
     "passkeys": {
       "added": "Passkey creado.",
@@ -523,13 +550,16 @@
       "removeLabel": "Eliminar {name}",
       "requestRejected": "La solicitud ha sido rechazada.",
       "synced": "sincronizado",
-      "title": "Passkeys",
+      "title": "Seguridad",
+      "heading": "Passkeys",
+      "summary": "Inicia sesión sin contraseña, con passkeys en tus dispositivos.",
       "unavailable": "Esta instalación funciona en <code>{origin}</code>. Los navegadores solo permiten passkeys por HTTPS (o en <code>localhost</code>) — aquí no se puede crear ninguno. El enlace de acceso por correo sigue siendo la entrada.",
       "waiting": "Esperando al dispositivo …"
     },
     "title": "Ajustes",
     "tokens": {
-      "title": "Tokens de acceso",
+      "title": "Conexión IA",
+      "summary": "Conecta Claude, ChatGPT y otros clientes de IA con tus talleres.",
       "intro": "Para clientes MCP como Claude Code, Claude Desktop, Gemini CLI, Codex o Langdock. Un token actúa como tú: nunca puede hacer más que tú. Claude, ChatGPT y otros también pueden conectarse sin token mediante OAuth, más abajo en esta página.",
       "freshLabel": "Tu nuevo token",
       "freshHint": "Se muestra una sola vez — lo que se guarda es su hash.",
@@ -667,7 +697,7 @@
     "approve": "Permitir el acceso",
     "approving": "Un momento …",
     "deny": "Rechazar",
-    "revokeHint": "Puedes retirarlo cuando quieras en los ajustes, en Tokens de acceso.",
+    "revokeHint": "Puedes retirarlo cuando quieras en los ajustes, en Conexión IA.",
     "unknownClient": "Esta instalación no conoce a ese cliente.",
     "badRedirect": "Esa dirección de retorno no pertenece a este cliente.",
     "badResponseType": "Esta petición nombra un tipo de respuesta que este servidor no ofrece.",

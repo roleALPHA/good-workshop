@@ -5,11 +5,14 @@ import type { Actor } from '@/server/db'
 import {
   MemberError,
   inviteMember,
+  listAssignable,
   listDirectory,
   listMembers,
   removeMember,
+  setMemberName,
   setMemberRole,
   setMemberStatus,
+  setOwnName,
 } from './members'
 
 /**
@@ -45,6 +48,7 @@ const admin = (): Actor => ({
 const plain = (): Actor => ({ ...admin(), tenantRole: 'member' })
 
 const address = () => `m-${randomUUID()}@example.test`
+const ANNA = { firstName: 'Anna', lastName: 'Berger' }
 
 beforeAll(async () => {
   await ops.connect()
@@ -77,7 +81,7 @@ afterAll(async () => {
 
 /** Remembers what to clean up, so a failing test does not poison the next run. */
 async function invite(email: string, role: 'member' | 'admin' = 'member') {
-  const result = await inviteMember(admin(), email, role, 'de')
+  const result = await inviteMember(admin(), email, role, 'de', ANNA)
   const row = await ops.query('select identity_id from member where id = $1', [result.memberId])
   created.push(row.rows[0].identity_id)
   return result
@@ -98,7 +102,7 @@ describe('inviteMember', () => {
   it('is idempotent for somebody who is already here', async () => {
     const email = address()
     const first = await invite(email)
-    const again = await inviteMember(admin(), email, 'admin', 'de')
+    const again = await inviteMember(admin(), email, 'admin', 'de', ANNA)
 
     expect(again.alreadyMember).toBe(true)
     expect(again.memberId).toBe(first.memberId)
@@ -109,15 +113,117 @@ describe('inviteMember', () => {
   })
 
   it('refuses an address that is not one', async () => {
-    await expect(inviteMember(admin(), 'kein-at-zeichen', 'member', 'de')).rejects.toThrow(
+    await expect(inviteMember(admin(), 'kein-at-zeichen', 'member', 'de', ANNA)).rejects.toThrow(
       MemberError,
     )
   })
 
   it('refuses somebody who is not a tenant admin', async () => {
-    await expect(inviteMember(plain(), address(), 'member', 'de')).rejects.toThrow(
+    await expect(inviteMember(plain(), address(), 'member', 'de', ANNA)).rejects.toThrow(
       'member.adminOnly',
     )
+  })
+
+  it('stores first and last name on the membership', async () => {
+    const result = await inviteMember(admin(), address(), 'member', 'de', {
+      firstName: '  Clara ',
+      lastName: 'Deutsch  ',
+    })
+    const rows = await ops.query(
+      'select identity_id, first_name, last_name from member where id = $1',
+      [result.memberId],
+    )
+    created.push(rows.rows[0].identity_id)
+    expect(rows.rows[0]).toMatchObject({ first_name: 'Clara', last_name: 'Deutsch' })
+  })
+
+  it('refuses an invitation without a name, before anything is written', async () => {
+    const email = address()
+    await expect(
+      inviteMember(admin(), email, 'member', 'de', { firstName: 'Clara', lastName: ' ' }),
+    ).rejects.toThrow('person.lastNameRequired')
+
+    const rows = await ops.query('select 1 from identity where email = $1', [email])
+    expect(rows.rowCount).toBe(0)
+  })
+})
+
+describe('names', () => {
+  it('shows the full name in the lists and in who may be put in charge of a block', async () => {
+    const result = await inviteMember(admin(), address(), 'member', 'de', {
+      firstName: 'Emil',
+      lastName: 'Fuchs',
+    })
+    const row = await ops.query('select identity_id from member where id = $1', [result.memberId])
+    created.push(row.rows[0].identity_id)
+
+    const members = await listMembers(admin())
+    expect(members.find((m) => m.id === result.memberId)).toMatchObject({
+      firstName: 'Emil',
+      lastName: 'Fuchs',
+      displayName: 'Emil Fuchs',
+    })
+
+    const assignable = await listAssignable(admin())
+    expect(assignable.find((p) => p.id === result.memberId)?.name).toBe('Emil Fuchs')
+  })
+
+  it('lets an admin correct a colleague’s name', async () => {
+    const result = await invite(address())
+    await setMemberName(admin(), result.memberId, { firstName: 'Greta', lastName: 'Huber' })
+
+    const rows = await ops.query('select first_name, last_name from member where id = $1', [
+      result.memberId,
+    ])
+    expect(rows.rows[0]).toMatchObject({ first_name: 'Greta', last_name: 'Huber' })
+  })
+
+  it('does not let a plain member rename a colleague', async () => {
+    const result = await invite(address())
+    await expect(
+      setMemberName(plain(), result.memberId, { firstName: 'X', lastName: 'Y' }),
+    ).rejects.toThrow('member.adminOnly')
+  })
+
+  it('refuses a name that is not one, and a member that does not exist', async () => {
+    const result = await invite(address())
+    await expect(
+      setMemberName(admin(), result.memberId, { firstName: '', lastName: 'Huber' }),
+    ).rejects.toThrow('person.firstNameRequired')
+    await expect(
+      setMemberName(admin(), randomUUID(), { firstName: 'Greta', lastName: 'Huber' }),
+    ).rejects.toThrow('member.gone')
+  })
+
+  it('lets anybody change their own name, and only their own', async () => {
+    const result = await invite(address())
+    const self: Actor = {
+      tenantId: TENANT,
+      memberId: result.memberId,
+      tenantRole: 'member',
+      source: 'web',
+    }
+
+    await setOwnName(self, { firstName: 'Ida', lastName: 'Jung' })
+
+    const rows = await ops.query(
+      'select id, first_name, last_name from member where id = any($1::uuid[])',
+      [[result.memberId, adminMember]],
+    )
+    const byId = new Map(rows.rows.map((r) => [r.id, r]))
+    expect(byId.get(result.memberId)).toMatchObject({ first_name: 'Ida', last_name: 'Jung' })
+    expect(byId.get(adminMember)).not.toMatchObject({ first_name: 'Ida' })
+  })
+
+  it('is invisible from another tenant', async () => {
+    const result = await invite(address())
+    const stranger: Actor = { ...admin(), tenantId: randomUUID() }
+    await expect(
+      setMemberName(stranger, result.memberId, { firstName: 'Kai', lastName: 'Lang' }),
+    ).rejects.toThrow()
+
+    const rows = await ops.query('select first_name from member where id = $1', [result.memberId])
+    expect(rows.rows[0].first_name).toBe('Anna')
   })
 })
 

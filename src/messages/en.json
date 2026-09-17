@@ -21,6 +21,8 @@
       "title": "Members",
       "invite": "Invite a member",
       "email": "E-mail address",
+      "firstName": "First name",
+      "lastName": "Last name",
       "emailPlaceholder": "colleague@example.com",
       "role": "Role",
       "roleOf": "Role of {email}",
@@ -43,7 +45,12 @@
       "successor": "Taken over by",
       "successorPlaceholder": "Please choose …",
       "removeTypeLabel": "Type the email address to confirm: {email}",
-      "removed": "{name} has been removed."
+      "removed": "{name} has been removed.",
+      "editName": "Edit name",
+      "editNameOf": "Edit the name of {email}",
+      "saveName": "Save",
+      "cancelName": "Cancel",
+      "noName": "no name yet"
     },
     "mail": {
       "title": "Mail delivery",
@@ -199,6 +206,8 @@
     "setup": {
       "title": "Set up GoodWorkshop",
       "intro": "This installation has nobody who can administer it yet. Enter yourself as the first administrator — everything else, mail delivery included, happens in the interface afterwards.",
+      "firstName": "First name",
+      "lastName": "Last name",
       "email": "Your e-mail address",
       "emailHint": "This is how you will sign in from now on. You invite other people in the interface afterwards.",
       "key": "Setup key",
@@ -301,6 +310,11 @@
         "successorIsLeaver": "The member cannot take over what they are handing on.",
         "successorGone": "The person who was to take over is no longer a member. Please choose again.",
         "successorDisabled": "The person who is to take over is disabled and could not sign in. Enable them first, or choose somebody else."
+      },
+      "person": {
+        "firstNameRequired": "Please enter a first name.",
+        "lastNameRequired": "Please enter a last name.",
+        "nameTooLong": "First and last name may be at most {max} characters each."
       },
       "setup": {
         "wrongKey": "That setup key is not correct.",
@@ -494,18 +508,31 @@
     "branding": "Branding",
     "members": "Members",
     "mail": "Mail delivery",
-    "passkeys": "Passkeys",
-    "tokens": "Tokens",
+    "administration": "Administration",
+    "profile": "Profile & settings",
+    "security": "Security",
+    "aiConnection": "AI Connection",
     "signOut": "Sign out",
-    "account": "Account"
+    "account": "Account",
+    "openMenu": "Open menu"
   },
   "settings": {
-    "intro": "Your account: language, passkeys and access tokens.",
+    "intro": "Your account: name, language, security and AI connection.",
     "language": {
       "title": "Language",
       "intro": "Applies to the interface, your exports and the e-mails you receive.",
       "label": "Language",
       "apply": "Apply"
+    },
+    "profile": {
+      "title": "Profile",
+      "intro": "How others see you in workshops, sharing and live editing.",
+      "firstName": "First name",
+      "lastName": "Last name",
+      "save": "Save",
+      "saving": "Saving …",
+      "saved": "Saved.",
+      "missing": "Please add your first and last name so others can recognise you."
     },
     "passkeys": {
       "added": "Passkey created.",
@@ -523,13 +550,16 @@
       "removeLabel": "Remove {name}",
       "requestRejected": "The request was refused.",
       "synced": "synced",
-      "title": "Passkeys",
+      "title": "Security",
+      "heading": "Passkeys",
+      "summary": "Sign in without a password, with passkeys on your devices.",
       "unavailable": "This installation runs on <code>{origin}</code>. Browsers only allow passkeys over HTTPS (or on <code>localhost</code>) — none can be created here. The sign-in link by e-mail remains the way in.",
       "waiting": "Waiting for the device …"
     },
     "title": "Settings",
     "tokens": {
-      "title": "Access tokens",
+      "title": "AI Connection",
+      "summary": "Connect Claude, ChatGPT and other AI clients to your workshops.",
       "intro": "For MCP clients such as Claude Code, Claude Desktop, Gemini CLI, Codex or Langdock. A token acts as you — it can never do more than you can. Claude, ChatGPT and others can instead sign in over OAuth without a token, further down this page.",
       "freshLabel": "Your new token",
       "freshHint": "It is shown once only — what is stored is its hash.",
@@ -667,7 +697,7 @@
     "approve": "Allow access",
     "approving": "One moment …",
     "deny": "Refuse",
-    "revokeHint": "You can take this back at any time under Access tokens in your settings.",
+    "revokeHint": "You can take this back at any time under AI Connection in your settings.",
     "unknownClient": "This installation does not know that client.",
     "badRedirect": "That redirect address does not belong to this client.",
     "badResponseType": "This request names a response type this server does not offer.",

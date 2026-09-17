@@ -522,6 +522,34 @@ describe('blocks', () => {
     const read = await must('get_workshop', { workshopId, dayId })
     expect(read.text).toContain(`responsible: ${adminName}, ${myName}, Frau Berg`)
 
+    // With a name on the membership, a model finds the member by first and last
+    // name -- the way a person would say it.
+    await ops.query(`update member set first_name = 'Klara', last_name = 'Kurz' where id = $1`, [
+      admin.memberId,
+    ])
+    await must('update_module', {
+      workshopId,
+      dayId,
+      moduleId: block.data.id,
+      responsible: [{ name: 'klara kurz' }],
+    })
+    const byFullName = await ops.query('select responsible from module where id = $1', [
+      block.data.id,
+    ])
+    expect(byFullName.rows[0].responsible).toEqual([
+      { name: 'Klara Kurz', memberId: admin.memberId },
+    ])
+    await ops.query(`update member set first_name = '', last_name = '' where id = $1`, [
+      admin.memberId,
+    ])
+    // Back to the assignment the rest of this test reads.
+    await must('update_module', {
+      workshopId,
+      dayId,
+      moduleId: block.data.id,
+      responsible: [{ memberId: admin.memberId }, { name: myName }, { name: 'Frau Berg' }],
+    })
+
     await must('update_module', { workshopId, dayId, moduleId: block.data.id, parked: true })
     const outline = await must('get_workshop', { workshopId, dayId })
     const blocks = outline.data.blocks as { id: string; kind: string; parked?: boolean }[]

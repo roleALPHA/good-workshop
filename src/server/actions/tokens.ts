@@ -28,7 +28,7 @@ export async function createTokenAction(raw: {
     (tx, actor, input) => createToken(tx, actor, input),
   )
 
-  if (result.ok) revalidatePath('/settings/tokens')
+  if (result.ok) revalidatePath('/settings/ai-connection')
   return result
 }
 
@@ -42,6 +42,6 @@ export async function revokeTokenAction(raw: { id: string }): Promise<ActionResu
     },
   )
 
-  if (result.ok) revalidatePath('/settings/tokens')
+  if (result.ok) revalidatePath('/settings/ai-connection')
   return result
 }

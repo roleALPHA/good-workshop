@@ -6,6 +6,7 @@ import { withAuth, withTenantOnly } from '@/server/db'
 import { authSession, identity, member } from '@/server/db/schema'
 import { authConfig } from './config'
 import { generateSecret, hashSecret, verifySecret } from './tokens'
+import { fullName } from '@/domain/tenant/person-name'
 
 /**
  * Database-backed sessions, not JWTs.
@@ -39,6 +40,9 @@ export type SessionUser = {
   sessionId: string
   identityId: string
   email: string
+  firstName: string
+  lastName: string
+  /** First and last name from the membership; '' for somebody without a name yet. */
   displayName: string
   tenantId: string
   memberId: string
@@ -139,7 +143,6 @@ export async function verifySessionCookie(raw: string): Promise<SessionUser | nu
         identityId: authSession.identityId,
         tenantId: authSession.activeTenantId,
         email: identity.email,
-        displayName: identity.displayName,
         identityStatus: identity.status,
         locale: identity.locale,
       })
@@ -181,7 +184,13 @@ export async function verifySessionCookie(raw: string): Promise<SessionUser | nu
   // re-login.
   const membership = await withTenantOnly(account.tenantId, async (tx) => {
     const rows = await tx
-      .select({ id: member.id, role: member.role, status: member.status })
+      .select({
+        id: member.id,
+        role: member.role,
+        status: member.status,
+        firstName: member.firstName,
+        lastName: member.lastName,
+      })
       .from(member)
       .where(eq(member.identityId, account.identityId))
       .limit(1)
@@ -194,7 +203,9 @@ export async function verifySessionCookie(raw: string): Promise<SessionUser | nu
     sessionId,
     identityId: account.identityId,
     email: account.email,
-    displayName: account.displayName,
+    firstName: membership.firstName,
+    lastName: membership.lastName,
+    displayName: fullName(membership),
     tenantId: account.tenantId,
     memberId: membership.id,
     tenantRole: membership.role as 'member' | 'admin',

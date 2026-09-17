@@ -8,7 +8,7 @@
  * any missing feature. Every command here works without either.
  *
  *   node scripts/cli.mjs login-link --email me@example.com
- *   node scripts/cli.mjs admin create --email me@example.com
+ *   node scripts/cli.mjs admin create --email me@example.com --first-name Anna --last-name Berger
  *   node scripts/cli.mjs admin promote --email me@example.com
  *   node scripts/cli.mjs members
  */
@@ -57,9 +57,13 @@ try {
       await loginLink(requireEmail())
       break
     case 'admin':
-      if (subcommand === 'create') await createAdmin(requireEmail())
+      if (subcommand === 'create') await createAdmin(requireEmail(), requireName())
       else if (subcommand === 'promote') await promote(requireEmail())
-      else fail('Usage: admin create|promote --email <address>')
+      else
+        fail(
+          'Usage: admin create --email <address> --first-name <name> --last-name <name>\n' +
+            '       admin promote --email <address>',
+        )
       break
     case 'members':
       await listMembers()
@@ -75,7 +79,8 @@ try {
           'GoodWorkshop CLI',
           '',
           '  login-link --email <address>      Print a one-time login link',
-          '  admin create --email <address>    Create an identity and a tenant admin',
+          '  admin create --email <address> --first-name <name> --last-name <name>',
+          '                                    Create an identity and a tenant admin',
           '  admin promote --email <address>   Make an existing member an admin',
           '  members                           List members of the default tenant',
           '  token create --email <address>    Create a personal access token for MCP',
@@ -90,6 +95,20 @@ try {
 function fail(message) {
   console.error(message)
   process.exit(1)
+}
+
+/**
+ * First and last name, as the application asks for them on invitation and at
+ * setup. Same limits as src/domain/tenant/person-name.ts, restated for the
+ * same reason as hashSecret above.
+ */
+function requireName() {
+  const clean = (value) =>
+    typeof value === 'string' ? value.replace(/\s+/g, ' ').trim().slice(0, 100) : ''
+  const firstName = clean(flags['first-name'])
+  const lastName = clean(flags['last-name'])
+  if (!firstName || !lastName) fail('--first-name and --last-name are required.')
+  return { firstName, lastName }
 }
 
 function requireEmail() {
@@ -170,7 +189,7 @@ async function loginLink(email) {
   console.log('')
 }
 
-async function createAdmin(email) {
+async function createAdmin(email, { firstName, lastName }) {
   let found = await findIdentity(email)
   if (!found) {
     found = await asAuth(async () => {
@@ -185,10 +204,11 @@ async function createAdmin(email) {
 
   await asTenant(() =>
     client.query(
-      `insert into member (id, tenant_id, identity_id, role, status)
-       values ($1, $2, $3, 'admin', 'active')
-       on conflict (tenant_id, identity_id) do update set role = 'admin', status = 'active'`,
-      [randomUUID(), DEFAULT_TENANT_ID, found.id],
+      `insert into member (id, tenant_id, identity_id, role, status, first_name, last_name)
+       values ($1, $2, $3, 'admin', 'active', $4, $5)
+       on conflict (tenant_id, identity_id)
+       do update set role = 'admin', status = 'active', first_name = $4, last_name = $5`,
+      [randomUUID(), DEFAULT_TENANT_ID, found.id, firstName, lastName],
     ),
   )
 
@@ -297,7 +317,7 @@ async function listTokens() {
 async function listMembers() {
   const members = await asTenant(async () => {
     const { rows } = await client.query(
-      'select id, identity_id, role, status from member order by created_at',
+      'select id, identity_id, role, status, first_name, last_name from member order by created_at',
     )
     return rows
   })
@@ -317,7 +337,7 @@ async function listMembers() {
 
   for (const m of members) {
     console.log(
-      `  ${(emails.get(m.identity_id) ?? '?').padEnd(34)} ${m.role.padEnd(7)} ${m.status}`,
+      `  ${(emails.get(m.identity_id) ?? '?').padEnd(34)} ${`${m.first_name} ${m.last_name}`.trim().padEnd(28)} ${m.role.padEnd(7)} ${m.status}`,
     )
   }
 }

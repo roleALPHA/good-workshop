@@ -67,6 +67,10 @@ export const DOMAIN_ERROR_KEYS = [
   'member.successorGone',
   'member.successorDisabled',
   'member.lastAdmin',
+  // A person's name, asked for on invitation, at setup and in the profile
+  'person.firstNameRequired',
+  'person.lastNameRequired',
+  'person.nameTooLong',
   // Branding
   'brand.notHex',
   'brand.grey',

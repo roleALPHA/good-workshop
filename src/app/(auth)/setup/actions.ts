@@ -7,7 +7,8 @@ import { issueMagicLink } from '@/server/auth/magic-link'
 import { magicLinkMail, mailConfigFor, sendMail, deliversToRecipient } from '@/server/auth/mail'
 import { authConfig } from '@/server/auth/config'
 import { getTranslations } from 'next-intl/server'
-import { claimInstallation, SetupError } from '@/server/settings/setup'
+import { claimInstallation } from '@/server/settings/setup'
+import { DomainError } from '@/domain/errors'
 
 /**
  * Claiming a fresh installation.
@@ -31,6 +32,10 @@ export async function claim(formData: FormData): Promise<SetupResult> {
     const email = await claimInstallation(
       String(formData.get('email') ?? ''),
       String(formData.get('token') ?? ''),
+      {
+        firstName: String(formData.get('firstName') ?? ''),
+        lastName: String(formData.get('lastName') ?? ''),
+      },
     )
 
     const issued = await issueMagicLink(email, authConfig.defaultTenantId)
@@ -58,7 +63,9 @@ export async function claim(formData: FormData): Promise<SetupResult> {
     }
   } catch (error) {
     const t = await getTranslations('errors')
-    if (error instanceof SetupError) {
+    // SetupError and the name rules alike: both are refusals with a sentence
+    // the person can act on.
+    if (error instanceof DomainError) {
       return { ok: false, error: t(`domain.${error.messageKey}` as 'domain.setup.wrongKey') }
     }
     console.error('setup failed', { error })

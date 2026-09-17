@@ -190,6 +190,11 @@ try {
 async function bootstrapAdmin(client) {
   const email = process.env.GW_BOOTSTRAP_ADMIN_EMAIL?.trim().toLowerCase()
   if (!email) return
+  // Optional: without them the admin starts nameless and is asked for a name
+  // in their profile, the same as anybody who joined before names existed.
+  const name = (value) => (value ?? '').replace(/\s+/g, ' ').trim().slice(0, 100)
+  const firstName = name(process.env.GW_BOOTSTRAP_ADMIN_FIRST_NAME)
+  const lastName = name(process.env.GW_BOOTSTRAP_ADMIN_LAST_NAME)
 
   // The identity tables are unreachable for gw_app by design -- that separation
   // is what stops an ORM mistake outside the auth module from reading
@@ -213,11 +218,11 @@ async function bootstrapAdmin(client) {
   await client.query(`select set_config('app.tenant_id', $1, true)`, [DEFAULT_TENANT_ID])
 
   const { rows: members } = await client.query(
-    `insert into member (id, tenant_id, identity_id, role, status)
-     values ($1, $2, $3, 'admin', 'active')
+    `insert into member (id, tenant_id, identity_id, role, status, first_name, last_name)
+     values ($1, $2, $3, 'admin', 'active', $4, $5)
      on conflict (tenant_id, identity_id) do nothing
      returning id`,
-    [randomUUID(), DEFAULT_TENANT_ID, identityId],
+    [randomUUID(), DEFAULT_TENANT_ID, identityId, firstName, lastName],
   )
 
   // Only on the very first run: printing a fresh login link on every boot would

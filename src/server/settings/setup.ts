@@ -5,6 +5,7 @@ import { identity, member } from '@/server/db/schema'
 import { authConfig } from '@/server/auth/config'
 import { DomainError } from '@/domain/errors'
 import { setupTokenMatches } from './setup-token'
+import { normalisePersonName, type PersonName } from '@/domain/tenant/person-name'
 
 export { currentSetupToken, setupTokenMatches } from './setup-token'
 
@@ -54,10 +55,16 @@ export class SetupError extends DomainError {}
  * browser tabs, or a retry on a slow connection, must not produce two claims on
  * an installation.
  */
-export async function claimInstallation(emailAddress: string, token: string): Promise<string> {
+export async function claimInstallation(
+  emailAddress: string,
+  token: string,
+  name: PersonName,
+): Promise<string> {
   if (!setupTokenMatches(token)) {
     throw new SetupError('setup.wrongKey')
   }
+
+  const { firstName, lastName } = normalisePersonName(name)
 
   const normalised = emailAddress.trim().toLowerCase()
   if (!/^[^@\s]+@[^@\s]+\.[^@\s]+$/.test(normalised)) {
@@ -98,10 +105,18 @@ export async function claimInstallation(emailAddress: string, token: string): Pr
     }
     await tx
       .insert(member)
-      .values({ id: randomUUID(), tenantId, identityId, role: 'admin', status: 'active' })
+      .values({
+        id: randomUUID(),
+        tenantId,
+        identityId,
+        role: 'admin',
+        status: 'active',
+        firstName,
+        lastName,
+      })
       .onConflictDoUpdate({
         target: [member.tenantId, member.identityId],
-        set: { role: 'admin', status: 'active' },
+        set: { role: 'admin', status: 'active', firstName, lastName },
       })
   })
 

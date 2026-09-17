@@ -8,7 +8,7 @@ import { NextResponse, type NextRequest } from 'next/server'
  *
  * The one that matters without any other bug being present is
  * `frame-ancestors`. Clickjacking needs no XSS, and /admin/members,
- * /admin/branding and /settings/tokens put role changes, invitations and token
+ * /admin/branding and /settings/ai-connection put role changes, invitations and token
  * creation behind ordinary buttons.
  *
  * A note on `style-src`, because it is the one place this policy is not strict

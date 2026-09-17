@@ -14,10 +14,21 @@ import { STORAGE_STATE } from './paths'
 setup('authenticate', async ({ page, baseURL }) => {
   const email = process.env.E2E_EMAIL ?? 'e2e@example.test'
 
-  execFileSync('node', ['scripts/cli.mjs', 'admin', 'create', '--email', email], {
-    env: { ...process.env, GW_APP_URL: baseURL },
-    stdio: 'pipe',
-  })
+  execFileSync(
+    'node',
+    [
+      'scripts/cli.mjs',
+      'admin',
+      'create',
+      '--email',
+      email,
+      '--first-name',
+      'Erika',
+      '--last-name',
+      'Ende',
+    ],
+    { env: { ...process.env, GW_APP_URL: baseURL }, stdio: 'pipe' },
+  )
 
   const output = execFileSync('node', ['scripts/cli.mjs', 'login-link', '--email', email], {
     env: { ...process.env, GW_APP_URL: baseURL },

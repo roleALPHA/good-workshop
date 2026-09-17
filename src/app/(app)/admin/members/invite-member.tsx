@@ -7,7 +7,7 @@ import { inviteMemberAction, type InviteOutcome } from '@/server/actions/members
 import { useTranslations } from 'next-intl'
 
 /**
- * Inviting is one field and one choice, inline.
+ * Inviting is an address, a name and a role, inline.
  *
  * No dialog, per the inline-editing rule: the list of who is already here
  * stays visible while you type, which is exactly what stops you inviting
@@ -19,21 +19,27 @@ export function InviteMember() {
   const router = useRouter()
   const [open, setOpen] = useState(false)
   const [email, setEmail] = useState('')
+  const [firstName, setFirstName] = useState('')
+  const [lastName, setLastName] = useState('')
   const [role, setRole] = useState<'member' | 'admin'>('member')
   const [error, setError] = useState<string | null>(null)
   const [outcome, setOutcome] = useState<InviteOutcome | null>(null)
   const [pending, startTransition] = useTransition()
 
+  const complete = email.trim() !== '' && firstName.trim() !== '' && lastName.trim() !== ''
+
   function invite() {
-    if (email.trim() === '') return
+    if (!complete) return
     startTransition(async () => {
-      const result = await inviteMemberAction({ email, role })
+      const result = await inviteMemberAction({ email, role, firstName, lastName })
       if (!result.ok) {
         setError(result.message)
         return
       }
       setOutcome(result.data)
       setEmail('')
+      setFirstName('')
+      setLastName('')
       router.refresh()
     })
   }
@@ -55,7 +61,39 @@ export function InviteMember() {
     <div className="w-full max-w-xl">
       <div className="flex flex-wrap items-start gap-2">
         <input
+          aria-label={t('firstName')}
+          placeholder={t('firstName')}
           autoFocus
+          autoComplete="off"
+          maxLength={100}
+          className="min-w-36 flex-1 rounded border border-[var(--border-strong)] bg-[var(--surface)] px-2.5 py-1.5 text-[16px]"
+          value={firstName}
+          onChange={(e) => {
+            setFirstName(e.target.value)
+            setError(null)
+          }}
+          onKeyDown={(e) => {
+            if (e.key === 'Enter') invite()
+            if (e.key === 'Escape') setOpen(false)
+          }}
+        />
+        <input
+          aria-label={t('lastName')}
+          placeholder={t('lastName')}
+          autoComplete="off"
+          maxLength={100}
+          className="min-w-36 flex-1 rounded border border-[var(--border-strong)] bg-[var(--surface)] px-2.5 py-1.5 text-[16px]"
+          value={lastName}
+          onChange={(e) => {
+            setLastName(e.target.value)
+            setError(null)
+          }}
+          onKeyDown={(e) => {
+            if (e.key === 'Enter') invite()
+            if (e.key === 'Escape') setOpen(false)
+          }}
+        />
+        <input
           type="email"
           aria-label={t('email')}
           placeholder={t('emailPlaceholder')}
@@ -82,7 +120,7 @@ export function InviteMember() {
         <button
           type="button"
           onClick={invite}
-          disabled={pending || email.trim() === ''}
+          disabled={pending || !complete}
           className="rounded bg-[var(--brand)] px-3 py-1.5 text-[15px] font-medium text-[var(--brand-fg)] hover:bg-[var(--brand-hover)] disabled:opacity-60"
         >
           {pending ? t('inviting') : t('inviteAction')}

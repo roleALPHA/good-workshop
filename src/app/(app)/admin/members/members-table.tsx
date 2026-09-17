@@ -5,6 +5,7 @@ import { useState, useTransition } from 'react'
 import type { MemberRow } from '@/domain/tenant/members'
 import {
   removeMemberAction,
+  setMemberNameAction,
   setMemberRoleAction,
   setMemberStatusAction,
 } from '@/server/actions/members'
@@ -36,6 +37,7 @@ export function MembersTable({ members }: { members: MemberRow[] }) {
   const [removing, setRemoving] = useState<string | null>(null)
   const [successor, setSuccessor] = useState('')
   const [typed, setTyped] = useState('')
+  const [naming, setNaming] = useState<string | null>(null)
 
   function openRemoval(memberId: string) {
     setRemoving(removing === memberId ? null : memberId)
@@ -65,10 +67,24 @@ export function MembersTable({ members }: { members: MemberRow[] }) {
                 {person.displayName || person.email}
                 {person.isSelf && <span className="text-[var(--fg-subtle)]"> · du</span>}
               </p>
-              {person.displayName && (
-                <p className="truncate text-[13px] text-[var(--fg-muted)]">{person.email}</p>
-              )}
+              <p className="truncate text-[13px] text-[var(--fg-muted)]">
+                {person.displayName ? person.email : t('noName')}
+              </p>
             </div>
+
+            <button
+              type="button"
+              aria-label={t('editNameOf', { email: person.email })}
+              aria-expanded={naming === person.id}
+              disabled={pending}
+              onClick={() => {
+                setNaming(naming === person.id ? null : person.id)
+                setError(null)
+              }}
+              className="rounded border border-[var(--border-strong)] px-2.5 py-1.5 text-[14px] hover:bg-[var(--surface-raised)] disabled:opacity-40"
+            >
+              {t('editName')}
+            </button>
 
             <span
               className={`rounded px-1.5 py-0.5 text-[13px] ${
@@ -124,6 +140,21 @@ export function MembersTable({ members }: { members: MemberRow[] }) {
             </button>
           </div>
 
+          {naming === person.id && (
+            <NamePanel
+              person={person}
+              pending={pending}
+              onCancel={() => setNaming(null)}
+              onSave={(name) =>
+                run(person.id, async () => {
+                  const result = await setMemberNameAction({ memberId: person.id, ...name })
+                  if (result.ok) setNaming(null)
+                  return result
+                })
+              }
+            />
+          )}
+
           {removing === person.id && (
             <RemovalPanel
               person={person}
@@ -158,6 +189,76 @@ export function MembersTable({ members }: { members: MemberRow[] }) {
         </li>
       ))}
     </ul>
+  )
+}
+
+/**
+ * Correcting a colleague's name, under their row.
+ *
+ * The same shape as the removal panel below, without its gate: a wrong name is
+ * a nuisance that the next edit fixes, not a loss.
+ */
+function NamePanel({
+  person,
+  pending,
+  onCancel,
+  onSave,
+}: {
+  person: MemberRow
+  pending: boolean
+  onCancel: () => void
+  onSave: (name: { firstName: string; lastName: string }) => void
+}) {
+  const t = useTranslations('admin.members')
+  const [firstName, setFirstName] = useState(person.firstName)
+  const [lastName, setLastName] = useState(person.lastName)
+
+  return (
+    <form
+      className="mt-3 flex flex-wrap items-end gap-2 rounded border border-[var(--border)] bg-[var(--surface)] p-3"
+      onSubmit={(event) => {
+        event.preventDefault()
+        onSave({ firstName, lastName })
+      }}
+      onKeyDown={(event) => {
+        if (event.key === 'Escape') onCancel()
+      }}
+    >
+      <label className="min-w-36 flex-1 text-[13px] text-[var(--fg-muted)]">
+        {t('firstName')}
+        <input
+          autoFocus
+          maxLength={100}
+          value={firstName}
+          onChange={(event) => setFirstName(event.target.value)}
+          className="mt-1 block w-full rounded border border-[var(--border-strong)] bg-[var(--bg)] px-2.5 py-1.5 text-[16px] text-[var(--fg)]"
+        />
+      </label>
+      <label className="min-w-36 flex-1 text-[13px] text-[var(--fg-muted)]">
+        {t('lastName')}
+        <input
+          maxLength={100}
+          value={lastName}
+          onChange={(event) => setLastName(event.target.value)}
+          className="mt-1 block w-full rounded border border-[var(--border-strong)] bg-[var(--bg)] px-2.5 py-1.5 text-[16px] text-[var(--fg)]"
+        />
+      </label>
+      <button
+        type="button"
+        onClick={onCancel}
+        disabled={pending}
+        className="rounded border border-[var(--border-strong)] px-3 py-2 text-[14px] hover:bg-[var(--surface-raised)] disabled:opacity-60"
+      >
+        {t('cancelName')}
+      </button>
+      <button
+        type="submit"
+        disabled={pending}
+        className="rounded bg-[var(--brand)] px-3 py-2 text-[14px] font-medium text-[var(--brand-fg)] hover:bg-[var(--brand-hover)] disabled:opacity-60"
+      >
+        {t('saveName')}
+      </button>
+    </form>
   )
 }
 
