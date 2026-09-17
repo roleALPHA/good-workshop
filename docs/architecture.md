@@ -67,9 +67,13 @@ routes and for `src/cloud`. Registration writes nothing but a `pending_signup` r
 address is confirmed; the confirmation link runs `app.cloud_complete_signup`, which creates the
 identity, the tenant, the admin membership, the trial and the billing account in one transaction,
 so a double click creates one workspace. The form answers the same whether or not an address is
-known, and a known address gets a mail pointing to the sign-in instead. The welcome mail carries
-the terms (and for consumers the withdrawal information) as text, because a consumer contract has
-to be confirmed on a durable medium, not behind a link. The legal texts are Markdown in
+known, and a known address gets a mail pointing to the sign-in instead. The cloud is sold to
+businesses only: the form says so before its first field and asks for it to be confirmed,
+`parseSignup` refuses anything unconfirmed before it looks at anything else, and the database
+accepts no other customer type. A business in another EU member state needs a VAT number, because
+without a valid one there is no correct invoice to issue — the billing run holds such a month for
+an operator. The welcome mail carries the terms as text, as they were agreed. The legal texts are
+Markdown in
 `src/cloud/legal/`, rendered without passing any HTML through, and prices live in exactly one
 place, `src/cloud/billing/plans.ts`, which the pricing page and billing both read.
 

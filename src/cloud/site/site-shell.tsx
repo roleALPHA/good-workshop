@@ -65,7 +65,6 @@ export async function LegalLinks() {
   const links = [
     ['/impressum', t('impressum')],
     ['/agb', t('agb')],
-    ['/widerruf', t('widerruf')],
     ['/datenschutz', t('datenschutz')],
     ['/avv', t('avv')],
   ] as const

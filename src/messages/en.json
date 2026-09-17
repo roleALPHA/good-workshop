@@ -359,7 +359,7 @@
         "badResource": "This access was requested for a different server."
       },
       "signup": {
-        "customerType": "Please choose whether you register as a business or a private person.",
+        "business": "Registration is for businesses only. Please confirm that you are ordering as a business.",
         "invalidEmail": "That is not a valid e-mail address.",
         "country": "Please choose a country.",
         "companyName": "Please enter the company name.",
@@ -371,8 +371,7 @@
         "vatIdInvalid": "According to the EU register (VIES), this VAT number is not valid. Please check it.",
         "plan": "Please choose a billing model.",
         "terms": "Please accept the terms.",
-        "dpa": "Please enter into the data processing agreement.",
-        "earlyStart": "Without this consent we cannot provide the service during the withdrawal period."
+        "dpa": "Please enter into the data processing agreement."
       }
     },
     "failed": "That did not work. Try again.",
@@ -763,8 +762,7 @@
       "impressum": "Imprint",
       "agb": "Terms",
       "datenschutz": "Privacy",
-      "avv": "DPA",
-      "widerruf": "Withdrawal"
+      "avv": "DPA"
     },
     "home": {
       "title": "Plan workshops that work.",
@@ -797,8 +795,6 @@
     "pricing": {
       "title": "Pricing",
       "intro": "One model per workspace, chosen at sign-up and changeable every month.",
-      "business": "Business",
-      "consumer": "Personal",
       "perUser": {
         "name": "Per user",
         "unit": "per active member per month",
@@ -810,10 +806,10 @@
         "body": "Any number of members. Every new workshop is billed once."
       },
       "net": "excl. VAT",
-      "gross": "incl. 20% VAT",
-      "vatNote": "Private customers outside Austria pay the VAT of their country of residence. Businesses in the EU with a valid VAT number pay net (reverse charge).",
+      "vatNote": "Businesses in Austria pay 20% VAT. Businesses in other EU countries with a valid VAT number pay net (reverse charge); businesses outside the EU pay no Austrian VAT.",
       "trial": "The first 14 days are free, with no payment details.",
-      "cta": "Try it free"
+      "cta": "Try it free",
+      "businessOnly": "Businesses only: GoodWorkshop Cloud is sold exclusively to businesses. All prices net, plus VAT."
     },
     "legal": {
       "germanOnly": "The German version is legally binding."
@@ -824,9 +820,9 @@
     "register": {
       "title": "Try it free",
       "intro": "14 days free, no payment details. Then decide whether to continue.",
-      "customerType": "You are registering as",
-      "business": "A business",
-      "consumer": "A private person",
+      "businessOnlyTitle": "Businesses only",
+      "businessOnlyBody": "GoodWorkshop Cloud is offered to businesses only. You register and order as a business (§ 1 of the Austrian Commercial Code); contracts with consumers are not possible.",
+      "confirmBusiness": "I am ordering as a business for my company, not as a consumer.",
       "firstName": "First name",
       "lastName": "Last name",
       "email": "E-mail address",
@@ -836,21 +832,18 @@
       "city": "City",
       "country": "Country",
       "vatId": "VAT number",
-      "vatIdHint": "Required for businesses in another EU country, so invoices can be issued without VAT (reverse charge).",
+      "vatIdHint": "Required for businesses in another EU country: invoices are issued without VAT (reverse charge).",
       "plan": "Billing model",
       "perUser": "€1 per user/month",
       "perWorkshop": "€1 per workshop",
-      "planHintBusiness": "Net, plus VAT; can be changed every month.",
-      "planHintConsumer": "€1.20 gross incl. 20% VAT; can be changed every month.",
       "acceptTerms": "I accept the <terms>terms</terms> and have read the <privacy>privacy policy</privacy>.",
       "acceptDpa": "I enter into the <dpa>data processing agreement</dpa>.",
-      "earlyStart": "I expressly request that GoodWorkshop is provided immediately, before the withdrawal period ends. I understand that if I withdraw, I pay a proportionate amount for the service provided until then (nothing during the free trial).",
-      "withdrawalNote": "As a private person you have a 14-day right of withdrawal — see the <withdrawal>withdrawal information</withdrawal>.",
       "submit": "Register",
       "submitting": "One moment …",
       "sentTitle": "Check your inbox.",
       "sentBody": "We sent a link to {email}. It creates your workspace and is valid for 24 hours.",
-      "haveAccount": "Already have an account? <login>Sign in</login>"
+      "haveAccount": "Already have an account? <login>Sign in</login>",
+      "planHint": "Net, plus VAT; can be changed every month."
     },
     "confirm": {
       "title": "Create workspace",

@@ -24,6 +24,6 @@ Informationen gemäß § 5 E-Commerce-Gesetz (ECG), § 14 Unternehmensgesetzbuch
 
 Medieninhaber: roleALPHA [Rechtsform], [Anschrift]. Grundlegende Richtung: Information über die Software GoodWorkshop und deren Nutzung.
 
-## Streitbeilegung
+## Kundenkreis
 
-Wir sind nicht verpflichtet und nicht bereit, an einem Streitbeilegungsverfahren vor einer Verbraucherschlichtungsstelle teilzunehmen. Verbraucher können sich an die [Schlichtung für Verbrauchergeschäfte](https://www.verbraucherschlichtung.at) wenden.
+GoodWorkshop Cloud wird ausschließlich Unternehmern im Sinne des § 1 UGB angeboten.

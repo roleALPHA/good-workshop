@@ -68,10 +68,10 @@ begin
 
   insert into billing_account (
     tenant_id, customer_type, company_name, street, postal_code, city, country, vat_id,
-    billing_email, plan, plan_from, terms_accepted_at, dpa_accepted_at, early_start_requested_at
+    billing_email, plan, plan_from, terms_accepted_at, dpa_accepted_at, business_confirmed_at
   ) values (
     v_tenant,
-    p ->> 'customerType',
+    'business',
     p ->> 'companyName',
     p ->> 'street',
     p ->> 'postalCode',
@@ -83,7 +83,7 @@ begin
     current_date,
     s.created_at,
     case when (p ->> 'acceptedDpa')::boolean then s.created_at end,
-    case when (p ->> 'requestedEarlyStart')::boolean then s.created_at end
+    case when (p ->> 'confirmedBusiness')::boolean then s.created_at end
   );
 
   -- The VIES answer the registration was checked against, as evidence, and

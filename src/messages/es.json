@@ -359,7 +359,7 @@
         "badResource": "Este acceso se pidió para otro servidor."
       },
       "signup": {
-        "customerType": "Elige si te registras como empresa o como particular.",
+        "business": "El registro solo es posible para empresas. Confirma que contratas como empresario.",
         "invalidEmail": "No es una dirección de correo válida.",
         "country": "Elige un país.",
         "companyName": "Indica el nombre de la empresa.",
@@ -371,8 +371,7 @@
         "vatIdInvalid": "Según el registro de la UE (VIES), este número de IVA no es válido. Compruébalo.",
         "plan": "Elige un modelo de facturación.",
         "terms": "Acepta las condiciones.",
-        "dpa": "Suscribe el contrato de encargo de tratamiento.",
-        "earlyStart": "Sin este consentimiento no podemos prestar el servicio durante el plazo de desistimiento."
+        "dpa": "Suscribe el contrato de encargo de tratamiento."
       }
     },
     "failed": "No ha funcionado. Inténtalo de nuevo.",
@@ -763,8 +762,7 @@
       "impressum": "Aviso legal",
       "agb": "Condiciones",
       "datenschutz": "Privacidad",
-      "avv": "Encargo de tratamiento",
-      "widerruf": "Desistimiento"
+      "avv": "Encargo de tratamiento"
     },
     "home": {
       "title": "Planifica talleres que funcionan.",
@@ -797,8 +795,6 @@
     "pricing": {
       "title": "Precios",
       "intro": "Un modelo por espacio de trabajo, elegido al registrarse y cambiable cada mes.",
-      "business": "Empresas",
-      "consumer": "Particulares",
       "perUser": {
         "name": "Por usuario",
         "unit": "por miembro activo al mes",
@@ -810,10 +806,10 @@
         "body": "Miembros ilimitados. Cada taller nuevo se factura una vez."
       },
       "net": "IVA no incluido",
-      "gross": "IVA del 20 % incluido",
-      "vatNote": "Los particulares fuera de Austria pagan el IVA de su país de residencia. Las empresas de la UE con número de IVA válido pagan el importe neto (inversión del sujeto pasivo).",
+      "vatNote": "Las empresas en Austria pagan un 20 % de IVA. Las empresas de otros países de la UE con número de IVA válido pagan el importe neto (inversión del sujeto pasivo); las empresas fuera de la UE no pagan IVA austriaco.",
       "trial": "Los primeros 14 días son gratuitos, sin datos de pago.",
-      "cta": "Probar gratis"
+      "cta": "Probar gratis",
+      "businessOnly": "Solo para empresas: GoodWorkshop Cloud se vende exclusivamente a empresas. Todos los precios son netos, IVA no incluido."
     },
     "legal": {
       "germanOnly": "La versión en alemán es la jurídicamente vinculante."
@@ -824,9 +820,9 @@
     "register": {
       "title": "Probar gratis",
       "intro": "14 días gratis y sin datos de pago. Después decides si continúas.",
-      "customerType": "Te registras como",
-      "business": "Empresa",
-      "consumer": "Particular",
+      "businessOnlyTitle": "Solo para empresas",
+      "businessOnlyBody": "GoodWorkshop Cloud se ofrece exclusivamente a empresas. Te registras y contratas como empresario (§ 1 del Código de Comercio austriaco); no es posible contratar con consumidores.",
+      "confirmBusiness": "Contrato como empresario para mi empresa, no como consumidor.",
       "firstName": "Nombre",
       "lastName": "Apellido",
       "email": "Dirección de correo",
@@ -836,21 +832,18 @@
       "city": "Ciudad",
       "country": "País",
       "vatId": "Número de IVA",
-      "vatIdHint": "Obligatorio para empresas de otro país de la UE, para facturar sin IVA (inversión del sujeto pasivo).",
+      "vatIdHint": "Obligatorio para empresas de otro país de la UE: se factura sin IVA (inversión del sujeto pasivo).",
       "plan": "Modelo de facturación",
       "perUser": "1 € por usuario/mes",
       "perWorkshop": "1 € por taller",
-      "planHintBusiness": "Neto, IVA no incluido; se puede cambiar cada mes.",
-      "planHintConsumer": "1,20 € con el 20 % de IVA incluido; se puede cambiar cada mes.",
       "acceptTerms": "Acepto las <terms>condiciones</terms> y he leído la <privacy>política de privacidad</privacy>.",
       "acceptDpa": "Suscribo el <dpa>contrato de encargo de tratamiento</dpa>.",
-      "earlyStart": "Solicito expresamente que GoodWorkshop se preste de inmediato, antes de que termine el plazo de desistimiento. Sé que, si desisto, pagaré un importe proporcional por el servicio prestado hasta entonces (nada durante la prueba gratuita).",
-      "withdrawalNote": "Como particular tienes un derecho de desistimiento de 14 días; consulta la <withdrawal>información sobre el desistimiento</withdrawal>.",
       "submit": "Registrarse",
       "submitting": "Un momento …",
       "sentTitle": "Revisa tu bandeja de entrada.",
       "sentBody": "Hemos enviado un enlace a {email}. Con él creas tu espacio de trabajo; es válido 24 horas.",
-      "haveAccount": "¿Ya tienes una cuenta? <login>Iniciar sesión</login>"
+      "haveAccount": "¿Ya tienes una cuenta? <login>Iniciar sesión</login>",
+      "planHint": "Neto, IVA no incluido; se puede cambiar cada mes."
     },
     "confirm": {
       "title": "Crear espacio de trabajo",

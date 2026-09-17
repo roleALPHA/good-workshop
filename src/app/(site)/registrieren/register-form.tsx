@@ -3,12 +3,7 @@
 import { useMemo, useState } from 'react'
 import { useLocale, useTranslations } from 'next-intl'
 import { PLAN_KEYS, type PlanKey } from '@/cloud/billing/plans'
-import {
-  SIGNUP_COUNTRIES,
-  vatIdRequired,
-  type CustomerType,
-  type SignupCountry,
-} from '@/cloud/registration/rules'
+import { SIGNUP_COUNTRIES, vatIdRequired, type SignupCountry } from '@/cloud/registration/rules'
 import { register, type RegisterResult } from './actions'
 
 const field =
@@ -16,10 +11,8 @@ const field =
 const label = 'block text-[14px] font-medium'
 
 /**
- * One form for both kinds of customer, because most of it is the same: what
- * differs -- company and VAT number for a business, the early-start request for
- * a consumer -- appears when the choice at the top is made, rather than on a
- * second page nobody expects.
+ * Registration, for businesses only -- which is the first thing the form says
+ * and the first thing it asks to be confirmed, before a single field.
  *
  * Everything is checked again on the server (src/cloud/registration/rules.ts);
  * the `required` attributes here are for the person, not for security.
@@ -27,7 +20,6 @@ const label = 'block text-[14px] font-medium'
 export function RegisterForm() {
   const t = useTranslations('site.register')
   const locale = useLocale()
-  const [customerType, setCustomerType] = useState<CustomerType>('business')
   const [country, setCountry] = useState<SignupCountry>('AT')
   const [plan, setPlan] = useState<PlanKey>('per_user')
   const [result, setResult] = useState<RegisterResult | null>(null)
@@ -55,7 +47,7 @@ export function RegisterForm() {
     setPending(true)
     try {
       const raw = Object.fromEntries(formData.entries()) as Record<string, unknown>
-      for (const box of ['acceptedTerms', 'acceptedDpa', 'requestedEarlyStart']) {
+      for (const box of ['confirmedBusiness', 'acceptedTerms', 'acceptedDpa']) {
         raw[box] = formData.get(box) === 'on'
       }
       setResult(await register(raw))
@@ -75,10 +67,27 @@ export function RegisterForm() {
     )
   }
 
-  const business = customerType === 'business'
-
   return (
     <form action={submit} className="space-y-5">
+      <section
+        aria-labelledby="su-business-title"
+        className="rounded border border-[var(--border-strong)] bg-[var(--surface-raised)] p-4"
+      >
+        <h2 id="su-business-title" className="text-[16px] font-semibold">
+          {t('businessOnlyTitle')}
+        </h2>
+        <p className="mt-1 text-[15px]">{t('businessOnlyBody')}</p>
+        <label className="mt-3 flex items-start gap-2 text-[15px] font-medium">
+          <input
+            type="checkbox"
+            name="confirmedBusiness"
+            required
+            className="mt-1 size-4 shrink-0"
+          />
+          <span>{t('confirmBusiness')}</span>
+        </label>
+      </section>
+
       {result && !result.ok && (
         <p
           role="alert"
@@ -87,27 +96,6 @@ export function RegisterForm() {
           {result.error}
         </p>
       )}
-
-      <fieldset>
-        <legend className={label}>{t('customerType')}</legend>
-        <div className="mt-2 flex flex-wrap gap-2">
-          {(['business', 'consumer'] as const).map((type) => (
-            <label
-              key={type}
-              className="flex min-h-11 cursor-pointer items-center gap-2 rounded border border-[var(--border-strong)] px-3 has-[:checked]:border-[var(--brand)] has-[:checked]:bg-[var(--surface-raised)]"
-            >
-              <input
-                type="radio"
-                name="customerType"
-                value={type}
-                checked={customerType === type}
-                onChange={() => setCustomerType(type)}
-              />
-              {t(type)}
-            </label>
-          ))}
-        </div>
-      </fieldset>
 
       <div className="grid gap-4 sm:grid-cols-2">
         <div>
@@ -157,21 +145,19 @@ export function RegisterForm() {
         <input name="website" tabIndex={-1} autoComplete="off" />
       </div>
 
-      {business && (
-        <div>
-          <label htmlFor="su-company" className={label}>
-            {t('companyName')}
-          </label>
-          <input
-            id="su-company"
-            name="companyName"
-            required
-            maxLength={200}
-            autoComplete="organization"
-            className={field}
-          />
-        </div>
-      )}
+      <div>
+        <label htmlFor="su-company" className={label}>
+          {t('companyName')}
+        </label>
+        <input
+          id="su-company"
+          name="companyName"
+          required
+          maxLength={200}
+          autoComplete="organization"
+          className={field}
+        />
+      </div>
 
       <div>
         <label htmlFor="su-street" className={label}>
@@ -233,24 +219,22 @@ export function RegisterForm() {
         </select>
       </div>
 
-      {business && (
-        <div>
-          <label htmlFor="su-vat" className={label}>
-            {t('vatId')}
-          </label>
-          <input
-            id="su-vat"
-            name="vatId"
-            required={vatIdRequired('business', country)}
-            maxLength={20}
-            aria-describedby="su-vat-hint"
-            className={`${field} uppercase`}
-          />
-          <p id="su-vat-hint" className="mt-1 text-[13px] text-[var(--fg-muted)]">
-            {t('vatIdHint')}
-          </p>
-        </div>
-      )}
+      <div>
+        <label htmlFor="su-vat" className={label}>
+          {t('vatId')}
+        </label>
+        <input
+          id="su-vat"
+          name="vatId"
+          required={vatIdRequired(country)}
+          maxLength={20}
+          aria-describedby="su-vat-hint"
+          className={`${field} uppercase`}
+        />
+        <p id="su-vat-hint" className="mt-1 text-[13px] text-[var(--fg-muted)]">
+          {t('vatIdHint')}
+        </p>
+      </div>
 
       <fieldset>
         <legend className={label}>{t('plan')}</legend>
@@ -271,9 +255,7 @@ export function RegisterForm() {
             </label>
           ))}
         </div>
-        <p className="mt-1 text-[13px] text-[var(--fg-muted)]">
-          {t(business ? 'planHintBusiness' : 'planHintConsumer')}
-        </p>
+        <p className="mt-1 text-[13px] text-[var(--fg-muted)]">{t('planHint')}</p>
       </fieldset>
 
       <div className="space-y-3 text-[15px]">
@@ -283,27 +265,10 @@ export function RegisterForm() {
             {t.rich('acceptTerms', { terms: link('/agb'), privacy: link('/datenschutz') })}
           </span>
         </label>
-        {business ? (
-          <label className="flex items-start gap-2">
-            <input type="checkbox" name="acceptedDpa" required className="mt-1 size-4 shrink-0" />
-            <span>{t.rich('acceptDpa', { dpa: link('/avv') })}</span>
-          </label>
-        ) : (
-          <>
-            <label className="flex items-start gap-2">
-              <input
-                type="checkbox"
-                name="requestedEarlyStart"
-                required
-                className="mt-1 size-4 shrink-0"
-              />
-              <span>{t('earlyStart')}</span>
-            </label>
-            <p className="text-[14px] text-[var(--fg-muted)]">
-              {t.rich('withdrawalNote', { withdrawal: link('/widerruf') })}
-            </p>
-          </>
-        )}
+        <label className="flex items-start gap-2">
+          <input type="checkbox" name="acceptedDpa" required className="mt-1 size-4 shrink-0" />
+          <span>{t.rich('acceptDpa', { dpa: link('/avv') })}</span>
+        </label>
       </div>
 
       <button

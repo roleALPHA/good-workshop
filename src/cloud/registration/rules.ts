@@ -1,5 +1,5 @@
 import { DomainError } from '@/domain/errors'
-import { PERSON_NAME_MAX_LENGTH, normalisePersonName } from '@/domain/tenant/person-name'
+import { normalisePersonName } from '@/domain/tenant/person-name'
 import { isPlanKey, type PlanKey } from '@/cloud/billing/plans'
 
 /**
@@ -12,7 +12,11 @@ import { isPlanKey, type PlanKey } from '@/cloud/billing/plans'
 
 export class SignupError extends DomainError {}
 
-export type CustomerType = 'business' | 'consumer'
+/**
+ * GoodWorkshop Cloud sells to businesses only. The type stays a union of one so
+ * that the stored value says what it means rather than being implied.
+ */
+export type CustomerType = 'business'
 
 /** The EU member states, by ISO 3166-1 alpha-2 -- VIES uses EL for Greece, we store GR. */
 export const EU_COUNTRIES = [
@@ -54,9 +58,9 @@ export type Signup = {
   firstName: string
   lastName: string
   email: string
-  /** The workspace's name: the company for a business, the person's name otherwise. */
+  /** The workspace's name: the company's. */
   workspaceName: string
-  companyName: string | null
+  companyName: string
   street: string
   postalCode: string
   city: string
@@ -64,11 +68,10 @@ export type Signup = {
   /** Normalised: upper case, no spaces or punctuation, country prefix included. */
   vatId: string | null
   plan: PlanKey
+  /** Ordering as a business (§ 1 UGB), not as a consumer -- confirmed, not assumed. */
+  confirmedBusiness: true
   acceptedTerms: true
-  /** Businesses only: the data processing agreement. */
-  acceptedDpa: boolean
-  /** Consumers only: service starts within the withdrawal period (§ 10 FAGG). */
-  requestedEarlyStart: boolean
+  acceptedDpa: true
 }
 
 const text = (value: unknown, max: number) =>
@@ -86,13 +89,13 @@ export function normaliseVatId(value: unknown): string | null {
   return cleaned === '' ? null : cleaned
 }
 
-/** Whether a business in this country needs a VAT number to be billed net. */
-export function vatIdRequired(customerType: CustomerType, country: SignupCountry): boolean {
-  return (
-    customerType === 'business' &&
-    country !== 'AT' &&
-    (EU_COUNTRIES as readonly string[]).includes(country)
-  )
+/**
+ * Whether a VAT number is required: for every business in another EU member
+ * state, because a supply to it is only invoiced net (reverse charge) against a
+ * valid number -- and without one there is nothing correct to invoice.
+ */
+export function vatIdRequired(country: SignupCountry): boolean {
+  return country !== 'AT' && (EU_COUNTRIES as readonly string[]).includes(country)
 }
 
 /** The prefix a VAT number from this country starts with. Greece is EL, not GR. */
@@ -101,13 +104,8 @@ export function vatPrefix(country: SignupCountry): string {
 }
 
 export function parseSignup(raw: Record<string, unknown>): Signup {
-  const customerType =
-    raw.customerType === 'consumer'
-      ? 'consumer'
-      : raw.customerType === 'business'
-        ? 'business'
-        : null
-  if (!customerType) throw new SignupError('signup.customerType')
+  // First, before anything else is looked at: the offer is not open to consumers.
+  if (raw.confirmedBusiness !== true) throw new SignupError('signup.business')
 
   const { firstName, lastName } = normalisePersonName({
     firstName: raw.firstName,
@@ -123,7 +121,7 @@ export function parseSignup(raw: Record<string, unknown>): Signup {
   }
 
   const companyName = text(raw.companyName, 200)
-  if (customerType === 'business' && companyName === '') throw new SignupError('signup.companyName')
+  if (companyName === '') throw new SignupError('signup.companyName')
   if (companyName.length > 200) throw new SignupError('signup.tooLong')
 
   const street = text(raw.street, 200)
@@ -134,40 +132,33 @@ export function parseSignup(raw: Record<string, unknown>): Signup {
     throw new SignupError('signup.tooLong')
   }
 
-  const vatId = customerType === 'business' ? normaliseVatId(raw.vatId) : null
+  const vatId = normaliseVatId(raw.vatId)
   const typedCountry = country as SignupCountry
-  if (vatIdRequired(customerType, typedCountry) && !vatId)
-    throw new SignupError('signup.vatIdRequired')
+  if (vatIdRequired(typedCountry) && !vatId) throw new SignupError('signup.vatIdRequired')
   if (vatId && !/^[A-Z]{2}[A-Z0-9]{2,13}$/.test(vatId)) throw new SignupError('signup.vatIdFormat')
-  if (vatId && !vatId.startsWith(vatPrefix(typedCountry)))
+  if (vatId && !vatId.startsWith(vatPrefix(typedCountry))) {
     throw new SignupError('signup.vatIdCountry')
+  }
 
   if (!isPlanKey(raw.plan)) throw new SignupError('signup.plan')
   if (raw.acceptedTerms !== true) throw new SignupError('signup.terms')
+  if (raw.acceptedDpa !== true) throw new SignupError('signup.dpa')
 
-  const acceptedDpa = customerType === 'business' && raw.acceptedDpa === true
-  if (customerType === 'business' && !acceptedDpa) throw new SignupError('signup.dpa')
-
-  const requestedEarlyStart = customerType === 'consumer' && raw.requestedEarlyStart === true
-  if (customerType === 'consumer' && !requestedEarlyStart)
-    throw new SignupError('signup.earlyStart')
-
-  const personal = `${firstName} ${lastName}`.slice(0, PERSON_NAME_MAX_LENGTH * 2 + 1)
   return {
-    customerType,
+    customerType: 'business',
     firstName,
     lastName,
     email,
-    workspaceName: customerType === 'business' ? companyName : personal,
-    companyName: customerType === 'business' ? companyName : null,
+    workspaceName: companyName,
+    companyName,
     street,
     postalCode,
     city,
     country: typedCountry,
     vatId,
     plan: raw.plan,
+    confirmedBusiness: true,
     acceptedTerms: true,
-    acceptedDpa,
-    requestedEarlyStart,
+    acceptedDpa: true,
   }
 }
