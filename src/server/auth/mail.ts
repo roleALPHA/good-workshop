@@ -51,7 +51,7 @@ function fromFileOrValue(file: string | undefined, value: string | undefined) {
   return value || undefined
 }
 
-const oneLine = (value: string) => value.replace(/[\r\n\u2028\u2029]+/g, ' ')
+const oneLine = (value: string) => value.replace(/\r|\n|\u2028|\u2029/g, '')
 
 export async function sendMail(mail: Mail, tenantId: string): Promise<void> {
   const config = await mailConfigFor(tenantId)
@@ -67,7 +67,10 @@ export async function sendMail(mail: Mail, tenantId: string): Promise<void> {
           `To:      ${oneLine(mail.to)}`,
           `Subject: ${oneLine(mail.subject)}`,
           '',
-          mail.text,
+          // The body is multi-line by nature and carries text people typed (a
+          // workshop title, a name). Every line is marked as part of this mail,
+          // so none of it can pass for a log entry of its own.
+          ...mail.text.split(/\r\n|\r|\n|\u2028|\u2029/).map((line) => `│ ${line}`),
           '─'.repeat(72),
           '',
         ].join('\n'),
