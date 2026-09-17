@@ -1,7 +1,7 @@
 import { NextResponse, type NextRequest } from 'next/server'
 import { and, eq, sql } from 'drizzle-orm'
 import { withTenant } from '@/server/db'
-import { authConfig } from '@/server/auth/config'
+import { edition } from '@/server/edition'
 import { oauthToken } from '@/server/db/schema'
 import { hashSecret, parseOAuthToken } from '@/server/auth/tokens'
 
@@ -22,10 +22,12 @@ export async function POST(request: NextRequest) {
   const presented = form?.get('token')
   const parsed = typeof presented === 'string' ? parseOAuthToken(presented) : null
 
-  if (parsed) {
+  const tenantId = parsed ? await edition.tenantForOAuthToken(parsed.tokenKey) : null
+
+  if (parsed && tenantId) {
     await withTenant(
       {
-        tenantId: authConfig.defaultTenantId,
+        tenantId,
         memberId: null,
         tenantRole: 'member',
         source: 'mcp',

@@ -4,6 +4,7 @@ import { workshop, workshopShareLink } from '@/server/db/schema'
 import { lastDayOf } from '@/domain/workshop/share-links'
 import { isExpired, normaliseEmail } from '@/domain/workshop/share-rules'
 import { authConfig } from './config'
+import { edition } from '@/server/edition'
 import { generateSecret, hashSecret } from './tokens'
 import { createGuestSession } from './share-session'
 
@@ -69,13 +70,15 @@ export async function readShareGate(token: string): Promise<ShareGate | null> {
    * reads back zero rows -- fail-closed by construction, exactly as
    * src/server/db/index.ts describes for PAT resolution.
    *
-   * Which is why this cannot be an ordinary query, and why the token is resolved
-   * through withTenantOnly across the tenants an install has. The Community
-   * Edition has one, fixed; a Cloud Edition would resolve the token through a
-   * SECURITY DEFINER function the way app.resolve_pat does, and this is the seam
-   * where that goes.
+   * Which is why the edition names the tenant first -- the Community Edition
+   * has one, fixed; a multi-tenant one resolves the hash the way app.resolve_pat
+   * resolves a token -- and the link is then read inside that tenant, under its
+   * policies like any other row.
    */
-  const rows = await withTenantOnly(authConfig.defaultTenantId, (tx) =>
+  const tenantId = await edition.tenantForShareToken(tokenHash)
+  if (!tenantId) return null
+
+  const rows = await withTenantOnly(tenantId, (tx) =>
     tx
       .select({
         linkId: workshopShareLink.id,

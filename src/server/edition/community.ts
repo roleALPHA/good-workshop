@@ -1,0 +1,23 @@
+import { authConfig } from '@/server/auth/config'
+import type { Edition } from './types'
+
+/**
+ * One installation, one tenant, and every answer is that tenant.
+ *
+ * Deliberately without a database read: this is the behaviour every self-hosted
+ * installation has always had, and routing it through a lookup would add a
+ * query -- and a way to fail -- to paths that never needed one.
+ */
+const TENANT = authConfig.defaultTenantId
+const always = async () => TENANT
+
+export const communityEdition: Edition = {
+  name: 'community',
+  tenantForSignIn: always,
+  tenantForShareToken: always,
+  tenantForClientRegistration: always,
+  tenantForAuthorizationCode: always,
+  tenantForOAuthToken: always,
+  tenantForAnonymousBrand: always,
+  tenantForSetup: always,
+}

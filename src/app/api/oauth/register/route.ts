@@ -1,6 +1,6 @@
 import { NextResponse, type NextRequest } from 'next/server'
 import { withTenant } from '@/server/db'
-import { authConfig } from '@/server/auth/config'
+import { edition } from '@/server/edition'
 import { rateLimiter } from '@/server/auth/ratelimit'
 import { clientAddress } from '@/server/auth/client-address'
 import { OAuthError, registerClient } from '@/domain/oauth/repo'
@@ -44,7 +44,7 @@ export async function POST(request: NextRequest) {
   }
 
   const actor = {
-    tenantId: authConfig.defaultTenantId,
+    tenantId: await edition.tenantForClientRegistration(),
     memberId: null,
     tenantRole: 'member' as const,
     source: 'mcp' as const,

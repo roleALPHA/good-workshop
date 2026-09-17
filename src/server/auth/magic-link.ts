@@ -3,6 +3,7 @@ import { and, count, eq, gt, isNull, sql } from 'drizzle-orm'
 import { withAuth, withTenantOnly } from '@/server/db'
 import { emailToken, identity, member } from '@/server/db/schema'
 import { authConfig } from './config'
+import { edition } from '@/server/edition'
 import { generateSecret, hashSecret } from './tokens'
 import { magicLinkMail, sendMail } from './mail'
 import { DEFAULT_LOCALE, type Locale } from '@/i18n/config'
@@ -24,7 +25,13 @@ import { asLocale } from '@/i18n/resolve'
  * again at the send site, would be a second query in a different transaction
  * and a second chance to forget.
  */
-export type IssueResult = { link: string; email: string; locale: Locale }
+export type IssueResult = {
+  link: string
+  email: string
+  locale: Locale
+  /** The tenant the link signs into -- and whose mail settings send it. */
+  tenantId: string
+}
 
 /**
  * Issues a link for an existing member.
@@ -45,7 +52,12 @@ const MAGIC_LINK_WINDOW_MS = 15 * 60_000
 
 export async function issueMagicLink(
   emailAddress: string,
-  tenantId: string = authConfig.defaultTenantId,
+  /**
+   * Known when the caller already acts inside a tenant -- an invitation, first
+   * setup. Left out on the login form, where the edition decides which tenant
+   * this person signs into.
+   */
+  knownTenantId?: string,
   meta: { ip?: string } = {},
 ): Promise<IssueResult | null> {
   const normalised = emailAddress.trim().toLowerCase()
@@ -71,6 +83,10 @@ export async function issueMagicLink(
 
     const found = rows[0]
     if (!found || found.status !== 'active') return null
+
+    const tenantId = knownTenantId ?? (await edition.tenantForSignIn(found.identityId))
+    // No tenant to sign into is the same silence as no account.
+    if (!tenantId) return null
 
     // Counted in the database rather than in this process: /login is anonymous,
     // the mail goes out through the operator's relay, and a limit that resets
@@ -109,16 +125,16 @@ export async function issueMagicLink(
       // Untrusted despite the column being NOT NULL: it is a documented seam
       // for OIDC/SAML imports and carries no check constraint.
       locale: asLocale(found.locale) ?? DEFAULT_LOCALE,
+      tenantId,
     }
   })
 }
 
-export async function sendMagicLink(emailAddress: string, tenantId?: string): Promise<void> {
-  const tenant = tenantId ?? authConfig.defaultTenantId
-  const issued = await issueMagicLink(emailAddress, tenant)
+export async function sendMagicLink(emailAddress: string): Promise<void> {
+  const issued = await issueMagicLink(emailAddress)
   // Nothing to send is not an error the caller may distinguish -- see above.
   if (!issued) return
-  await sendMail(magicLinkMail(issued.email, issued.link, issued.locale), tenant)
+  await sendMail(magicLinkMail(issued.email, issued.link, issued.locale), issued.tenantId)
 }
 
 /**

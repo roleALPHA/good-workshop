@@ -5,9 +5,9 @@ import { clientAddress } from '@/server/auth/client-address'
 import { rateLimiter } from '@/server/auth/ratelimit'
 import { issueMagicLink } from '@/server/auth/magic-link'
 import { magicLinkMail, mailConfigFor, sendMail, deliversToRecipient } from '@/server/auth/mail'
-import { authConfig } from '@/server/auth/config'
 import { getTranslations } from 'next-intl/server'
 import { claimInstallation } from '@/server/settings/setup'
+import { edition } from '@/server/edition'
 import { DomainError } from '@/domain/errors'
 
 /**
@@ -38,10 +38,11 @@ export async function claim(formData: FormData): Promise<SetupResult> {
       },
     )
 
-    const issued = await issueMagicLink(email, authConfig.defaultTenantId)
+    const claimed = await edition.tenantForSetup()
+    const issued = claimed ? await issueMagicLink(email, claimed) : null
     if (!issued) return { ok: true, email }
 
-    const config = await mailConfigFor(authConfig.defaultTenantId)
+    const config = await mailConfigFor(issued.tenantId)
     if (!deliversToRecipient(config)) {
       // No relay configured yet -- which is the normal state five seconds into
       // an installation. Showing the link is not a leak here: the person
@@ -50,10 +51,7 @@ export async function claim(formData: FormData): Promise<SetupResult> {
     }
 
     try {
-      await sendMail(
-        magicLinkMail(issued.email, issued.link, issued.locale),
-        authConfig.defaultTenantId,
-      )
+      await sendMail(magicLinkMail(issued.email, issued.link, issued.locale), issued.tenantId)
       return { ok: true, email }
     } catch (error) {
       console.error('setup: magic link delivery failed', { error })

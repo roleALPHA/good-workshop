@@ -1,5 +1,6 @@
 import { NextResponse, type NextRequest } from 'next/server'
 import { authConfig } from '@/server/auth/config'
+import { edition } from '@/server/edition'
 import { authenticationOptions, verifyAuthentication } from '@/server/auth/passkey'
 import { createSession } from '@/server/auth/session'
 import { rateLimiter } from '@/server/auth/ratelimit'
@@ -34,7 +35,12 @@ export async function POST(request: NextRequest) {
   const login = await verifyAuthentication(body)
   if (!login) return NextResponse.json({ error: 'verification_failed' }, { status: 401 })
 
-  await createSession(login.identityId, authConfig.defaultTenantId, 'passkey', {
+  // A passkey says who somebody is, not where they work; the edition answers
+  // the second. No tenant is refused like a failed verification.
+  const tenantId = await edition.tenantForSignIn(login.identityId)
+  if (!tenantId) return NextResponse.json({ error: 'verification_failed' }, { status: 401 })
+
+  await createSession(login.identityId, tenantId, 'passkey', {
     userAgent: request.headers.get('user-agent') ?? undefined,
   })
   return NextResponse.json({ ok: true })

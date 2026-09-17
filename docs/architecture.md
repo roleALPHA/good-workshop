@@ -28,6 +28,22 @@ locked for `gw_app`. Whoever needs them explicitly enters through `set local rol
 because `gw_app` is NOINHERIT, that right ends with the transaction. An ORM mistake outside the
 auth module therefore cannot read sign-in material.
 
+### Finding the tenant before a credential names one
+
+Most requests arrive with their tenant attached: a session, a personal access token, an OAuth
+access token and a guest cookie each name one. A handful of moments do not — somebody signing
+in, a guest opening a share link, an OAuth client registering or redeeming a code, a logged-out
+visitor looking at the login page, first-run setup. Every one of those asks
+[`edition`](../src/server/edition/index.ts), and nothing else in the application names a tenant
+id of its own; `src/server/edition/edition.test.ts` fails the build when something does.
+
+The Community Edition answers each question with its one fixed tenant and without a database
+read, which is exactly how self-hosted installations have always behaved. The seam exists so
+that an edition with many tenants can answer the same questions from the credential in hand —
+the identity, the hash of a code or token — without a second code path through sign-in, OAuth
+or sharing. Which edition a build is gets decided when it is built, never by an environment
+variable an operator could set.
+
 ## Database roles
 
 | Role       | For what                         | Particularity                      |
