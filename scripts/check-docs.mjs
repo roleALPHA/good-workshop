@@ -57,6 +57,9 @@ const INTERNAL = {
   GW_COLLAB_GRACE_MS: 'Collaboration server timing. Tuning knob.',
   GW_COLLAB_MATERIALIZE_MS: 'Collaboration server timing. Tuning knob.',
   GW_COLLAB_PERSIST_MS: 'Collaboration server timing. Tuning knob.',
+  GW_VIES_REQUESTER_VAT_ID:
+    'Cloud only: our own VAT number, sent with VIES checks so they return a consultation ' +
+    'number. A self-hosted installation never checks VAT numbers.',
   GW_BUILD:
     'Baked into the image by the Dockerfile from the build argument. Names the build the ' +
     'footer shows; an operator setting it would make the footer lie.',

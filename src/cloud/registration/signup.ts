@@ -15,6 +15,7 @@ import { PLATFORM_TENANT } from '@/server/edition/cloud'
 import { TRIAL_DAYS } from '@/cloud/billing/plans'
 import { readLegalDocument } from '@/cloud/legal/documents'
 import type { Signup } from './rules'
+import type { VatCheck } from '@/cloud/tax/vies'
 
 /**
  * Registering for the cloud, in two steps: the form asks for a link, the link
@@ -46,7 +47,7 @@ const BURST = 3
 export async function requestSignup(
   signup: Signup,
   locale: Locale,
-  meta: { ip?: string } = {},
+  meta: { ip?: string; vatCheck?: VatCheck } = {},
 ): Promise<void> {
   const secret = generateSecret(32)
 
@@ -72,7 +73,12 @@ export async function requestSignup(
       id: randomUUID(),
       tokenHash: hashSecret(secret),
       email: signup.email,
-      payload: { ...signup, locale, trialDays: TRIAL_DAYS },
+      payload: {
+        ...signup,
+        locale,
+        trialDays: TRIAL_DAYS,
+        ...(meta.vatCheck ? { vatCheck: meta.vatCheck } : {}),
+      },
       requestedIp: meta.ip ?? null,
       expiresAt: new Date(Date.now() + LINK_TTL_HOURS * 60 * 60_000),
     })

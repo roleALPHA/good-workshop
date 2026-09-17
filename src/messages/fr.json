@@ -368,6 +368,7 @@
         "vatIdRequired": "Les entreprises de ce pays doivent indiquer leur numéro de TVA.",
         "vatIdFormat": "Ce n’est pas un numéro de TVA valide.",
         "vatIdCountry": "Le numéro de TVA ne correspond pas au pays choisi.",
+        "vatIdInvalid": "Selon le registre de l’UE (VIES), ce numéro de TVA n’est pas valide. Vérifie-le.",
         "plan": "Choisis un modèle de facturation.",
         "terms": "Accepte les conditions.",
         "dpa": "Conclus l’accord de sous-traitance.",
