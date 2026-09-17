@@ -960,5 +960,79 @@
       "invalid": "Este enlace ha caducado o ya se ha usado. Vuelve a registrarte.",
       "exists": "Ya existe una cuenta para esta dirección. Inicia sesión."
     }
+  },
+  "operator": {
+    "signOut": "Cerrar sesión",
+    "signIn": {
+      "title": "Consola de operador",
+      "intro": "Acceso solo con passkey.",
+      "button": "Acceder con passkey",
+      "failed": "El acceso ha fallado.",
+      "enrollTitle": "Configurar passkey",
+      "enrollIntro": "Configura la passkey para {email}.",
+      "enroll": "Configurar passkey",
+      "enrollInvalid": "Este enlace no es válido o ha caducado. scripts/operator.mjs enroll en el servidor crea uno nuevo."
+    },
+    "tenants": {
+      "title": "Espacios de trabajo",
+      "search": "Buscar por nombre o correo",
+      "filter": "Estado",
+      "all": "Todos",
+      "apply": "Mostrar",
+      "count": "{count, plural, one {# espacio} many {# espacios} other {# espacios}}",
+      "name": "Espacio",
+      "state": "Estado",
+      "plan": "Modelo",
+      "members": "Miembros",
+      "workshops": "Talleres",
+      "attention": "Pendiente",
+      "created": "Creado",
+      "held": "{count} en revisión",
+      "failed": "{count} pago fallido",
+      "noPayment": "sin método de pago"
+    },
+    "state": {
+      "trial": "Prueba",
+      "active": "Activo",
+      "read_only": "Solo lectura",
+      "paused": "En pausa",
+      "deleting": "Eliminándose",
+      "blocked": "Bloqueado"
+    },
+    "plan": {
+      "per_user": "por usuario",
+      "per_workshop": "por taller"
+    },
+    "detail": {
+      "state": "Estado",
+      "trialEndsAt": "Prueba hasta",
+      "deleteAfter": "Eliminación el",
+      "plan": "Modelo",
+      "country": "País · IVA",
+      "payment": "Método de pago",
+      "yes": "sí",
+      "no": "no",
+      "periods": "Periodos de facturación",
+      "audit": "Registro"
+    },
+    "actions": {
+      "title": "Acciones",
+      "reason": "Motivo (obligatorio, queda en el registro)",
+      "pause": "Pausar",
+      "unpause": "Terminar pausa",
+      "block": "Bloquear",
+      "unblock": "Desbloquear",
+      "scheduleDeletion": "Eliminar en {days} días",
+      "cancelDeletion": "Anular eliminación",
+      "days": "Días",
+      "extendTrial": "Ampliar la prueba {days} días",
+      "bill": "Facturar",
+      "void": "Descartar",
+      "error": {
+        "input": "Entrada no válida.",
+        "unauthenticated": "Vuelve a iniciar sesión.",
+        "failed": "No ha funcionado."
+      }
+    }
   }
 }
