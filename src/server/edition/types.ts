@@ -15,6 +15,13 @@ import type { Tx } from '@/server/db'
  * them from the credential in hand. Code outside this directory never names a
  * tenant id of its own -- src/server/edition/edition.test.ts holds that line.
  */
+/** What the app shell tells a workspace about its own state. Null: nothing to say. */
+export type WorkspaceNotice = {
+  state: 'trial' | 'read_only' | 'paused' | 'deleting'
+  trialEndsAt: Date | null
+  deleteAfter: Date | null
+}
+
 export type Edition = {
   readonly name: 'community' | 'cloud'
 
@@ -56,4 +63,10 @@ export type Edition = {
    * in, before the consent screen looks it up there.
    */
   adoptRegisteredClient(tx: Tx, clientKey: string): Promise<void>
+
+  /** For the banner under the header: a trial, a read-only, paused or deleting workspace. */
+  workspaceNotice(tenantId: string): Promise<WorkspaceNotice | null>
+
+  /** Whether tenant admins have a billing page. */
+  readonly hasBilling: boolean
 }

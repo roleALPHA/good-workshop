@@ -108,6 +108,8 @@ export const DOMAIN_ERROR_KEYS = [
   'mail.noSmtpUrl',
   'mail.transportNone',
   'mail.graphMissing',
+  // A workspace that may not change its content (cloud: read-only, paused, deleting)
+  'workspace.readOnly',
   // Live collaboration
   'collab.unavailable',
   // Cloud registration

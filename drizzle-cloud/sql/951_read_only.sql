@@ -20,7 +20,9 @@ set search_path = pg_catalog, public
 stable
 as $$
   select coalesce(
-    (select l.state <> 'read_only' from tenant_lifecycle l where l.tenant_id = app.current_tenant()),
+    -- A paused workspace and one waiting to be deleted read like a read-only one.
+    (select l.state not in ('read_only', 'paused', 'deleting')
+       from tenant_lifecycle l where l.tenant_id = app.current_tenant()),
     true
   );
 $$;

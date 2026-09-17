@@ -93,6 +93,19 @@ evidence, an invoice whose tax is not what was billed, an amount above the limit
 operator rather than guessed. The payment provider's webhook only verifies and stores; the worker
 acts on stored events, once.
 
+**A workspace's state in the cloud** is `tenant_lifecycle`: `trial`, `active`, `read_only` (trial
+over without a payment method, or payment failed), `paused` (an operator's decision; billing
+continues) and `deleting`. Everything but `trial` and `active` is read-only through the same
+restrictive policies, and the app shell says why in a banner under the header. Blocking is
+`tenant.status = 'suspended'`, which signs everybody out. A tenant admin deletes their workspace
+from the billing page: it becomes read-only at once so that it can still be exported, member days
+stop counting, the request can be taken back for 30 days, and after that the billing worker
+deletes the tenant, its content and every account no other workspace holds -- but only once the
+month of the request has been closed, so the last partial month is invoiced like any other. The
+billing page's writes are SECURITY DEFINER functions that act on the current tenant and refuse
+anybody who is not its admin; a refused write under row level security reaches the person as
+"this workspace is read-only", not as a failure.
+
 **OAuth clients in the cloud** register into a registry tenant, because registration happens
 before anybody has signed in. The consent screen copies the client into the tenant of the person
 consenting (`app.cloud_adopt_oauth_client`, which can only write into the tenant the caller

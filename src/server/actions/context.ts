@@ -129,8 +129,21 @@ export async function toResult<T>(error: unknown): Promise<ActionResult<T>> {
     return { ...result, contentVersion: error.actual.toString() }
   }
 
+  // The database refusing a write under row level security: in a cloud
+  // workspace that is read-only, paused or being deleted, that is the one
+  // refusal a person can reach, and "something went wrong" would hide why.
+  if (refusedByRowSecurity(error)) return fail('forbidden', 'domain.workspace.readOnly')
+
   console.error('server action failed', error)
   return fail('failed', 'failed')
+}
+
+function refusedByRowSecurity(error: unknown): boolean {
+  for (let current = error; current instanceof Error; current = current.cause) {
+    const pg = current as Error & { code?: string }
+    if (pg.code === '42501' && /row-level security/.test(pg.message)) return true
+  }
+  return false
 }
 
 /** Which of the six coarse categories a domain error belongs to. */

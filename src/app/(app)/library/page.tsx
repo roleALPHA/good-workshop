@@ -10,6 +10,7 @@ import { FolderPanel } from './folder-panel'
 import { LibraryDnd } from './library-dnd'
 import { SearchBox } from './search-box'
 import { WorkshopList } from './workshop-list'
+import { edition } from '@/server/edition'
 
 export const dynamic = 'force-dynamic'
 
@@ -31,7 +32,13 @@ export default async function LibraryPage({
 
   // Folders belong to the tenant rather than to a person, so tidying them up is
   // an admin's call -- the workshops inside may well be somebody else's.
-  const isAdmin = (await readSessionCached())?.tenantRole === 'admin'
+  const session = await readSessionCached()
+  const isAdmin = session?.tenantRole === 'admin'
+  // A workspace that is read-only, paused or being deleted offers nothing to
+  // create -- the database would refuse it, and a button that always fails is
+  // worse than none. Only the cloud has such workspaces.
+  const notice = session ? await edition.workspaceNotice(session.tenantId).catch(() => null) : null
+  const readOnly = notice !== null && notice.state !== 'trial'
 
   if (!result.ok) {
     return <p className="text-[var(--danger-fg)]">{result.message}</p>
@@ -72,9 +79,11 @@ export default async function LibraryPage({
               tagged={Boolean(tag)}
               canManage={isAdmin}
             />
-            <div className="mt-2">
-              <CreateFolder parentId={folder ?? null} />
-            </div>
+            {!readOnly && (
+              <div className="mt-2">
+                <CreateFolder parentId={folder ?? null} />
+              </div>
+            )}
 
             <Link
               href="/library/trash"
@@ -114,7 +123,7 @@ export default async function LibraryPage({
             {/* A row of its own on a phone, with the search taking what is left. */}
             <div className="flex w-full flex-wrap items-center gap-2 sm:w-auto">
               <SearchBox />
-              <CreateWorkshop folderId={folder ?? null} />
+              {!readOnly && <CreateWorkshop folderId={folder ?? null} />}
             </div>
           </div>
 

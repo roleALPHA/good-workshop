@@ -140,6 +140,16 @@ export async function closeMonth(db: Db, month: string, options: RunOptions): Pr
     )
     created += inserted.rowCount ?? 0
   }
+
+  // A plan chosen during a month applies from the next one; the month just
+  // closed was billed under the old plan, the one now running is the new one's.
+  await db.query(
+    `update billing_account
+        set plan = next_plan, next_plan = null, plan_from = date_trunc('month', $1::timestamptz)::date,
+            updated_at = now()
+      where next_plan is not null`,
+    [options.now],
+  )
   options.log('billing: month closed', { month, periods: created })
   return created
 }
@@ -503,6 +513,63 @@ export async function recheckPendingVat(
   if (rows.length) options.log('billing: VAT numbers rechecked', { count: rows.length })
 }
 
+// ── 7. Workspaces whose deletion grace period is over ─────────────────────
+
+/**
+ * Deletes a workspace for good: its content, its members, and every account
+ * that belonged to no other workspace. The bookkeeping stays -- billing_account,
+ * billing_period, vat_check and the usage tables have no foreign key to tenant
+ * on purpose.
+ *
+ * Waits until the month the deletion was asked for has been closed, so that the
+ * last, partial month is invoiced like every other one.
+ */
+export async function purgeDeletedTenants(db: Db, options: RunOptions) {
+  const { rows } = await db.query(
+    `select l.tenant_id, l.deletion_requested_at
+       from tenant_lifecycle l
+      where l.state = 'deleting' and l.delete_after <= $1`,
+    [options.now],
+  )
+
+  for (const tenant of rows) {
+    const requestedMonth = `${viennaDay(tenant.deletion_requested_at).slice(0, 7)}-01`
+    const closed = await db.query(
+      `select 1 from billing_period where tenant_id = $1 and month = $2`,
+      [tenant.tenant_id, requestedMonth],
+    )
+    const stillInTrial = await db.query(
+      `select 1 from tenant_lifecycle
+        where tenant_id = $1 and (trial_ends_at is null or trial_ends_at > deletion_requested_at)`,
+      [tenant.tenant_id],
+    )
+    if (!closed.rowCount && !stillInTrial.rowCount) continue
+
+    const { rows: identities } = await db.query(
+      `select identity_id from member where tenant_id = $1`,
+      [tenant.tenant_id],
+    )
+    await db.query('begin')
+    try {
+      // Revisions carry no foreign key (see the schema); everything else goes
+      // with the tenant row by cascade.
+      await db.query(`delete from module_revision where tenant_id = $1`, [tenant.tenant_id])
+      await db.query(`delete from tenant where id = $1`, [tenant.tenant_id])
+      await db.query(
+        `delete from identity i
+          where i.id = any($1::uuid[])
+            and not exists (select 1 from member m where m.identity_id = i.id)`,
+        [identities.map((row) => row.identity_id)],
+      )
+      await db.query('commit')
+    } catch (error) {
+      await db.query('rollback')
+      throw error
+    }
+    options.log('billing: workspace deleted', { tenantId: tenant.tenant_id })
+  }
+}
+
 // ── All of it ──────────────────────────────────────────────────────────────
 
 export async function runBilling(
@@ -514,6 +581,7 @@ export async function runBilling(
   await recheckPendingVat(db, check, options)
   await trialTransitions(db, options)
   await closeMonth(db, previousMonth(options.now), options)
+  await purgeDeletedTenants(db, options)
   if (!adapters) {
     options.log('billing: no adapters in this build, invoicing and payments are off')
     return
