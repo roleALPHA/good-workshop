@@ -41,9 +41,15 @@ FROM node:${NODE_VERSION} AS builder
 WORKDIR /app
 RUN corepack enable
 ENV NEXT_TELEMETRY_DISABLED=1
+# community | cloud. Only this stage sees it: the build picks the edition's code
+# and records the choice in dist/edition.json, which is what migrate and
+# provision read at runtime. The runner stage never gets the variable, so a
+# container cannot be switched to another edition by its environment.
+ARG GW_EDITION=community
 COPY --from=deps /app/node_modules ./node_modules
 COPY . .
-RUN pnpm build
+RUN GW_EDITION=${GW_EDITION} pnpm build && \
+    if [ "${GW_EDITION}" != "cloud" ]; then rm -rf drizzle-cloud && mkdir drizzle-cloud; fi
 
 # --- runner -----------------------------------------------------------------
 FROM node:${NODE_VERSION} AS runner
@@ -95,6 +101,8 @@ COPY --chown=node:node NOTICE ./NOTICE
 # container serves pages but cannot set up or repair its own database.
 COPY --from=builder --chown=node:node /app/scripts ./scripts
 COPY --from=builder --chown=node:node /app/drizzle ./drizzle
+# Empty in a community image; see the builder stage.
+COPY --from=builder --chown=node:node /app/drizzle-cloud ./drizzle-cloud
 COPY --from=builder --chown=node:node /app/src/domain/moduleType/builtins.json ./src/domain/moduleType/builtins.json
 
 # `output: standalone` traces only what the SERVER imports. The scripts pull in

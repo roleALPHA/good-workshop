@@ -29,7 +29,10 @@
       }
     ],
     "paths": {
-      "@/*": ["./src/*"]
+      "@/*": ["./src/*"],
+      // Type-checked against the community implementation; both implement the
+      // same `Edition` type, and cloud.ts is checked on its own as a source file.
+      "@gw/edition": ["./src/server/edition/community.ts"]
     }
   },
   "include": [

@@ -307,6 +307,7 @@ declare const messages: {
         "gone": "Dieses Mitglied gibt es nicht.",
         "cannotDisableSelf": "Du kannst dich nicht selbst abschalten.",
         "lastAdmin": "Das ist der letzte aktive Admin. Mach zuerst jemand anderen zum Admin — sonst kommt niemand mehr an die Verwaltung.",
+        "cannotInvite": "Diese Adresse kann nicht eingeladen werden.",
         "checkEmailAndRole": "Bitte E-Mail-Adresse und Rolle prüfen.",
         "cannotRemoveSelf": "Du kannst dich nicht selbst entfernen. Bitte jemand anderen mit Admin-Rechten darum.",
         "successorRequired": "Diesem Mitglied gehören noch Workshops oder Ordner. Wähle zuerst, wer sie übernimmt.",

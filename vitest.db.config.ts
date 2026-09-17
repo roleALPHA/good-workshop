@@ -8,11 +8,20 @@ import { fileURLToPath } from 'node:url'
  * which deserves to be its own red light rather than one line among hundreds.
  */
 export default defineConfig({
-  resolve: { alias: { '@': fileURLToPath(new URL('./src', import.meta.url)) } },
+  resolve: {
+    alias: {
+      '@': fileURLToPath(new URL('./src', import.meta.url)),
+      '@gw/edition': fileURLToPath(new URL('./src/server/edition/community.ts', import.meta.url)),
+    },
+  },
   test: {
     environment: 'node',
     globals: true,
     include: ['src/**/*.db.test.ts'],
+    // Against a database with the cloud migrations applied -- see
+    // vitest.cloud.db.config.ts. One membership per person there would break the
+    // tests here that deliberately put one person into two tenants.
+    exclude: ['**/node_modules/**', 'src/**/*.cloud.db.test.ts'],
     // One connection pool, one migration state: parallel files would fight.
     fileParallelism: false,
     testTimeout: 20_000,

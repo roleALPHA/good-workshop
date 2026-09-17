@@ -6,7 +6,7 @@
  * Guarded by an advisory lock so that N application replicas rolling out at
  * once cannot race each other into a half-applied schema.
  */
-import { readFile } from 'node:fs/promises'
+import { readdir, readFile } from 'node:fs/promises'
 import { dirname, join } from 'node:path'
 import { fileURLToPath } from 'node:url'
 import pg from 'pg'
@@ -14,6 +14,7 @@ import { drizzle } from 'drizzle-orm/node-postgres'
 import { migrate } from 'drizzle-orm/node-postgres/migrator'
 import { sql } from 'drizzle-orm'
 import { dbOptions } from './db-connect.mjs'
+import { builtEdition } from './edition.mjs'
 
 const root = join(dirname(fileURLToPath(import.meta.url)), '..')
 const url = process.env.MIGRATION_DATABASE_URL ?? process.env.DATABASE_URL
@@ -54,6 +55,10 @@ try {
   // the first one failed, and compose runs this on every `up` with the app
   // waiting on it. First install worked; the second start did not come up.
   await applyPatResolver()
+
+  // Only in an image built as the cloud edition. Read from dist/edition.json,
+  // which the build wrote -- not from the environment, which an operator sets.
+  if (builtEdition() === 'cloud') await applyCloudMigrations()
 
   await forceRowLevelSecurity(db)
   await regrant(db)
@@ -100,6 +105,65 @@ async function applyPatResolver() {
     await admin.query(source)
   } finally {
     await admin.end()
+  }
+}
+
+/**
+ * The cloud edition's own migrations, from drizzle-cloud/.
+ *
+ * Kept apart from drizzle/ so that nothing in them can reach a self-hosted
+ * database, and with a ledger of their own for the same reason: the drizzle
+ * journal describes the community schema, and a file that exists in one
+ * edition's journal and not the other's would make the health check's "is the
+ * schema current" answer mean two different things.
+ *
+ * Numbered files run once, in order, each in its own transaction. Everything
+ * under drizzle-cloud/sql/ is re-applied on every run, like the core resolvers,
+ * so an edit to a function needs no new file.
+ */
+async function applyCloudMigrations() {
+  const dir = join(root, 'drizzle-cloud')
+  const files = (await readdir(dir)).filter((name) => /^\d{4}_.+\.sql$/.test(name)).sort()
+  const functions = (await readdir(join(dir, 'sql'))).filter((name) => name.endsWith('.sql')).sort()
+
+  const adminUrl = process.env.ADMIN_DATABASE_URL
+  const runner = adminUrl
+    ? new pg.Client(dbOptions(adminUrl, process.env.ADMIN_DATABASE_PASSWORD_FILE))
+    : null
+  const query = runner
+    ? (text, values) => runner.query(text, values)
+    : (text, values) => client.query(text, values)
+
+  if (runner) await runner.connect()
+  try {
+    await query(
+      `create table if not exists drizzle.cloud_migrations (
+         name text primary key,
+         applied_at timestamptz not null default now()
+       )`,
+    )
+    const { rows } = await query('select name from drizzle.cloud_migrations')
+    const applied = new Set(rows.map((row) => row.name))
+
+    for (const name of files) {
+      if (applied.has(name)) continue
+      await query('begin')
+      try {
+        await query(await readFile(join(dir, name), 'utf8'))
+        await query('insert into drizzle.cloud_migrations (name) values ($1)', [name])
+        await query('commit')
+        console.log(`  cloud migration ${name}`)
+      } catch (error) {
+        await query('rollback')
+        throw error
+      }
+    }
+
+    for (const name of functions) {
+      await query(await readFile(join(dir, 'sql', name), 'utf8'))
+    }
+  } finally {
+    if (runner) await runner.end()
   }
 }
 

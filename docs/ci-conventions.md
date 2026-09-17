@@ -26,6 +26,7 @@ Jobs run **in parallel**, not as a chain:
 | `dco`   | Pull requests only: every commit carries a `Signed-off-by` trailer matching its author. Bots and merge commits are exempt — see CONTRIBUTING.md for what it certifies               |
 | `unit`  | Vitest, coverage report as a PR comment                                                                                                                                             |
 | `db`    | Postgres 17 **service container**, `migrate` + `provision`, then the RLS metadata test, cross-tenant fixtures, repository integration tests                                         |
+| `cloud` | A second Postgres, the build recorded as `cloud`, `drizzle-cloud/` applied, then `pnpm test:db:cloud`: two tenants side by side for sign-in, share links and OAuth                  |
 | `e2e`   | Playwright against the built standalone server, **two shards**, Chromium plus a mobile viewport project (`Pixel 5`). Traces and videos only `on-first-retry`, uploaded as artifacts |
 | `build` | `docker buildx build --load` **without** a push — a broken Dockerfile shows up in the PR, not first at release time. Then Grype over that image: high and critical with a fix fail  |
 

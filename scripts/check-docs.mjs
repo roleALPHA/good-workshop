@@ -40,7 +40,9 @@ import { execFileSync } from 'node:child_process'
  * adding it without the reason is what this file is against.
  */
 const INTERNAL = {
-  GW_EDITION: 'community | cloud. Set by the distribution, not by the operator.',
+  GW_EDITION:
+    'community | cloud. A build argument, read only while building (scripts/edition.mjs); ' +
+    'setting it on a running container changes nothing, on purpose.',
   GW_ALLOW_OPS: 'Test seam. Opens the ops endpoints without a token -- never in production.',
   GW_COLLAB_PATH:
     'Path of the collaboration socket. Also hard-coded in the Caddyfile; two places that ' +

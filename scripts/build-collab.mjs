@@ -10,8 +10,11 @@
 import { build } from 'esbuild'
 import { dirname, join } from 'node:path'
 import { fileURLToPath } from 'node:url'
+import { writeEdition } from './edition.mjs'
 
 const root = join(dirname(fileURLToPath(import.meta.url)), '..')
+// Same decision as next.config.ts, recorded for the scripts that run later.
+const edition = writeEdition()
 
 await build({
   entryPoints: [join(root, 'src/server/collab/entry.ts')],
@@ -24,7 +27,10 @@ await build({
   // Native and heavy dependencies stay external and are resolved from
   // node_modules at runtime, exactly as the Next server resolves its own.
   external: ['pg', 'pg-native', 'ws'],
-  alias: { '@': join(root, 'src') },
+  alias: {
+    '@': join(root, 'src'),
+    '@gw/edition': join(root, `src/server/edition/${edition}.ts`),
+  },
   banner: {
     // The bundle is ESM but some dependencies still reach for require().
     js: "import { createRequire } from 'node:module'; const require = createRequire(import.meta.url);",

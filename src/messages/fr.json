@@ -304,6 +304,7 @@
         "gone": "Ce membre n'existe pas.",
         "cannotDisableSelf": "Tu ne peux pas te désactiver toi-même.",
         "lastAdmin": "C'est le dernier admin actif. Nomme d'abord quelqu'un d'autre admin — sinon plus personne n'accédera à l'administration.",
+        "cannotInvite": "Cette adresse ne peut pas être invitée.",
         "checkEmailAndRole": "Vérifie l'adresse e-mail et le rôle.",
         "cannotRemoveSelf": "Vous ne pouvez pas vous supprimer vous-même. Demandez-le à une autre personne ayant les droits d'administration.",
         "successorRequired": "Ce membre possède encore des ateliers ou des dossiers. Choisissez d'abord qui les reprend.",

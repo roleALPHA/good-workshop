@@ -304,6 +304,7 @@
         "gone": "There is no such member.",
         "cannotDisableSelf": "You cannot disable yourself.",
         "lastAdmin": "That is the last active admin. Make somebody else an admin first — otherwise nobody can reach the administration any more.",
+        "cannotInvite": "This address cannot be invited.",
         "checkEmailAndRole": "Please check the e-mail address and the role.",
         "cannotRemoveSelf": "You cannot remove yourself. Ask somebody else with admin rights.",
         "successorRequired": "This member still owns workshops or folders. Choose who takes them over first.",

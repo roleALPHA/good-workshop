@@ -127,7 +127,6 @@ services:
     environment:
       <<: *migrate-db
       GW_APP_URL: ${GW_APP_URL:?GW_APP_URL must be set}
-      GW_EDITION: ${GW_EDITION:-community}
       # Legt beim allerersten Lauf einen Admin an und druckt einen einmaligen
       # sign-in link to stdout -- independently of the mail configuration.
       GW_BOOTSTRAP_ADMIN_EMAIL: ${GW_BOOTSTRAP_ADMIN_EMAIL:-}
@@ -174,7 +173,6 @@ services:
       GW_GRAPH_CLIENT_SECRET: ${GW_GRAPH_CLIENT_SECRET:-}
       GW_GRAPH_CLIENT_SECRET_FILE: ${GW_GRAPH_CLIENT_SECRET_FILE:-}
       GW_GRAPH_SENDER: ${GW_GRAPH_SENDER:-}
-      GW_EDITION: ${GW_EDITION:-community}
       # Der Tag, der laut .env laufen soll -- derselbe Wert, der oben das Image
       # picks. Without this line /api/health reports the ARG value from the
       # Dockerfile (`dev` bei einem selbst gebauten Image), und die eine Frage,
