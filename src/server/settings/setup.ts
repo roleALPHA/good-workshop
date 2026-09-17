@@ -2,7 +2,7 @@ import { randomUUID } from 'node:crypto'
 import { and, count, eq } from 'drizzle-orm'
 import { withAuth, withTenantOnly } from '@/server/db'
 import { identity, member } from '@/server/db/schema'
-import { authConfig } from '@/server/auth/config'
+import { edition } from '@/server/edition'
 import { DomainError } from '@/domain/errors'
 import { setupTokenMatches } from './setup-token'
 import { normalisePersonName, type PersonName } from '@/domain/tenant/person-name'
@@ -34,7 +34,9 @@ export { currentSetupToken, setupTokenMatches } from './setup-token'
 
 /** Whether this installation still has nobody who could log in and configure it. */
 export async function needsSetup(): Promise<boolean> {
-  const tenantId = authConfig.defaultTenantId
+  // An edition that is not claimed through this screen has nothing to set up.
+  const tenantId = await edition.tenantForSetup()
+  if (!tenantId) return false
   const rows = await withTenantOnly(tenantId, (tx) =>
     tx
       .select({ n: count() })
@@ -71,11 +73,10 @@ export async function claimInstallation(
     throw new SetupError('setup.invalidEmail')
   }
 
-  if (!(await needsSetup())) {
+  const tenantId = await edition.tenantForSetup()
+  if (!tenantId || !(await needsSetup())) {
     throw new SetupError('setup.alreadyClaimed')
   }
-
-  const tenantId = authConfig.defaultTenantId
 
   // The identity tables are unreachable for gw_app by design; withAuth is the
   // sanctioned door, and the privilege ends with the transaction.

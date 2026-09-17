@@ -99,7 +99,9 @@ cosign verify ghcr.io/rolealpha/good-workshop:0.5.1 \
 gh attestation verify oci://ghcr.io/rolealpha/good-workshop:0.5.1 --repo roleALPHA/good-workshop
 ```
 
-Releases from before signing was introduced carry neither.
+`cosign` needs to be version 3 or later: the signatures are stored in the Sigstore bundle
+format, which version 2 does not look for and reports as "no signatures found". Releases before
+0.5.1 carry neither a signature nor an attestation.
 
 Dependabot, CodeQL (`security-extended`), dependency review and secret scanning with push
 protection run on this repository. So do gitleaks over the whole git history, zizmor over the

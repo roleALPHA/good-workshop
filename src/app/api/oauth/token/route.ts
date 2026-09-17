@@ -1,6 +1,6 @@
 import { NextResponse, type NextRequest } from 'next/server'
 import { withTenant } from '@/server/db'
-import { authConfig } from '@/server/auth/config'
+import { edition } from '@/server/edition'
 import { rateLimiter } from '@/server/auth/ratelimit'
 import { clientAddress } from '@/server/auth/client-address'
 import { hashSecret, parseOAuthToken, verifySecret } from '@/server/auth/tokens'
@@ -27,8 +27,8 @@ const attempts = rateLimiter({ limit: 60, windowMs: 60_000 })
 
 const bad = (error: string, status = 400) => NextResponse.json({ error }, { status })
 
-const actorFor = () => ({
-  tenantId: authConfig.defaultTenantId,
+const actorFor = (tenantId: string) => ({
+  tenantId,
   memberId: null,
   tenantRole: 'member' as const,
   source: 'mcp' as const,
@@ -49,7 +49,14 @@ export async function POST(request: NextRequest) {
   const clientKey = get('client_id')
   if (!clientKey) return bad('invalid_client', 401)
 
-  return withTenant(actorFor(), async (tx) => {
+  // Which tenant the grant lives in is read off the grant itself -- the code, or
+  // the refresh token -- because the client is not authenticated yet and no
+  // session is involved. A code or token that names no tenant fails the same
+  // way an unknown one does.
+  const tenantId = await tenantOfGrant(grantType, get)
+  if (!tenantId) return bad('invalid_grant')
+
+  return withTenant(actorFor(tenantId), async (tx) => {
     const client = await findClient(tx, clientKey)
     if (!client) return bad('invalid_client', 401)
 
@@ -117,6 +124,22 @@ export async function POST(request: NextRequest) {
 
     return bad('unsupported_grant_type')
   })
+}
+
+async function tenantOfGrant(
+  grantType: string | null,
+  get: (key: string) => string | null,
+): Promise<string | null> {
+  const code = grantType === 'authorization_code' ? get('code') : null
+  if (code) return edition.tenantForAuthorizationCode(hashSecret(code))
+
+  const refresh = grantType === 'refresh_token' ? parseOAuthToken(get('refresh_token') ?? '') : null
+  if (refresh) return edition.tenantForOAuthToken(refresh.tokenKey)
+
+  // Nothing that names a tenant: a missing code, a malformed token, a grant type
+  // nobody supports. Answered further down with the same error as always, from
+  // inside the tenant clients register in.
+  return edition.tenantForClientRegistration()
 }
 
 function tokenResponse(issued: {

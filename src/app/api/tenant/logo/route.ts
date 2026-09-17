@@ -1,6 +1,7 @@
 import { eq } from 'drizzle-orm'
 import { NextResponse } from 'next/server'
-import { authConfig } from '@/server/auth/config'
+import { readSession } from '@/server/auth/session'
+import { edition } from '@/server/edition'
 import { withTenantOnly } from '@/server/db'
 import { tenant } from '@/server/db/schema'
 
@@ -20,9 +21,11 @@ export const dynamic = 'force-dynamic'
  * standing between a tenant admin's upload and everybody else's browser.
  */
 export async function GET(request: Request) {
-  // The community edition has one tenant. The cloud edition resolves it from
-  // the subdomain, which is the only line that changes.
-  const tenantId = authConfig.defaultTenantId
+  // The same rule as loadTenantBrand in src/components/layout/tenant-brand.tsx:
+  // your own tenant when signed in, the edition's answer when not.
+  const session = await readSession().catch(() => null)
+  const tenantId = session?.tenantId ?? (await edition.tenantForAnonymousBrand())
+  if (!tenantId) return new NextResponse(null, { status: 404 })
 
   const row = await withTenantOnly(tenantId, (tx) =>
     tx
