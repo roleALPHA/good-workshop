@@ -37,3 +37,28 @@ await build({
   },
   logLevel: 'info',
 })
+
+// The billing worker, in a cloud build only. Same bundling, its own process --
+// see src/cloud/billing/worker.ts.
+if (edition === 'cloud') {
+  await build({
+    entryPoints: [join(root, 'src/cloud/billing/worker.ts')],
+    outfile: join(root, 'dist/billing-worker.mjs'),
+    bundle: true,
+    platform: 'node',
+    target: 'node22',
+    format: 'esm',
+    sourcemap: true,
+    external: ['pg', 'pg-native'],
+    alias: {
+      '@': join(root, 'src'),
+      '@gw/edition': join(root, 'src/server/edition/cloud.ts'),
+      '@gw/billing-adapters':
+        process.env.GW_BILLING_ADAPTERS ?? join(root, 'src/cloud/billing/adapters/unavailable.ts'),
+    },
+    banner: {
+      js: "import { createRequire } from 'node:module'; const require = createRequire(import.meta.url);",
+    },
+    logLevel: 'info',
+  })
+}

@@ -528,6 +528,26 @@
     "signupWelcome": {
       "subject": "Bienvenido a GoodWorkshop",
       "body": "Hola:\n\ntu espacio de trabajo está listo. Los primeros {days} días son gratuitos.\n\nEmpieza aquí:\n{link}\n\nAbajo encontrarás las condiciones vigentes en el momento de tu registro; guarda este mensaje."
+    },
+    "billing": {
+      "trial_ending": {
+        "subject": "Tu prueba de GoodWorkshop termina pronto",
+        "body": "Hola:\n\ntu prueba gratuita termina en {days, plural, one {un día} many {# días} other {# días}}. Para seguir trabajando después, añade un método de pago:\n{link}\n\nSin él, todo sigue siendo legible y exportable, pero ya no se puede modificar."
+      },
+      "payment_failed": {
+        "subject": "Ha fallado el pago de GoodWorkshop",
+        "body": "Hola:\n\nno hemos podido cobrar el importe de la factura. {retry, select, none {No volveremos a intentarlo.} other {Lo volveremos a intentar el {retry}.}}\n\nRevisa tu método de pago:\n{link}"
+      },
+      "readOnly": {
+        "trial_ended": {
+          "subject": "Tu espacio de trabajo ahora es de solo lectura",
+          "body": "Hola:\n\ntu prueba ha terminado. Tus talleres siguen siendo legibles y exportables. Añade un método de pago para seguir trabajando:\n{link}"
+        },
+        "payment_failed": {
+          "subject": "Tu espacio de trabajo es de solo lectura",
+          "body": "Hola:\n\nno hemos podido cobrar una factura tras varios intentos, por lo que tu espacio de trabajo es de solo lectura; leer y exportar sigue funcionando. Regulariza el pago:\n{link}"
+        }
+      }
     }
   },
   "meta": {

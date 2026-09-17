@@ -15,6 +15,9 @@ export default defineConfig({
       '@': fileURLToPath(new URL('./src', import.meta.url)),
       '@gw/edition': fileURLToPath(new URL('./src/server/edition/cloud.ts', import.meta.url)),
       '@gw/home': fileURLToPath(new URL('./src/cloud/site/home.tsx', import.meta.url)),
+      '@gw/billing-adapters': fileURLToPath(
+        new URL('./src/cloud/billing/adapters/unavailable.ts', import.meta.url),
+      ),
     },
   },
   test: {

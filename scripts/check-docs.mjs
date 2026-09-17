@@ -60,6 +60,14 @@ const INTERNAL = {
   GW_VIES_REQUESTER_VAT_ID:
     'Cloud only: our own VAT number, sent with VIES checks so they return a consultation ' +
     'number. A self-hosted installation never checks VAT numbers.',
+  GW_BILLING_ADAPTERS:
+    'Build argument of the private cloud build: the module with the real accounting and ' +
+    'payment adapters. Unset, billing refuses to run.',
+  GW_BILLING_MODE:
+    'Cloud billing worker: `live` sends invoices and collects; anything else is a dry run.',
+  GW_BILLING_INTERVAL_MS: 'Cloud billing worker: time between runs. Tuning knob.',
+  GW_BILLING_MAX_INVOICE_CENTS:
+    'Cloud billing worker: invoices above this net amount are held for an operator.',
   GW_BUILD:
     'Baked into the image by the Dockerfile from the build argument. Names the build the ' +
     'footer shows; an operator setting it would make the footer lie.',

@@ -528,6 +528,26 @@
     "signupWelcome": {
       "subject": "Willkommen bei GoodWorkshop",
       "body": "Hallo,\n\ndein Workspace ist angelegt. Die ersten {days} Tage sind kostenlos.\n\nHier geht es los:\n{link}\n\nUnten findest du die Vertragsbedingungen, die bei deiner Registrierung gegolten haben — bewahre diese Nachricht auf."
+    },
+    "billing": {
+      "trial_ending": {
+        "subject": "Deine Testphase bei GoodWorkshop endet bald",
+        "body": "Hallo,\n\ndeine kostenlose Testphase endet in {days, plural, one {einem Tag} other {# Tagen}}. Damit du danach weiterarbeiten kannst, hinterlege eine Zahlungsmethode:\n{link}\n\nOhne Zahlungsmethode bleibt alles lesbar und exportierbar, lässt sich aber nicht mehr ändern."
+      },
+      "payment_failed": {
+        "subject": "Zahlung für GoodWorkshop fehlgeschlagen",
+        "body": "Hallo,\n\nwir konnten den Rechnungsbetrag nicht einziehen. {retry, select, none {Wir versuchen es nicht erneut.} other {Wir versuchen es am {retry} erneut.}}\n\nBitte prüfe deine Zahlungsmethode:\n{link}"
+      },
+      "readOnly": {
+        "trial_ended": {
+          "subject": "Dein Workspace ist jetzt schreibgeschützt",
+          "body": "Hallo,\n\ndeine Testphase ist abgelaufen. Deine Workshops bleiben lesbar und exportierbar. Sobald du eine Zahlungsmethode hinterlegst, kannst du weiterarbeiten:\n{link}"
+        },
+        "payment_failed": {
+          "subject": "Dein Workspace ist schreibgeschützt",
+          "body": "Hallo,\n\nwir konnten eine Rechnung auch nach mehreren Versuchen nicht einziehen. Dein Workspace ist deshalb schreibgeschützt; lesen und exportieren geht weiterhin. Bitte kläre die Zahlung:\n{link}"
+        }
+      }
     }
   },
   "meta": {

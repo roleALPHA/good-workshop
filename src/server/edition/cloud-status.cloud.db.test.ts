@@ -171,7 +171,9 @@ describe('a read-only tenant', () => {
         and exists (select 1 from information_schema.columns col
                     where col.table_schema = 'public' and col.table_name = c.relname
                       and col.column_name = 'tenant_id')
-        and c.relname not in ('tenant_lifecycle', 'billing_account', 'vat_check', 'tax_evidence')
+        -- The cloud's own bookkeeping, which the application never writes.
+        and c.relname not in ('tenant_lifecycle', 'billing_account', 'vat_check', 'tax_evidence',
+                              'usage_member_interval', 'usage_workshop_created', 'billing_period')
     `)
     const undecided = rows
       .filter((row) => !row.guarded && !(row.table in notGuarded))

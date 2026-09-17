@@ -73,6 +73,22 @@ to be confirmed on a durable medium, not behind a link. The legal texts are Mark
 `src/cloud/legal/`, rendered without passing any HTML through, and prices live in exactly one
 place, `src/cloud/billing/plans.ts`, which the pricing page and billing both read.
 
+**Billing in the cloud** runs in its own process, the billing worker (`dist/billing-worker.mjs`,
+cloud builds only), as the operations role, one run at a time under an advisory lock. Usage is
+recorded by triggers on `member` and `workshop`, so every path that creates a workshop or switches
+a membership counts without knowing billing exists, and a tenant cannot shrink its own usage. A
+run closes the previous month into one `billing_period` per tenant, invoices it, waits for the
+SEPA pre-notification period and collects; every step moves a period one state on with an update
+that names the state it expects, and the invoice reference is the idempotency key towards
+accounting and payments, so a repeated or interrupted run neither invoices nor charges twice.
+Accounting and payments are ports (`src/cloud/billing/ports.ts`): the real adapters come from the
+private build through `@gw/billing-adapters`; every other build gets adapters that refuse, and the
+worker then only closes months and moves trials. `GW_BILLING_MODE` is a dry run unless it is
+exactly `live`. Anything the run cannot decide -- a VAT number still pending, contradicting
+evidence, an invoice whose tax is not what was billed, an amount above the limit -- is held for an
+operator rather than guessed. The payment provider's webhook only verifies and stores; the worker
+acts on stored events, once.
+
 **OAuth clients in the cloud** register into a registry tenant, because registration happens
 before anybody has signed in. The consent screen copies the client into the tenant of the person
 consenting (`app.cloud_adopt_oauth_client`, which can only write into the tenant the caller
