@@ -67,6 +67,9 @@ export const DOMAIN_ERROR_KEYS = [
   'member.successorGone',
   'member.successorDisabled',
   'member.lastAdmin',
+  // Deliberately says nothing about why: the address may belong to another
+  // workspace, and saying so would confirm that it does.
+  'member.cannotInvite',
   // A person's name, asked for on invitation, at setup and in the profile
   'person.firstNameRequired',
   'person.lastNameRequired',

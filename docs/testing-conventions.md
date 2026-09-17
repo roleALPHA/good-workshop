@@ -40,6 +40,23 @@ fail**.
 A new table without RLS is a silent, total data leak with no symptom. This is the most
 important test in the project.
 
+### The cloud edition has a database of its own
+
+`*.cloud.db.test.ts` run with `pnpm test:db:cloud`, against a database that has the cloud
+migrations from `drizzle-cloud/` applied, and with `@gw/edition` pointing at the cloud
+implementation. Not against the community test database: the cloud holds one membership per
+person, and the community suite deliberately puts one person into two tenants. CI runs them in
+the `Cloud tenancy` job; locally, create a second database and point the URLs at it:
+
+```bash
+psql postgres://postgres@127.0.0.1:5433/postgres -c "create database goodworkshop_cloud"
+export ADMIN_DATABASE_URL=postgres://postgres@127.0.0.1:5433/goodworkshop_cloud \
+  MIGRATION_DATABASE_URL=postgres://gw_owner@127.0.0.1:5433/goodworkshop_cloud
+GW_EDITION=cloud node scripts/edition.mjs write
+pnpm db:bootstrap && pnpm db:migrate && pnpm test:db:cloud
+node scripts/edition.mjs write   # back to community, or the next migrate applies cloud
+```
+
 ### Component tests drive real `userEvent`
 
 Never direct state manipulation. What is tested is what the user sees — **roles and accessible

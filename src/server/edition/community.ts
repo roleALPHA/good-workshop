@@ -21,3 +21,6 @@ export const communityEdition: Edition = {
   tenantForAnonymousBrand: always,
   tenantForSetup: always,
 }
+
+/** What `@gw/edition` resolves to in a community build. */
+export const selectedEdition = communityEdition

@@ -11,6 +11,7 @@ import { dirname, join } from 'node:path'
 import { fileURLToPath } from 'node:url'
 import pg from 'pg'
 import { dbOptions } from './db-connect.mjs'
+import { builtEdition } from './edition.mjs'
 
 const root = join(dirname(fileURLToPath(import.meta.url)), '..')
 // Runs as gw_app, not as the migration role. Seeding module types is an
@@ -27,6 +28,9 @@ if (!url) {
 /** Community Edition runs on one tenant with a fixed id. The code path is
  *  byte-identical to cloud; only tenant resolution differs. */
 const DEFAULT_TENANT_ID = '00000000-0000-0000-0000-000000000001'
+
+/** What the image was built as -- see scripts/edition.mjs. Never the environment. */
+const EDITION = builtEdition()
 
 const builtins = JSON.parse(
   await readFile(join(root, 'src/domain/moduleType/builtins.json'), 'utf8'),
@@ -47,12 +51,12 @@ const builtins = JSON.parse(
  * with a bypass role, and it is the only step that needs it.
  */
 async function activeTenants() {
-  if (process.env.GW_EDITION !== 'cloud') return [{ id: DEFAULT_TENANT_ID }]
+  if (EDITION !== 'cloud') return [{ id: DEFAULT_TENANT_ID }]
 
   const operatorUrl = process.env.OPS_DATABASE_URL ?? process.env.ADMIN_DATABASE_URL
   if (!operatorUrl) {
     throw new Error(
-      'GW_EDITION=cloud needs OPS_DATABASE_URL (or ADMIN_DATABASE_URL) to enumerate tenants: ' +
+      'The cloud edition needs OPS_DATABASE_URL (or ADMIN_DATABASE_URL) to enumerate tenants: ' +
         'under RLS the application role can only ever see the tenant it is currently acting as.',
     )
   }
@@ -87,7 +91,7 @@ await client.connect()
 try {
   await client.query('begin')
 
-  if (process.env.GW_EDITION !== 'cloud') {
+  if (EDITION !== 'cloud') {
     // The context is set BEFORE the insert, not after. `tenant` is under RLS
     // like everything else now, and its policy compares the row's own id
     // against app.current_tenant() -- so creating a tenant means acting as the
@@ -189,7 +193,9 @@ try {
  */
 async function bootstrapAdmin(client) {
   const email = process.env.GW_BOOTSTRAP_ADMIN_EMAIL?.trim().toLowerCase()
-  if (!email) return
+  // The cloud has no default tenant to put an admin into; tenants come from
+  // registration there.
+  if (!email || EDITION === 'cloud') return
   // Optional: without them the admin starts nameless and is asked for a name
   // in their profile, the same as anybody who joined before names existed.
   const name = (value) => (value ?? '').replace(/\s+/g, ' ').trim().slice(0, 100)

@@ -304,6 +304,7 @@
         "gone": "Ese miembro no existe.",
         "cannotDisableSelf": "No puedes desactivarte a ti misma.",
         "lastAdmin": "Es la última administradora activa. Nombra antes a otra persona administradora — si no, nadie podrá acceder a la administración.",
+        "cannotInvite": "No se puede invitar a esta dirección.",
         "checkEmailAndRole": "Revisa la dirección de correo y el rol.",
         "cannotRemoveSelf": "No puedes eliminarte a ti mismo. Pídeselo a otra persona con permisos de administración.",
         "successorRequired": "Este miembro todavía posee talleres o carpetas. Elige primero quién los asume.",

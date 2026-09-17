@@ -2,6 +2,14 @@ import { dirname } from 'node:path'
 import { fileURLToPath } from 'node:url'
 import createNextIntlPlugin from 'next-intl/plugin'
 import type { NextConfig } from 'next'
+import { requestedEdition } from './scripts/edition.mjs'
+
+/**
+ * Which edition this build is. Read from the build environment here and in
+ * scripts/build-collab.mjs, which also records it for migrate and provision --
+ * see scripts/edition.mjs for why it is never a runtime switch.
+ */
+const edition = requestedEdition()
 
 const nextConfig: NextConfig = {
   // Single self-contained artifact for the on-prem Docker image.
@@ -28,6 +36,10 @@ const nextConfig: NextConfig = {
 
   reactStrictMode: true,
   poweredByHeader: false,
+
+  turbopack: {
+    resolveAlias: { '@gw/edition': `./src/server/edition/${edition}.ts` },
+  },
 
   /**
    * The two settings pages were renamed from what they are made of to what they

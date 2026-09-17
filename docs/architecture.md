@@ -42,7 +42,11 @@ read, which is exactly how self-hosted installations have always behaved. The se
 that an edition with many tenants can answer the same questions from the credential in hand —
 the identity, the hash of a code or token — without a second code path through sign-in, OAuth
 or sharing. Which edition a build is gets decided when it is built, never by an environment
-variable an operator could set.
+variable an operator could set: `GW_EDITION` is a Docker build argument, the build points
+`@gw/edition` at `community.ts` or `cloud.ts` and records the choice in `dist/edition.json`, and
+migrate and provision read that file. Only a cloud build applies `drizzle-cloud/` — one
+membership per person, and the SECURITY DEFINER functions that find the tenant behind an
+identity, a share link, an authorization code or an OAuth token.
 
 ## Database roles
 

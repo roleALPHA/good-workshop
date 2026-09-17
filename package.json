@@ -32,6 +32,7 @@
     "db:up": "docker compose -f compose.dev.yaml up -d",
     "db:down": "docker compose -f compose.dev.yaml down",
     "test:db": "vitest run --config vitest.db.config.ts",
+    "test:db:cloud": "vitest run --config vitest.cloud.db.config.ts",
     "db:provision": "node scripts/provision.mjs",
     "build:collab": "node scripts/build-collab.mjs",
     "collab": "node dist/collab-server.mjs"

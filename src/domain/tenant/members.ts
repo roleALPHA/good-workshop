@@ -275,6 +275,14 @@ export async function inviteMember(
         invitedBy: actor.memberId,
       })
       .returning({ id: member.id })
+      .catch((error: unknown) => {
+        // Only where one person may belong to one workspace (the cloud edition's
+        // member_one_tenant_per_identity): the address is taken elsewhere.
+        if (violates(error, 'member_one_tenant_per_identity')) {
+          throw new MemberError('member.cannotInvite')
+        }
+        throw error
+      })
 
     return { memberId: created[0]!.id, email, alreadyMember: false }
   })
@@ -323,6 +331,14 @@ export async function setOwnName(actor: Actor, name: PersonName): Promise<void> 
 
     if (!updated[0]) throw new MemberError('member.gone')
   })
+}
+
+function violates(error: unknown, constraint: string): boolean {
+  for (let current = error; current instanceof Error; current = current.cause) {
+    const pgError = current as Error & { code?: string; constraint?: string }
+    if (pgError.code === '23505' && pgError.constraint === constraint) return true
+  }
+  return false
 }
 
 export async function setMemberRole(
