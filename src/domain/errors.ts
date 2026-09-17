@@ -120,6 +120,7 @@ export const DOMAIN_ERROR_KEYS = [
   'signup.vatIdRequired',
   'signup.vatIdFormat',
   'signup.vatIdCountry',
+  'signup.vatIdInvalid',
   'signup.plan',
   'signup.terms',
   'signup.dpa',

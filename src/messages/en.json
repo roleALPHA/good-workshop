@@ -368,6 +368,7 @@
         "vatIdRequired": "Businesses in this country need to enter their VAT number.",
         "vatIdFormat": "That is not a valid VAT number.",
         "vatIdCountry": "The VAT number does not match the country.",
+        "vatIdInvalid": "According to the EU register (VIES), this VAT number is not valid. Please check it.",
         "plan": "Please choose a billing model.",
         "terms": "Please accept the terms.",
         "dpa": "Please enter into the data processing agreement.",

@@ -368,6 +368,7 @@
         "vatIdRequired": "Las empresas de este país deben indicar su número de IVA.",
         "vatIdFormat": "No es un número de IVA válido.",
         "vatIdCountry": "El número de IVA no corresponde al país elegido.",
+        "vatIdInvalid": "Según el registro de la UE (VIES), este número de IVA no es válido. Compruébalo.",
         "plan": "Elige un modelo de facturación.",
         "terms": "Acepta las condiciones.",
         "dpa": "Suscribe el contrato de encargo de tratamiento.",

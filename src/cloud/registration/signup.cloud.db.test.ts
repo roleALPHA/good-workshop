@@ -39,7 +39,12 @@ const signup = (email: string, overrides: Record<string, unknown> = {}) =>
   })
 
 /** A pending registration with a token the test knows. */
-async function pending(email: string, expiresIn = '1 hour', overrides = {}) {
+async function pending(
+  email: string,
+  expiresIn = '1 hour',
+  overrides = {},
+  extra: Record<string, unknown> = {},
+) {
   const token = `tok-${randomUUID()}`
   await ops.query(
     `insert into pending_signup (id, token_hash, email, payload, expires_at)
@@ -48,7 +53,7 @@ async function pending(email: string, expiresIn = '1 hour', overrides = {}) {
       randomUUID(),
       hashSecret(token),
       email,
-      { ...signup(email, overrides), locale: 'de', trialDays: 14 },
+      { ...signup(email, overrides), locale: 'de', trialDays: 14, ...extra },
       expiresIn,
     ],
   )
@@ -208,6 +213,90 @@ describe('completing a registration', () => {
       tenantRole: 'admin',
       displayName: 'Rita Register',
     })
+  })
+})
+
+describe('the VAT number a registration was checked with', () => {
+  const tenantOf = async (token: string) => {
+    const done = await completeSignup(token)
+    if (done.outcome !== 'created') throw new Error(done.outcome)
+    return done.tenantId
+  }
+
+  it('is kept as evidence with its consultation number, and makes the status valid', async () => {
+    const email = address()
+    const tenantId = await tenantOf(
+      await pending(
+        email,
+        '1 hour',
+        { country: 'DE', vatId: 'DE123456789' },
+        {
+          vatCheck: {
+            status: 'valid',
+            vatId: 'DE123456789',
+            name: 'REGISTER GMBH',
+            address: null,
+            consultationNumber: 'WAPIAAAAY2q',
+            checkedAt: '2026-09-18T10:00:00.000Z',
+          },
+        },
+      ),
+    )
+    const { rows: account } = await ops.query(
+      'select vat_status from billing_account where tenant_id = $1',
+      [tenantId],
+    )
+    expect(account[0].vat_status).toBe('valid')
+    const { rows: checks } = await ops.query(
+      'select vat_id, result, consultation_number from vat_check where tenant_id = $1',
+      [tenantId],
+    )
+    expect(checks).toEqual([
+      { vat_id: 'DE123456789', result: 'valid', consultation_number: 'WAPIAAAAY2q' },
+    ])
+    const { rows: evidence } = await ops.query(
+      'select kind, country from tax_evidence where tenant_id = $1',
+      [tenantId],
+    )
+    expect(evidence).toEqual([{ kind: 'billing_address', country: 'DE' }])
+  })
+
+  it('stays pending when VIES could not be asked', async () => {
+    const email = address()
+    const tenantId = await tenantOf(
+      await pending(
+        email,
+        '1 hour',
+        { country: 'DE', vatId: 'DE123456789' },
+        {
+          vatCheck: {
+            status: 'unavailable',
+            vatId: 'DE123456789',
+            error: 'MS_UNAVAILABLE',
+            checkedAt: '2026-09-18T10:00:00.000Z',
+          },
+        },
+      ),
+    )
+    const { rows } = await ops.query(
+      `select b.vat_status, c.result, c.error from billing_account b join vat_check c using (tenant_id)
+        where b.tenant_id = $1`,
+      [tenantId],
+    )
+    expect(rows[0]).toEqual({
+      vat_status: 'pending',
+      result: 'unavailable',
+      error: 'MS_UNAVAILABLE',
+    })
+  })
+
+  it('is none for a registration without one', async () => {
+    const tenantId = await tenantOf(await pending(address(), '1 hour', { vatId: '' }))
+    const { rows } = await ops.query(
+      'select vat_status from billing_account where tenant_id = $1',
+      [tenantId],
+    )
+    expect(rows[0].vat_status).toBe('none')
   })
 })
 

@@ -11,6 +11,8 @@ import { withTenantOnly } from '@/server/db'
 import type { Translate } from '@/i18n/translator'
 import { parseSignup, type CustomerType } from '@/cloud/registration/rules'
 import { completeSignup, requestSignup, sendWelcome } from '@/cloud/registration/signup'
+import { checkVatId } from '@/cloud/tax/vies'
+import { SignupError } from '@/cloud/registration/rules'
 
 /**
  * Registration, from an anonymous form. Only reachable in a cloud build: the
@@ -34,7 +36,12 @@ export async function register(raw: Record<string, unknown>): Promise<RegisterRe
 
   try {
     const signup = parseSignup(raw)
-    await requestSignup(signup, (await getLocale()) as never, { ip: caller })
+    // Asked before the link goes out, so a mistyped number is corrected now and
+    // not discovered on the first invoice. VIES being unreachable does not stop
+    // a registration: the check stays pending and is asked again later.
+    const vatCheck = signup.vatId ? await checkVatId(signup.vatId) : undefined
+    if (vatCheck?.status === 'invalid') throw new SignupError('signup.vatIdInvalid')
+    await requestSignup(signup, (await getLocale()) as never, { ip: caller, vatCheck })
     return { ok: true, email: signup.email }
   } catch (error) {
     if (error instanceof DomainError) {

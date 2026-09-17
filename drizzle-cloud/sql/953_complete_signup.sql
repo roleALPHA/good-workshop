@@ -86,6 +86,33 @@ begin
     case when (p ->> 'requestedEarlyStart')::boolean then s.created_at end
   );
 
+  -- The VIES answer the registration was checked against, as evidence, and
+  -- the status it gives. No answer yet ("unavailable") leaves it pending for
+  -- the billing worker to ask again.
+  if p ? 'vatCheck' then
+    insert into vat_check (tenant_id, vat_id, result, name, address, consultation_number, error, checked_at)
+    values (
+      v_tenant,
+      p -> 'vatCheck' ->> 'vatId',
+      p -> 'vatCheck' ->> 'status',
+      p -> 'vatCheck' ->> 'name',
+      p -> 'vatCheck' ->> 'address',
+      p -> 'vatCheck' ->> 'consultationNumber',
+      p -> 'vatCheck' ->> 'error',
+      (p -> 'vatCheck' ->> 'checkedAt')::timestamptz
+    );
+    update billing_account
+       set vat_status = case p -> 'vatCheck' ->> 'status'
+                          when 'valid' then 'valid'
+                          when 'invalid' then 'invalid'
+                          else 'pending'
+                        end
+     where billing_account.tenant_id = v_tenant;
+  end if;
+
+  insert into tax_evidence (tenant_id, kind, country, recorded_at)
+  values (v_tenant, 'billing_address', p ->> 'country', s.created_at);
+
   return query select v_tenant, v_identity, 'created'::text;
 end;
 $$;

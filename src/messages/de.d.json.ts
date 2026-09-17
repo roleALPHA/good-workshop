@@ -371,6 +371,7 @@ declare const messages: {
         "vatIdRequired": "Für Unternehmen in diesem Land brauchen wir die UID-Nummer.",
         "vatIdFormat": "Das ist keine gültige UID-Nummer.",
         "vatIdCountry": "Die UID-Nummer passt nicht zum gewählten Land.",
+        "vatIdInvalid": "Diese UID-Nummer ist laut dem EU-Register (VIES) nicht gültig. Bitte prüfe sie.",
         "plan": "Bitte wähle ein Abrechnungsmodell.",
         "terms": "Bitte akzeptiere die AGB.",
         "dpa": "Bitte schließe die Auftragsverarbeitungsvereinbarung ab.",
