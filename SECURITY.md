@@ -80,11 +80,29 @@ You do not have to take our word for what a version contains:
   pulling it:
 
   ```bash
-  docker buildx imagetools inspect ghcr.io/rolealpha/good-workshop:0.5.0 --format '{{ json .SBOM }}'
+  docker buildx imagetools inspect ghcr.io/rolealpha/good-workshop:0.5.1 --format '{{ json .SBOM }}'
   ```
 
 - **`THIRD-PARTY-LICENSES.txt`** ships inside the image and is attached to every release.
 
+## Checking that an image is ours
+
+Every published image is signed with a keyless [Sigstore](https://www.sigstore.dev/) signature
+and carries a GitHub build attestation. Both name the workflow and the commit that built it, so
+an image pushed by anybody else — with a stolen registry token, say — fails the check:
+
+```bash
+cosign verify ghcr.io/rolealpha/good-workshop:0.5.1 \
+  --certificate-identity-regexp '^https://github\.com/roleALPHA/good-workshop/\.github/workflows/publish\.yml@' \
+  --certificate-oidc-issuer https://token.actions.githubusercontent.com
+
+gh attestation verify oci://ghcr.io/rolealpha/good-workshop:0.5.1 --repo roleALPHA/good-workshop
+```
+
+Releases from before signing was introduced carry neither.
+
 Dependabot, CodeQL (`security-extended`), dependency review and secret scanning with push
-protection run on this repository, and CI runs the full suite nightly. That is how we find the
+protection run on this repository. So do gitleaks over the whole git history, zizmor over the
+workflows, osv-scanner over the lockfile, Grype over the built image, and the OpenSSF Scorecard.
+CI runs the full suite nightly. That is how we find the
 boring half; the interesting half comes from people like you.

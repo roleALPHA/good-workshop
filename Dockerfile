@@ -49,6 +49,19 @@ RUN pnpm build
 FROM node:${NODE_VERSION} AS runner
 WORKDIR /app
 
+# The Node base image is a development image: it ships npm, npx, corepack and
+# Yarn, and with them a few hundred packages this server never loads -- tar,
+# pacote, sigstore and friends, each with advisories of their own that an
+# operator's scanner then reports against GoodWorkshop. Nothing here runs a
+# package manager at runtime, so they go. `apk upgrade` because the base image
+# digest is pinned: without it, an OpenSSL fix published after the pin would
+# only arrive when somebody moves the pin, and the image scan in CI would fail
+# on exactly that in the meantime.
+RUN apk upgrade --no-cache && \
+    rm -rf /usr/local/lib/node_modules/npm /usr/local/lib/node_modules/corepack \
+           /usr/local/bin/npm /usr/local/bin/npx /usr/local/bin/corepack \
+           /usr/local/bin/yarn /usr/local/bin/yarnpkg /opt/yarn-v*
+
 ENV NODE_ENV=production \
     NEXT_TELEMETRY_DISABLED=1 \
     PORT=3000 \

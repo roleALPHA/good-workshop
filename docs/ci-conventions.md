@@ -27,7 +27,7 @@ Jobs run **in parallel**, not as a chain:
 | `unit`  | Vitest, coverage report as a PR comment                                                                                                                                             |
 | `db`    | Postgres 17 **service container**, `migrate` + `provision`, then the RLS metadata test, cross-tenant fixtures, repository integration tests                                         |
 | `e2e`   | Playwright against the built standalone server, **two shards**, Chromium plus a mobile viewport project (`Pixel 5`). Traces and videos only `on-first-retry`, uploaded as artifacts |
-| `build` | `docker buildx build --load` **without** a push — a broken Dockerfile shows up in the PR, not first at release time                                                                 |
+| `build` | `docker buildx build --load` **without** a push — a broken Dockerfile shows up in the PR, not first at release time. Then Grype over that image: high and critical with a fix fail  |
 
 The `db` job is the most important one in the whole setup.
 
@@ -45,6 +45,26 @@ today's rules.
 
 No build step. This is TypeScript and CodeQL reads it without one — adding `next build` would
 double the pipeline's slowest job to tell the scanner what it already knows.
+
+### `.github/workflows/security.yml` — on pull request, on push to `main`, and weekly
+
+Three jobs, each reading something no other workflow reads:
+
+| Job            | Reads                    | Why it is not redundant                                                                                                                                                   |
+| -------------- | ------------------------ | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `secrets`      | the whole git history    | A credential committed and deleted in the next commit is still in every clone. gitleaks as a checksum-verified binary: `gitleaks-action` wants a paid key for an org repo |
+| `workflows`    | `.github/`               | zizmor: template injection, over-broad permissions, credentials persisted into artifacts, cache poisoning in release jobs, Dependabot without cooldown                    |
+| `dependencies` | `pnpm-lock.yaml` via OSV | The dependency review only sees what a PR _adds_; this sees the whole closure, and the weekly run catches an advisory against a version that has been there for months    |
+
+A false positive in gitleaks goes into `.gitleaksignore` by fingerprint, **with the reason on the
+line above**. zizmor fails the job rather than uploading SARIF: an upload needs
+`security-events: write`, which a pull request from a fork does not get.
+
+### `.github/workflows/scorecard.yml` — on push to `main`, weekly, and on branch protection changes
+
+The OpenSSF Scorecard, published so that somebody evaluating GoodWorkshop can read the result
+without taking our word for it. The only workflow besides `publish.yml` with `id-token: write`,
+which Scorecard needs to publish.
 
 ### `.github/workflows/dependency-review.yml` — on pull request
 
@@ -69,6 +89,11 @@ The obvious alternative — one job with QEMU emulation and
 `platforms: linux/amd64,linux/arm64` — is considerably simpler, and turns a two-minute Next.js
 build into a twenty-minute one. When changing this workflow: **do not fall back to QEMU** just
 because the digest-merge mechanics look awkward.
+
+The `merge` job signs the manifest list with a **keyless cosign signature** and attaches a
+**GitHub build attestation** (`actions/attest-build-provenance`), both on the final digest. That
+is the only reason it holds `id-token: write` and `attestations: write`; the per-architecture
+build jobs hold neither. SECURITY.md has the commands an operator uses to verify both.
 
 A third job, `sbom`, runs **only for tags** and attaches `sbom.cdx.json` and
 `THIRD-PARTY-LICENSES.txt` to the GitHub release. It takes `contents: write` and nothing else;
@@ -102,7 +127,14 @@ annotation as if it were the release note; `gh release edit` can still improve i
   something changed _outside_ the repository.
 
 - Every action pinned to a **full-length commit SHA**, not to `@v4`. Dependabot keeps them
-  current — `.github/dependabot.yml` covers actions, npm and Docker, weekly.
+  current — `.github/dependabot.yml` covers actions, npm and Docker, weekly, with a **seven-day
+  cooldown**: a malicious release is usually caught within days, and a version that has been
+  out for a week has had them. Security updates are not delayed by it.
+- **Every checkout sets `persist-credentials: false`.** Without it the job token stays in
+  `.git/config` for every later step to read, and ends up in any artifact that includes the
+  working tree. No job here talks to the repository after checking it out.
+- **No dependency cache in a release job.** Any run on `main` writes the cache, and restoring
+  it into the job that builds release documents lets a poisoned entry reach them.
 - **A `pnpm.overrides` block is not a small change.** Adding one re-resolves parts of the graph,
   and the resolver is free to land somewhere else than the lockfile did. Pinning one transitive
   package away from an advisory pulled in `@esbuild-kit/core-utils` with an esbuild carrying an

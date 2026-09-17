@@ -1,0 +1,87 @@
+name: Security
+
+# Three scanners that each read something none of the other workflows read:
+# the git history (gitleaks), the workflows themselves (zizmor) and the
+# lockfile against the OSV database (osv-scanner). CodeQL reads the code and
+# lives in codeql.yml; the image is scanned where it is built, in ci.yml.
+on:
+  pull_request:
+    branches: [main]
+  push:
+    branches: [main]
+  schedule:
+    # Weekly, because two of the three answers change without the repository
+    # changing: new advisories land in OSV, and zizmor gains audits.
+    - cron: '23 5 * * 2'
+  workflow_dispatch:
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}-${{ github.event_name }}
+  cancel-in-progress: true
+
+permissions:
+  contents: read
+
+jobs:
+  secrets:
+    name: Secrets in history
+    runs-on: ubuntu-latest
+    env:
+      GITLEAKS_VERSION: 8.30.1
+      # From the release's checksums file. The binary is downloaded rather than
+      # run through gitleaks-action, which requires a paid licence key for
+      # repositories owned by an organisation.
+      GITLEAKS_SHA256: 551f6fc83ea457d62a0d98237cbad105af8d557003051f41f3e7ca7b3f2470eb
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+          # The whole history, not the tip: a credential committed and then
+          # deleted in the next commit is still in every clone.
+          fetch-depth: 0
+      - name: Install gitleaks
+        run: |
+          set -euo pipefail
+          archive="gitleaks_${GITLEAKS_VERSION}_linux_x64.tar.gz"
+          curl -fsSLo "$archive" \
+            "https://github.com/gitleaks/gitleaks/releases/download/v${GITLEAKS_VERSION}/${archive}"
+          echo "${GITLEAKS_SHA256}  ${archive}" | sha256sum --check --strict
+          tar -xzf "$archive" gitleaks
+      - name: Scan
+        # Known false positives are listed by fingerprint in .gitleaksignore,
+        # each with the reason next to it.
+        run: ./gitleaks git . --redact --no-banner --exit-code 1
+
+  workflows:
+    name: Workflow audit
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+      # Template injection, over-broad permissions, credentials persisted into
+      # artifacts, cache poisoning in release jobs -- the ways a workflow hands
+      # the repository to whoever can open a pull request.
+      - uses: zizmorcore/zizmor-action@cc914d7f3750a2d13d75c7f184a1060aa0e9d482 # v0.6.4
+        with:
+          version: 1.30.1
+          # Fail the job on a finding instead of uploading SARIF: an upload
+          # needs `security-events: write`, which a pull request from a fork
+          # does not get, and a finding nobody sees on the PR is not a gate.
+          advanced-security: false
+
+  dependencies:
+    name: Known vulnerabilities in the lockfile
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+      # Not the same question as dependency-review.yml, which only looks at
+      # what a pull request ADDS. This reads the whole closure, and on the
+      # weekly run it notices an advisory published against a version that
+      # has been in the lockfile for months.
+      - uses: google/osv-scanner-action/osv-scanner-action@a345acffa64b0eaede81a3d9aae6141214d9c8fc # v2.6.0
+        with:
+          scan-args: |-
+            --lockfile=./pnpm-lock.yaml
