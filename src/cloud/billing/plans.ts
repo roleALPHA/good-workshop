@@ -18,7 +18,7 @@ export type Plan = {
 }
 
 export const PLANS: Record<PlanKey, Plan> = {
-  per_user: { key: 'per_user', netCents: 100, unit: 'user_month' },
+  per_user: { key: 'per_user', netCents: 500, unit: 'user_month' },
   per_workshop: { key: 'per_workshop', netCents: 100, unit: 'workshop' },
 }
 

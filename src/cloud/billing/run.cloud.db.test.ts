@@ -218,7 +218,7 @@ describe('closing a month', () => {
     expect(rows[0]).toMatchObject({
       plan: 'per_user',
       quantity: '1.52',
-      net_cents: 152,
+      net_cents: 760,
       tax_kind: 'domestic',
       tax_country: 'AT',
       tax_rate: '0.2000',
@@ -297,7 +297,7 @@ describe('invoicing and collecting', () => {
     const invoiced = await period(id)
     expect(invoiced).toMatchObject({
       status: 'invoiced',
-      gross_cents: 120,
+      gross_cents: 600,
       invoice_id: first.invoice_id,
     })
     const mine = (key: string) => key.startsWith(invoiced.invoice_ref)
@@ -309,11 +309,11 @@ describe('invoicing and collecting', () => {
     await chargeDue(ops, fake.adapters, options(later))
     await chargeDue(ops, fake.adapters, options(later))
     expect(fake.charges.filter((c) => mine(c.idempotencyKey))).toEqual([
-      expect.objectContaining({ amountCents: 120, idempotencyKey: `${invoiced.invoice_ref}-1` }),
+      expect.objectContaining({ amountCents: 600, idempotencyKey: `${invoiced.invoice_ref}-1` }),
     ])
     expect(await period(id)).toMatchObject({ status: 'paid' })
     expect(fake.payments.filter((p) => p.invoiceId === invoiced.invoice_id)).toEqual([
-      expect.objectContaining({ amountCents: 120 }),
+      expect.objectContaining({ amountCents: 600 }),
     ])
   })
 
@@ -335,7 +335,7 @@ describe('invoicing and collecting', () => {
     await fake.adapters.invoicing.issueInvoice({
       customerRef: 'x',
       ref,
-      lines: [{ description: 'earlier run', quantity: 1, unitNetCents: 100, plan: 'per_user' }],
+      lines: [{ description: 'earlier run', quantity: 1, unitNetCents: 500, plan: 'per_user' }],
       tax: { kind: 'domestic', country: 'AT', rate: 0.2 },
       collectedAfter: APRIL_2,
     })
@@ -423,7 +423,7 @@ describe('invoicing and collecting', () => {
         id: eventId,
         type: 'payment_succeeded',
         paymentRef: charging.payment_ref,
-        amountCents: 120,
+        amountCents: 600,
       },
     ])
     // Stored twice, processed once.
