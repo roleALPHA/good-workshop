@@ -1,4 +1,4 @@
-<!-- Vor Veröffentlichung rechtlich prüfen lassen. Platzhalter in [eckigen Klammern] ausfüllen. -->
+<!-- Vor Veröffentlichung rechtlich prüfen lassen. -->
 
 # Datenschutzerklärung
 
@@ -6,7 +6,7 @@ Stand: 18. September 2026
 
 ## Verantwortlicher
 
-roleALPHA GmbH, Aschergasse 34, 1130 Wien, E-Mail: [datenschutz@goodworkshop.org](mailto:datenschutz@goodworkshop.org)
+roleALPHA GmbH, Aschergasse 34, 1130 Wien, E-Mail: [office@rolealpha.com](mailto:office@rolealpha.com)
 
 ## Welche Daten wir wofür verarbeiten
 
@@ -41,4 +41,4 @@ Kontodaten speichern wir für die Dauer des Vertrags. Inhalte löschen wir spät
 
 ## Ihre Rechte
 
-Sie haben das Recht auf Auskunft, Berichtigung, Löschung, Einschränkung der Verarbeitung, Datenübertragbarkeit und Widerspruch. Wenden Sie sich dafür an [datenschutz@goodworkshop.org](mailto:datenschutz@goodworkshop.org). Sie können sich außerdem bei der österreichischen [Datenschutzbehörde](https://www.dsb.gv.at) beschweren.
+Sie haben das Recht auf Auskunft, Berichtigung, Löschung, Einschränkung der Verarbeitung, Datenübertragbarkeit und Widerspruch. Wenden Sie sich dafür an [office@rolealpha.com](mailto:office@rolealpha.com). Sie können sich außerdem bei der österreichischen [Datenschutzbehörde](https://www.dsb.gv.at) beschweren.

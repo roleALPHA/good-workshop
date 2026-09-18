@@ -1,4 +1,4 @@
-<!-- Vor Veröffentlichung rechtlich prüfen lassen. Platzhalter in [eckigen Klammern] ausfüllen. -->
+<!-- Vor Veröffentlichung rechtlich prüfen lassen. -->
 
 # Auftragsverarbeitungsvereinbarung
 
