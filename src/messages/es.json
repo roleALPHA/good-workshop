@@ -150,7 +150,9 @@
           "charging": "cobrándose",
           "paid": "pagada",
           "failed": "pago fallido"
-        }
+        },
+        "download": "Descargar factura",
+        "notYet": "Documento pendiente"
       },
       "delete": {
         "title": "Eliminar espacio de trabajo",

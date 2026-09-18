@@ -153,7 +153,9 @@ declare const messages: {
           "charging": "wird eingezogen",
           "paid": "bezahlt",
           "failed": "Zahlung fehlgeschlagen"
-        }
+        },
+        "download": "Rechnung herunterladen",
+        "notYet": "Beleg folgt"
       },
       "delete": {
         "title": "Workspace löschen",
@@ -455,7 +457,8 @@ declare const messages: {
         "vatIdInvalid": "Diese UID-Nummer ist laut dem EU-Register (VIES) nicht gültig. Bitte prüfe sie.",
         "plan": "Bitte wähle ein Abrechnungsmodell.",
         "terms": "Bitte akzeptiere die AGB.",
-        "dpa": "Bitte schließe die Auftragsverarbeitungsvereinbarung ab."
+        "dpa": "Bitte schließe die Auftragsverarbeitungsvereinbarung ab.",
+        "priceUnavailable": "Wir können gerade keinen Preis nennen und nehmen deshalb keine neuen Registrierungen an. Bitte versuche es später noch einmal."
       },
       "workspace": {
         "readOnly": "Dieser Workspace ist schreibgeschützt. Inhalte lassen sich lesen und exportieren, aber nicht ändern."

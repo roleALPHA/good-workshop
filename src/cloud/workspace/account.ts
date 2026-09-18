@@ -47,6 +47,8 @@ export type BillingOverview = {
     grossCents: number | null
     number: string | null
     url: string | null
+    /** Whether the document has been fetched and can be downloaded here. */
+    downloadable: boolean
   }[]
 }
 
@@ -108,8 +110,11 @@ export async function readBillingOverview(
 
     const invoices = await rows(
       tx,
-      sql`select month, status, net_cents, gross_cents, invoice_number, invoice_url
-            from billing_period where status not in ('void') order by month desc limit 24`,
+      sql`select p.month, p.status, p.net_cents, p.gross_cents, p.invoice_number, p.invoice_url,
+                 (d.tenant_id is not null) as downloadable
+            from billing_period p
+            left join invoice_document d on d.tenant_id = p.tenant_id and d.month = p.month
+           where p.status not in ('void') order by p.month desc limit 24`,
     )
 
     return {
@@ -140,6 +145,7 @@ export async function readBillingOverview(
         grossCents: (row.gross_cents as number | null) ?? null,
         number: (row.invoice_number as string | null) ?? null,
         url: (row.invoice_url as string | null) ?? null,
+        downloadable: Boolean(row.downloadable),
       })),
     }
   })

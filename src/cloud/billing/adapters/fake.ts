@@ -53,6 +53,14 @@ export function fakeAdapters(
         invoices.set(ref, invoice)
         return invoice
       },
+      async invoiceDocument(invoiceId) {
+        if (![...invoices.values()].some((invoice) => invoice.id === invoiceId)) return null
+        return {
+          filename: `${invoiceId}.pdf`,
+          // Enough of a PDF that a test can tell it apart from nothing.
+          bytes: new TextEncoder().encode(`%PDF-1.4 ${invoiceId}`),
+        }
+      },
       async recordPayment(payment) {
         payments.push(payment)
       },

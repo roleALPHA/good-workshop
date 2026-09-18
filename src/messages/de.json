@@ -150,7 +150,9 @@
           "charging": "wird eingezogen",
           "paid": "bezahlt",
           "failed": "Zahlung fehlgeschlagen"
-        }
+        },
+        "download": "Rechnung herunterladen",
+        "notYet": "Beleg folgt"
       },
       "delete": {
         "title": "Workspace löschen",

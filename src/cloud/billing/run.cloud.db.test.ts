@@ -6,6 +6,7 @@ import { fakeAdapters } from './adapters/fake'
 import {
   chargeDue,
   closeMonth,
+  storeInvoiceDocuments,
   syncPlanPrices,
   invoicePeriods,
   processPaymentEvents,
@@ -397,6 +398,38 @@ describe('invoicing and collecting', () => {
     await invoicePeriods(ops, fake.adapters, options())
     expect(fake.invoices.size).toBe(1)
     expect(await period(id)).toMatchObject({ status: 'invoiced', invoice_number: 'INV/2026/0001' })
+  })
+
+  it('keeps the invoice document, so a tenant can download its own', async () => {
+    const id = await computed()
+    const fake = fakeAdapters()
+    await invoicePeriods(ops, fake.adapters, options())
+    await storeInvoiceDocuments(ops, fake.adapters, options())
+    await storeInvoiceDocuments(ops, fake.adapters, options())
+
+    const { rows } = await ops.query(
+      'select filename, byte_size, content from invoice_document where tenant_id = $1',
+      [id],
+    )
+    expect(rows).toHaveLength(1)
+    expect(rows[0].byte_size).toBeGreaterThan(0)
+    expect(rows[0].content.toString('utf8')).toContain('%PDF')
+  })
+
+  it('does not fail an invoice over a document it could not fetch', async () => {
+    // The invoice is issued and sent; the PDF is a second step that may be
+    // retried. Treating it as one would put a paid invoice into an error state.
+    const id = await computed()
+    const fake = fakeAdapters()
+    fake.adapters.invoicing.invoiceDocument = async () => {
+      throw new Error('accounting is down')
+    }
+    await invoicePeriods(ops, fake.adapters, options())
+    await storeInvoiceDocuments(ops, fake.adapters, options())
+
+    expect(await period(id)).toMatchObject({ status: 'invoiced' })
+    const { rows } = await ops.query('select 1 from invoice_document where tenant_id = $1', [id])
+    expect(rows).toHaveLength(0)
   })
 
   it('does nothing outside when it is a dry run', async () => {

@@ -17,6 +17,7 @@ export const adapters: BillingAdapters = {
     upsertCustomer: refuse,
     findInvoice: refuse,
     issueInvoice: refuse,
+    invoiceDocument: refuse,
     recordPayment: refuse,
   },
   payments: {

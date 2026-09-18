@@ -323,6 +323,7 @@ jobs:
           test -e .next/standalone/src/cloud/legal/agb.md
           test -e dist/billing-worker.mjs
           test -e ".next/server/app/(app)/admin/billing/page.js"
+          test -e ".next/server/app/(app)/admin/billing/rechnung/[month]/route.js"
           test -e .next/server/app/operator/page.js
           test -e ".next/server/app/api/billing/webhook/route.js"
           grep -q "adapters-from-the-private-build" dist/billing-worker.mjs

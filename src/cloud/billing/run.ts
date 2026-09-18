@@ -639,6 +639,60 @@ export async function purgeDeletedTenants(db: Db, options: RunOptions) {
   }
 }
 
+// ── The invoice document ───────────────────────────────────────────────────
+
+/**
+ * Fetches the invoice as it was sent and keeps it, so a customer can download
+ * its own later without an account in the accounting system.
+ *
+ * Separate from invoicing on purpose: an invoice that is issued and sent but
+ * whose PDF could not be fetched is not a failed invoice. The next run picks it
+ * up.
+ */
+export async function storeInvoiceDocuments(
+  db: Db,
+  adapters: BillingAdapters,
+  options: RunOptions,
+): Promise<number> {
+  if (options.mode === 'dry_run') return 0
+
+  const { rows } = await db.query(
+    `select p.tenant_id, p.month, p.invoice_id, p.invoice_number
+       from billing_period p
+       left join invoice_document d on d.tenant_id = p.tenant_id and d.month = p.month
+      where p.invoice_id is not null and d.tenant_id is null
+      order by p.month
+      limit 50`,
+  )
+
+  let stored = 0
+  for (const period of rows) {
+    try {
+      const document = await adapters.invoicing.invoiceDocument(period.invoice_id)
+      if (!document) continue
+      await db.query(
+        `insert into invoice_document (tenant_id, month, filename, content, byte_size)
+         values ($1, $2, $3, $4, $5)
+         on conflict (tenant_id, month) do nothing`,
+        [
+          period.tenant_id,
+          period.month,
+          document.filename,
+          Buffer.from(document.bytes),
+          document.bytes.byteLength,
+        ],
+      )
+      stored += 1
+    } catch (error) {
+      options.log('billing: could not fetch the invoice document', {
+        invoice: period.invoice_number,
+        error: error instanceof Error ? error.message : String(error),
+      })
+    }
+  }
+  return stored
+}
+
 // ── All of it ──────────────────────────────────────────────────────────────
 
 export async function runBilling(
@@ -660,5 +714,6 @@ export async function runBilling(
   }
   await processPaymentEvents(db, adapters, options)
   await invoicePeriods(db, adapters, options)
+  await storeInvoiceDocuments(db, adapters, options)
   await chargeDue(db, adapters, options)
 }

@@ -11,6 +11,7 @@ import { issueMagicLink } from '@/server/auth/magic-link'
 import { readShareGate } from '@/server/auth/share-invite'
 import { hashSecret, parseOAuthToken } from '@/server/auth/tokens'
 import { edition } from '@/server/edition'
+import { readInvoiceDocument } from '@/cloud/workspace/invoice-download'
 import { CLIENT_REGISTRY_TENANT } from './cloud'
 
 /**
@@ -194,5 +195,39 @@ describe('before anybody has said who they are', () => {
   it('shows nobody’s branding and offers no setup', async () => {
     expect(await edition.tenantForAnonymousBrand()).toBeNull()
     expect(await edition.tenantForSetup()).toBeNull()
+  })
+})
+
+describe('invoices', () => {
+  it('hands each workspace its own document and nothing else', async () => {
+    const inA = await person(A)
+    const inB = await person(B)
+    const month = '2026-07-01'
+    for (const [tenantId, mark] of [
+      [A, 'A'],
+      [B, 'B'],
+    ] as const) {
+      await ops.query(
+        `insert into invoice_document (tenant_id, month, filename, content, byte_size)
+         values ($1, $2, $3, $4, $5)
+         on conflict (tenant_id, month) do update set content = excluded.content`,
+        [tenantId, month, `RE-${mark}.pdf`, Buffer.from(`%PDF ${mark}`), 7],
+      )
+    }
+
+    // Each admin asks for the same month. The policy decides whose row that is.
+    expect(await readInvoiceDocument(inA.actor, '2026-07')).toMatchObject({
+      filename: 'RE-A.pdf',
+    })
+    expect(await readInvoiceDocument(inB.actor, '2026-07')).toMatchObject({
+      filename: 'RE-B.pdf',
+    })
+  })
+
+  it('answers nothing for a month the workspace has no invoice for', async () => {
+    const inA = await person(A)
+    expect(await readInvoiceDocument(inA.actor, '2019-01')).toBeNull()
+    // Not a database error either: a malformed month is a refusal, not a crash.
+    expect(await readInvoiceDocument(inA.actor, 'nonsense')).toBeNull()
   })
 })

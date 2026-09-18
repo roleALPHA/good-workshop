@@ -231,15 +231,19 @@ export function InvoicesPanel({ invoices }: { invoices: BillingOverview['invoice
               <span className="text-[var(--fg-muted)]">
                 {t(`state.${invoice.status as 'paid'}`)}
               </span>
-              {invoice.url && (
+              {/* Our own route, not a link into the accounting system: that
+                  one opens for nobody but us, and a portal link with a token in
+                  it works for anybody who gets hold of it. */}
+              {invoice.downloadable ? (
                 <a
-                  href={invoice.url}
-                  target="_blank"
-                  rel="noreferrer"
+                  href={`/admin/billing/rechnung/${invoice.month}`}
                   className="underline underline-offset-2"
+                  download
                 >
-                  {invoice.number ?? t('open')}
+                  {invoice.number ? `${t('download')} (${invoice.number})` : t('download')}
                 </a>
+              ) : (
+                invoice.number && <span className="text-[var(--fg-muted)]">{t('notYet')}</span>
               )}
             </li>
           ))}

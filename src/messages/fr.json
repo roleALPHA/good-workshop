@@ -150,7 +150,9 @@
           "charging": "en cours de prélèvement",
           "paid": "payée",
           "failed": "paiement échoué"
-        }
+        },
+        "download": "Télécharger la facture",
+        "notYet": "Document à venir"
       },
       "delete": {
         "title": "Supprimer l’espace de travail",

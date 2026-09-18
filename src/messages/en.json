@@ -150,7 +150,9 @@
           "charging": "being collected",
           "paid": "paid",
           "failed": "payment failed"
-        }
+        },
+        "download": "Download invoice",
+        "notYet": "Document to follow"
       },
       "delete": {
         "title": "Delete workspace",
