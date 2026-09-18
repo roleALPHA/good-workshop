@@ -1,5 +1,11 @@
 import { describe, expect, it } from 'vitest'
-import { ATTRIBUTION_MARKDOWN, ATTRIBUTION_TEXT, LICENSE_URL, ROLEALPHA_URL } from './attribution'
+import {
+  ATTRIBUTION_MARKDOWN,
+  ATTRIBUTION_TEXT,
+  LICENSE_URL,
+  ROLEALPHA_URL,
+  SOURCE_URL,
+} from './attribution'
 
 /**
  * One line, three surfaces, and the two that are not HTML are the ones that go
@@ -42,5 +48,8 @@ describe('the attribution line', () => {
 
   it('points the licence at the terms themselves', () => {
     expect(LICENSE_URL).toBe('https://github.com/roleALPHA/good-workshop/blob/main/LICENSE')
+    // The website points people at the source; it is the same repository, and
+    // the two must not drift into naming different places.
+    expect(LICENSE_URL.startsWith(`${SOURCE_URL}/`)).toBe(true)
   })
 })
