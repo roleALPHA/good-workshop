@@ -1,6 +1,6 @@
 # Politique de confidentialité
 
-Version : 22 septembre 2026
+Version : 29 septembre 2026
 
 > Seule la version allemande de cette politique fait foi. Cette traduction est fournie à titre de compréhension.
 
@@ -10,7 +10,17 @@ roleALPHA GmbH, Aschergasse 34, 1130 Vienne, Autriche, courriel : [office@roleal
 
 ## Quelles données, et pour quoi faire
 
-**Site web.** Lors de la consultation, notre serveur traite des données techniquement nécessaires (adresse IP, horodatage, adresse consultée, identification du navigateur) afin de délivrer la page et de repousser les attaques. La base légale est notre intérêt légitime (art. 6, par. 1, point f, RGPD). Nous supprimons les journaux du serveur après 14 jours. Nous n’utilisons ni cookies de suivi ni cookies marketing ; seuls des cookies techniquement nécessaires à la connexion et à la langue sont déposés.
+**Site web.** Lors de la consultation, notre serveur traite des données techniquement nécessaires (adresse IP, horodatage, adresse consultée, identification du navigateur) afin de délivrer la page et de repousser les attaques. La base légale est notre intérêt légitime (art. 6, par. 1, point f, RGPD). Nous supprimons les journaux du serveur après 14 jours. Nous n’utilisons ni cookies de suivi ni cookies marketing et n’intégrons aucun contenu tiers.
+
+Seuls ces cookies sont déposés, et uniquement lorsque vous faites quelque chose qui les exige :
+
+- **Session** – vous maintient connecté ; jusqu’à la déconnexion, au plus 14 jours sans utilisation
+- **Accès invité** – ouvre un atelier partagé sans compte ; pour la durée de la visite
+- **Langue** – retient la langue choisie ; un an
+
+Par ailleurs, le navigateur des personnes connectées conserve localement le choix entre un aspect clair et un aspect sombre ainsi que les dossiers repliés. Rien de tout cela ne nécessite de consentement, car sans ce stockage le service que vous avez appelé n’existe pas (§ 165, al. 3, TKG 2021).
+
+**Mesure d’audience.** Sur les pages publiques de ce site, nous comptons les consultations avec Umami, un logiciel libre que nous exploitons sur notre propre serveur. Aucun cookie n’est déposé, aucune adresse IP n’est conservée et aucun profil n’est constitué ; la consultation et les indications du navigateur produisent une somme de contrôle qui change chaque jour et ne peut être rattachée à une personne. Les chiffres ainsi obtenus ne quittent pas notre serveur. La base légale est notre intérêt légitime à disposer de statistiques sans suivi (art. 6, par. 1, point f, RGPD). **Aucune mesure n’a lieu dans l’espace de travail** : ce que les clients font de leurs ateliers, nous ne le comptons pas.
 
 **Inscription et compte.** Nom, adresse électronique, entreprise, adresse de facturation et numéro de TVA de la personne qui conclut le contrat pour son entreprise, afin de conclure et d’exécuter le contrat (art. 6, par. 1, point b, RGPD).
 

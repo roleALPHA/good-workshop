@@ -3,6 +3,7 @@ import type { Route } from 'next'
 import { getLocale, getTranslations } from 'next-intl/server'
 import { AppFooter } from '@/components/layout/app-footer'
 import type { Locale } from '@/i18n/config'
+import { Analytics } from './analytics'
 import { LanguageLinks } from './language-links'
 import { pathFor } from './routes'
 
@@ -35,6 +36,10 @@ export async function SiteShell({ children }: { children: React.ReactNode }) {
 
   return (
     <div className="flex min-h-dvh flex-col bg-[var(--bg)]">
+      {/* The public pages, and only those: the shell around the workspace is a
+          different file, and nothing counts what people do with their own
+          workshops. */}
+      <Analytics />
       <header className="border-b border-[var(--border)] bg-[var(--surface)]">
         <nav className="mx-auto flex w-full max-w-5xl flex-wrap items-center gap-x-4 gap-y-2 px-4 py-3">
           <Link href={pathFor('home', locale) as Route} className="font-semibold tracking-tight">
