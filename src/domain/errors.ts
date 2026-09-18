@@ -124,6 +124,7 @@ export const DOMAIN_ERROR_KEYS = [
   'signup.vatIdCountry',
   'signup.vatIdInvalid',
   'signup.plan',
+  'signup.priceUnavailable',
   'signup.terms',
   'signup.dpa',
   // First-run setup

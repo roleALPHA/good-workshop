@@ -150,7 +150,9 @@
           "charging": "en cours de prélèvement",
           "paid": "payée",
           "failed": "paiement échoué"
-        }
+        },
+        "download": "Télécharger la facture",
+        "notYet": "Document à venir"
       },
       "delete": {
         "title": "Supprimer l’espace de travail",
@@ -452,7 +454,8 @@
         "vatIdInvalid": "Selon le registre de l’UE (VIES), ce numéro de TVA n’est pas valide. Vérifie-le.",
         "plan": "Choisis un modèle de facturation.",
         "terms": "Accepte les conditions.",
-        "dpa": "Conclus l’accord de sous-traitance."
+        "dpa": "Conclus l’accord de sous-traitance.",
+        "priceUnavailable": "Nous ne pouvons pas indiquer de tarif pour le moment et n’acceptons donc pas de nouvelles inscriptions. Réessaie plus tard."
       },
       "workspace": {
         "readOnly": "Cet espace de travail est en lecture seule. Le contenu peut être lu et exporté, mais pas modifié."
@@ -916,7 +919,8 @@
       "vatNote": "Les entreprises en Autriche paient 20 % de TVA. Les entreprises d’autres pays de l’UE disposant d’un numéro de TVA valide paient hors taxes (autoliquidation) ; les entreprises hors UE ne paient pas de TVA autrichienne.",
       "trial": "Les 14 premiers jours sont gratuits, sans données de paiement.",
       "cta": "Essai gratuit",
-      "businessOnly": "Réservé aux entreprises : GoodWorkshop Cloud est vendu exclusivement aux professionnels. Tous les prix sont HT."
+      "businessOnly": "Réservé aux entreprises : GoodWorkshop Cloud est vendu exclusivement aux professionnels. Tous les prix sont HT.",
+      "unavailable": "Les tarifs ne peuvent pas être consultés pour le moment. Réessaie plus tard."
     },
     "legal": {
       "germanOnly": "Seule la version allemande fait foi."
@@ -950,7 +954,8 @@
       "sentTitle": "Regarde ta boîte de réception.",
       "sentBody": "Nous avons envoyé un lien à {email}. Il crée ton espace de travail et reste valable 24 heures.",
       "haveAccount": "Déjà un compte ? <login>Se connecter</login>",
-      "planHint": "HT ; modifiable chaque mois."
+      "planHint": "HT ; modifiable chaque mois.",
+      "unavailable": "Les tarifs ne peuvent pas être consultés pour le moment. Réessaie plus tard."
     },
     "confirm": {
       "title": "Créer l’espace de travail",

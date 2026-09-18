@@ -3,7 +3,7 @@
 import { useRouter } from 'next/navigation'
 import { useMemo, useState, useTransition } from 'react'
 import { useFormatter, useLocale, useTranslations } from 'next-intl'
-import { PLANS, type PlanKey } from '@/cloud/billing/plans'
+import type { PlanKey } from '@/cloud/billing/plans'
 import { SIGNUP_COUNTRIES } from '@/cloud/registration/rules'
 import type { BillingOverview } from '@/cloud/workspace/account'
 import {
@@ -57,7 +57,10 @@ export function PlanPanel({ overview }: { overview: BillingOverview }) {
   // has to be changed in four catalogs as well, and one of them is forgotten.
   const planLabel = (key: PlanKey) =>
     t(`plan.${key}`, {
-      price: format.number(PLANS[key].netCents / 100, { style: 'currency', currency: 'EUR' }),
+      price:
+        overview.prices[key] === null
+          ? '—'
+          : format.number(overview.prices[key] / 100, { style: 'currency', currency: 'EUR' }),
     })
 
   return (
@@ -228,15 +231,19 @@ export function InvoicesPanel({ invoices }: { invoices: BillingOverview['invoice
               <span className="text-[var(--fg-muted)]">
                 {t(`state.${invoice.status as 'paid'}`)}
               </span>
-              {invoice.url && (
+              {/* Our own route, not a link into the accounting system: that
+                  one opens for nobody but us, and a portal link with a token in
+                  it works for anybody who gets hold of it. */}
+              {invoice.downloadable ? (
                 <a
-                  href={invoice.url}
-                  target="_blank"
-                  rel="noreferrer"
+                  href={`/admin/billing/rechnung/${invoice.month}`}
                   className="underline underline-offset-2"
+                  download
                 >
-                  {invoice.number ?? t('open')}
+                  {invoice.number ? `${t('download')} (${invoice.number})` : t('download')}
                 </a>
+              ) : (
+                invoice.number && <span className="text-[var(--fg-muted)]">{t('notYet')}</span>
               )}
             </li>
           ))}

@@ -85,6 +85,25 @@ run closes the previous month into one `billing_period` per tenant, invoices it,
 SEPA pre-notification period and collects; every step moves a period one state on with an update
 that names the state it expects, and the invoice reference is the idempotency key towards
 accounting and payments, so a repeated or interrupted run neither invoices nor charges twice.
+**What a plan costs** is read from the accounting system, not kept in the code: the article has to
+carry the price there for the invoice anyway, and the second copy is the one that goes stale -- the
+registration page advertised one euro for a while after the price had gone to five. The billing
+worker reads the article price and appends a row to `plan_price`; the web container reads that
+table and needs no access to accounting at all. A change takes effect on the first of the coming
+month, so a month that is running never gets more expensive than was announced, and every price
+ever in force stays on record. When accounting has not answered for a day, the pricing page shows
+no price and registration refuses -- existing workspaces are unaffected, because a stale sync is
+our problem, not theirs. What stays in `plans.ts` is what accounting does not know: that a user
+month is counted by the day and a workshop once, when it is created.
+
+**The invoice document** is fetched after the invoice was sent and kept in `invoice_document`, so
+a workspace can download its own from `/admin/billing/rechnung/<month>`. A link into the
+accounting system's portal would either open for nobody but us or carry a token that works for
+anybody who has the link. Which document belongs to whom is decided by row level security, not by
+the route: the query runs in the tenant's transaction and another workspace's month comes back as
+nothing. Fetching is its own step -- an invoice that went out but whose PDF could not be fetched
+is not a failed invoice.
+
 Accounting and payments are ports (`src/cloud/billing/ports.ts`): the real adapters come from the
 private build through `@gw/billing-adapters`; every other build gets adapters that refuse, and the
 worker then only closes months and moves trials. The private build names its adapters with the

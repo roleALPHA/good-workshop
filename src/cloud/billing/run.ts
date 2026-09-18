@@ -1,4 +1,5 @@
-import { PLANS, isPlanKey } from './plans'
+import { PLANS, PLAN_KEYS, isPlanKey } from './plans'
+import { nextChangeMonth, priceAt, type PlanPrice } from './prices'
 import type { BillingAdapters, IssuedInvoice, PaymentEvent } from './ports'
 import {
   invoiceRef,
@@ -49,6 +50,64 @@ export type RunOptions = {
 
 const DAY = 86_400_000
 
+// ── 0. Prices ──────────────────────────────────────────────────────────────
+
+/** Every price ever in force. Few rows: two plans, one row per change. */
+export async function readPlanPrices(db: Db): Promise<PlanPrice[]> {
+  const { rows } = await db.query(
+    `select plan, net_cents, to_char(effective_from, 'YYYY-MM-DD') as effective_from
+       from plan_price order by effective_from`,
+  )
+  return rows
+    .filter((row) => isPlanKey(row.plan))
+    .map((row) => ({
+      plan: row.plan,
+      netCents: Number(row.net_cents),
+      effectiveFrom: row.effective_from,
+    }))
+}
+
+/**
+ * Asks the accounting system what the articles cost, and records a change from
+ * the first of the coming month.
+ *
+ * A change never reaches the month that is running: existing customers are told
+ * about a raise beforehand, and this is where that promise is kept. The time of
+ * the answer is recorded either way -- a price nobody could confirm for a day
+ * stops new orders (see prices.ts).
+ */
+export async function syncPlanPrices(
+  db: Db,
+  adapters: BillingAdapters,
+  options: RunOptions,
+): Promise<void> {
+  const prices = await readPlanPrices(db)
+  const from = nextChangeMonth(options.now)
+  try {
+    for (const plan of PLAN_KEYS) {
+      const netCents = await adapters.invoicing.planPrice(plan)
+      if (!Number.isInteger(netCents) || netCents < 0) {
+        throw new Error(`accounting returned ${netCents} for ${plan}`)
+      }
+      const announced = priceAt(prices, plan, from)
+      if (announced === netCents) continue
+      await db.query(
+        `insert into plan_price (plan, net_cents, effective_from)
+         values ($1, $2, $3)
+         on conflict (plan, effective_from) do update set net_cents = excluded.net_cents,
+                                                          recorded_at = now()`,
+        [plan, netCents, from],
+      )
+      options.log('billing: price change recorded', { plan, netCents, from })
+    }
+    await db.query(`update plan_price_sync set checked_at = now(), last_error = null`)
+  } catch (error) {
+    const message = error instanceof Error ? error.message : String(error)
+    await db.query(`update plan_price_sync set last_error = $1`, [message])
+    options.log('billing: could not read prices from accounting', { error: message })
+  }
+}
+
 // ── 1. Closing a month ─────────────────────────────────────────────────────
 
 /** Computes the period of `month` (YYYY-MM-01) for every tenant that has one. Idempotent. */
@@ -68,6 +127,8 @@ export async function closeMonth(db: Db, month: string, options: RunOptions): Pr
         and (l.trial_ends_at is null or l.trial_ends_at <= $2)`,
     [month, monthEnd],
   )
+
+  const prices = await readPlanPrices(db)
 
   let created = 0
   for (const account of accounts) {
@@ -106,7 +167,14 @@ export async function closeMonth(db: Db, month: string, options: RunOptions): Pr
       country: account.country,
       vatStatus: account.vat_status as VatStatus,
     })
-    const net = netCents(quantity, plan.netCents)
+    // The price in force when the month began -- not the one in force now, in
+    // the month after it. A raise announced for October leaves September alone.
+    const unitNetCents = priceAt(prices, plan.key, month)
+    if (unitNetCents === null) {
+      options.log('billing: no price for this month', { tenant: account.tenant_id, month })
+      continue
+    }
+    const net = netCents(quantity, unitNetCents)
 
     const [status, holdReason] =
       net === 0
@@ -128,7 +196,7 @@ export async function closeMonth(db: Db, month: string, options: RunOptions): Pr
         month,
         plan.key,
         quantity,
-        plan.netCents,
+        unitNetCents,
         net,
         tax.kind,
         'country' in tax ? tax.country : null,
@@ -571,6 +639,60 @@ export async function purgeDeletedTenants(db: Db, options: RunOptions) {
   }
 }
 
+// ── The invoice document ───────────────────────────────────────────────────
+
+/**
+ * Fetches the invoice as it was sent and keeps it, so a customer can download
+ * its own later without an account in the accounting system.
+ *
+ * Separate from invoicing on purpose: an invoice that is issued and sent but
+ * whose PDF could not be fetched is not a failed invoice. The next run picks it
+ * up.
+ */
+export async function storeInvoiceDocuments(
+  db: Db,
+  adapters: BillingAdapters,
+  options: RunOptions,
+): Promise<number> {
+  if (options.mode === 'dry_run') return 0
+
+  const { rows } = await db.query(
+    `select p.tenant_id, p.month, p.invoice_id, p.invoice_number
+       from billing_period p
+       left join invoice_document d on d.tenant_id = p.tenant_id and d.month = p.month
+      where p.invoice_id is not null and d.tenant_id is null
+      order by p.month
+      limit 50`,
+  )
+
+  let stored = 0
+  for (const period of rows) {
+    try {
+      const document = await adapters.invoicing.invoiceDocument(period.invoice_id)
+      if (!document) continue
+      await db.query(
+        `insert into invoice_document (tenant_id, month, filename, content, byte_size)
+         values ($1, $2, $3, $4, $5)
+         on conflict (tenant_id, month) do nothing`,
+        [
+          period.tenant_id,
+          period.month,
+          document.filename,
+          Buffer.from(document.bytes),
+          document.bytes.byteLength,
+        ],
+      )
+      stored += 1
+    } catch (error) {
+      options.log('billing: could not fetch the invoice document', {
+        invoice: period.invoice_number,
+        error: error instanceof Error ? error.message : String(error),
+      })
+    }
+  }
+  return stored
+}
+
 // ── All of it ──────────────────────────────────────────────────────────────
 
 export async function runBilling(
@@ -581,6 +703,9 @@ export async function runBilling(
 ) {
   await recheckPendingVat(db, check, options)
   await trialTransitions(db, options)
+  // Before closing a month: that month is billed at a price this step may have
+  // recorded, and the freshness of the answer decides whether we still sell.
+  if (adapters) await syncPlanPrices(db, adapters, options)
   await closeMonth(db, previousMonth(options.now), options)
   await purgeDeletedTenants(db, options)
   if (!adapters) {
@@ -589,5 +714,6 @@ export async function runBilling(
   }
   await processPaymentEvents(db, adapters, options)
   await invoicePeriods(db, adapters, options)
+  await storeInvoiceDocuments(db, adapters, options)
   await chargeDue(db, adapters, options)
 }

@@ -153,7 +153,9 @@ declare const messages: {
           "charging": "wird eingezogen",
           "paid": "bezahlt",
           "failed": "Zahlung fehlgeschlagen"
-        }
+        },
+        "download": "Rechnung herunterladen",
+        "notYet": "Beleg folgt"
       },
       "delete": {
         "title": "Workspace löschen",
@@ -455,7 +457,8 @@ declare const messages: {
         "vatIdInvalid": "Diese UID-Nummer ist laut dem EU-Register (VIES) nicht gültig. Bitte prüfe sie.",
         "plan": "Bitte wähle ein Abrechnungsmodell.",
         "terms": "Bitte akzeptiere die AGB.",
-        "dpa": "Bitte schließe die Auftragsverarbeitungsvereinbarung ab."
+        "dpa": "Bitte schließe die Auftragsverarbeitungsvereinbarung ab.",
+        "priceUnavailable": "Wir können gerade keinen Preis nennen und nehmen deshalb keine neuen Registrierungen an. Bitte versuche es später noch einmal."
       },
       "workspace": {
         "readOnly": "Dieser Workspace ist schreibgeschützt. Inhalte lassen sich lesen und exportieren, aber nicht ändern."
@@ -919,7 +922,8 @@ declare const messages: {
       "vatNote": "Unternehmen in Österreich zahlen 20 % USt. Unternehmen in anderen EU-Ländern mit gültiger UID-Nummer zahlen netto (Reverse Charge), Unternehmen außerhalb der EU ohne österreichische USt.",
       "trial": "Die ersten 14 Tage sind kostenlos, ohne Zahlungsdaten.",
       "cta": "Kostenlos testen",
-      "businessOnly": "Nur für Unternehmen: GoodWorkshop Cloud wird ausschließlich an Unternehmer im Sinne des § 1 UGB verkauft. Alle Preise netto zzgl. Umsatzsteuer."
+      "businessOnly": "Nur für Unternehmen: GoodWorkshop Cloud wird ausschließlich an Unternehmer im Sinne des § 1 UGB verkauft. Alle Preise netto zzgl. Umsatzsteuer.",
+      "unavailable": "Die Preise lassen sich gerade nicht abrufen. Bitte versuche es später noch einmal."
     },
     "legal": {
       "germanOnly": "Rechtlich verbindlich ist die deutsche Fassung."
@@ -953,7 +957,8 @@ declare const messages: {
       "sentTitle": "Schau in dein Postfach.",
       "sentBody": "Wir haben dir einen Link an {email} geschickt. Mit ihm legst du deinen Workspace an; er gilt 24 Stunden.",
       "haveAccount": "Schon ein Konto? <login>Anmelden</login>",
-      "planHint": "Netto zzgl. USt.; jeden Monat wechselbar."
+      "planHint": "Netto zzgl. USt.; jeden Monat wechselbar.",
+      "unavailable": "Die Preise lassen sich gerade nicht abrufen. Bitte versuche es später noch einmal."
     },
     "confirm": {
       "title": "Workspace anlegen",

@@ -1,7 +1,8 @@
 import { sql } from 'drizzle-orm'
 import { withTenant, type Actor, type Tx } from '@/server/db'
 import { assertTenantAdmin } from '@/domain/tenant/members'
-import { PLANS, isPlanKey, type PlanKey } from '@/cloud/billing/plans'
+import { isPlanKey, type PlanKey } from '@/cloud/billing/plans'
+import { readPriceList } from '@/cloud/billing/price-list'
 import { memberMonths, viennaDay, type Interval } from '@/cloud/billing/usage'
 import type { BillingAdapters } from '@/cloud/billing/ports'
 import { parseBillingDetails, parseBillingEmail, SignupError } from '@/cloud/registration/rules'
@@ -35,6 +36,8 @@ export type BillingOverview = {
   vatStatus: 'none' | 'valid' | 'invalid' | 'pending'
   billingEmail: string
   paymentMethodReady: boolean
+  /** What each plan costs today, from the accounting system. Null when unknown. */
+  prices: Record<PlanKey, number | null>
   /** What this month comes to so far, before tax. */
   monthToDate: { quantity: number; netCents: number }
   invoices: {
@@ -44,6 +47,8 @@ export type BillingOverview = {
     grossCents: number | null
     number: string | null
     url: string | null
+    /** Whether the document has been fetched and can be downloaded here. */
+    downloadable: boolean
   }[]
 }
 
@@ -63,6 +68,7 @@ export async function readBillingOverview(
   now = new Date(),
 ): Promise<BillingOverview | null> {
   assertTenantAdmin(actor)
+  const priceList = await readPriceList(now)
   return withTenant(actor, async (tx) => {
     const [account] = await rows(
       tx,
@@ -104,8 +110,11 @@ export async function readBillingOverview(
 
     const invoices = await rows(
       tx,
-      sql`select month, status, net_cents, gross_cents, invoice_number, invoice_url
-            from billing_period where status not in ('void') order by month desc limit 24`,
+      sql`select p.month, p.status, p.net_cents, p.gross_cents, p.invoice_number, p.invoice_url,
+                 (d.tenant_id is not null) as downloadable
+            from billing_period p
+            left join invoice_document d on d.tenant_id = p.tenant_id and d.month = p.month
+           where p.status not in ('void') order by p.month desc limit 24`,
     )
 
     return {
@@ -123,7 +132,11 @@ export async function readBillingOverview(
       vatStatus: account.vat_status as BillingOverview['vatStatus'],
       billingEmail: account.billing_email as string,
       paymentMethodReady: Boolean(account.payment_method_ready),
-      monthToDate: { quantity, netCents: Math.round(quantity * PLANS[plan].netCents) },
+      prices: priceList.prices,
+      monthToDate: {
+        quantity,
+        netCents: Math.round(quantity * (priceList.prices[plan] ?? 0)),
+      },
       invoices: invoices.map((row) => ({
         // A `date` column: already the calendar month, no time zone involved.
         month: String(row.month).slice(0, 7),
@@ -132,6 +145,7 @@ export async function readBillingOverview(
         grossCents: (row.gross_cents as number | null) ?? null,
         number: (row.invoice_number as string | null) ?? null,
         url: (row.invoice_url as string | null) ?? null,
+        downloadable: Boolean(row.downloadable),
       })),
     }
   })
