@@ -100,8 +100,8 @@ declare const messages: {
       },
       "plan": {
         "title": "Abrechnungsmodell",
-        "per_user": "1 € pro Nutzer/Monat",
-        "per_workshop": "1 € pro Workshop",
+        "per_user": "{price} pro Nutzer/Monat",
+        "per_workshop": "{price} pro Workshop",
         "next": "Ab dem nächsten Monat: {plan}",
         "hint": "Ein Wechsel gilt ab dem nächsten Monatsersten.",
         "save": "Übernehmen"
@@ -944,8 +944,8 @@ declare const messages: {
       "vatId": "UID-Nummer",
       "vatIdHint": "Für Unternehmen in einem anderen EU-Land Pflicht: Abgerechnet wird ohne Umsatzsteuer (Reverse Charge).",
       "plan": "Abrechnungsmodell",
-      "perUser": "1 € pro Nutzer/Monat",
-      "perWorkshop": "1 € pro Workshop",
+      "perUser": "{price} pro Nutzer/Monat",
+      "perWorkshop": "{price} pro Workshop",
       "acceptTerms": "Ich akzeptiere die <terms>AGB</terms> und habe die <privacy>Datenschutzerklärung</privacy> gelesen.",
       "acceptDpa": "Ich schließe die <dpa>Auftragsverarbeitungsvereinbarung</dpa> ab.",
       "submit": "Registrieren",

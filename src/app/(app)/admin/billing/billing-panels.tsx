@@ -3,6 +3,7 @@
 import { useRouter } from 'next/navigation'
 import { useMemo, useState, useTransition } from 'react'
 import { useFormatter, useLocale, useTranslations } from 'next-intl'
+import { PLANS, type PlanKey } from '@/cloud/billing/plans'
 import { SIGNUP_COUNTRIES } from '@/cloud/registration/rules'
 import type { BillingOverview } from '@/cloud/workspace/account'
 import {
@@ -52,6 +53,12 @@ export function PlanPanel({ overview }: { overview: BillingOverview }) {
   const format = useFormatter()
   const [plan, setPlan] = useState(overview.nextPlan ?? overview.plan)
   const { error, pending, act } = useAction()
+  // The price is read from the plan, not written into the label: otherwise it
+  // has to be changed in four catalogs as well, and one of them is forgotten.
+  const planLabel = (key: PlanKey) =>
+    t(`plan.${key}`, {
+      price: format.number(PLANS[key].netCents / 100, { style: 'currency', currency: 'EUR' }),
+    })
 
   return (
     <section className={card} aria-labelledby="billing-plan">
@@ -66,8 +73,8 @@ export function PlanPanel({ overview }: { overview: BillingOverview }) {
           onChange={(e) => setPlan(e.target.value as typeof plan)}
           className="min-h-11 rounded border border-[var(--border-strong)] bg-[var(--bg)] px-2 text-[16px]"
         >
-          <option value="per_user">{t('plan.per_user')}</option>
-          <option value="per_workshop">{t('plan.per_workshop')}</option>
+          <option value="per_user">{planLabel('per_user')}</option>
+          <option value="per_workshop">{planLabel('per_workshop')}</option>
         </select>
         <button
           type="button"
@@ -79,9 +86,7 @@ export function PlanPanel({ overview }: { overview: BillingOverview }) {
         </button>
       </div>
       {overview.nextPlan && (
-        <p className="mt-2 text-[14px]">
-          {t('plan.next', { plan: t(`plan.${overview.nextPlan}`) })}
-        </p>
+        <p className="mt-2 text-[14px]">{t('plan.next', { plan: planLabel(overview.nextPlan) })}</p>
       )}
       <p className="mt-3 text-[14px] text-[var(--fg-muted)]">
         {t('usage.title')}:{' '}

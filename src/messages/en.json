@@ -97,8 +97,8 @@
       },
       "plan": {
         "title": "Billing model",
-        "per_user": "€1 per user/month",
-        "per_workshop": "€1 per workshop",
+        "per_user": "{price} per user/month",
+        "per_workshop": "{price} per workshop",
         "next": "From next month: {plan}",
         "hint": "A change applies from the first of next month.",
         "save": "Apply"
@@ -941,8 +941,8 @@
       "vatId": "VAT number",
       "vatIdHint": "Required for businesses in another EU country: invoices are issued without VAT (reverse charge).",
       "plan": "Billing model",
-      "perUser": "€1 per user/month",
-      "perWorkshop": "€1 per workshop",
+      "perUser": "{price} per user/month",
+      "perWorkshop": "{price} per workshop",
       "acceptTerms": "I accept the <terms>terms</terms> and have read the <privacy>privacy policy</privacy>.",
       "acceptDpa": "I enter into the <dpa>data processing agreement</dpa>.",
       "submit": "Register",

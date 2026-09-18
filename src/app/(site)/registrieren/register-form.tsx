@@ -1,8 +1,8 @@
 'use client'
 
 import { useMemo, useState } from 'react'
-import { useLocale, useTranslations } from 'next-intl'
-import { PLAN_KEYS, type PlanKey } from '@/cloud/billing/plans'
+import { useFormatter, useLocale, useTranslations } from 'next-intl'
+import { PLANS, PLAN_KEYS, type PlanKey } from '@/cloud/billing/plans'
 import { SIGNUP_COUNTRIES, vatIdRequired, type SignupCountry } from '@/cloud/registration/rules'
 import { register, type RegisterResult } from './actions'
 
@@ -19,7 +19,11 @@ const label = 'block text-[14px] font-medium'
  */
 export function RegisterForm() {
   const t = useTranslations('site.register')
+  const format = useFormatter()
   const locale = useLocale()
+  // The price comes from the same file the billing run reads, not from the
+  // label: a translated amount is a second place to change it.
+  const euro = (cents: number) => format.number(cents / 100, { style: 'currency', currency: 'EUR' })
   const [country, setCountry] = useState<SignupCountry>('AT')
   const [plan, setPlan] = useState<PlanKey>('per_user')
   const [result, setResult] = useState<RegisterResult | null>(null)
@@ -251,7 +255,9 @@ export function RegisterForm() {
                 checked={plan === key}
                 onChange={() => setPlan(key)}
               />
-              {t(key === 'per_user' ? 'perUser' : 'perWorkshop')}
+              {t(key === 'per_user' ? 'perUser' : 'perWorkshop', {
+                price: euro(PLANS[key].netCents),
+              })}
             </label>
           ))}
         </div>

@@ -97,8 +97,8 @@
       },
       "plan": {
         "title": "Modèle de facturation",
-        "per_user": "1 € par utilisateur/mois",
-        "per_workshop": "1 € par atelier",
+        "per_user": "{price} par utilisateur/mois",
+        "per_workshop": "{price} par atelier",
         "next": "À partir du mois prochain : {plan}",
         "hint": "Un changement s’applique à partir du 1er du mois suivant.",
         "save": "Appliquer"
@@ -941,8 +941,8 @@
       "vatId": "Numéro de TVA",
       "vatIdHint": "Obligatoire pour les entreprises d’un autre pays de l’UE : la facture est émise hors TVA (autoliquidation).",
       "plan": "Modèle de facturation",
-      "perUser": "1 € par utilisateur/mois",
-      "perWorkshop": "1 € par atelier",
+      "perUser": "{price} par utilisateur/mois",
+      "perWorkshop": "{price} par atelier",
       "acceptTerms": "J’accepte les <terms>conditions</terms> et j’ai lu la <privacy>politique de confidentialité</privacy>.",
       "acceptDpa": "Je conclus l’<dpa>accord de sous-traitance</dpa>.",
       "submit": "S’inscrire",

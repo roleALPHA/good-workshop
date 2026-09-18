@@ -151,3 +151,19 @@ describe('every key the code can throw', () => {
     })
   })
 })
+
+describe('prices', () => {
+  it('are nowhere in the catalogs', () => {
+    // The price belongs in src/cloud/billing/plans.ts, which the pricing page,
+    // the registration form and the billing run all read. A translated label
+    // that spells it out is a second place to change it -- and the one that
+    // gets forgotten: the registration page still offered "1 € pro Nutzer"
+    // after the price had gone to five.
+    const spelled = /(\d+[.,]?\d*\s*(€|EUR)|(€|EUR)\s*\d)/
+    for (const locale of LOCALES) {
+      for (const [key, value] of flatten(CATALOGS[locale as Locale])) {
+        expect(`${locale} ${key}: ${value}`).not.toMatch(spelled)
+      }
+    }
+  })
+})
