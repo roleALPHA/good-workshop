@@ -3,8 +3,10 @@ import { and, count, eq, gt } from 'drizzle-orm'
 import { sql } from 'drizzle-orm'
 import { pgTable, text, timestamp, uuid, jsonb } from 'drizzle-orm/pg-core'
 import { withAuth, withTenantOnly, withoutTenant } from '@/server/db'
+import { readPriceList } from '@/cloud/billing/price-list'
 import { identity } from '@/server/db/schema'
 import { authConfig } from '@/server/auth/config'
+import { SignupError } from './rules'
 import { generateSecret, hashSecret } from '@/server/auth/tokens'
 import { sendMail, type Mail } from '@/server/auth/mail'
 import { translator } from '@/i18n/translator'
@@ -44,11 +46,22 @@ const LINK_TTL_HOURS = 24
 /** Confirmation mails one address may be sent within an hour. */
 const BURST = 3
 
+/**
+ * Refused when no confirmed price covers the chosen plan. The form hides the
+ * button in that case; this is the same answer for anybody who posts anyway --
+ * a workspace created at a price we cannot name is a workspace we cannot
+ * invoice.
+ */
 export async function requestSignup(
   signup: Signup,
   locale: Locale,
   meta: { ip?: string; vatCheck?: VatCheck } = {},
 ): Promise<void> {
+  const priceList = await readPriceList()
+  if (!priceList.sellable || priceList.prices[signup.plan] === null) {
+    throw new SignupError('signup.priceUnavailable')
+  }
+
   const secret = generateSecret(32)
 
   const outcome = await withAuth(async (tx) => {

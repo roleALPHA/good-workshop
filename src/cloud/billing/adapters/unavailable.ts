@@ -13,6 +13,7 @@ export const configured = false
 
 export const adapters: BillingAdapters = {
   invoicing: {
+    planPrice: refuse,
     upsertCustomer: refuse,
     findInvoice: refuse,
     issueInvoice: refuse,

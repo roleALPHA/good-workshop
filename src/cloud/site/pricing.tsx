@@ -1,15 +1,23 @@
 import Link from 'next/link'
 import type { Route } from 'next'
 import { getFormatter, getTranslations } from 'next-intl/server'
-import { PLANS, type PlanKey } from '@/cloud/billing/plans'
+import type { PlanKey } from '@/cloud/billing/plans'
+import { readPriceList } from '@/cloud/billing/price-list'
 
 /**
  * Both models, for businesses. Net prices, because GoodWorkshop Cloud is not
- * offered to consumers -- the page says so before it says anything else. The
- * numbers come from src/cloud/billing/plans.ts, the file the billing run reads.
+ * offered to consumers -- the page says so before it says anything else.
+ *
+ * The numbers come from the accounting system, recorded by the billing worker.
+ * When they cannot be had, the page says so instead of naming a price nobody
+ * has confirmed.
  */
 export async function Pricing() {
-  const [t, format] = await Promise.all([getTranslations('site.pricing'), getFormatter()])
+  const [t, format, priceList] = await Promise.all([
+    getTranslations('site.pricing'),
+    getFormatter(),
+    readPriceList(),
+  ])
   const euro = (cents: number) => format.number(cents / 100, { style: 'currency', currency: 'EUR' })
 
   const plans: PlanKey[] = ['per_user', 'per_workshop']
@@ -25,7 +33,7 @@ export async function Pricing() {
 
       <ul className="mt-8 grid gap-4 md:grid-cols-2">
         {plans.map((key) => {
-          const plan = PLANS[key]
+          const netCents = priceList.prices[key]
           const c = copy[key]
           return (
             <li
@@ -34,8 +42,12 @@ export async function Pricing() {
             >
               <h2 className="text-xl font-semibold tracking-tight">{t(`${c}.name`)}</h2>
               <p className="mt-1 text-[15px] text-[var(--fg-muted)]">{t(`${c}.unit`)}</p>
-              <p className="mt-4 text-3xl font-semibold">{euro(plan.netCents)}</p>
-              <p className="text-[13px] text-[var(--fg-muted)]">{t('net')}</p>
+              <p className="mt-4 text-3xl font-semibold">
+                {netCents === null ? '—' : euro(netCents)}
+              </p>
+              <p className="text-[13px] text-[var(--fg-muted)]">
+                {netCents === null ? t('unavailable') : t('net')}
+              </p>
               <p className="mt-4 flex-1 text-[15px]">{t(`${c}.body`)}</p>
             </li>
           )

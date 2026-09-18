@@ -6,6 +6,7 @@ import { fakeAdapters } from './adapters/fake'
 import {
   chargeDue,
   closeMonth,
+  syncPlanPrices,
   invoicePeriods,
   processPaymentEvents,
   recheckPendingVat,
@@ -201,6 +202,60 @@ describe('recording usage', () => {
       [inTrial]: true,
       [paying]: false,
     })
+  })
+})
+
+describe('prices from the accounting system', () => {
+  beforeEach(async () => {
+    await ops.query(`delete from plan_price where source = 'accounting'`)
+  })
+
+  it('records a change from the first of the coming month, not today', async () => {
+    // A raise mid-month must not reach the month that is running: existing
+    // customers are told beforehand, and this is that promise in the data.
+    const fake = fakeAdapters()
+    fake.prices.set('per_user', 900)
+    await syncPlanPrices(ops, fake.adapters, options({ now: new Date('2026-09-18T10:00:00Z') }))
+
+    const { rows } = await ops.query(
+      `select net_cents, to_char(effective_from, 'YYYY-MM-DD') as from_day
+         from plan_price where plan = 'per_user' and source = 'accounting'`,
+    )
+    expect(rows).toEqual([{ net_cents: 900, from_day: '2026-10-01' }])
+  })
+
+  it('bills a month at the price that was in force when it began', async () => {
+    const id = await tenant({ plan: 'per_user' })
+    await interval(id, '2026-01-01T00:00:00Z', null)
+    await ops.query(
+      `insert into plan_price (plan, net_cents, effective_from, source)
+       values ('per_user', 700, '2026-04-01', 'accounting')`,
+    )
+
+    await closeMonth(ops, MARCH, options())
+
+    // April's price is already recorded when March is invoiced in April.
+    const { rows } = await ops.query(
+      'select unit_net_cents from billing_period where tenant_id = $1',
+      [id],
+    )
+    expect(rows[0]).toMatchObject({ unit_net_cents: 500 })
+  })
+
+  it('remembers when accounting last answered, and what went wrong', async () => {
+    const broken = fakeAdapters()
+    broken.adapters.invoicing.planPrice = async () => {
+      throw new Error('accounting is down')
+    }
+    await syncPlanPrices(ops, broken.adapters, options())
+
+    const { rows } = await ops.query('select checked_at, last_error from plan_price_sync')
+    expect(rows[0].last_error).toContain('accounting is down')
+
+    await syncPlanPrices(ops, fakeAdapters().adapters, options())
+    const after = await ops.query('select checked_at, last_error from plan_price_sync')
+    expect(after.rows[0].last_error).toBeNull()
+    expect(after.rows[0].checked_at).not.toBeNull()
   })
 })
 

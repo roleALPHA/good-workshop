@@ -1,7 +1,8 @@
 import { sql } from 'drizzle-orm'
 import { withTenant, type Actor, type Tx } from '@/server/db'
 import { assertTenantAdmin } from '@/domain/tenant/members'
-import { PLANS, isPlanKey, type PlanKey } from '@/cloud/billing/plans'
+import { isPlanKey, type PlanKey } from '@/cloud/billing/plans'
+import { readPriceList } from '@/cloud/billing/price-list'
 import { memberMonths, viennaDay, type Interval } from '@/cloud/billing/usage'
 import type { BillingAdapters } from '@/cloud/billing/ports'
 import { parseBillingDetails, parseBillingEmail, SignupError } from '@/cloud/registration/rules'
@@ -35,6 +36,8 @@ export type BillingOverview = {
   vatStatus: 'none' | 'valid' | 'invalid' | 'pending'
   billingEmail: string
   paymentMethodReady: boolean
+  /** What each plan costs today, from the accounting system. Null when unknown. */
+  prices: Record<PlanKey, number | null>
   /** What this month comes to so far, before tax. */
   monthToDate: { quantity: number; netCents: number }
   invoices: {
@@ -63,6 +66,7 @@ export async function readBillingOverview(
   now = new Date(),
 ): Promise<BillingOverview | null> {
   assertTenantAdmin(actor)
+  const priceList = await readPriceList(now)
   return withTenant(actor, async (tx) => {
     const [account] = await rows(
       tx,
@@ -123,7 +127,11 @@ export async function readBillingOverview(
       vatStatus: account.vat_status as BillingOverview['vatStatus'],
       billingEmail: account.billing_email as string,
       paymentMethodReady: Boolean(account.payment_method_ready),
-      monthToDate: { quantity, netCents: Math.round(quantity * PLANS[plan].netCents) },
+      prices: priceList.prices,
+      monthToDate: {
+        quantity,
+        netCents: Math.round(quantity * (priceList.prices[plan] ?? 0)),
+      },
       invoices: invoices.map((row) => ({
         // A `date` column: already the calendar month, no time zone involved.
         month: String(row.month).slice(0, 7),

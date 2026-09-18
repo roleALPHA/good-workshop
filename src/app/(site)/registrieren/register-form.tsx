@@ -2,7 +2,7 @@
 
 import { useMemo, useState } from 'react'
 import { useFormatter, useLocale, useTranslations } from 'next-intl'
-import { PLANS, PLAN_KEYS, type PlanKey } from '@/cloud/billing/plans'
+import { PLAN_KEYS, type PlanKey } from '@/cloud/billing/plans'
 import { SIGNUP_COUNTRIES, vatIdRequired, type SignupCountry } from '@/cloud/registration/rules'
 import { register, type RegisterResult } from './actions'
 
@@ -17,12 +17,18 @@ const label = 'block text-[14px] font-medium'
  * Everything is checked again on the server (src/cloud/registration/rules.ts);
  * the `required` attributes here are for the person, not for security.
  */
-export function RegisterForm() {
+export function RegisterForm({
+  prices,
+  sellable,
+}: {
+  prices: Record<PlanKey, number | null>
+  sellable: boolean
+}) {
   const t = useTranslations('site.register')
   const format = useFormatter()
   const locale = useLocale()
-  // The price comes from the same file the billing run reads, not from the
-  // label: a translated amount is a second place to change it.
+  // The price comes from the accounting system through the server component,
+  // not from the label: a translated amount is a second place to change it.
   const euro = (cents: number) => format.number(cents / 100, { style: 'currency', currency: 'EUR' })
   const [country, setCountry] = useState<SignupCountry>('AT')
   const [plan, setPlan] = useState<PlanKey>('per_user')
@@ -256,7 +262,7 @@ export function RegisterForm() {
                 onChange={() => setPlan(key)}
               />
               {t(key === 'per_user' ? 'perUser' : 'perWorkshop', {
-                price: euro(PLANS[key].netCents),
+                price: prices[key] === null ? '—' : euro(prices[key]),
               })}
             </label>
           ))}
@@ -277,9 +283,18 @@ export function RegisterForm() {
         </label>
       </div>
 
+      {!sellable && (
+        <p
+          role="status"
+          className="rounded border border-[var(--border)] bg-[var(--warn-bg)] px-3 py-2 text-[15px] text-[var(--warn-fg)]"
+        >
+          {t('unavailable')}
+        </p>
+      )}
+
       <button
         type="submit"
-        disabled={pending}
+        disabled={pending || !sellable}
         className="min-h-11 rounded bg-[var(--brand)] px-5 text-[16px] font-medium text-[var(--brand-fg)] hover:bg-[var(--brand-hover)] disabled:opacity-60"
       >
         {pending ? t('submitting') : t('submit')}

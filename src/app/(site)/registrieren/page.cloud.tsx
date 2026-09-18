@@ -3,6 +3,7 @@ import { redirect } from 'next/navigation'
 import { NextIntlClientProvider } from 'next-intl'
 import { getMessages, getTranslations } from 'next-intl/server'
 import type { AbstractIntlMessages } from 'next-intl'
+import { readPriceList } from '@/cloud/billing/price-list'
 import { readSessionCached } from '@/server/auth/session'
 import { RegisterForm } from './register-form'
 
@@ -16,9 +17,10 @@ export async function generateMetadata(): Promise<Metadata> {
 export default async function RegisterPage() {
   if (await readSessionCached().catch(() => null)) redirect('/library')
 
-  const [t, messages] = await Promise.all([
+  const [t, messages, priceList] = await Promise.all([
     getTranslations('site.register'),
     getMessages() as Promise<{ site: { register: AbstractIntlMessages } }>,
+    readPriceList(),
   ])
 
   return (
@@ -28,7 +30,7 @@ export default async function RegisterPage() {
       {/* Only the slice the form renders goes to the browser; `site` is not a
           client namespace. */}
       <NextIntlClientProvider messages={{ site: { register: messages.site.register } }}>
-        <RegisterForm />
+        <RegisterForm prices={priceList.prices} sellable={priceList.sellable} />
       </NextIntlClientProvider>
       <p className="mt-6 text-[15px] text-[var(--fg-muted)]">
         {t.rich('haveAccount', {

@@ -452,7 +452,8 @@
         "vatIdInvalid": "Según el registro de la UE (VIES), este número de IVA no es válido. Compruébalo.",
         "plan": "Elige un modelo de facturación.",
         "terms": "Acepta las condiciones.",
-        "dpa": "Suscribe el contrato de encargo de tratamiento."
+        "dpa": "Suscribe el contrato de encargo de tratamiento.",
+        "priceUnavailable": "Ahora mismo no podemos indicar un precio y por eso no aceptamos nuevos registros. Inténtalo de nuevo más tarde."
       },
       "workspace": {
         "readOnly": "Este espacio de trabajo es de solo lectura. El contenido se puede leer y exportar, pero no modificar."
@@ -916,7 +917,8 @@
       "vatNote": "Las empresas en Austria pagan un 20 % de IVA. Las empresas de otros países de la UE con número de IVA válido pagan el importe neto (inversión del sujeto pasivo); las empresas fuera de la UE no pagan IVA austriaco.",
       "trial": "Los primeros 14 días son gratuitos, sin datos de pago.",
       "cta": "Probar gratis",
-      "businessOnly": "Solo para empresas: GoodWorkshop Cloud se vende exclusivamente a empresas. Todos los precios son netos, IVA no incluido."
+      "businessOnly": "Solo para empresas: GoodWorkshop Cloud se vende exclusivamente a empresas. Todos los precios son netos, IVA no incluido.",
+      "unavailable": "Ahora mismo no se pueden consultar los precios. Inténtalo de nuevo más tarde."
     },
     "legal": {
       "germanOnly": "La versión en alemán es la jurídicamente vinculante."
@@ -950,7 +952,8 @@
       "sentTitle": "Revisa tu bandeja de entrada.",
       "sentBody": "Hemos enviado un enlace a {email}. Con él creas tu espacio de trabajo; es válido 24 horas.",
       "haveAccount": "¿Ya tienes una cuenta? <login>Iniciar sesión</login>",
-      "planHint": "Neto, IVA no incluido; se puede cambiar cada mes."
+      "planHint": "Neto, IVA no incluido; se puede cambiar cada mes.",
+      "unavailable": "Ahora mismo no se pueden consultar los precios. Inténtalo de nuevo más tarde."
     },
     "confirm": {
       "title": "Crear espacio de trabajo",

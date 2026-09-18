@@ -13,8 +13,18 @@ export function fakeAdapters(
   const payments: { invoiceId: string; amountCents: number; paymentRef: string }[] = []
   let outcome = options.chargeOutcome ?? 'succeeded'
 
+  const prices = new Map<string, number>([
+    ['per_user', 500],
+    ['per_workshop', 100],
+  ])
+
   const adapters: BillingAdapters = {
     invoicing: {
+      async planPrice(plan) {
+        const price = prices.get(plan)
+        if (price === undefined) throw new Error(`no article for ${plan}`)
+        return price
+      },
       async upsertCustomer(customer) {
         const ref = customers.get(customer.tenantId) ?? `partner-${customers.size + 1}`
         customers.set(customer.tenantId, ref)
@@ -72,6 +82,7 @@ export function fakeAdapters(
 
   return {
     adapters,
+    prices,
     customers,
     invoices,
     charges,

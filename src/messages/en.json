@@ -452,7 +452,8 @@
         "vatIdInvalid": "According to the EU register (VIES), this VAT number is not valid. Please check it.",
         "plan": "Please choose a billing model.",
         "terms": "Please accept the terms.",
-        "dpa": "Please enter into the data processing agreement."
+        "dpa": "Please enter into the data processing agreement.",
+        "priceUnavailable": "We cannot name a price right now and are therefore not accepting new registrations. Please try again later."
       },
       "workspace": {
         "readOnly": "This workspace is read-only. Content can be read and exported but not changed."
@@ -916,7 +917,8 @@
       "vatNote": "Businesses in Austria pay 20% VAT. Businesses in other EU countries with a valid VAT number pay net (reverse charge); businesses outside the EU pay no Austrian VAT.",
       "trial": "The first 14 days are free, with no payment details.",
       "cta": "Try it free",
-      "businessOnly": "Businesses only: GoodWorkshop Cloud is sold exclusively to businesses. All prices net, plus VAT."
+      "businessOnly": "Businesses only: GoodWorkshop Cloud is sold exclusively to businesses. All prices net, plus VAT.",
+      "unavailable": "Prices cannot be retrieved right now. Please try again later."
     },
     "legal": {
       "germanOnly": "The German version is legally binding."
@@ -950,7 +952,8 @@
       "sentTitle": "Check your inbox.",
       "sentBody": "We sent a link to {email}. It creates your workspace and is valid for 24 hours.",
       "haveAccount": "Already have an account? <login>Sign in</login>",
-      "planHint": "Net, plus VAT; can be changed every month."
+      "planHint": "Net, plus VAT; can be changed every month.",
+      "unavailable": "Prices cannot be retrieved right now. Please try again later."
     },
     "confirm": {
       "title": "Create workspace",

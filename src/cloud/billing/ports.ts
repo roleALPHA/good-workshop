@@ -47,6 +47,13 @@ export type IssuedInvoice = {
 }
 
 export type InvoicingPort = {
+  /**
+   * What the article for a plan costs there, net, in cents.
+   *
+   * The accounting system owns the price: it has to carry it for the invoice
+   * anyway, and a second copy in the code is the copy that goes stale.
+   */
+  planPrice(plan: PlanKey): Promise<number>
   /** Creates or updates the customer; returns the accounting system's id for it. */
   upsertCustomer(customer: BillingCustomer): Promise<string>
   /** The invoice already issued under this reference, if any -- what makes a repeated run safe. */
