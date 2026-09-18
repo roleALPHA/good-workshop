@@ -26,8 +26,27 @@ import { NextResponse, type NextRequest } from 'next/server'
  *   emission, which it does not reliably support. Worth revisiting; not worth
  *   claiming to have solved.
  */
+/**
+ * The origin of the reach measurement, when one is configured.
+ *
+ * Only the origin: the script is one file, but the beacon it sends goes to
+ * another path on the same host, and a policy naming the file would block it. A
+ * value that is not a URL widens nothing -- a typo in a deployment must not
+ * quietly open script-src.
+ */
+function analyticsOrigin(): string | null {
+  const configured = process.env.GW_ANALYTICS_SCRIPT_URL
+  if (!configured) return null
+  try {
+    return new URL(configured).origin
+  } catch {
+    return null
+  }
+}
+
 export function middleware(request: NextRequest): NextResponse {
   const nonce = crypto.randomUUID().replaceAll('-', '')
+  const analytics = analyticsOrigin()
 
   const csp = [
     "default-src 'self'",
@@ -49,7 +68,7 @@ export function middleware(request: NextRequest): NextResponse {
     // type on the way in (see validatedDescs there), so what the browser does
     // here is instant feedback rather than the guarantee. Replacing it can
     // therefore be judged on ergonomics alone.
-    `script-src 'self' 'nonce-${nonce}' 'unsafe-eval'`,
+    `script-src 'self' 'nonce-${nonce}' 'unsafe-eval'${analytics ? ` ${analytics}` : ''}`,
     "style-src 'self' 'unsafe-inline'",
     // data: for the tenant logo, which is served from the row as a data URI in
     // some paths; blob: for nothing yet, so it stays out.
@@ -58,7 +77,7 @@ export function middleware(request: NextRequest): NextResponse {
     // The collaboration socket runs on the same host under /collab, but a
     // separate GW_COLLAB_URL is a supported deployment, so ws: and wss: to self
     // are allowed rather than pinned to a value this file cannot see.
-    "connect-src 'self' ws: wss:",
+    `connect-src 'self' ws: wss:${analytics ? ` ${analytics}` : ''}`,
     "object-src 'none'",
     "base-uri 'self'",
     "form-action 'self'",
