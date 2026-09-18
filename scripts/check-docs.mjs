@@ -71,6 +71,11 @@ const INTERNAL = {
   GW_OPERATOR_CONSOLE:
     'Cloud only: `1` in the operator console container. The public web container never sets it.',
   GW_OPERATOR_URL: 'Cloud only: where the operator console is served; passkeys are bound to it.',
+  GW_ANALYTICS_SCRIPT_URL:
+    'Cloud only: the counter script for the public website (Umami). Its origin is added to the ' +
+    'content security policy; without it nothing external is loaded at all.',
+  GW_ANALYTICS_WEBSITE_ID:
+    'Cloud only: which site the counter counts for. Both have to be set, or nothing is loaded.',
   GW_BUILD:
     'Baked into the image by the Dockerfile from the build argument. Names the build the ' +
     'footer shows; an operator setting it would make the footer lie.',
