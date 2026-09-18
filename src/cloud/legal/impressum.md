@@ -6,23 +6,23 @@ Informationen gemäß § 5 E-Commerce-Gesetz (ECG), § 14 Unternehmensgesetzbuch
 
 ## Anbieter
 
-**roleALPHA [Rechtsform]**
-[Straße Hausnummer]
-[PLZ Ort], Österreich
+**roleALPHA GmbH**
+Aschergasse 34
+1130 Wien, Österreich
 
 - E-Mail: [kontakt@goodworkshop.org](mailto:kontakt@goodworkshop.org)
 - Telefon: [Telefonnummer]
 - Firmenbuchnummer: [FN]
 - Firmenbuchgericht: [Firmenbuchgericht]
-- UID-Nummer: [ATU…]
-- Unternehmensgegenstand: [Unternehmensgegenstand, z. B. Entwicklung und Betrieb von Software]
-- Mitglied der Wirtschaftskammer [Bundesland], Fachgruppe [Fachgruppe]
-- Gewerbebehörde: [Bezirkshauptmannschaft / Magistrat]
+- UID-Nummer: ATU83606108
+- Unternehmensgegenstand: Entwicklung und Betrieb von Software
+- Mitglied der Wirtschaftskammer Wien, Fachgruppe [Fachgruppe]
+- Gewerbebehörde: [Gewerbebehörde]
 - Anwendbare Rechtsvorschriften: Gewerbeordnung, abrufbar unter [ris.bka.gv.at](https://www.ris.bka.gv.at)
 
 ## Offenlegung nach § 25 Mediengesetz
 
-Medieninhaber: roleALPHA [Rechtsform], [Anschrift]. Grundlegende Richtung: Information über die Software GoodWorkshop und deren Nutzung.
+Medieninhaber: roleALPHA GmbH, Aschergasse 34, 1130 Wien. Grundlegende Richtung: Information über die Software GoodWorkshop und deren Nutzung.
 
 ## Kundenkreis
 

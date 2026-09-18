@@ -2,15 +2,15 @@
 
 # Datenschutzerklärung
 
-Stand: [Datum]
+Stand: 18. September 2026
 
 ## Verantwortlicher
 
-roleALPHA [Rechtsform], [Anschrift], E-Mail: [datenschutz@goodworkshop.org](mailto:datenschutz@goodworkshop.org)
+roleALPHA GmbH, Aschergasse 34, 1130 Wien, E-Mail: [datenschutz@goodworkshop.org](mailto:datenschutz@goodworkshop.org)
 
 ## Welche Daten wir wofür verarbeiten
 
-**Webseite.** Beim Aufruf verarbeitet unser Server technisch notwendige Daten (IP-Adresse, Zeitpunkt, aufgerufene Adresse, Browserkennung), um die Seite auszuliefern und Angriffe abzuwehren. Rechtsgrundlage ist unser berechtigtes Interesse (Art. 6 Abs. 1 lit. f DSGVO). Server-Protokolle löschen wir nach [14] Tagen. Wir setzen keine Tracking- oder Marketing-Cookies ein; gesetzt werden nur technisch notwendige Cookies für Anmeldung und Sprache.
+**Webseite.** Beim Aufruf verarbeitet unser Server technisch notwendige Daten (IP-Adresse, Zeitpunkt, aufgerufene Adresse, Browserkennung), um die Seite auszuliefern und Angriffe abzuwehren. Rechtsgrundlage ist unser berechtigtes Interesse (Art. 6 Abs. 1 lit. f DSGVO). Server-Protokolle löschen wir nach 14 Tagen. Wir setzen keine Tracking- oder Marketing-Cookies ein; gesetzt werden nur technisch notwendige Cookies für Anmeldung und Sprache.
 
 **Registrierung und Konto.** Name, E-Mail-Adresse, Unternehmen, Rechnungsadresse und UID-Nummer der Person, die den Vertrag für ihr Unternehmen abschließt, um den Vertrag abzuschließen und zu erfüllen (Art. 6 Abs. 1 lit. b DSGVO).
 

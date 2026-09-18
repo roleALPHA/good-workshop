@@ -2,7 +2,7 @@
 
 # Auftragsverarbeitungsvereinbarung
 
-nach Art. 28 DSGVO zwischen dem Kunden (Verantwortlicher) und roleALPHA [Rechtsform], [Anschrift] (Auftragsverarbeiter). Sie ist Bestandteil des Vertrags über GoodWorkshop Cloud und gilt mit dessen Abschluss.
+nach Art. 28 DSGVO zwischen dem Kunden (Verantwortlicher) und roleALPHA GmbH, Aschergasse 34, 1130 Wien (Auftragsverarbeiter). Sie ist Bestandteil des Vertrags über GoodWorkshop Cloud und gilt mit dessen Abschluss.
 
 ## 1. Gegenstand und Dauer
 
@@ -32,6 +32,10 @@ Der Verantwortliche stimmt dem Einsatz der folgenden Unterauftragsverarbeiter zu
 
 - netcup GmbH, Deutschland – Hosting in Rechenzentren in der EU
 - Microsoft Ireland Operations Ltd., Irland – E-Mail-Versand
+- Odoo S.A., Belgien – Buchhaltung und Rechnungsstellung
+- Stripe Payments Europe Ltd., Irland – Zahlungsabwicklung
+
+An Odoo und Stripe gehen ausschließlich die Daten, die eine Rechnung und deren Einzug erfordern: Firma, Rechnungsanschrift, UID-Nummer, Rechnungs-E-Mail und die abgerechneten Mengen. Workshop-Inhalte und die Namen der Mitglieder des Verantwortlichen erhalten sie nicht.
 
 Über beabsichtigte Änderungen informiert der Auftragsverarbeiter mindestens 30 Tage vorher; der Verantwortliche kann aus wichtigem Grund widersprechen.
 
