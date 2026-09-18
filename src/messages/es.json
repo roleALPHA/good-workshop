@@ -97,8 +97,8 @@
       },
       "plan": {
         "title": "Modelo de facturación",
-        "per_user": "1 € por usuario/mes",
-        "per_workshop": "1 € por taller",
+        "per_user": "{price} por usuario/mes",
+        "per_workshop": "{price} por taller",
         "next": "A partir del mes que viene: {plan}",
         "hint": "Un cambio se aplica a partir del día 1 del mes siguiente.",
         "save": "Aplicar"
@@ -941,8 +941,8 @@
       "vatId": "Número de IVA",
       "vatIdHint": "Obligatorio para empresas de otro país de la UE: se factura sin IVA (inversión del sujeto pasivo).",
       "plan": "Modelo de facturación",
-      "perUser": "1 € por usuario/mes",
-      "perWorkshop": "1 € por taller",
+      "perUser": "{price} por usuario/mes",
+      "perWorkshop": "{price} por taller",
       "acceptTerms": "Acepto las <terms>condiciones</terms> y he leído la <privacy>política de privacidad</privacy>.",
       "acceptDpa": "Suscribo el <dpa>contrato de encargo de tratamiento</dpa>.",
       "submit": "Registrarse",
