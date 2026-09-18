@@ -2,8 +2,9 @@ import Link from 'next/link'
 import type { Route } from 'next'
 import { redirect } from 'next/navigation'
 import { getTranslations } from 'next-intl/server'
-import { Bot, Printer, Share2, Timer, Users } from 'lucide-react'
+import { Bot, Github, Printer, Share2, Timer, Users } from 'lucide-react'
 import { readSessionCached } from '@/server/auth/session'
+import { SOURCE_URL } from '@/lib/attribution'
 import { SiteShell } from './site-shell'
 
 /**
@@ -57,6 +58,27 @@ export default async function CloudHome() {
             </li>
           ))}
         </ul>
+      </section>
+
+      {/* Said on the front page rather than hidden in the pricing table: the
+          cloud sells operation, not access to the software. */}
+      <section
+        className="mt-10 rounded border border-[var(--border)] bg-[var(--surface)] p-5"
+        aria-labelledby="self-host"
+      >
+        <h2 id="self-host" className="text-xl font-semibold tracking-tight">
+          {t('selfHostTitle')}
+        </h2>
+        <p className="mt-2 max-w-2xl text-[15px] text-[var(--fg-muted)]">{t('selfHostBody')}</p>
+        <a
+          href={SOURCE_URL}
+          target="_blank"
+          rel="noreferrer"
+          className="mt-3 inline-flex min-h-11 items-center gap-2 text-[15px] underline underline-offset-2"
+        >
+          <Github aria-hidden className="size-4" />
+          {t('selfHostCta')}
+        </a>
       </section>
     </SiteShell>
   )

@@ -900,7 +900,10 @@
         "title": "Imprimer et exporter",
         "body": "Vue d’impression et export Markdown pour la salle, le support et le compte rendu."
       },
-      "trialNote": "Aucune donnée de paiement. Tu décides après 14 jours."
+      "trialNote": "Aucune donnée de paiement. Tu décides après 14 jours.",
+      "selfHostTitle": "Plutôt l’héberger toi-même ?",
+      "selfHostBody": "GoodWorkshop est open source. Avec tes propres serveurs, tu l’installes avec Docker et tu ne nous paies rien, ni aujourd’hui ni plus tard. Le cloud te décharge de l’exploitation, des mises à jour et des sauvegardes ; c’est toute la différence.",
+      "selfHostCta": "Voir sur GitHub"
     },
     "pricing": {
       "title": "Tarifs",
@@ -920,7 +923,14 @@
       "trial": "Les 14 premiers jours sont gratuits, sans données de paiement.",
       "cta": "Essai gratuit",
       "businessOnly": "Réservé aux entreprises : GoodWorkshop Cloud est vendu exclusivement aux professionnels. Tous les prix sont HT.",
-      "unavailable": "Les tarifs ne peuvent pas être consultés pour le moment. Réessaie plus tard."
+      "unavailable": "Les tarifs ne peuvent pas être consultés pour le moment. Réessaie plus tard.",
+      "selfHost": {
+        "name": "Auto-hébergé",
+        "unit": "sur tes propres serveurs",
+        "free": "pour toujours",
+        "body": "Open source sous Apache 2.0 avec la Commons Clause : utilise et adapte GoodWorkshop chez toi sans limite. La seule chose interdite est de le vendre comme ton propre service.",
+        "cta": "Installation sur GitHub"
+      }
     },
     "legal": {
       "germanOnly": "Seule la version allemande fait foi."

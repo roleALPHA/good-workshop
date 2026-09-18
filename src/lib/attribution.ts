@@ -20,6 +20,8 @@
  */
 
 export const ROLEALPHA_URL = 'https://rolealpha.com'
+/** Where the source is, for anybody who would rather run it themselves. */
+export const SOURCE_URL = 'https://github.com/roleALPHA/good-workshop'
 export const LICENSE_URL = 'https://github.com/roleALPHA/good-workshop/blob/main/LICENSE'
 export const LICENSE = 'Apache-2.0 + Commons Clause'
 

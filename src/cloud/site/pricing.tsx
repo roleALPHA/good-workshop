@@ -3,6 +3,7 @@ import type { Route } from 'next'
 import { getFormatter, getTranslations } from 'next-intl/server'
 import type { PlanKey } from '@/cloud/billing/plans'
 import { readPriceList } from '@/cloud/billing/price-list'
+import { SOURCE_URL } from '@/lib/attribution'
 
 /**
  * Both models, for businesses. Net prices, because GoodWorkshop Cloud is not
@@ -31,7 +32,7 @@ export async function Pricing() {
       </p>
       <p className="mt-4 max-w-2xl text-[17px] text-[var(--fg-muted)]">{t('intro')}</p>
 
-      <ul className="mt-8 grid gap-4 md:grid-cols-2">
+      <ul className="mt-8 grid gap-4 md:grid-cols-3">
         {plans.map((key) => {
           const netCents = priceList.prices[key]
           const c = copy[key]
@@ -52,6 +53,25 @@ export async function Pricing() {
             </li>
           )
         })}
+
+        {/* The third way to have GoodWorkshop, and the honest one to name on a
+            page about prices: running it yourself costs nothing, and the zero
+            is formatted like the others rather than written into a sentence. */}
+        <li className="flex flex-col rounded border border-[var(--border)] bg-[var(--surface)] p-5">
+          <h2 className="text-xl font-semibold tracking-tight">{t('selfHost.name')}</h2>
+          <p className="mt-1 text-[15px] text-[var(--fg-muted)]">{t('selfHost.unit')}</p>
+          <p className="mt-4 text-3xl font-semibold">{euro(0)}</p>
+          <p className="text-[13px] text-[var(--fg-muted)]">{t('selfHost.free')}</p>
+          <p className="mt-4 flex-1 text-[15px]">{t('selfHost.body')}</p>
+          <a
+            href={SOURCE_URL}
+            target="_blank"
+            rel="noreferrer"
+            className="mt-4 inline-flex min-h-11 items-center underline underline-offset-2"
+          >
+            {t('selfHost.cta')}
+          </a>
+        </li>
       </ul>
 
       <p className="mt-6 max-w-2xl text-[14px] text-[var(--fg-muted)]">{t('vatNote')}</p>

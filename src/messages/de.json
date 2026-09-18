@@ -900,7 +900,10 @@
         "title": "Drucken und exportieren",
         "body": "Druckansicht und Markdown-Export für den Raum, das Handout und die Dokumentation."
       },
-      "trialNote": "Keine Zahlungsdaten nötig. Nach 14 Tagen entscheidest du."
+      "trialNote": "Keine Zahlungsdaten nötig. Nach 14 Tagen entscheidest du.",
+      "selfHostTitle": "Lieber selbst betreiben?",
+      "selfHostBody": "GoodWorkshop ist quelloffen. Wer eigene Server hat, installiert es dort mit Docker und zahlt uns nichts — weder heute noch später. Die Cloud nimmt dir Betrieb, Updates und Sicherung ab; das ist der einzige Unterschied.",
+      "selfHostCta": "Auf GitHub ansehen"
     },
     "pricing": {
       "title": "Preise",
@@ -920,7 +923,14 @@
       "trial": "Die ersten 14 Tage sind kostenlos, ohne Zahlungsdaten.",
       "cta": "Kostenlos testen",
       "businessOnly": "Nur für Unternehmen: GoodWorkshop Cloud wird ausschließlich an Unternehmer im Sinne des § 1 UGB verkauft. Alle Preise netto zzgl. Umsatzsteuer.",
-      "unavailable": "Die Preise lassen sich gerade nicht abrufen. Bitte versuche es später noch einmal."
+      "unavailable": "Die Preise lassen sich gerade nicht abrufen. Bitte versuche es später noch einmal.",
+      "selfHost": {
+        "name": "Selbst gehostet",
+        "unit": "auf eigenen Servern",
+        "free": "für immer",
+        "body": "Quelloffen unter Apache 2.0 mit Commons Clause: Du darfst GoodWorkshop im eigenen Haus unbegrenzt nutzen und anpassen. Nicht erlaubt ist nur, es als eigenen Dienst zu verkaufen.",
+        "cta": "Zur Installation auf GitHub"
+      }
     },
     "legal": {
       "germanOnly": "Rechtlich verbindlich ist die deutsche Fassung."
