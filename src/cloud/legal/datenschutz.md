@@ -1,16 +1,16 @@
-<!-- Vor Veröffentlichung rechtlich prüfen lassen. Platzhalter in [eckigen Klammern] ausfüllen. -->
+<!-- Vor Veröffentlichung rechtlich prüfen lassen. -->
 
 # Datenschutzerklärung
 
-Stand: [Datum]
+Stand: 18. September 2026
 
 ## Verantwortlicher
 
-roleALPHA [Rechtsform], [Anschrift], E-Mail: [datenschutz@goodworkshop.org](mailto:datenschutz@goodworkshop.org)
+roleALPHA GmbH, Aschergasse 34, 1130 Wien, E-Mail: [office@rolealpha.com](mailto:office@rolealpha.com)
 
 ## Welche Daten wir wofür verarbeiten
 
-**Webseite.** Beim Aufruf verarbeitet unser Server technisch notwendige Daten (IP-Adresse, Zeitpunkt, aufgerufene Adresse, Browserkennung), um die Seite auszuliefern und Angriffe abzuwehren. Rechtsgrundlage ist unser berechtigtes Interesse (Art. 6 Abs. 1 lit. f DSGVO). Server-Protokolle löschen wir nach [14] Tagen. Wir setzen keine Tracking- oder Marketing-Cookies ein; gesetzt werden nur technisch notwendige Cookies für Anmeldung und Sprache.
+**Webseite.** Beim Aufruf verarbeitet unser Server technisch notwendige Daten (IP-Adresse, Zeitpunkt, aufgerufene Adresse, Browserkennung), um die Seite auszuliefern und Angriffe abzuwehren. Rechtsgrundlage ist unser berechtigtes Interesse (Art. 6 Abs. 1 lit. f DSGVO). Server-Protokolle löschen wir nach 14 Tagen. Wir setzen keine Tracking- oder Marketing-Cookies ein; gesetzt werden nur technisch notwendige Cookies für Anmeldung und Sprache.
 
 **Registrierung und Konto.** Name, E-Mail-Adresse, Unternehmen, Rechnungsadresse und UID-Nummer der Person, die den Vertrag für ihr Unternehmen abschließt, um den Vertrag abzuschließen und zu erfüllen (Art. 6 Abs. 1 lit. b DSGVO).
 
@@ -41,4 +41,4 @@ Kontodaten speichern wir für die Dauer des Vertrags. Inhalte löschen wir spät
 
 ## Ihre Rechte
 
-Sie haben das Recht auf Auskunft, Berichtigung, Löschung, Einschränkung der Verarbeitung, Datenübertragbarkeit und Widerspruch. Wenden Sie sich dafür an [datenschutz@goodworkshop.org](mailto:datenschutz@goodworkshop.org). Sie können sich außerdem bei der österreichischen [Datenschutzbehörde](https://www.dsb.gv.at) beschweren.
+Sie haben das Recht auf Auskunft, Berichtigung, Löschung, Einschränkung der Verarbeitung, Datenübertragbarkeit und Widerspruch. Wenden Sie sich dafür an [office@rolealpha.com](mailto:office@rolealpha.com). Sie können sich außerdem bei der österreichischen [Datenschutzbehörde](https://www.dsb.gv.at) beschweren.

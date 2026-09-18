@@ -1,12 +1,12 @@
-<!-- Vor Veröffentlichung rechtlich prüfen lassen. Platzhalter in [eckigen Klammern] ausfüllen. -->
+<!-- Vor Veröffentlichung rechtlich prüfen lassen. -->
 
 # Allgemeine Geschäftsbedingungen
 
-Stand: [Datum]
+Stand: 18. September 2026
 
 ## 1. Geltungsbereich und Kundenkreis
 
-1. Diese Bedingungen gelten für die Nutzung von GoodWorkshop Cloud (der „Dienst“), angeboten von roleALPHA [Rechtsform], [Anschrift] („wir“).
+1. Diese Bedingungen gelten für die Nutzung von GoodWorkshop Cloud (der „Dienst“), angeboten von der roleALPHA GmbH, Aschergasse 34, 1130 Wien („wir“).
 2. Der Dienst wird ausschließlich Unternehmern im Sinne des § 1 Unternehmensgesetzbuch (UGB) angeboten („Kunde“). Mit der Registrierung bestätigt der Kunde, den Vertrag für sein Unternehmen abzuschließen. Verträge mit Verbrauchern im Sinne des Konsumentenschutzgesetzes (KSchG) schließen wir nicht; die Bestimmungen des KSchG und des Fern- und Auswärtsgeschäfte-Gesetzes (FAGG) finden daher keine Anwendung.
 3. Die Person, die die Registrierung vornimmt, versichert, zur Vertretung des Kunden berechtigt zu sein.
 4. Abweichende Bedingungen des Kunden gelten nicht, auch wenn wir ihnen nicht ausdrücklich widersprechen.
@@ -65,5 +65,5 @@ Wir können diese Bedingungen mit einer Frist von sechs Wochen ändern. Die Änd
 ## 11. Schlussbestimmungen
 
 1. Es gilt österreichisches Recht unter Ausschluss des UN-Kaufrechts und der Verweisungsnormen des internationalen Privatrechts.
-2. Gerichtsstand ist das für [Sitz des Anbieters] sachlich zuständige Gericht.
+2. Gerichtsstand ist das für 1130 Wien sachlich zuständige Gericht.
 3. Sollte eine Bestimmung unwirksam sein, bleiben die übrigen wirksam.
