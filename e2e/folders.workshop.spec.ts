@@ -31,6 +31,26 @@ const sidebar = (page: Page) => page.getByRole('navigation', { name: 'Ordner und
  * file ran on a tenant without tags, which is how it shipped in v0.4.0 and was
  * found on a live install.
  */
+
+/**
+ * A button in a folder's row.
+ *
+ * The row hovers first, because the buttons are invisible until it does and
+ * take no clicks while they are invisible -- that is what keeps a click on a
+ * long folder name from opening its access page. Playwright moves the mouse
+ * and hit-tests in one step, which is a moment too early for the hover to have
+ * applied, so the two are separated here the way a person does them.
+ */
+async function rowAction(page: Page, folder: string, label: string) {
+  await sidebar(page).getByRole('link', { name: folder, exact: true }).hover()
+  return sidebar(page).getByRole('button', { name: label })
+}
+
+async function rowLink(page: Page, folder: string, label: string) {
+  await sidebar(page).getByRole('link', { name: folder, exact: true }).hover()
+  return sidebar(page).getByRole('link', { name: label })
+}
+
 test('shows the library, with its tags, once a workshop carries one', async ({ page }) => {
   const title = `Getaggt ${Date.now()}`
   const tag = `Tag${Date.now()}`
@@ -78,9 +98,7 @@ test('creates a folder inside another, then moves it back out', async ({ page })
   expect(indent).not.toBe('0px')
 
   // And out again, to the top level.
-  await sidebar(page)
-    .getByRole('button', { name: `Ordner ${inner} verschieben` })
-    .click()
+  await (await rowAction(page, inner, `Ordner ${inner} verschieben`)).click()
   await sidebar(page).getByLabel('Verschieben nach').selectOption('')
 
   await expect(async () => {
@@ -106,9 +124,7 @@ test('does not offer a folder its own subtree as a destination', async ({ page }
   await page.keyboard.press('Enter')
   await expect(sidebar(page).getByRole('link', { name: child, exact: true })).toBeVisible()
 
-  await sidebar(page)
-    .getByRole('button', { name: `Ordner ${parent} verschieben` })
-    .click()
+  await (await rowAction(page, parent, `Ordner ${parent} verschieben`)).click()
   const options = await sidebar(page)
     .getByLabel('Verschieben nach')
     .locator('option')
@@ -309,7 +325,7 @@ test.describe('filing things by dragging them', () => {
     // Sideways, not upwards. The horizontal travel is what says how deep, and
     // the row above decides which parent that is -- dragging ONTO the row above
     // would mean "put me in front of it" instead.
-    const handle = sidebar(page).getByRole('button', { name: `Ordner ${child} verschieben` })
+    const handle = await rowAction(page, child, `Ordner ${child} verschieben`)
     await handle.scrollIntoViewIfNeeded()
     const from = await centreOf(handle)
     await dragTo(page, from, { x: from.x + 30, y: from.y })
@@ -371,9 +387,7 @@ test('opens the access screen of a folder from the tree', async ({ page }) => {
   await page.keyboard.press('Enter')
   await expect(sidebar(page).getByRole('link', { name, exact: true })).toBeVisible()
 
-  await sidebar(page)
-    .getByRole('link', { name: `Zugriff auf Ordner ${name}` })
-    .click()
+  await (await rowLink(page, name, `Zugriff auf Ordner ${name}`)).click()
 
   await expect(page.getByRole('heading', { name: `Zugriff auf ${name}` })).toBeVisible()
   // The sentence that keeps somebody from sharing a subtree by accident: it

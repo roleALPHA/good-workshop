@@ -588,7 +588,10 @@
     "folderInherited": "{role} · a través de {folder}",
     "folderShare": "Acceso",
     "folderShareOf": "Acceso a la carpeta {name}",
-    "you": "tú"
+    "you": "tú",
+    "removeFolderWarning": "¿Eliminar la carpeta «{name}»? Los talleres que contiene suben un nivel, y las subcarpetas también. Se pierden los permisos de esta carpeta.",
+    "removeFolderConfirm": "Eliminar carpeta",
+    "cancel": "Cancelar"
   },
   "mail": {
     "magicLink": {
