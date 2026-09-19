@@ -588,7 +588,10 @@
     "folderInherited": "{role} · über {folder}",
     "folderShare": "Zugriff",
     "folderShareOf": "Zugriff auf Ordner {name}",
-    "you": "du"
+    "you": "du",
+    "removeFolderWarning": "Ordner „{name}\" entfernen? Workshops darin rücken eine Ebene nach oben, Unterordner ebenso. Die Freigaben dieses Ordners gehen verloren.",
+    "removeFolderConfirm": "Ordner entfernen",
+    "cancel": "Abbrechen"
   },
   "mail": {
     "magicLink": {

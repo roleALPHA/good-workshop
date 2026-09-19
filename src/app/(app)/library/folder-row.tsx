@@ -53,6 +53,7 @@ export function FolderRow({
   const [pending, startTransition] = useTransition()
   const [failed, setFailed] = useState<string | null>(null)
   const [moving, setMoving] = useState(false)
+  const [confirming, setConfirming] = useState(false)
   const [showName, setShowName] = useState(false)
   const nameRef = useRef<HTMLSpanElement>(null)
   const actionsRef = useRef<HTMLDivElement>(null)
@@ -81,6 +82,7 @@ export function FolderRow({
 
   function remove() {
     setFailed(null)
+    setConfirming(false)
     startTransition(async () => {
       const result = await deleteFolderAction({ id })
       if (!result.ok) setFailed(result.message)
@@ -196,8 +198,9 @@ export function FolderRow({
               {canManage && (
                 <button
                   type="button"
-                  onClick={remove}
+                  onClick={() => setConfirming((open) => !open)}
                   disabled={pending}
+                  aria-expanded={confirming}
                   title={t('removeFolder')}
                   aria-label={t('removeFolderLabel', { name })}
                   className={iconButtonClass}
@@ -231,6 +234,35 @@ export function FolderRow({
             </div>
           )}
 
+          {/* Asked, not done: this button sits in a bar a keyboard reaches
+              while it is still invisible, and one Enter there used to unfile
+              every workshop in the folder and drop its sharing, with nothing
+              to undo it. */}
+          {confirming && (
+            <div className="mt-1 ml-2 rounded border border-[var(--border)] bg-[var(--surface)] p-2">
+              <p className="text-[13px]">{t('removeFolderWarning', { name })}</p>
+              <div className="mt-2 flex flex-wrap gap-2">
+                {/* Not the label of the button that opened this: the second one
+                    is the one that cannot be taken back. */}
+                <button
+                  type="button"
+                  onClick={remove}
+                  disabled={pending}
+                  className="rounded bg-[var(--danger-fg)] px-2 py-1.5 text-[13px] font-medium text-[var(--bg)] disabled:opacity-50 pointer-coarse:min-h-11"
+                >
+                  {t('removeFolderConfirm')}
+                </button>
+                <button
+                  type="button"
+                  onClick={() => setConfirming(false)}
+                  className="rounded px-2 py-1.5 text-[13px] hover:bg-[var(--surface-raised)] pointer-coarse:min-h-11"
+                >
+                  {t('cancel')}
+                </button>
+              </div>
+            </div>
+          )}
+
           {failed && (
             <p role="alert" className="px-2 text-[13px] text-[var(--warn-fg)]">
               {failed}
@@ -251,19 +283,25 @@ export function FolderRow({
  * after five letters whether anybody was pointing at it or not. Now the name
  * has the row until somebody reaches for the buttons.
  *
- * Hidden by opacity alone, deliberately not by `pointer-events-none`. A pointer
- * cannot reach the buttons without hovering the row, which shows them first, so
- * nobody clicks one they could not see. And opacity keeps them in the tab order
- * and hit-testable -- focus is what reveals the bar for a keyboard, and the
- * library's end-to-end tests aim at these buttons by name.
+ * Hidden by opacity AND by pointer-events, which the first version got wrong.
+ * The reasoning then was that a pointer cannot reach a button without hovering
+ * the row first, so nobody clicks one they could not see. Use says otherwise:
+ * the click that reveals the bar lands on it. Selecting a folder took two
+ * clicks, and clicking a long name opened its access page instead -- the bar
+ * lies over the end of the name.
+ *
+ * Opacity still carries the reveal, so the buttons stay in the tab order and
+ * the library's end-to-end tests can aim at them by name; focus-within makes
+ * them clickable for a keyboard, hover for a pointer.
  *
  * On a coarse pointer there is no hover to reveal anything with, so the bar
  * goes back into the flow, always visible -- the name yields there, as before.
  */
 const actionsClass = cn(
   'absolute inset-y-0 right-0 flex items-center gap-1 rounded bg-[var(--bg)] pl-1',
-  'opacity-0 group-hover:opacity-100 group-focus-within:opacity-100',
-  'pointer-coarse:static pointer-coarse:opacity-100',
+  'pointer-events-none opacity-0 group-hover:opacity-100 group-focus-within:opacity-100',
+  'group-hover:pointer-events-auto group-focus-within:pointer-events-auto',
+  'pointer-coarse:static pointer-coarse:opacity-100 pointer-coarse:pointer-events-auto',
 )
 
 /**
