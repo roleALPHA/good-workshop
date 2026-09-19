@@ -588,7 +588,10 @@
     "folderInherited": "{role} · via {folder}",
     "folderShare": "Accès",
     "folderShareOf": "Accès au dossier {name}",
-    "you": "toi"
+    "you": "toi",
+    "removeFolderWarning": "Supprimer le dossier « {name} » ? Les ateliers qu’il contient remontent d’un niveau, les sous-dossiers aussi. Les partages de ce dossier sont perdus.",
+    "removeFolderConfirm": "Supprimer le dossier",
+    "cancel": "Annuler"
   },
   "mail": {
     "magicLink": {

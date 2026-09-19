@@ -588,7 +588,10 @@
     "folderInherited": "{role} · via {folder}",
     "folderShare": "Access",
     "folderShareOf": "Access to folder {name}",
-    "you": "you"
+    "you": "you",
+    "removeFolderWarning": "Remove the folder “{name}”? Workshops in it move up one level, and so do subfolders. This folder’s sharing is lost.",
+    "removeFolderConfirm": "Remove folder",
+    "cancel": "Cancel"
   },
   "mail": {
     "magicLink": {

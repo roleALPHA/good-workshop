@@ -57,9 +57,54 @@ describe('a folder in the sidebar', () => {
     expect(moveFolderAction).toHaveBeenCalledWith({ id: 'f-1', parentId: 'f-2' })
   })
 
+  it('asks before it removes a folder', async () => {
+    // The remove button sits in a bar that a keyboard reaches while it is
+    // invisible. One Enter there used to unfile every workshop in the folder
+    // and drop its sharing, with nothing to undo it.
+    show()
+    await userEvent.click(screen.getByRole('button', { name: 'Ordner Kunden entfernen' }))
+
+    expect(deleteFolderAction).not.toHaveBeenCalled()
+    expect(screen.getByText(/Workshops darin rücken/)).toBeInTheDocument()
+  })
+
+  it('removes it on the second, differently named button', async () => {
+    deleteFolderAction.mockResolvedValue({ ok: true, data: null })
+    show()
+
+    await userEvent.click(screen.getByRole('button', { name: 'Ordner Kunden entfernen' }))
+    await userEvent.click(screen.getByRole('button', { name: 'Ordner entfernen' }))
+
+    expect(deleteFolderAction).toHaveBeenCalledWith({ id: 'f-1' })
+  })
+
+  it('lets go of the question again', async () => {
+    show()
+    await userEvent.click(screen.getByRole('button', { name: 'Ordner Kunden entfernen' }))
+    await userEvent.click(screen.getByRole('button', { name: 'Abbrechen' }))
+
+    expect(screen.queryByText(/Workshops darin rücken/)).not.toBeInTheDocument()
+    expect(deleteFolderAction).not.toHaveBeenCalled()
+  })
+
   it('offers nothing to somebody who may not tidy up', () => {
     show(false)
     expect(screen.queryByRole('button', { name: /Kunden/ })).not.toBeInTheDocument()
+  })
+})
+
+describe('the row buttons while they are invisible', () => {
+  it('take no clicks until the row is hovered or focused', () => {
+    // Reported from use: the first click on a long folder name opened its
+    // access page instead of selecting the folder, and selecting a folder often
+    // took two clicks. Both are this bar: it lies over the end of the name, and
+    // opacity alone leaves it hit-testable, so the click that reveals it also
+    // lands on it.
+    show()
+    const bar = screen.getByRole('link', { name: /Zugriff/ }).parentElement!
+    expect(bar.className).toContain('pointer-events-none')
+    expect(bar.className).toContain('group-hover:pointer-events-auto')
+    expect(bar.className).toContain('group-focus-within:pointer-events-auto')
   })
 })
 
