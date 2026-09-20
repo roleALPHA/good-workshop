@@ -13,6 +13,8 @@ import { describe, expect, it } from 'vitest'
 
 const root = join(import.meta.dirname, '../../..')
 const home = readFileSync(join(root, 'src/cloud/site/home.tsx'), 'utf8')
+const LOCALES = ['de', 'en', 'es', 'fr']
+const SHOTS = ['agenda.png', 'library.png', 'phone.png']
 
 /** Every picture tag, whether plain or Next's. */
 const images = () => home.match(/<(?:img|Image)[\s\S]*?\/>/g) ?? []
@@ -21,12 +23,22 @@ const images = () => home.match(/<(?:img|Image)[\s\S]*?\/>/g) ?? []
 const sources = [...home.matchAll(/src="(\/[^"]+)"/g)].map((match) => match[1]!)
 
 describe('the pictures on the website', () => {
-  it('are actually in the repository', () => {
-    expect(sources.length).toBeGreaterThan(0)
-    for (const src of sources) {
-      const file = join(root, 'public', src)
-      expect(statSync(file).size, `${src} is empty`).toBeGreaterThan(1000)
+  it('exist in every language the website speaks', () => {
+    // A missing language would not break the build: the page would ask for a
+    // file that is not there and show nothing at all.
+    for (const locale of LOCALES) {
+      for (const shot of SHOTS) {
+        const file = join(root, 'public', 'marketing', locale, shot)
+        expect(statSync(file).size, `${locale}/${shot} is empty`).toBeGreaterThan(1000)
+      }
     }
+  })
+
+  it('are addressed by language, not by a fixed path', () => {
+    // A hard-coded /marketing/agenda.png would show German screenshots to
+    // everybody, which is the mistake this whole set exists to fix.
+    expect(home).toMatch(/marketing\/\$\{locale\}\//)
+    expect(sources.filter((src) => src.startsWith('/marketing/'))).toHaveLength(0)
   })
 
   it('each carry a description', () => {

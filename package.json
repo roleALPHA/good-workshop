@@ -19,7 +19,7 @@
     "test:watch": "vitest",
     "test:coverage": "vitest run --coverage",
     "test:e2e": "playwright test",
-    "capture": "GW_CAPTURE=1 playwright test --project=marketing",
+    "capture": "GW_CAPTURE=1 playwright test --project=marketing --workers=1",
     "test:e2e:ui": "playwright test --ui",
     "db:bootstrap": "node scripts/db-bootstrap.mjs",
     "db:generate": "drizzle-kit generate",

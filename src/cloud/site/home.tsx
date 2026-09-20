@@ -2,7 +2,7 @@ import Image from 'next/image'
 import Link from 'next/link'
 import type { Route } from 'next'
 import { redirect } from 'next/navigation'
-import { getTranslations } from 'next-intl/server'
+import { getLocale, getTranslations } from 'next-intl/server'
 import { Bot, Github, Printer, Share2, Timer, Users } from 'lucide-react'
 import { readSessionCached } from '@/server/auth/session'
 import { SOURCE_URL } from '@/lib/attribution'
@@ -14,7 +14,7 @@ import { SiteShell } from './site-shell'
  */
 export default async function CloudHome() {
   if (await readSessionCached().catch(() => null)) redirect('/library')
-  const t = await getTranslations('site.home')
+  const [t, locale] = await Promise.all([getTranslations('site.home'), getLocale()])
 
   const features = [
     ['plan', Timer],
@@ -51,7 +51,7 @@ export default async function CloudHome() {
           what is advertised here is what the tests run against. */}
       <section className="mt-8">
         <Image
-          src="/marketing/agenda.png"
+          src={`/marketing/${locale}/agenda.png`}
           alt={t('shotAgenda')}
           width={1280}
           height={860}
@@ -82,7 +82,7 @@ export default async function CloudHome() {
         </h2>
         <div className="mt-4 grid gap-4 sm:grid-cols-[2fr_1fr]">
           <Image
-            src="/marketing/library.png"
+            src={`/marketing/${locale}/library.png`}
             alt={t('shotLibrary')}
             width={1280}
             height={860}
@@ -90,7 +90,7 @@ export default async function CloudHome() {
             className="h-auto w-full rounded-lg border border-[var(--border)] shadow-sm"
           />
           <Image
-            src="/marketing/phone.png"
+            src={`/marketing/${locale}/phone.png`}
             alt={t('shotPhone')}
             width={390}
             height={844}
