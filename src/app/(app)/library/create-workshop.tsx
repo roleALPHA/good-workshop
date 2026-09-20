@@ -1,6 +1,6 @@
 'use client'
 
-import { useRouter } from 'next/navigation'
+import { useRouter, useSearchParams } from 'next/navigation'
 import { useState, useTransition } from 'react'
 import { Plus } from 'lucide-react'
 import { createWorkshopAction } from '@/server/actions/workshop'
@@ -11,12 +11,30 @@ import { useTranslations } from 'next-intl'
  *
  * No dialog, per the inline-editing rule: the list stays visible while you name
  * the new entry, so you can see what you already have.
+ *
+ * Where it is filed comes from the address bar, not only from the prop. Two of
+ * ten new workshops were reported landing in the wrong folder, and this is why:
+ * a prop is one render behind. Clicking a folder starts a navigation, the page
+ * for the new folder is fetched, and until it arrives this component still
+ * carries the folder the library showed a moment ago -- long enough to type a
+ * title and press Enter. The URL changes first, so it is the better answer.
+ *
+ * The folder is also named next to the field, because the surest fix for filing
+ * something in the wrong place is seeing where it goes before it goes there.
  */
-export function CreateWorkshop({ folderId }: { folderId: string | null }) {
+export function CreateWorkshop({
+  folderId,
+  folderName,
+}: {
+  folderId: string | null
+  folderName?: string | null
+}) {
   const t = useTranslations('library')
   const tc = useTranslations('common')
 
   const router = useRouter()
+  const params = useSearchParams()
+  const target = params.get('folder') ?? folderId
   const [open, setOpen] = useState(false)
   const [title, setTitle] = useState('')
   const [error, setError] = useState<string | null>(null)
@@ -27,7 +45,7 @@ export function CreateWorkshop({ folderId }: { folderId: string | null }) {
     if (trimmed === '') return
 
     startTransition(async () => {
-      const result = await createWorkshopAction({ title: trimmed, folderId })
+      const result = await createWorkshopAction({ title: trimmed, folderId: target })
       if (!result.ok) {
         setError(result.message)
         return
@@ -56,6 +74,11 @@ export function CreateWorkshop({ folderId }: { folderId: string | null }) {
     // "Anlegen" off the edge of the screen.
     <div className="flex w-full items-start gap-2 sm:w-auto">
       <div className="min-w-0 flex-1">
+        {folderName && target === folderId && (
+          <p className="mb-1 text-[13px] text-[var(--fg-subtle)]">
+            {t('filedIn', { folder: folderName })}
+          </p>
+        )}
         <input
           autoFocus
           aria-label={t('workshopTitle')}

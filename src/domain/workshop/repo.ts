@@ -635,6 +635,43 @@ async function applyFolderRebalance(
  * path in `ancestor_ids` names this folder in every workshop below it, and a
  * path that mentions a folder which no longer exists breaks the tree view.
  */
+/**
+ * Renames a folder.
+ *
+ * The name clash is answered here rather than by folder_sibling_name_uq, for
+ * the same reason as in createFolder: the database's answer is a unique
+ * violation, and the sidebar would show it to somebody who typed a name that
+ * was simply already taken.
+ *
+ * A folder may keep its own name spelled differently -- otherwise correcting
+ * the capitalisation of a folder would be refused by the folder itself.
+ */
+export async function renameFolder(tx: Tx, id: string, name: string): Promise<void> {
+  const rows = await tx
+    .select({ parentId: folder.parentId })
+    .from(folder)
+    .where(eq(folder.id, id))
+    .limit(1)
+
+  const found = rows[0]
+  if (!found) throw new NotFoundError()
+
+  const clash = await tx
+    .select({ id: folder.id })
+    .from(folder)
+    .where(
+      and(
+        sameParent(found.parentId),
+        sql`lower(${folder.name}) = lower(${name})`,
+        sql`${folder.id} <> ${id}::uuid`,
+      ),
+    )
+    .limit(1)
+  if (clash[0]) throw new FolderMoveError('folder.nameTaken')
+
+  await tx.update(folder).set({ name }).where(eq(folder.id, id))
+}
+
 export async function deleteFolder(tx: Tx, id: string): Promise<void> {
   const rows = await tx
     .select({ parentId: folder.parentId })

@@ -591,7 +591,13 @@
     "you": "tú",
     "removeFolderWarning": "¿Eliminar la carpeta «{name}»? Los talleres que contiene suben un nivel, y las subcarpetas también. Se pierden los permisos de esta carpeta.",
     "removeFolderConfirm": "Eliminar carpeta",
-    "cancel": "Cancelar"
+    "cancel": "Cancelar",
+    "renameFolder": "Cambiar nombre",
+    "renameFolderLabel": "Cambiar el nombre de la carpeta {name}",
+    "renameFolderField": "Nuevo nombre para {name}",
+    "filedIn": "Se guarda en «{folder}»",
+    "createIn": "Crear en",
+    "folderActions": "Más para la carpeta {name}"
   },
   "mail": {
     "magicLink": {

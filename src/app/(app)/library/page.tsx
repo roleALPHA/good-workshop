@@ -81,7 +81,10 @@ export default async function LibraryPage({
             />
             {!readOnly && (
               <div className="mt-2">
-                <CreateFolder parentId={folder ?? null} />
+                <CreateFolder
+                  parentId={folder ?? null}
+                  parentName={folders.find((node) => node.id === folder)?.name ?? null}
+                />
               </div>
             )}
 
@@ -123,7 +126,12 @@ export default async function LibraryPage({
             {/* A row of its own on a phone, with the search taking what is left. */}
             <div className="flex w-full flex-wrap items-center gap-2 sm:w-auto">
               <SearchBox />
-              {!readOnly && <CreateWorkshop folderId={folder ?? null} />}
+              {!readOnly && (
+                <CreateWorkshop
+                  folderId={folder ?? null}
+                  folderName={folders.find((node) => node.id === folder)?.name ?? null}
+                />
+              )}
             </div>
           </div>
 

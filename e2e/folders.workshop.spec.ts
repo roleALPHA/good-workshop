@@ -33,21 +33,24 @@ const sidebar = (page: Page) => page.getByRole('navigation', { name: 'Ordner und
  */
 
 /**
- * A button in a folder's row.
- *
- * The row hovers first, because the buttons are invisible until it does and
- * take no clicks while they are invisible -- that is what keeps a click on a
- * long folder name from opening its access page. Playwright moves the mouse
- * and hit-tests in one step, which is a moment too early for the hover to have
- * applied, so the two are separated here the way a person does them.
+ * A button that stands in a folder's row: the move control, which is also the
+ * drag handle. The row hovers first, because the bar is invisible until it
+ * does.
  */
 async function rowAction(page: Page, folder: string, label: string) {
   await sidebar(page).getByRole('link', { name: folder, exact: true }).hover()
   return sidebar(page).getByRole('button', { name: label })
 }
 
-async function rowLink(page: Page, folder: string, label: string) {
+/**
+ * Everything else lives behind the row's menu, so it is opened first -- the
+ * way somebody using it would.
+ */
+async function rowMenuLink(page: Page, folder: string, label: string) {
   await sidebar(page).getByRole('link', { name: folder, exact: true }).hover()
+  await sidebar(page)
+    .getByRole('button', { name: `Mehr zu Ordner ${folder}` })
+    .click()
   return sidebar(page).getByRole('link', { name: label })
 }
 
@@ -387,7 +390,7 @@ test('opens the access screen of a folder from the tree', async ({ page }) => {
   await page.keyboard.press('Enter')
   await expect(sidebar(page).getByRole('link', { name, exact: true })).toBeVisible()
 
-  await (await rowLink(page, name, `Zugriff auf Ordner ${name}`)).click()
+  await (await rowMenuLink(page, name, `Zugriff auf Ordner ${name}`)).click()
 
   await expect(page.getByRole('heading', { name: `Zugriff auf ${name}` })).toBeVisible()
   // The sentence that keeps somebody from sharing a subtree by accident: it

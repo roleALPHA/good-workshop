@@ -1,9 +1,9 @@
 'use client'
 
 import Link from 'next/link'
-import { useRef, useState, useTransition } from 'react'
-import { ChevronRight, FolderIcon, FolderInput, Users, X } from 'lucide-react'
-import { deleteFolderAction, moveFolderAction } from '@/server/actions/workshop'
+import { useEffect, useId, useRef, useState, useTransition } from 'react'
+import { ChevronRight, FolderIcon, FolderInput, MoreVertical, Pencil, Users, X } from 'lucide-react'
+import { deleteFolderAction, moveFolderAction, renameFolderAction } from '@/server/actions/workshop'
 import { useTranslations } from 'next-intl'
 import { cn } from '@/lib/cn'
 import { DropTarget, MoveControl } from './drag-parts'
@@ -54,6 +54,26 @@ export function FolderRow({
   const [failed, setFailed] = useState<string | null>(null)
   const [moving, setMoving] = useState(false)
   const [confirming, setConfirming] = useState(false)
+  const [renaming, setRenaming] = useState<string | null>(null)
+  const [menuOpen, setMenuOpen] = useState(false)
+  const menuRef = useRef<HTMLButtonElement>(null)
+  const menuPanelRef = useRef<HTMLDivElement>(null)
+  const menuId = useId()
+
+  // The same disclosure rules as the profile menu: Escape closes and gives the
+  // focus back, a press elsewhere closes it, and it is a button plus a panel
+  // rather than role="menu" -- what is inside are links and buttons.
+  useEffect(() => {
+    if (!menuOpen) return
+    const onPointerDown = (event: PointerEvent) => {
+      const target = event.target as Node | null
+      if (menuPanelRef.current?.contains(target)) return
+      if (menuRef.current?.contains(target)) return
+      setMenuOpen(false)
+    }
+    document.addEventListener('pointerdown', onPointerDown, true)
+    return () => document.removeEventListener('pointerdown', onPointerDown, true)
+  }, [menuOpen])
   const [showName, setShowName] = useState(false)
   const nameRef = useRef<HTMLSpanElement>(null)
   const actionsRef = useRef<HTMLDivElement>(null)
@@ -89,6 +109,17 @@ export function FolderRow({
     })
   }
 
+  function rename() {
+    const next = (renaming ?? '').trim()
+    setRenaming(null)
+    if (next === '' || next === name) return
+    setFailed(null)
+    startTransition(async () => {
+      const result = await renameFolderAction({ id, name: next })
+      if (!result.ok) setFailed(result.message)
+    })
+  }
+
   function move(nextParentId: string | null) {
     setFailed(null)
     setMoving(false)
@@ -108,7 +139,18 @@ export function FolderRow({
   return (
     <DropTarget id={id}>
       {({ ref }) => (
-        <li ref={ref} className="relative" style={{ paddingLeft: depth * 12 }}>
+        <li
+          ref={ref}
+          className="relative"
+          style={{ paddingLeft: depth * 12 }}
+          onKeyDown={(event) => {
+            if (event.key === 'Escape' && menuOpen) {
+              event.preventDefault()
+              setMenuOpen(false)
+              menuRef.current?.focus()
+            }
+          }}
+        >
           <div
             className={cn(
               'group relative flex items-center gap-1 rounded',
@@ -168,19 +210,9 @@ export function FolderRow({
               </span>
             )}
 
-            <div ref={actionsRef} className={actionsClass}>
-              {/* Not behind `canManage`: a folder viewer may look at who else has
-                  access even though they can change little or nothing. The page
-                  itself decides what the select offers -- see folder-sharing. */}
-              <Link
-                href={`/f/${id}/sharing`}
-                title={t('folderShare')}
-                aria-label={t('folderShareOf', { name })}
-                className={iconButtonClass}
-              >
-                <Users aria-hidden className="size-3.5" />
-              </Link>
-
+            <div ref={actionsRef} data-testid="folder-row-actions" className={actionsClass}>
+              {/* The drag handle stays in the row: a handle behind a closed
+                  menu is a handle nobody can drag. */}
               {canManage && (
                 <MoveControl
                   drag={{ kind: 'folder', id, name }}
@@ -195,19 +227,76 @@ export function FolderRow({
                 </MoveControl>
               )}
 
-              {canManage && (
+              {/* Everything else behind one button. Four of them beside a name
+                  left about five letters of a 240px sidebar, and laying them
+                  over the name made clicks meant for the folder open whatever
+                  was underneath. */}
+              <div className="relative">
                 <button
+                  ref={menuRef}
                   type="button"
-                  onClick={() => setConfirming((open) => !open)}
-                  disabled={pending}
-                  aria-expanded={confirming}
-                  title={t('removeFolder')}
-                  aria-label={t('removeFolderLabel', { name })}
+                  onClick={() => setMenuOpen((open) => !open)}
+                  aria-expanded={menuOpen}
+                  aria-controls={menuId}
+                  aria-label={t('folderActions', { name })}
                   className={iconButtonClass}
                 >
-                  <X aria-hidden className="size-3.5" />
+                  <MoreVertical aria-hidden className="size-3.5" />
                 </button>
-              )}
+
+                {menuOpen && (
+                  <div
+                    id={menuId}
+                    ref={menuPanelRef}
+                    className="absolute top-full right-0 z-30 mt-1 w-max min-w-40 rounded border border-[var(--border)] bg-[var(--surface)] p-1 shadow-md"
+                  >
+                    {/* Not behind `canManage`: a folder viewer may look at who
+                        else has access even though they can change little or
+                        nothing. The page itself decides what the select offers
+                        -- see folder-sharing. */}
+                    <Link
+                      href={`/f/${id}/sharing`}
+                      aria-label={t('folderShareOf', { name })}
+                      className={menuItemClass}
+                    >
+                      <Users aria-hidden className="size-3.5" />
+                      {t('folderShare')}
+                    </Link>
+
+                    {canManage && (
+                      <button
+                        type="button"
+                        onClick={() => {
+                          setMenuOpen(false)
+                          setRenaming(name)
+                        }}
+                        disabled={pending}
+                        aria-label={t('renameFolderLabel', { name })}
+                        className={menuItemClass}
+                      >
+                        <Pencil aria-hidden className="size-3.5" />
+                        {t('renameFolder')}
+                      </button>
+                    )}
+
+                    {canManage && (
+                      <button
+                        type="button"
+                        onClick={() => {
+                          setMenuOpen(false)
+                          setConfirming(true)
+                        }}
+                        disabled={pending}
+                        aria-label={t('removeFolderLabel', { name })}
+                        className={cn(menuItemClass, 'text-[var(--danger-fg)]')}
+                      >
+                        <X aria-hidden className="size-3.5" />
+                        {t('removeFolder')}
+                      </button>
+                    )}
+                  </div>
+                )}
+              </div>
             </div>
           </div>
 
@@ -238,6 +327,28 @@ export function FolderRow({
               while it is still invisible, and one Enter there used to unfile
               every workshop in the folder and drop its sharing, with nothing
               to undo it. */}
+          {/* In the row, like every other edit here: the sidebar stays visible
+              while the name changes, so the siblings it has to fit among are
+              still on screen. */}
+          {renaming !== null && (
+            <div className="mt-1 ml-2">
+              <input
+                autoFocus
+                aria-label={t('renameFolderField', { name })}
+                value={renaming}
+                disabled={pending}
+                onChange={(event) => setRenaming(event.target.value)}
+                onBlur={rename}
+                onKeyDown={(event) => {
+                  if (event.key === 'Enter') rename()
+                  if (event.key === 'Escape') setRenaming(null)
+                }}
+                maxLength={120}
+                className="w-full rounded border border-[var(--border-strong)] bg-[var(--surface)] px-2 py-1.5 text-[16px]"
+              />
+            </div>
+          )}
+
           {confirming && (
             <div className="mt-1 ml-2 rounded border border-[var(--border)] bg-[var(--surface)] p-2">
               <p className="text-[13px]">{t('removeFolderWarning', { name })}</p>
@@ -278,30 +389,29 @@ export function FolderRow({
  * The row's buttons: visible on hover, on focus anywhere in the row, and always
  * under a thumb.
  *
- * Laid OVER the end of the name rather than beside it. Hidden but still in the
- * flow, three buttons took 100px of a 200px sidebar, and a folder name was cut
- * after five letters whether anybody was pointing at it or not. Now the name
- * has the row until somebody reaches for the buttons.
+ * Beside the name, in the flow -- and that costs the width of four buttons,
+ * which is why it was an overlay before: a folder name is cut short whether
+ * anybody is pointing at the row or not.
  *
- * Hidden by opacity AND by pointer-events, which the first version got wrong.
- * The reasoning then was that a pointer cannot reach a button without hovering
- * the row first, so nobody clicks one they could not see. Use says otherwise:
- * the click that reveals the bar lands on it. Selecting a folder took two
- * clicks, and clicking a long name opened its access page instead -- the bar
- * lies over the end of the name.
+ * The overlay could not stay. Over the end of the name, it answered clicks
+ * meant for the folder: selecting one took two clicks, and a long name opened
+ * its access page instead. Padding on the link was tried and is not enough --
+ * padding is inside the element's box, so the name still caught those clicks.
+ * The full name is one hover away in the tooltip; a click that does something
+ * else is not recoverable that cheaply.
  *
- * Opacity still carries the reveal, so the buttons stay in the tab order and
- * the library's end-to-end tests can aim at them by name; focus-within makes
- * them clickable for a keyboard, hover for a pointer.
+ * Hidden by opacity alone, which is safe now that the bar stands beside the
+ * name rather than over it: there is nothing underneath it to click by
+ * accident. Opacity keeps the buttons in the tab order, and focus-within is
+ * what reveals them for a keyboard.
  *
  * On a coarse pointer there is no hover to reveal anything with, so the bar
  * goes back into the flow, always visible -- the name yields there, as before.
  */
 const actionsClass = cn(
-  'absolute inset-y-0 right-0 flex items-center gap-1 rounded bg-[var(--bg)] pl-1',
-  'pointer-events-none opacity-0 group-hover:opacity-100 group-focus-within:opacity-100',
-  'group-hover:pointer-events-auto group-focus-within:pointer-events-auto',
-  'pointer-coarse:static pointer-coarse:opacity-100 pointer-coarse:pointer-events-auto',
+  'flex shrink-0 items-center gap-1 rounded pl-1',
+  'opacity-0 group-hover:opacity-100 group-focus-within:opacity-100',
+  'pointer-coarse:opacity-100',
 )
 
 /**
@@ -340,6 +450,12 @@ const foldClass = cn(
  * something meant to be tapped. The 44px goes on coarse pointers only, where it
  * is a touch target rather than wasted height.
  */
+/** An entry in the row menu: icon, label, full width, thumb-sized. */
+const menuItemClass = cn(
+  'flex w-full items-center gap-2 rounded px-2 py-2 text-left text-[14px]',
+  'hover:bg-[var(--surface-raised)] disabled:opacity-40 pointer-coarse:min-h-11',
+)
+
 const iconButtonClass = cn(
   'grid size-8 shrink-0 place-items-center rounded text-[var(--fg-subtle)]',
   'pointer-coarse:size-11',

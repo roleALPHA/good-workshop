@@ -591,7 +591,13 @@
     "you": "toi",
     "removeFolderWarning": "Supprimer le dossier « {name} » ? Les ateliers qu’il contient remontent d’un niveau, les sous-dossiers aussi. Les partages de ce dossier sont perdus.",
     "removeFolderConfirm": "Supprimer le dossier",
-    "cancel": "Annuler"
+    "cancel": "Annuler",
+    "renameFolder": "Renommer",
+    "renameFolderLabel": "Renommer le dossier {name}",
+    "renameFolderField": "Nouveau nom pour {name}",
+    "filedIn": "Classé dans « {folder} »",
+    "createIn": "Créer dans",
+    "folderActions": "Plus pour le dossier {name}"
   },
   "mail": {
     "magicLink": {

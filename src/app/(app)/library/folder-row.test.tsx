@@ -5,10 +5,12 @@ import { renderWithIntl } from '@/test/intl'
 
 const moveFolderAction = vi.fn()
 const deleteFolderAction = vi.fn()
+const renameFolderAction = vi.fn()
 
 vi.mock('@/server/actions/workshop', () => ({
   moveFolderAction: (...args: unknown[]) => moveFolderAction(...args),
   deleteFolderAction: (...args: unknown[]) => deleteFolderAction(...args),
+  renameFolderAction: (...args: unknown[]) => renameFolderAction(...args),
 }))
 
 const { FolderRow } = await import('./folder-row')
@@ -39,11 +41,17 @@ const show = (canManage = true) =>
 afterEach(() => {
   moveFolderAction.mockReset()
   deleteFolderAction.mockReset()
+  renameFolderAction.mockReset()
 })
 
 describe('a folder in the sidebar', () => {
-  it('names its remove button from the catalog', () => {
+  /** Everything but moving lives in the row menu, so a test opens it first. */
+  const openMenu = () =>
+    userEvent.click(screen.getByRole('button', { name: 'Mehr zu Ordner Kunden' }))
+
+  it('names its remove entry from the catalog', async () => {
     show()
+    await openMenu()
     expect(screen.getByRole('button', { name: 'Ordner Kunden entfernen' })).toBeInTheDocument()
   })
 
@@ -62,6 +70,7 @@ describe('a folder in the sidebar', () => {
     // invisible. One Enter there used to unfile every workshop in the folder
     // and drop its sharing, with nothing to undo it.
     show()
+    await openMenu()
     await userEvent.click(screen.getByRole('button', { name: 'Ordner Kunden entfernen' }))
 
     expect(deleteFolderAction).not.toHaveBeenCalled()
@@ -72,6 +81,7 @@ describe('a folder in the sidebar', () => {
     deleteFolderAction.mockResolvedValue({ ok: true, data: null })
     show()
 
+    await openMenu()
     await userEvent.click(screen.getByRole('button', { name: 'Ordner Kunden entfernen' }))
     await userEvent.click(screen.getByRole('button', { name: 'Ordner entfernen' }))
 
@@ -80,6 +90,7 @@ describe('a folder in the sidebar', () => {
 
   it('lets go of the question again', async () => {
     show()
+    await openMenu()
     await userEvent.click(screen.getByRole('button', { name: 'Ordner Kunden entfernen' }))
     await userEvent.click(screen.getByRole('button', { name: 'Abbrechen' }))
 
@@ -87,24 +98,94 @@ describe('a folder in the sidebar', () => {
     expect(deleteFolderAction).not.toHaveBeenCalled()
   })
 
-  it('offers nothing to somebody who may not tidy up', () => {
+  it('renames a folder from the row', async () => {
+    // There was no way to rename a folder at all -- not in the sidebar, not
+    // anywhere else. A folder named in a hurry stayed that way.
+    renameFolderAction.mockResolvedValue({ ok: true, data: null })
+    show()
+
+    await openMenu()
+    await userEvent.click(screen.getByRole('button', { name: 'Ordner Kunden umbenennen' }))
+    const field = screen.getByLabelText('Neuer Name für Kunden')
+    await userEvent.clear(field)
+    await userEvent.type(field, 'Kundschaft{Enter}')
+
+    expect(renameFolderAction).toHaveBeenCalledWith({ id: 'f-1', name: 'Kundschaft' })
+  })
+
+  it('starts from the name it has, and lets go on Escape', async () => {
+    show()
+    await openMenu()
+    await userEvent.click(screen.getByRole('button', { name: 'Ordner Kunden umbenennen' }))
+    expect(screen.getByLabelText('Neuer Name für Kunden')).toHaveValue('Kunden')
+
+    await userEvent.keyboard('{Escape}')
+    expect(screen.queryByLabelText('Neuer Name für Kunden')).not.toBeInTheDocument()
+    expect(renameFolderAction).not.toHaveBeenCalled()
+  })
+
+  it('offers nothing to change to somebody who may not tidy up', async () => {
+    // The menu is still there: a viewer may look at who else has access.
     show(false)
-    expect(screen.queryByRole('button', { name: /Kunden/ })).not.toBeInTheDocument()
+    await userEvent.click(screen.getByRole('button', { name: 'Mehr zu Ordner Kunden' }))
+
+    expect(screen.getByRole('link', { name: /Zugriff/ })).toBeInTheDocument()
+    expect(screen.queryByRole('button', { name: /umbenennen/ })).not.toBeInTheDocument()
+    expect(screen.queryByRole('button', { name: /entfernen/ })).not.toBeInTheDocument()
+    expect(screen.queryByRole('button', { name: /verschieben/ })).not.toBeInTheDocument()
   })
 })
 
-describe('the row buttons while they are invisible', () => {
-  it('take no clicks until the row is hovered or focused', () => {
-    // Reported from use: the first click on a long folder name opened its
-    // access page instead of selecting the folder, and selecting a folder often
-    // took two clicks. Both are this bar: it lies over the end of the name, and
-    // opacity alone leaves it hit-testable, so the click that reveals it also
-    // lands on it.
+describe('the row menu', () => {
+  const menu = () => screen.getByRole('button', { name: 'Mehr zu Ordner Kunden' })
+
+  it('keeps one button in the row instead of four', () => {
+    // Four buttons beside a name leave about five letters of a 240px sidebar.
+    // Dragging needs a handle that is always there, so the move control stays;
+    // everything else moves behind one button.
     show()
-    const bar = screen.getByRole('link', { name: /Zugriff/ }).parentElement!
-    expect(bar.className).toContain('pointer-events-none')
-    expect(bar.className).toContain('group-hover:pointer-events-auto')
-    expect(bar.className).toContain('group-focus-within:pointer-events-auto')
+    expect(menu()).toBeInTheDocument()
+    expect(screen.getByRole('button', { name: 'Ordner Kunden verschieben' })).toBeInTheDocument()
+    expect(screen.queryByRole('link', { name: /Zugriff/ })).not.toBeInTheDocument()
+    expect(screen.queryByRole('button', { name: /entfernen/ })).not.toBeInTheDocument()
+  })
+
+  it('offers access, renaming and removing once it is open', async () => {
+    show()
+    await userEvent.click(menu())
+
+    expect(screen.getByRole('link', { name: /Zugriff/ })).toBeInTheDocument()
+    expect(screen.getByRole('button', { name: 'Ordner Kunden umbenennen' })).toBeInTheDocument()
+    expect(screen.getByRole('button', { name: 'Ordner Kunden entfernen' })).toBeInTheDocument()
+  })
+
+  it('closes on Escape and gives the focus back', async () => {
+    show()
+    await userEvent.click(menu())
+    await userEvent.keyboard('{Escape}')
+
+    expect(screen.queryByRole('link', { name: /Zugriff/ })).not.toBeInTheDocument()
+    expect(menu()).toHaveFocus()
+  })
+
+  it('closes when something else is pressed', async () => {
+    show()
+    await userEvent.click(menu())
+    await userEvent.click(document.body)
+
+    expect(screen.queryByRole('link', { name: /Zugriff/ })).not.toBeInTheDocument()
+  })
+})
+
+describe('the row buttons and the name', () => {
+  it('do not overlap: the bar stands beside the name', () => {
+    // Reported from use: clicking a long folder name opened its access page,
+    // because the bar lay over the end of the name. Padding on the link was
+    // tried and is not enough -- padding is inside the element's box, so the
+    // name still answered those clicks.
+    show()
+    const bar = screen.getByRole('button', { name: 'Ordner Kunden verschieben' }).parentElement!
+    expect(bar.className).not.toContain('absolute')
   })
 })
 
@@ -140,7 +221,7 @@ describe('a folder name too long for the sidebar', () => {
     show()
     overflow(0)
     const name = screen.getByText('Kunden', { selector: '[data-folder-name]' })
-    const actions = screen.getByRole('button', { name: 'Ordner Kunden entfernen' }).parentElement!
+    const actions = screen.getByTestId('folder-row-actions')
     name.getBoundingClientRect = () => DOMRect.fromRect({ x: 40, width: 100 })
     actions.getBoundingClientRect = () => DOMRect.fromRect({ x: 110, width: 90 })
 

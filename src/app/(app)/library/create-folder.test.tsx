@@ -7,7 +7,11 @@ const createFolderAction = vi.fn()
 vi.mock('@/server/actions/workshop', () => ({
   createFolderAction: (...args: unknown[]) => createFolderAction(...args),
 }))
-vi.mock('next/navigation', () => ({ useRouter: () => ({ refresh: () => {} }) }))
+let search = new URLSearchParams()
+vi.mock('next/navigation', () => ({
+  useRouter: () => ({ refresh: () => {} }),
+  useSearchParams: () => search,
+}))
 
 const { CreateFolder } = await import('./create-folder')
 
@@ -23,6 +27,7 @@ const { CreateFolder } = await import('./create-folder')
 
 afterEach(() => {
   createFolderAction.mockReset()
+  search = new URLSearchParams()
 })
 
 describe('creating a folder', () => {
@@ -75,5 +80,46 @@ describe('creating a folder', () => {
     fireEvent.focusOut(screen.getByLabelText('Name des Ordners'))
 
     expect(createFolderAction).not.toHaveBeenCalled()
+  })
+})
+
+describe('where a new folder goes', () => {
+  /**
+   * Reported from use: "+ Ordner" always made a subfolder of whatever was
+   * selected, with no way to make one at the top level short of deselecting
+   * first -- which loses the place you were looking at.
+   */
+  async function open(parentId: string | null, parentName: string | null = null) {
+    search = new URLSearchParams(parentId ? `folder=${parentId}` : '')
+    renderWithIntl(<CreateFolder parentId={parentId} parentName={parentName} />)
+    await userEvent.click(screen.getByRole('button', { name: 'Ordner' }))
+  }
+
+  it('offers the top level as well while a folder is selected', async () => {
+    createFolderAction.mockResolvedValue({ ok: true, data: { id: 'f-9' } })
+    await open('f-1', 'Kunden')
+
+    // "top" rather than an empty value: empty would be indistinguishable from
+    // "nothing chosen yet", which is what makes the field follow the library.
+    await userEvent.selectOptions(screen.getByLabelText('Anlegen in'), 'top')
+    await userEvent.type(screen.getByLabelText('Name des Ordners'), 'Partner{Enter}')
+
+    expect(createFolderAction).toHaveBeenCalledWith({ name: 'Partner', parentId: null })
+  })
+
+  it('keeps the selected folder as the suggestion', async () => {
+    createFolderAction.mockResolvedValue({ ok: true, data: { id: 'f-9' } })
+    await open('f-1', 'Kunden')
+
+    // Inside a folder, so the field says subfolder -- the label follows the
+    // chosen destination rather than the button that opened the form.
+    await userEvent.type(screen.getByLabelText('Name des Unterordners'), 'Innen{Enter}')
+
+    expect(createFolderAction).toHaveBeenCalledWith({ name: 'Innen', parentId: 'f-1' })
+  })
+
+  it('asks nothing when there is nothing to choose between', async () => {
+    await open(null)
+    expect(screen.queryByLabelText('Anlegen in')).not.toBeInTheDocument()
   })
 })
