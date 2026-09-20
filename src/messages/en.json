@@ -251,7 +251,9 @@
     "searchType": "Search block types",
     "tagPlaceholder": "+ tag",
     "unpark": "Back into the schedule",
-    "unparkLabel": "Put {title} back into the schedule"
+    "unparkLabel": "Put {title} back into the schedule",
+    "blockTitle": "Title",
+    "blockDuration": "Duration"
   },
   "auth": {
     "guest": {

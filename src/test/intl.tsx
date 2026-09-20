@@ -2,7 +2,7 @@ import { render, type RenderOptions, type RenderResult } from '@testing-library/
 import { NextIntlClientProvider } from 'next-intl'
 import type { ReactElement } from 'react'
 import { CATALOGS } from '@/i18n/catalogs'
-import { DEFAULT_LOCALE } from '@/i18n/config'
+import { DEFAULT_LOCALE, type Locale } from '@/i18n/config'
 
 /**
  * `render`, with the real message catalog behind it.
@@ -17,14 +17,14 @@ import { DEFAULT_LOCALE } from '@/i18n/config'
  * date formatted against the machine's zone passes on a laptop in Berlin and
  * fails in CI.
  */
-export function renderWithIntl(ui: ReactElement, options?: RenderOptions): RenderResult {
+export function renderWithIntl(
+  ui: ReactElement,
+  options?: RenderOptions & { locale?: Locale },
+): RenderResult {
+  const locale = options?.locale ?? DEFAULT_LOCALE
   return render(ui, {
     wrapper: ({ children }) => (
-      <NextIntlClientProvider
-        locale={DEFAULT_LOCALE}
-        messages={CATALOGS[DEFAULT_LOCALE]}
-        timeZone="Europe/Berlin"
-      >
+      <NextIntlClientProvider locale={locale} messages={CATALOGS[locale]} timeZone="Europe/Berlin">
         {children}
       </NextIntlClientProvider>
     ),

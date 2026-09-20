@@ -29,6 +29,7 @@ export function TitleInput({
   onCommit: (value: string) => void
   placeholder?: string
 }) {
+  const t = useTranslations('agenda')
   const [draft, setDraft] = useState(value)
   // Adopted during render, not in an effect -- see the note in search-box.tsx.
   const [seen, setSeen] = useState(value)
@@ -40,7 +41,7 @@ export function TitleInput({
   return (
     <input
       type="text"
-      aria-label="Titel"
+      aria-label={t('blockTitle')}
       placeholder={placeholder}
       className={cn(bare, '-ml-1 font-semibold text-[var(--fg)]')}
       value={draft}
@@ -151,6 +152,7 @@ export function DurationInput({
   minutes: number
   onCommit: (minutes: number) => void
 }) {
+  const t = useTranslations('agenda')
   const [draft, setDraft] = useState(() => formatDuration(minutes))
   const [invalid, setInvalid] = useState(false)
   const ref = useRef<HTMLInputElement>(null)
@@ -189,7 +191,7 @@ export function DurationInput({
       ref={ref}
       type="text"
       inputMode="text"
-      aria-label="Dauer"
+      aria-label={t('blockDuration')}
       className={cn(
         bare,
         'tabular -ml-1 w-[5.5rem] font-semibold',

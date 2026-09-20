@@ -254,7 +254,9 @@ declare const messages: {
     "searchType": "Blocktyp suchen",
     "tagPlaceholder": "+ Tag",
     "unpark": "In den Ablauf",
-    "unparkLabel": "{title} zurück in den Ablauf"
+    "unparkLabel": "{title} zurück in den Ablauf",
+    "blockTitle": "Titel",
+    "blockDuration": "Dauer"
   },
   "auth": {
     "guest": {
