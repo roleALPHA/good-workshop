@@ -7,6 +7,7 @@ import { assertWorkshopAccess } from '@/domain/agenda/access'
 import {
   createFolder,
   FolderMoveError,
+  renameFolder,
   listFolders,
   listWorkshops,
   moveFolder,
@@ -264,5 +265,43 @@ describe('ordering folders', () => {
     await expect(withTenant(admin(), (tx) => moveFolder(tx, top, below, null))).rejects.toThrow(
       'folder.intoOwnDescendant',
     )
+  })
+})
+
+describe('renaming a folder', () => {
+  const nameOf = async (id: string) =>
+    (await ops.query('select name from folder where id = $1', [id])).rows[0].name
+
+  it('gives it the new name', async () => {
+    const id = await folderNamed(`Kunden ${randomUUID().slice(0, 6)}`)
+    await withTenant(admin(), (tx) => renameFolder(tx, id, 'Kundschaft'))
+    expect(await nameOf(id)).toBe('Kundschaft')
+  })
+
+  it('refuses a name a sibling already has, by the same rule as creating one', async () => {
+    // Told apart from a unique violation on purpose: the database would answer
+    // with an error nobody can read, and the sidebar would show it.
+    const suffix = randomUUID().slice(0, 6)
+    const first = await folderNamed(`Kunden ${suffix}`)
+    const second = await folderNamed(`Partner ${suffix}`)
+
+    await expect(
+      withTenant(admin(), (tx) => renameFolder(tx, second, `kunden ${suffix}`)),
+    ).rejects.toThrow(FolderMoveError)
+    expect(await nameOf(second)).toBe(`Partner ${suffix}`)
+    expect(await nameOf(first)).toBe(`Kunden ${suffix}`)
+  })
+
+  it('lets a folder keep its own name, spelled differently', async () => {
+    const id = await folderNamed(`Kunden ${randomUUID().slice(0, 6)}`)
+    const current = await nameOf(id)
+    await withTenant(admin(), (tx) => renameFolder(tx, id, current.toUpperCase()))
+    expect(await nameOf(id)).toBe(current.toUpperCase())
+  })
+
+  it('says so when the folder is gone', async () => {
+    await expect(
+      withTenant(admin(), (tx) => renameFolder(tx, randomUUID(), 'Weg')),
+    ).rejects.toThrow()
   })
 })

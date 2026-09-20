@@ -591,7 +591,13 @@
     "you": "you",
     "removeFolderWarning": "Remove the folder “{name}”? Workshops in it move up one level, and so do subfolders. This folder’s sharing is lost.",
     "removeFolderConfirm": "Remove folder",
-    "cancel": "Cancel"
+    "cancel": "Cancel",
+    "renameFolder": "Rename",
+    "renameFolderLabel": "Rename folder {name}",
+    "renameFolderField": "New name for {name}",
+    "filedIn": "Filed in “{folder}”",
+    "createIn": "Create in",
+    "folderActions": "More for folder {name}"
   },
   "mail": {
     "magicLink": {

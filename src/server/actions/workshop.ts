@@ -16,6 +16,7 @@ import {
   listTrashedWorkshops,
   deleteFolder,
   moveFolder,
+  renameFolder,
   moveWorkshopToFolder,
 } from '@/domain/workshop/repo'
 import { pruneUnusedTags, setWorkshopTags } from '@/domain/workshop/tags'
@@ -229,6 +230,30 @@ export async function moveFolderAction(raw: {
     async (tx, actor, input) => {
       assertTenantAdmin(actor)
       await moveFolder(tx, input.id, input.parentId, input.afterId ?? null)
+      return null
+    },
+  )
+
+  if (result.ok) revalidatePath('/library')
+  return result
+}
+
+/**
+ * Renames a folder.
+ *
+ * Tenant admin, like deleting and moving one: a folder belongs to the tenant,
+ * and its name is what everybody else navigates by.
+ */
+export async function renameFolderAction(raw: {
+  id: string
+  name: string
+}): Promise<ActionResult<null>> {
+  const result = await action(
+    z.object({ id: z.string().uuid(), name: z.string().trim().min(1).max(120) }),
+    raw,
+    async (tx, actor, input) => {
+      assertTenantAdmin(actor)
+      await renameFolder(tx, input.id, input.name)
       return null
     },
   )

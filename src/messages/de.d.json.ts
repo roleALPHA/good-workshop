@@ -594,7 +594,13 @@ declare const messages: {
     "you": "du",
     "removeFolderWarning": "Ordner „{name}\" entfernen? Workshops darin rücken eine Ebene nach oben, Unterordner ebenso. Die Freigaben dieses Ordners gehen verloren.",
     "removeFolderConfirm": "Ordner entfernen",
-    "cancel": "Abbrechen"
+    "cancel": "Abbrechen",
+    "renameFolder": "Umbenennen",
+    "renameFolderLabel": "Ordner {name} umbenennen",
+    "renameFolderField": "Neuer Name für {name}",
+    "filedIn": "Wird abgelegt in „{folder}\"",
+    "createIn": "Anlegen in",
+    "folderActions": "Mehr zu Ordner {name}"
   },
   "mail": {
     "magicLink": {
