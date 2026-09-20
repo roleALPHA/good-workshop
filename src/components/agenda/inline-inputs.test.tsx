@@ -2,7 +2,7 @@ import { screen } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
 import { describe, expect, it, vi } from 'vitest'
 import { renderWithIntl as render } from '@/test/intl'
-import { DescriptionInput } from './inline-inputs'
+import { DescriptionInput, DurationInput, TitleInput } from './inline-inputs'
 
 describe('the inline description field', () => {
   it('starts at one row, grows to its content and commits Markdown on Enter', async () => {
@@ -50,5 +50,27 @@ describe('the inline description field', () => {
     await user.click(document.body)
 
     expect(onCommit).toHaveBeenCalledWith(undefined)
+  })
+})
+
+describe('the fields a screen reader announces', () => {
+  it('names the title in the language of the page', () => {
+    // These two carried a hard-coded German aria-label in every language: an
+    // English reader heard "Titel", a French one "Dauer". The visible text was
+    // translated all along, which is why nobody saw it.
+    render(<TitleInput value="Check-in" onCommit={() => {}} />, { locale: 'en' })
+    expect(screen.getByRole('textbox', { name: 'Title' })).toBeInTheDocument()
+  })
+
+  it('names the duration in the language of the page', () => {
+    render(<DurationInput minutes={15} onCommit={() => {}} />, { locale: 'fr' })
+    expect(screen.getByRole('textbox', { name: 'Durée' })).toBeInTheDocument()
+  })
+
+  it('keeps the German names German', () => {
+    // The end-to-end suite aims at these by name, and so does everybody who
+    // learned the interface in German.
+    render(<TitleInput value="Check-in" onCommit={() => {}} />)
+    expect(screen.getByRole('textbox', { name: 'Titel' })).toBeInTheDocument()
   })
 })

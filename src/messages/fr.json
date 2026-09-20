@@ -251,7 +251,9 @@
     "searchType": "Rechercher un type de bloc",
     "tagPlaceholder": "+ tag",
     "unpark": "Remettre dans le déroulé",
-    "unparkLabel": "Remettre {title} dans le déroulé"
+    "unparkLabel": "Remettre {title} dans le déroulé",
+    "blockTitle": "Titre",
+    "blockDuration": "Durée"
   },
   "auth": {
     "guest": {

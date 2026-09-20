@@ -251,7 +251,9 @@
     "searchType": "Buscar tipo de bloque",
     "tagPlaceholder": "+ etiqueta",
     "unpark": "Volver al desarrollo",
-    "unparkLabel": "Devolver {title} al desarrollo"
+    "unparkLabel": "Devolver {title} al desarrollo",
+    "blockTitle": "Título",
+    "blockDuration": "Duración"
   },
   "auth": {
     "guest": {
