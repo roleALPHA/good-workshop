@@ -911,7 +911,7 @@
       },
       "trialNote": "Sin datos de pago. Decides después de 14 días.",
       "selfHostTitle": "¿Prefieres alojarlo tú?",
-      "selfHostBody": "GoodWorkshop es de código abierto. Si tienes tus propios servidores, lo instalas allí con Docker y no nos pagas nada, ni ahora ni después. La nube te quita de encima la operación, las actualizaciones y las copias de seguridad; esa es toda la diferencia.",
+      "selfHostBody": "El código de GoodWorkshop es público. Si tienes tus propios servidores, lo instalas allí con Docker y no nos pagas nada, ni ahora ni después. La nube te quita de encima la operación, las actualizaciones y las copias de seguridad; esa es toda la diferencia.",
       "selfHostCta": "Verlo en GitHub",
       "shotAgenda": "Un día de taller en GoodWorkshop: bloques con hora, duración, persona responsable y descripción, agrupados en secciones.",
       "shotLibrary": "La biblioteca: talleres en carpetas, con búsqueda y acciones rápidas.",
@@ -941,7 +941,7 @@
         "name": "Autoalojado",
         "unit": "en tus propios servidores",
         "free": "para siempre",
-        "body": "Código abierto con Apache 2.0 y la Commons Clause: usa y adapta GoodWorkshop en tu casa sin límites. Lo único que no se permite es venderlo como servicio propio.",
+        "body": "El código es público, bajo Apache 2.0 con la Commons Clause. Usa y adapta GoodWorkshop en tu casa sin límites. Lo que no se permite es venderlo como servicio propio, por eso no es una licencia de código abierto según la OSI.",
         "cta": "Instalación en GitHub"
       }
     },

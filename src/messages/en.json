@@ -911,7 +911,7 @@
       },
       "trialNote": "No payment details needed. Decide after 14 days.",
       "selfHostTitle": "Rather run it yourself?",
-      "selfHostBody": "GoodWorkshop is open source. With your own servers you install it there with Docker and pay us nothing — not now, not later. The cloud takes operation, updates and backups off your hands; that is the whole difference.",
+      "selfHostBody": "The source code of GoodWorkshop is public. With your own servers you install it there with Docker and pay us nothing — not now, not later. The cloud takes operation, updates and backups off your hands; that is the whole difference.",
       "selfHostCta": "Look at it on GitHub",
       "shotAgenda": "A workshop day in GoodWorkshop: blocks with time, duration, the person responsible and a description, grouped into sections.",
       "shotLibrary": "The library: workshops in folders, with search and quick actions.",
@@ -941,7 +941,7 @@
         "name": "Self-hosted",
         "unit": "on your own servers",
         "free": "forever",
-        "body": "Open source under Apache 2.0 with the Commons Clause: use and adapt GoodWorkshop in house without limits. The one thing not allowed is selling it as a service of your own.",
+        "body": "The source code is public, under Apache 2.0 with the Commons Clause. Use and adapt GoodWorkshop in house without limits. What is not allowed is selling it as a service of your own — which is why this is not an open source licence in the OSI sense.",
         "cta": "Installation on GitHub"
       }
     },

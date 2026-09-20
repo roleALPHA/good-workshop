@@ -167,3 +167,28 @@ describe('prices', () => {
     }
   })
 })
+
+describe('what the website claims about the licence', () => {
+  it('does not call the product open source', () => {
+    // It is not, in the sense the word carries: Apache 2.0 WITH the Commons
+    // Clause forbids selling the software, which the Open Source Definition
+    // does not allow a licence to do. README.md says "source-available, not
+    // open source" -- and the sales pages have to say the same thing, or the
+    // honest sentence is the one nobody reads.
+    // The word as a claim, not the word as such: saying "this is NOT an open
+    // source licence" is the sentence this test wants to see kept.
+    const asClaim = /quelloffen|logiciel libre/i
+    const mentions = /open.source|código abierto/i
+    const denies = /\b(nicht|keine|not|no|pas)\b/i
+
+    for (const locale of LOCALES) {
+      for (const [key, value] of flatten(CATALOGS[locale as Locale])) {
+        if (!key.startsWith('site.')) continue
+        expect(`${locale} ${key}: ${value}`).not.toMatch(asClaim)
+        if (mentions.test(value)) {
+          expect(value, `${locale} ${key} claims open source`).toMatch(denies)
+        }
+      }
+    }
+  })
+})
