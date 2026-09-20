@@ -912,7 +912,11 @@
       "trialNote": "Aucune donnée de paiement. Tu décides après 14 jours.",
       "selfHostTitle": "Plutôt l’héberger toi-même ?",
       "selfHostBody": "GoodWorkshop est open source. Avec tes propres serveurs, tu l’installes avec Docker et tu ne nous paies rien, ni aujourd’hui ni plus tard. Le cloud te décharge de l’exploitation, des mises à jour et des sauvegardes ; c’est toute la différence.",
-      "selfHostCta": "Voir sur GitHub"
+      "selfHostCta": "Voir sur GitHub",
+      "shotAgenda": "Une journée d’atelier dans GoodWorkshop : des blocs avec l’heure, la durée, la personne responsable et une description, groupés en sections.",
+      "shotLibrary": "La bibliothèque : des ateliers dans des dossiers, avec recherche et actions rapides.",
+      "shotPhone": "La même journée sur un téléphone, sous forme de cartes à lire dans la salle.",
+      "shotsTitle": "À quoi ça ressemble"
     },
     "pricing": {
       "title": "Tarifs",

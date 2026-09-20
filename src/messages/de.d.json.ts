@@ -915,7 +915,11 @@ declare const messages: {
       "trialNote": "Keine Zahlungsdaten nötig. Nach 14 Tagen entscheidest du.",
       "selfHostTitle": "Lieber selbst betreiben?",
       "selfHostBody": "GoodWorkshop ist quelloffen. Wer eigene Server hat, installiert es dort mit Docker und zahlt uns nichts — weder heute noch später. Die Cloud nimmt dir Betrieb, Updates und Sicherung ab; das ist der einzige Unterschied.",
-      "selfHostCta": "Auf GitHub ansehen"
+      "selfHostCta": "Auf GitHub ansehen",
+      "shotAgenda": "Ein Workshoptag in GoodWorkshop: Blöcke mit Uhrzeit, Dauer, verantwortlicher Person und Beschreibung, gruppiert in Abschnitte.",
+      "shotLibrary": "Die Bibliothek: Workshops in Ordnern, mit Suche und Schnellaktionen.",
+      "shotPhone": "Derselbe Workshoptag auf dem Handy, als Karten zum Mitlesen im Raum.",
+      "shotsTitle": "So sieht es aus"
     },
     "pricing": {
       "title": "Preise",

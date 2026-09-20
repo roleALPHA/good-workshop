@@ -105,6 +105,15 @@ export default defineConfig({
           // footer -- has its own assertions in reading-view.spec.ts. Running
           // it anyway meant seeding a workshop through a layout that has no
           // editor, which is what timed out.
+          // The website's pictures, taken from the running product. Its own
+          // project because it writes files and is not part of a test run --
+          // the spec skips itself unless GW_CAPTURE is set.
+          {
+            name: 'marketing',
+            testMatch: /marketing\.capture\.ts/,
+            use: { ...devices['Desktop Chrome'], storageState: STORAGE_STATE },
+            dependencies: ['setup'],
+          },
           {
             name: 'authenticated-mobile',
             testMatch: /reading-view\.spec\.ts/,

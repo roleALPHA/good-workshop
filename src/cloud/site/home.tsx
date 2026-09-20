@@ -1,3 +1,4 @@
+import Image from 'next/image'
 import Link from 'next/link'
 import type { Route } from 'next'
 import { redirect } from 'next/navigation'
@@ -45,6 +46,21 @@ export default async function CloudHome() {
         <p className="mt-3 text-[14px] text-[var(--fg-subtle)]">{t('trialNote')}</p>
       </section>
 
+      {/* The product itself, before the list of what it does. The pictures are
+          taken from the running application by e2e/marketing.capture.ts, so
+          what is advertised here is what the tests run against. */}
+      <section className="mt-8">
+        <Image
+          src="/marketing/agenda.png"
+          alt={t('shotAgenda')}
+          width={1280}
+          height={860}
+          priority
+          sizes="(min-width: 1024px) 64rem, 100vw"
+          className="h-auto w-full rounded-lg border border-[var(--border)] shadow-sm"
+        />
+      </section>
+
       <section className="mt-10" aria-labelledby="features">
         <h2 id="features" className="text-xl font-semibold tracking-tight">
           {t('featuresTitle')}
@@ -58,6 +74,30 @@ export default async function CloudHome() {
             </li>
           ))}
         </ul>
+      </section>
+
+      <section className="mt-10" aria-labelledby="shots">
+        <h2 id="shots" className="text-xl font-semibold tracking-tight">
+          {t('shotsTitle')}
+        </h2>
+        <div className="mt-4 grid gap-4 sm:grid-cols-[2fr_1fr]">
+          <Image
+            src="/marketing/library.png"
+            alt={t('shotLibrary')}
+            width={1280}
+            height={860}
+            sizes="(min-width: 640px) 42rem, 100vw"
+            className="h-auto w-full rounded-lg border border-[var(--border)] shadow-sm"
+          />
+          <Image
+            src="/marketing/phone.png"
+            alt={t('shotPhone')}
+            width={390}
+            height={844}
+            sizes="16rem"
+            className="mx-auto h-auto w-full max-w-64 rounded-lg border border-[var(--border)] shadow-sm"
+          />
+        </div>
       </section>
 
       {/* Said on the front page rather than hidden in the pricing table: the
