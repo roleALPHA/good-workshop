@@ -912,7 +912,11 @@
       "trialNote": "No payment details needed. Decide after 14 days.",
       "selfHostTitle": "Rather run it yourself?",
       "selfHostBody": "GoodWorkshop is open source. With your own servers you install it there with Docker and pay us nothing — not now, not later. The cloud takes operation, updates and backups off your hands; that is the whole difference.",
-      "selfHostCta": "Look at it on GitHub"
+      "selfHostCta": "Look at it on GitHub",
+      "shotAgenda": "A workshop day in GoodWorkshop: blocks with time, duration, the person responsible and a description, grouped into sections.",
+      "shotLibrary": "The library: workshops in folders, with search and quick actions.",
+      "shotPhone": "The same workshop day on a phone, as cards to read from in the room.",
+      "shotsTitle": "What it looks like"
     },
     "pricing": {
       "title": "Pricing",

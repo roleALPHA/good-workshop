@@ -153,9 +153,14 @@ async function callOnce(
  * Creates a workshop, fills its first day with the reference agenda and leaves
  * the browser on that day.
  */
-export async function seedReferenceDay(page: Page, request: APIRequestContext): Promise<string> {
+export async function seedReferenceDay(
+  page: Page,
+  request: APIRequestContext,
+  /** A readable name, for the pictures on the website. Tests do not care. */
+  name?: string,
+): Promise<string> {
   const doc = createDemoDay()
-  const title = `Referenz ${Date.now()}-${Math.random().toString(36).slice(2, 7)}`
+  const title = name ?? `Referenz ${Date.now()}-${Math.random().toString(36).slice(2, 7)}`
 
   const created = await call(request, 'create_workshop', { title, date: doc.date ?? undefined })
   const workshopId = String(created.workshopId ?? '')
