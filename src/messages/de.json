@@ -995,13 +995,21 @@
     "signOut": "Abmelden",
     "signIn": {
       "title": "Operator-Konsole",
-      "intro": "Anmeldung nur mit Passkey.",
+      "intro": "Anmeldung mit Passkey. Kein Passkey zur Hand? Dann schicken wir dir einen Link.",
       "button": "Mit Passkey anmelden",
       "failed": "Anmeldung fehlgeschlagen.",
       "enrollTitle": "Passkey einrichten",
       "enrollIntro": "Richte den Passkey für {email} ein.",
       "enroll": "Passkey einrichten",
-      "enrollInvalid": "Dieser Link ist ungültig oder abgelaufen. Einen neuen erzeugt scripts/operator.mjs enroll auf dem Server."
+      "enrollInvalid": "Dieser Link ist ungültig oder abgelaufen. Einen neuen erzeugt scripts/operator.mjs enroll auf dem Server.",
+      "mailTitle": "Per E-Mail anmelden",
+      "mailIntro": "Wir schicken einen Link an die hinterlegte Adresse. Er gilt 15 Minuten und genau einmal.",
+      "mailLabel": "E-Mail-Adresse",
+      "mailButton": "Link schicken",
+      "mailSent": "Wenn die Adresse zu einem Operator gehört, ist der Link unterwegs.",
+      "mailSubject": "Anmeldung zur Operator-Konsole",
+      "mailBody": "Mit diesem Link meldest du dich an der Operator-Konsole an. Er gilt 15 Minuten und genau einmal.\n\n{link}\n\nWenn du das nicht angefordert hast, ignoriere diese Nachricht — und sieh im Prüfprotokoll nach.",
+      "linkInvalid": "Dieser Link ist ungültig, abgelaufen oder schon benutzt."
     },
     "tenants": {
       "title": "Workspaces",

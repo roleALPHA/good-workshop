@@ -10,9 +10,13 @@ import { operatorConsoleEnabled, operatorDb } from '@/cloud/operator/db'
 import {
   completeEnrollment,
   enrollmentOptions,
+  requestSignInLink,
   signInOptions,
   verifySignIn,
 } from '@/cloud/operator/auth'
+import { sendMail } from '@/server/auth/mail'
+import { PLATFORM_TENANT } from '@/server/edition/cloud'
+import { getTranslations } from 'next-intl/server'
 import { applyOperatorAction, type OperatorAction } from '@/cloud/operator/console'
 import { currentOperator, endOperatorSession, startOperatorSession } from '@/cloud/operator/session'
 
@@ -39,6 +43,36 @@ export async function operatorSignIn(response: AuthenticationResponseJSON): Prom
   if (!operator) return false
   await startOperatorSession(operator.id)
   return true
+}
+
+/**
+ * Asks for a sign-in link.
+ *
+ * Always the same answer. Whether the address belongs to an operator, whether
+ * that operator is disabled, whether too many links are already out -- none of
+ * it reaches the browser, because the console has no sign-up and every
+ * distinguishable answer is a way to ask who the operators are.
+ *
+ * The mail goes out under the platform tenant, like the billing notices.
+ */
+export async function operatorMailLink(email: unknown): Promise<void> {
+  if (await limited()) return
+  const address = z.string().trim().email().max(320).safeParse(email)
+  if (!address.success) return
+
+  const issued = await requestSignInLink(operatorDb(), address.data)
+  if (!issued) return
+
+  const t = await getTranslations('operator.signIn')
+  const link = new URL(
+    `/operator/login/${issued.token}`,
+    process.env.GW_OPERATOR_URL ?? process.env.GW_APP_URL ?? 'http://localhost:3002',
+  ).toString()
+
+  await sendMail(
+    { to: issued.operator.email, subject: t('mailSubject'), text: t('mailBody', { link }) },
+    PLATFORM_TENANT,
+  )
 }
 
 export async function operatorEnrollmentOptions(token: string) {

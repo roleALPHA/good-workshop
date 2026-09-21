@@ -995,13 +995,21 @@
     "signOut": "Se déconnecter",
     "signIn": {
       "title": "Console opérateur",
-      "intro": "Connexion uniquement par passkey.",
+      "intro": "Connexion par passkey. Pas de passkey sous la main ? Nous t’envoyons un lien.",
       "button": "Se connecter avec une passkey",
       "failed": "Échec de la connexion.",
       "enrollTitle": "Configurer la passkey",
       "enrollIntro": "Configure la passkey pour {email}.",
       "enroll": "Configurer la passkey",
-      "enrollInvalid": "Ce lien est invalide ou a expiré. scripts/operator.mjs enroll sur le serveur en crée un nouveau."
+      "enrollInvalid": "Ce lien est invalide ou a expiré. scripts/operator.mjs enroll sur le serveur en crée un nouveau.",
+      "mailTitle": "Se connecter par e-mail",
+      "mailIntro": "Nous envoyons un lien à l’adresse enregistrée. Il vaut quinze minutes et une seule fois.",
+      "mailLabel": "Adresse e-mail",
+      "mailButton": "Envoyer le lien",
+      "mailSent": "Si l’adresse appartient à un opérateur, le lien est en route.",
+      "mailSubject": "Connexion à la console opérateur",
+      "mailBody": "Ce lien te connecte à la console opérateur. Il vaut quinze minutes et une seule fois.\n\n{link}\n\nSi tu ne l’as pas demandé, ignore ce message et consulte le journal d’audit.",
+      "linkInvalid": "Ce lien est invalide, expiré ou déjà utilisé."
     },
     "tenants": {
       "title": "Espaces de travail",

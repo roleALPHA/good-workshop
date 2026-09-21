@@ -995,13 +995,21 @@
     "signOut": "Cerrar sesión",
     "signIn": {
       "title": "Consola de operador",
-      "intro": "Acceso solo con passkey.",
+      "intro": "Inicia sesión con passkey. ¿No tienes ninguna a mano? Te enviamos un enlace.",
       "button": "Acceder con passkey",
       "failed": "El acceso ha fallado.",
       "enrollTitle": "Configurar passkey",
       "enrollIntro": "Configura la passkey para {email}.",
       "enroll": "Configurar passkey",
-      "enrollInvalid": "Este enlace no es válido o ha caducado. scripts/operator.mjs enroll en el servidor crea uno nuevo."
+      "enrollInvalid": "Este enlace no es válido o ha caducado. scripts/operator.mjs enroll en el servidor crea uno nuevo.",
+      "mailTitle": "Entrar por correo",
+      "mailIntro": "Enviamos un enlace a la dirección registrada. Vale quince minutos y una sola vez.",
+      "mailLabel": "Dirección de correo",
+      "mailButton": "Enviar el enlace",
+      "mailSent": "Si la dirección pertenece a un operador, el enlace va en camino.",
+      "mailSubject": "Acceso a la consola de operador",
+      "mailBody": "Con este enlace entras en la consola de operador. Vale quince minutos y una sola vez.\n\n{link}\n\nSi no lo has pedido, ignora este mensaje y revisa el registro de auditoría.",
+      "linkInvalid": "Este enlace no es válido, ha caducado o ya se ha usado."
     },
     "tenants": {
       "title": "Espacios de trabajo",

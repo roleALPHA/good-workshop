@@ -995,13 +995,21 @@
     "signOut": "Sign out",
     "signIn": {
       "title": "Operator console",
-      "intro": "Sign-in with a passkey only.",
+      "intro": "Sign in with a passkey. No passkey at hand? We will send you a link.",
       "button": "Sign in with passkey",
       "failed": "Sign-in failed.",
       "enrollTitle": "Set up passkey",
       "enrollIntro": "Set up the passkey for {email}.",
       "enroll": "Set up passkey",
-      "enrollInvalid": "This link is invalid or has expired. scripts/operator.mjs enroll on the server creates a new one."
+      "enrollInvalid": "This link is invalid or has expired. scripts/operator.mjs enroll on the server creates a new one.",
+      "mailTitle": "Sign in by e-mail",
+      "mailIntro": "We send a link to the address on file. It lives fifteen minutes and works once.",
+      "mailLabel": "E-mail address",
+      "mailButton": "Send the link",
+      "mailSent": "If the address belongs to an operator, the link is on its way.",
+      "mailSubject": "Sign in to the operator console",
+      "mailBody": "This link signs you in to the operator console. It lives fifteen minutes and works once.\n\n{link}\n\nIf you did not ask for it, ignore this message — and have a look at the audit log.",
+      "linkInvalid": "This link is invalid, expired or already used."
     },
     "tenants": {
       "title": "Workspaces",
