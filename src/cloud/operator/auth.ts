@@ -12,12 +12,18 @@ import { isCounterRegression } from '@/server/auth/passkey'
 import { generateSecret, hashSecret, verifySecret } from '@/server/auth/tokens'
 
 /**
- * Signing into the operator console: passkeys and nothing else.
+ * Signing into the operator console: a passkey, or a link by mail.
  *
- * The same WebAuthn rules as the application's own passkeys -- discoverable
- * credentials, user verification required, the signature counter checked --
- * against tables of their own. There is no e-mail link to fall back to: an
- * operator without a passkey gets a new enrollment link from the server.
+ * The passkey is the way in that should be used, with the same WebAuthn rules
+ * as the application's own -- discoverable credentials, user verification
+ * required, the signature counter checked -- against tables of their own.
+ *
+ * The link by mail is the way back. A passkey is bound to its origin and to a
+ * device, and an operator whose laptop is gone used to need somebody with a
+ * shell on the server. It is weaker than a passkey, and shaped accordingly:
+ * fifteen minutes, spent on first use, three per hour, and the same answer
+ * whether or not the address belongs to an operator. Every sign-in through it
+ * lands in the audit log, which is what makes the weaker door a visible one.
  */
 
 export const OPERATOR_COOKIE = '__Host-gw_operator'
@@ -25,6 +31,9 @@ export const OPERATOR_COOKIE_PLAIN = 'gw_operator'
 export const SESSION_HOURS = 8
 export const IDLE_MINUTES = 30
 const CHALLENGE_MS = 5 * 60_000
+const LINK_MS = 15 * 60_000
+/** Unspent links per operator per hour. The fourth request is answered with silence. */
+const LINK_BURST = 3
 
 export type Operator = { id: string; email: string; displayName: string }
 
@@ -227,4 +236,71 @@ function challengeOf(clientDataJSON: string): string {
   return (
     JSON.parse(Buffer.from(clientDataJSON, 'base64url').toString('utf8')) as { challenge: string }
   ).challenge
+}
+
+// ── Signing in by mail ───────────────────────────────────────────────────────
+
+/**
+ * Issues a sign-in link, or nothing at all.
+ *
+ * Null covers every refusal: an address that belongs to nobody, a disabled
+ * operator, too many unspent links. The console has no sign-up, so an answer
+ * that distinguishes them is an answer that says who the operators are.
+ */
+export async function requestSignInLink(
+  db: Db,
+  email: string,
+): Promise<{ operator: Operator; token: string } | null> {
+  const { rows } = await db.query(
+    `select id, email, display_name from operator
+      where lower(email) = lower($1) and disabled_at is null`,
+    [email.trim()],
+  )
+  const found = rows[0]
+  if (!found) return null
+
+  const recent = await db.query(
+    `select count(*)::int as n from operator_login
+      where operator_id = $1 and used_at is null and requested_at > now() - interval '1 hour'`,
+    [found.id],
+  )
+  if ((recent.rows[0]?.n ?? 0) >= LINK_BURST) return null
+
+  const token = generateSecret(32)
+  await db.query(
+    `insert into operator_login (operator_id, token_hash, expires_at) values ($1, $2, $3)`,
+    [found.id, hashSecret(token), new Date(Date.now() + LINK_MS)],
+  )
+  return {
+    operator: { id: found.id, email: found.email, displayName: found.display_name },
+    token,
+  }
+}
+
+/**
+ * Spends a sign-in link: one use, and the operator behind it.
+ *
+ * The update carries the conditions, so two requests with the same token
+ * cannot both win -- the second one updates no row and gets nothing.
+ */
+export async function spendSignInLink(db: Db, token: string): Promise<Operator | null> {
+  const { rows } = await db.query(
+    `update operator_login l set used_at = now()
+       from operator o
+      where l.operator_id = o.id
+        and l.token_hash = $1
+        and l.used_at is null
+        and l.expires_at > now()
+        and o.disabled_at is null
+      returning o.id, o.email, o.display_name`,
+    [hashSecret(token)],
+  )
+  const found = rows[0]
+  if (!found) return null
+
+  await db.query(
+    `insert into operator_audit (operator_id, action, detail) values ($1, 'sign_in_mail', $2)`,
+    [found.id, JSON.stringify({ email: found.email })],
+  )
+  return { id: found.id, email: found.email, displayName: found.display_name }
 }

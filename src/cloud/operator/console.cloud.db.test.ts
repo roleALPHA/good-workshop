@@ -9,8 +9,10 @@ import { edition } from '@/server/edition'
 import {
   createOperatorSession,
   peekEnrollment,
+  requestSignInLink,
   revokeOperatorSession,
   signInOptions,
+  spendSignInLink,
   verifyOperatorSession,
 } from './auth'
 import { applyOperatorAction, listTenants, tenantDetail } from './console'
@@ -37,6 +39,7 @@ const console_ = new pg.Pool({ connectionString: operatorUrl, max: 2 })
 const tenants: string[] = []
 const identities: string[] = []
 let operatorId: string
+let operatorEmail: string
 
 async function workspace() {
   const tenantId = randomUUID()
@@ -69,9 +72,10 @@ async function workspace() {
 
 beforeAll(async () => {
   await ops.connect()
+  operatorEmail = `operator-${randomUUID()}@example.test`
   const { rows } = await ops.query(
     `insert into operator (email, display_name) values ($1, 'Test Operator') returning id`,
-    [`operator-${randomUUID()}@example.test`],
+    [operatorEmail],
   )
   operatorId = rows[0].id
 })
@@ -247,5 +251,66 @@ describe('operator sign-in', () => {
       options.challenge,
     ])
     expect(rowCount).toBe(1)
+  })
+})
+
+describe('signing in by mail', () => {
+  const linkFor = async (email: string) => requestSignInLink(console_, email)
+
+  it('issues a link for an operator, and the same silence for anybody else', async () => {
+    // The answer must not say whether an address belongs to an operator: the
+    // console has no public sign-up, so every address that gets a different
+    // answer is one an attacker can rule in or out.
+    const link = await linkFor(operatorEmail)
+    expect(link).not.toBeNull()
+
+    expect(await linkFor(`nobody-${randomUUID()}@example.test`)).toBeNull()
+  })
+
+  it('lets the link in once, and never again', async () => {
+    const link = await linkFor(operatorEmail)
+    expect(await spendSignInLink(console_, link!.token)).toMatchObject({ id: operatorId })
+    expect(await spendSignInLink(console_, link!.token)).toBeNull()
+  })
+
+  it('refuses a link that has run out', async () => {
+    const link = await linkFor(operatorEmail)
+    await ops.query(
+      `update operator_login set expires_at = now() - interval '1 minute' where token_hash = $1`,
+      [hashSecret(link!.token)],
+    )
+    expect(await spendSignInLink(console_, link!.token)).toBeNull()
+  })
+
+  it('stops after three unspent links in an hour', async () => {
+    await ops.query('delete from operator_login where operator_id = $1', [operatorId])
+    for (let i = 0; i < 3; i += 1) expect(await linkFor(operatorEmail)).not.toBeNull()
+
+    // Silently, and with the same answer an unknown address gets: a message
+    // saying "too many" would be the answer the other address never gets.
+    expect(await linkFor(operatorEmail)).toBeNull()
+  })
+
+  it('writes the sign-in to the audit log', async () => {
+    await ops.query('delete from operator_login where operator_id = $1', [operatorId])
+    const link = await linkFor(operatorEmail)
+    await spendSignInLink(console_, link!.token)
+
+    const { rows } = await ops.query(
+      `select action from operator_audit where operator_id = $1 order by at desc limit 1`,
+      [operatorId],
+    )
+    expect(rows[0]?.action).toBe('sign_in_mail')
+  })
+
+  it('refuses a disabled operator, link or no link', async () => {
+    const link = await linkFor(operatorEmail)
+    await ops.query('update operator set disabled_at = now() where id = $1', [operatorId])
+    try {
+      expect(await spendSignInLink(console_, link!.token)).toBeNull()
+      expect(await linkFor(operatorEmail)).toBeNull()
+    } finally {
+      await ops.query('update operator set disabled_at = null where id = $1', [operatorId])
+    }
   })
 })

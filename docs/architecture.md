@@ -130,6 +130,15 @@ billing page's writes are SECURITY DEFINER functions that act on the current ten
 anybody who is not its admin; a refused write under row level security reaches the person as
 "this workspace is read-only", not as a failure.
 
+**Signing into the operator console** is a passkey, or a link by mail. The passkey is the door to
+use; the link is the way back, because a passkey is bound to its origin and to a device, and an
+operator whose laptop is gone used to need somebody with a shell on the server. The link lives
+fifteen minutes, is spent by the database in the same statement that reads it, and three unspent
+ones per hour are all an operator gets. Asking for one always answers the same, whether or not the
+address belongs to an operator: the console has no sign-up, so a distinguishable answer is a way to
+ask who the operators are. Every sign-in through it is written to `operator_audit` -- the weaker
+door is the visible one.
+
 **The operator console** is the cloud's own administration, and it is built so that the people
 using it cannot read a customer's work. It runs in a container started with
 `GW_OPERATOR_CONSOLE=1` (every other process answers 404 under `/operator`) and connects as
