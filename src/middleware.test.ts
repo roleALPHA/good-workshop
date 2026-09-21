@@ -1,4 +1,4 @@
-import { describe, expect, it } from 'vitest'
+import { afterEach, describe, expect, it } from 'vitest'
 import { NextRequest } from 'next/server'
 import { middleware } from './middleware'
 
@@ -110,5 +110,36 @@ describe('security headers', () => {
     const forwarded = response.headers.get('x-nonce') ?? ''
     expect(response.headers.get('content-security-policy')).toContain(forwarded)
     expect(forwarded).not.toBe('')
+  })
+})
+
+describe('reach measurement', () => {
+  afterEach(() => {
+    delete process.env.GW_ANALYTICS_SCRIPT_URL
+  })
+
+  it('allows nothing from outside while none is configured', () => {
+    // The default has to be the strict one: an installation that configures no
+    // measurement must not carry a hole in its policy for one.
+    const csp = headersFor().get('content-security-policy') ?? ''
+    expect(csp).toMatch(/script-src 'self' 'nonce-[a-f0-9]+' 'unsafe-eval'/)
+    expect(csp).not.toContain('analytics')
+  })
+
+  it('allows exactly the configured origin, script and beacon', () => {
+    process.env.GW_ANALYTICS_SCRIPT_URL = 'https://analytics.example.com/script.js'
+    const csp = headersFor().get('content-security-policy') ?? ''
+    // The origin, not the whole path: the beacon goes to /api/send on the same
+    // host, and a policy naming a file would block it.
+    expect(csp).toContain("script-src 'self' 'nonce-")
+    expect(csp).toMatch(/script-src[^;]*https:\/\/analytics\.example\.com/)
+    expect(csp).toMatch(/connect-src[^;]*https:\/\/analytics\.example\.com/)
+  })
+
+  it('ignores a value that is not a URL, rather than widening the policy', () => {
+    process.env.GW_ANALYTICS_SCRIPT_URL = 'not a url'
+    const csp = headersFor().get('content-security-policy') ?? ''
+    expect(csp).not.toContain('not a url')
+    expect(csp).toMatch(/script-src 'self' 'nonce-[a-f0-9]+' 'unsafe-eval';/)
   })
 })
