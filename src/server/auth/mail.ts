@@ -54,8 +54,40 @@ function fromFileOrValue(file: string | undefined, value: string | undefined) {
 const oneLine = (value: string) => value.replace(/\r|\n|\u2028|\u2029/g, '')
 
 export async function sendMail(mail: Mail, tenantId: string): Promise<void> {
-  const config = await mailConfigFor(tenantId)
+  await deliver(mail, await mailConfigFor(tenantId))
+}
 
+/**
+ * The configuration from the environment alone, with nothing read from a
+ * tenant.
+ *
+ * The operator console runs as a role with no grant on any tenant table, so
+ * the usual path -- read what an admin configured, fill up from the
+ * environment -- cannot work there: it needs the application's database role
+ * to read anything at all. Its sign-in links failed with "DATABASE_URL is not
+ * set", which is a confusing way to say "this container may not look there".
+ */
+export function platformMailConfig(): MailConfig {
+  // An empty object, not a tenant's row: nothing here is configured in a browser.
+  return resolveMailConfig(
+    {},
+    {
+      ...process.env,
+      SMTP_URL: fromFileOrValue(process.env.SMTP_URL_FILE, process.env.SMTP_URL),
+      GW_GRAPH_CLIENT_SECRET: fromFileOrValue(
+        process.env.GW_GRAPH_CLIENT_SECRET_FILE,
+        process.env.GW_GRAPH_CLIENT_SECRET,
+      ),
+    },
+  )
+}
+
+/** Mail the platform sends as itself: the operator console's sign-in links. */
+export async function sendPlatformMail(mail: Mail): Promise<void> {
+  await deliver(mail, platformMailConfig())
+}
+
+async function deliver(mail: Mail, config: MailConfig): Promise<void> {
   switch (config.transport) {
     case 'console':
       console.log(

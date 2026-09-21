@@ -14,8 +14,7 @@ import {
   signInOptions,
   verifySignIn,
 } from '@/cloud/operator/auth'
-import { sendMail } from '@/server/auth/mail'
-import { PLATFORM_TENANT } from '@/server/edition/cloud'
+import { sendPlatformMail } from '@/server/auth/mail'
 import { getTranslations } from 'next-intl/server'
 import { applyOperatorAction, type OperatorAction } from '@/cloud/operator/console'
 import { currentOperator, endOperatorSession, startOperatorSession } from '@/cloud/operator/session'
@@ -53,7 +52,11 @@ export async function operatorSignIn(response: AuthenticationResponseJSON): Prom
  * it reaches the browser, because the console has no sign-up and every
  * distinguishable answer is a way to ask who the operators are.
  *
- * The mail goes out under the platform tenant, like the billing notices.
+ * The mail goes out with the configuration from the environment alone. This
+ * container runs as a role with no grant on any tenant table, so the usual
+ * path -- read what an admin configured in the interface -- cannot work here:
+ * it needs the application's database role. That is what made the first
+ * version fail with "DATABASE_URL is not set" and drop every link.
  */
 export async function operatorMailLink(email: unknown): Promise<void> {
   if (await limited()) return
@@ -69,10 +72,11 @@ export async function operatorMailLink(email: unknown): Promise<void> {
     process.env.GW_OPERATOR_URL ?? process.env.GW_APP_URL ?? 'http://localhost:3002',
   ).toString()
 
-  await sendMail(
-    { to: issued.operator.email, subject: t('mailSubject'), text: t('mailBody', { link }) },
-    PLATFORM_TENANT,
-  )
+  await sendPlatformMail({
+    to: issued.operator.email,
+    subject: t('mailSubject'),
+    text: t('mailBody', { link }),
+  })
 }
 
 export async function operatorEnrollmentOptions(token: string) {
