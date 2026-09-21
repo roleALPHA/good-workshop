@@ -1,4 +1,4 @@
-import { describe, expect, it } from 'vitest'
+import { afterEach, describe, expect, it, vi } from 'vitest'
 import { magicLinkMail } from './mail'
 import { ATTRIBUTION_TEXT } from '@/lib/attribution'
 import { LOCALES } from '@/i18n/config'
@@ -56,5 +56,40 @@ describe('magicLinkMail', () => {
     // and Spanish catalogs need a `many` category.
     expect(magicLinkMail('a@b.test', LINK, 'en').text).toMatch(/\d+ minutes/)
     expect(magicLinkMail('a@b.test', LINK, 'fr').text).toMatch(/\d+ minutes/)
+  })
+})
+
+describe('mail from the platform itself', () => {
+  const kept = { ...process.env }
+  afterEach(() => {
+    process.env = { ...kept }
+  })
+
+  it('takes its settings from the environment alone', async () => {
+    // The operator console runs as a role that cannot read a tenant's stored
+    // mail settings -- it has no grant on any tenant table. Sending through
+    // the tenant path therefore failed with "DATABASE_URL is not set", which
+    // is what kept the console's sign-in links from going out at all.
+    process.env.GW_MAIL_TRANSPORT = 'console'
+    delete process.env.DATABASE_URL
+
+    const { sendPlatformMail } = await import('./mail')
+    const printed = vi.spyOn(console, 'log').mockImplementation(() => {})
+    await sendPlatformMail({ to: 'ops@example.test', subject: 'Hallo', text: 'Ein Link' })
+
+    expect(printed).toHaveBeenCalled()
+    expect(printed.mock.calls.flat().join(' ')).toContain('ops@example.test')
+    printed.mockRestore()
+  })
+
+  it('says so when no transport is configured, rather than dropping the mail', async () => {
+    delete process.env.GW_MAIL_TRANSPORT
+    delete process.env.SMTP_URL
+    delete process.env.DATABASE_URL
+
+    const { sendPlatformMail } = await import('./mail')
+    await expect(
+      sendPlatformMail({ to: 'ops@example.test', subject: 'Hallo', text: 'Ein Link' }),
+    ).rejects.toThrow()
   })
 })
