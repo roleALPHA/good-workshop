@@ -4,8 +4,16 @@ import { eq } from 'drizzle-orm'
 import { readSessionCached } from '@/server/auth/session'
 import { withTenant } from '@/server/db'
 import { tenant } from '@/server/db/schema'
-import { DELETION_GRACE_DAYS, readBillingOverview } from '@/cloud/workspace/account'
-import { DeletePanel, DetailsPanel, InvoicesPanel, PaymentPanel, PlanPanel } from './billing-panels'
+import { readBillingOverview } from '@/cloud/workspace/account'
+import { DELETION_GRACE_DAYS } from '@/cloud/billing/plans'
+import {
+  CancelPanel,
+  DeletePanel,
+  DetailsPanel,
+  InvoicesPanel,
+  PaymentPanel,
+  PlanPanel,
+} from './billing-panels'
 
 export const dynamic = 'force-dynamic'
 
@@ -48,6 +56,15 @@ export default async function BillingPage() {
       <PaymentPanel ready={overview.paymentMethodReady} />
       <DetailsPanel overview={overview} />
       <InvoicesPanel invoices={overview.invoices} />
+      {/* Once a deletion is under way there is nothing left to give notice
+          about -- the contract is over either way, and two panels offering to
+          end the same thing would only be a question about which one wins. */}
+      {!overview.deleteAfter && (
+        <CancelPanel
+          contractEndsOn={overview.contractEndsOn?.toISOString() ?? null}
+          graceDays={DELETION_GRACE_DAYS}
+        />
+      )}
       <DeletePanel
         workspaceName={workspace[0]?.name ?? ''}
         deleteAfter={overview.deleteAfter?.toISOString() ?? null}

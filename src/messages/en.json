@@ -154,9 +154,20 @@
         "download": "Download invoice",
         "notYet": "Document to follow"
       },
+      "cancel": {
+        "title": "End the contract",
+        "intro": "Ends the contract at the end of the current calendar month. Nothing changes until then.",
+        "open": "End the contract",
+        "warning": "You can keep working until the end of the month, and the last month is invoiced as usual. After that the workspace becomes read-only; for {graceDays} days all workshops can still be exported, then the contents are deleted.",
+        "confirm": "End at the end of the month",
+        "back": "Never mind",
+        "scheduled": "The contract ends on {date}.",
+        "afterwards": "After that the workspace becomes read-only and is deleted {graceDays} days later.",
+        "undo": "Withdraw the cancellation"
+      },
       "delete": {
         "title": "Delete workspace",
-        "intro": "Ends the contract and deletes all workshops, members and shares.",
+        "intro": "Deletes this workspace with all workshops, members and shares — at once, without waiting for the notice period.",
         "open": "Delete workspace",
         "warning": "The workspace becomes read-only at once and is deleted for good after {days} days. Until then every workshop can still be exported, and you can take the deletion back. The current month is still billed pro rata.",
         "typeName": "Type the workspace name to confirm: {name}",
@@ -638,6 +649,10 @@
       "payment_failed": {
         "subject": "GoodWorkshop payment failed",
         "body": "Hello,\n\nwe could not collect the invoice amount. {retry, select, none {We will not try again.} other {We will try again on {retry}.}}\n\nPlease check your payment method:\n{link}"
+      },
+      "contract_ended": {
+        "subject": "Your GoodWorkshop contract has ended",
+        "body": "Hello,\n\nyour contract ran out at the end of the month. Your workspace is now read-only: reading and exporting still work.\n\nYou can download your workshops until {until}. After that we delete the contents.\n{link}"
       },
       "readOnly": {
         "trial_ended": {

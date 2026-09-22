@@ -1,7 +1,7 @@
 import { sql } from 'drizzle-orm'
 import { withTenant, type Actor, type Tx } from '@/server/db'
 import { assertTenantAdmin } from '@/domain/tenant/members'
-import { isPlanKey, type PlanKey } from '@/cloud/billing/plans'
+import { DELETION_GRACE_DAYS, isPlanKey, type PlanKey } from '@/cloud/billing/plans'
 import { readPriceList } from '@/cloud/billing/price-list'
 import { memberMonths, viennaDay, type Interval } from '@/cloud/billing/usage'
 import type { BillingAdapters } from '@/cloud/billing/ports'
@@ -17,14 +17,14 @@ import type { VatCheck } from '@/cloud/tax/vies'
  * so the refusal is a sentence rather than a database error.
  */
 
-export const DELETION_GRACE_DAYS = 30
-
 export type WorkspaceState = 'trial' | 'active' | 'read_only' | 'paused' | 'deleting'
 
 export type BillingOverview = {
   state: WorkspaceState
   trialEndsAt: Date | null
   deleteAfter: Date | null
+  /** The last day the contract runs, once it has been ended. */
+  contractEndsOn: Date | null
   plan: PlanKey
   nextPlan: PlanKey | null
   companyName: string
@@ -72,7 +72,7 @@ export async function readBillingOverview(
   return withTenant(actor, async (tx) => {
     const [account] = await rows(
       tx,
-      sql`select b.*, l.state, l.trial_ends_at, l.delete_after
+      sql`select b.*, l.state, l.trial_ends_at, l.delete_after, l.contract_ends_on
             from billing_account b join tenant_lifecycle l using (tenant_id)`,
     )
     if (!account) return null
@@ -121,6 +121,7 @@ export async function readBillingOverview(
       state: account.state as WorkspaceState,
       trialEndsAt: toDate(account.trial_ends_at),
       deleteAfter: toDate(account.delete_after),
+      contractEndsOn: toDate(account.contract_ends_on),
       plan,
       nextPlan: isPlanKey(account.next_plan) ? account.next_plan : null,
       companyName: (account.company_name as string | null) ?? '',
@@ -202,6 +203,27 @@ export async function startPaymentSetup(
     tx.execute(sql`select app.cloud_set_payment_customer(${session.customerRef})`),
   )
   return session.url
+}
+
+/**
+ * Ending the contract to the end of this calendar month (AGB § 6.2).
+ *
+ * Not the same thing as deleting the workspace, and deliberately so: this one
+ * changes nothing today. People keep working through their notice period, the
+ * last month is invoiced in full, and only then does the workspace go read-only
+ * with the usual window to get the contents out.
+ */
+export async function requestCancellation(actor: Actor): Promise<Date> {
+  assertTenantAdmin(actor)
+  return withTenant(actor, async (tx) => {
+    const [row] = await rows(tx, sql`select app.cloud_request_own_cancellation() as ends_on`)
+    return toDate(row!.ends_on)!
+  })
+}
+
+export async function withdrawCancellation(actor: Actor): Promise<void> {
+  assertTenantAdmin(actor)
+  await withTenant(actor, (tx) => tx.execute(sql`select app.cloud_withdraw_own_cancellation()`))
 }
 
 export async function requestWorkspaceDeletion(actor: Actor): Promise<Date> {
