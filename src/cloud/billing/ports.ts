@@ -67,7 +67,7 @@ export type InvoicingPort = {
     ref: string
     lines: InvoiceLine[]
     tax: Exclude<TaxTreatment, { kind: 'hold' }>
-    /** Stated on the invoice: the amount will be collected (SEPA pre-notification). */
+    /** Stated on the invoice: the day the amount will be collected. */
     collectedAfter: Date
     /**
      * The language the invoice is written in: the one the customer registered

@@ -82,7 +82,7 @@ cloud builds only), as the operations role, one run at a time under an advisory 
 recorded by triggers on `member` and `workshop`, so every path that creates a workshop or switches
 a membership counts without knowing billing exists, and a tenant cannot shrink its own usage. A
 run closes the previous month into one `billing_period` per tenant, invoices it, waits for the
-SEPA pre-notification period and collects; every step moves a period one state on with an update
+announced collection date and collects; every step moves a period one state on with an update
 that names the state it expects, and the invoice reference is the idempotency key towards
 accounting and payments, so a repeated or interrupted run neither invoices nor charges twice.
 **What a plan costs** is read from the accounting system, not kept in the code: the article has to
