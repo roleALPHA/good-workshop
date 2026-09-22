@@ -1,4 +1,4 @@
-import { PLANS, PLAN_KEYS, isPlanKey, type PlanKey } from './plans'
+import { DELETION_GRACE_DAYS, PLANS, PLAN_KEYS, isPlanKey, type PlanKey } from './plans'
 import { nextChangeMonth, priceAt, type PlanPrice } from './prices'
 import type { BillingAdapters, IssuedInvoice, PaymentEvent } from './ports'
 import {
@@ -42,6 +42,7 @@ export type Notice = { to: string; locale: Locale } & (
   | { kind: 'trial_ending'; daysLeft: number }
   | { kind: 'read_only'; reason: 'trial_ended' | 'payment_failed' }
   | { kind: 'payment_failed'; retryAt: Date | null }
+  | { kind: 'contract_ended'; exportUntil: Date }
 )
 
 export type RunOptions = {
@@ -555,6 +556,41 @@ const REMINDERS = [
   { key: 'trial_1d', days: 1 },
 ] as const
 
+/**
+ * Contracts that ran out at the end of last month (AGB § 6.2).
+ *
+ * The notice period is over, so the workspace becomes what a workspace becomes
+ * when its customer leaves: read-only, exportable, and deleted after the grace
+ * period. That is the deletion path, reused deliberately -- one way from "no
+ * longer a customer" to "data gone", with the export window in it, and a purge
+ * that waits for the last month to be invoiced.
+ */
+export async function contractTransitions(db: Db, options: RunOptions) {
+  const today = viennaDay(options.now)
+  const { rows } = await db.query(
+    `select l.tenant_id, b.billing_email, b.locale
+       from tenant_lifecycle l join billing_account b on b.tenant_id = l.tenant_id
+      where l.contract_ends_on is not null and l.contract_ends_on < $1::date
+        and l.state <> 'deleting'`,
+    [today],
+  )
+
+  for (const tenant of rows) {
+    const { rows: scheduled } = await db.query(
+      `select app.cloud_schedule_tenant_deletion($1, $2) as delete_after`,
+      [tenant.tenant_id, DELETION_GRACE_DAYS],
+    )
+    const until = scheduled[0]?.delete_after
+    if (!until) continue
+    await announce(options, {
+      kind: 'contract_ended',
+      to: tenant.billing_email,
+      locale: localeOf(tenant.locale),
+      exportUntil: until,
+    })
+  }
+}
+
 export async function trialTransitions(db: Db, options: RunOptions) {
   const { rows } = await db.query(
     `select l.tenant_id, l.trial_ends_at, b.payment_method_ready, b.billing_email, b.locale,
@@ -767,6 +803,7 @@ export async function runBilling(
 ) {
   await recheckPendingVat(db, check, options)
   await trialTransitions(db, options)
+  await contractTransitions(db, options)
   // Before closing a month: that month is billed at a price this step may have
   // recorded, and the freshness of the answer decides whether we still sell.
   if (adapters) await syncPlanPrices(db, adapters, options)

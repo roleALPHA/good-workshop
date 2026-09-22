@@ -32,3 +32,14 @@ export function isPlanKey(value: unknown): value is PlanKey {
 
 /** Days a new tenant may use the service before it has to pay. */
 export const TRIAL_DAYS = 14
+
+/**
+ * Days between a workspace being done with -- deleted or cancelled -- and its
+ * contents being gone.
+ *
+ * It is two promises in one number: the export window of AGB § 6.4, and the
+ * outer bound of § 9.6, which says the data is deleted within 30 days of the
+ * contract ending. Shortening it shortens the window somebody has to get their
+ * work out; lengthening it breaks the other half.
+ */
+export const DELETION_GRACE_DAYS = 30

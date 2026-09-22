@@ -8,9 +8,11 @@ import { checkVatId } from '@/cloud/tax/vies'
 import {
   cancelWorkspaceDeletion,
   changePlan,
+  requestCancellation,
   requestWorkspaceDeletion,
   startPaymentSetup,
   updateBillingDetails,
+  withdrawCancellation,
 } from '@/cloud/workspace/account'
 
 /**
@@ -67,6 +69,17 @@ export async function requestWorkspaceDeletionAction(): Promise<ActionResult<str
 export async function cancelWorkspaceDeletionAction(): Promise<ActionResult<null>> {
   return run(async (actor) => {
     await cancelWorkspaceDeletion(actor)
+    return null
+  })
+}
+
+export async function requestCancellationAction(): Promise<ActionResult<string>> {
+  return run(async (actor) => (await requestCancellation(actor)).toISOString())
+}
+
+export async function withdrawCancellationAction(): Promise<ActionResult<null>> {
+  return run(async (actor) => {
+    await withdrawCancellation(actor)
     return null
   })
 }

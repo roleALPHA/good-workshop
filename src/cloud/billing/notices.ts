@@ -30,6 +30,9 @@ export function noticeMail(notice: Notice, locale: Locale): Mail {
   if (notice.kind === 'payment_failed') {
     params.retry = notice.retryAt ? notice.retryAt.toISOString().slice(0, 10) : 'none'
   }
+  if (notice.kind === 'contract_ended') {
+    params.until = notice.exportUntil.toISOString().slice(0, 10)
+  }
   return {
     to: notice.to,
     subject: t('subject'),

@@ -154,9 +154,20 @@
         "download": "Descargar factura",
         "notYet": "Documento pendiente"
       },
+      "cancel": {
+        "title": "Rescindir el contrato",
+        "intro": "Finaliza el contrato al terminar el mes natural en curso. Hasta entonces no cambia nada.",
+        "open": "Rescindir el contrato",
+        "warning": "Podéis seguir trabajando hasta fin de mes, y el último mes se factura con normalidad. Después el espacio pasa a solo lectura; durante {graceDays} días todos los talleres se pueden seguir exportando y luego se eliminan los contenidos.",
+        "confirm": "Rescindir a fin de mes",
+        "back": "Mejor no",
+        "scheduled": "El contrato finaliza el {date}.",
+        "afterwards": "Después el espacio pasa a solo lectura y se elimina {graceDays} días más tarde.",
+        "undo": "Retirar la rescisión"
+      },
       "delete": {
         "title": "Eliminar espacio de trabajo",
-        "intro": "Termina el contrato y elimina todos los talleres, miembros y permisos.",
+        "intro": "Elimina este espacio con todos los talleres, miembros y accesos compartidos — de inmediato, sin esperar al plazo de preaviso.",
         "open": "Eliminar espacio de trabajo",
         "warning": "El espacio de trabajo pasa de inmediato a solo lectura y se elimina definitivamente tras {days} días. Hasta entonces todos los talleres se pueden exportar y puedes anular la eliminación. El mes en curso se sigue facturando de forma proporcional.",
         "typeName": "Escribe el nombre del espacio de trabajo para confirmar: {name}",
@@ -638,6 +649,10 @@
       "payment_failed": {
         "subject": "Ha fallado el pago de GoodWorkshop",
         "body": "Hola:\n\nno hemos podido cobrar el importe de la factura. {retry, select, none {No volveremos a intentarlo.} other {Lo volveremos a intentar el {retry}.}}\n\nRevisa tu método de pago:\n{link}"
+      },
+      "contract_ended": {
+        "subject": "Tu contrato de GoodWorkshop ha finalizado",
+        "body": "Hola,\n\ntu contrato finalizó al terminar el mes. Tu espacio ahora es de solo lectura: leer y exportar siguen funcionando.\n\nPuedes descargar tus talleres hasta el {until}. Después eliminaremos los contenidos.\n{link}"
       },
       "readOnly": {
         "trial_ended": {

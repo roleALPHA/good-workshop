@@ -5,12 +5,19 @@ import { afterAll, beforeAll, describe, expect, it } from 'vitest'
 import { withTenant, type Actor } from '@/server/db'
 import { edition } from '@/server/edition'
 import { fakeAdapters } from '@/cloud/billing/adapters/fake'
-import { closeMonth, purgeDeletedTenants, type RunOptions } from '@/cloud/billing/run'
-import { previousMonth } from '@/cloud/billing/usage'
 import {
-  DELETION_GRACE_DAYS,
+  closeMonth,
+  contractTransitions,
+  purgeDeletedTenants,
+  type RunOptions,
+} from '@/cloud/billing/run'
+import { previousMonth } from '@/cloud/billing/usage'
+import { DELETION_GRACE_DAYS } from '@/cloud/billing/plans'
+import {
   cancelWorkspaceDeletion,
   changePlan,
+  requestCancellation,
+  withdrawCancellation,
   readBillingOverview,
   requestWorkspaceDeletion,
   startPaymentSetup,
@@ -60,9 +67,9 @@ async function workspace(state = 'active') {
   await ops.query(
     `insert into billing_account (tenant_id, customer_type, company_name, street, postal_code, city, country,
        billing_email, plan, plan_from, terms_accepted_at)
-     values ($1, 'business', 'Verwaltung GmbH', 'Ring 1', '1010', 'Wien', 'AT', 'rechnung@example.test',
+     values ($1, 'business', 'Verwaltung GmbH', 'Ring 1', '1010', 'Wien', 'AT', $2,
        'per_user', '2026-01-01', now())`,
-    [tenantId],
+    [tenantId, `rechnung-${tenantId.slice(0, 8)}@example.test`],
   )
   const admin: Actor = { tenantId, memberId, tenantRole: 'admin', source: 'web' }
   const member: Actor = { ...admin, tenantRole: 'member' }
@@ -296,5 +303,86 @@ describe('deleting a workspace', () => {
       (await ops.query('select 1 from usage_workshop_created where tenant_id = $1', [tenantId]))
         .rowCount,
     ).toBe(1)
+  })
+})
+
+/**
+ * Ending the contract, which used to be the same control as deleting the
+ * workspace -- and therefore cost three weeks of work to anybody who wanted to
+ * leave at the end of the month.
+ */
+describe('ending the contract to the end of the month', () => {
+  it('changes nothing today and names the last day of this month', async () => {
+    const { tenantId, admin, member } = await workspace()
+    await expect(requestCancellation(member)).rejects.toThrow('member.adminOnly')
+
+    const endsOn = await requestCancellation(admin)
+    const lastOfThisMonth = new Date(Date.UTC(endsOn.getUTCFullYear(), endsOn.getUTCMonth() + 1, 0))
+    expect(endsOn.getUTCDate()).toBe(lastOfThisMonth.getUTCDate())
+
+    // Still writable, still counting: a notice period is a period one works in.
+    const { rows } = await ops.query(
+      'select state, contract_ends_on from tenant_lifecycle where tenant_id = $1',
+      [tenantId],
+    )
+    expect(rows[0].state).toBe('active')
+    expect(rows[0].contract_ends_on).not.toBeNull()
+
+    const { rows: usage } = await ops.query(
+      'select count(*)::int as open from usage_member_interval where tenant_id = $1 and active_to is null',
+      [tenantId],
+    )
+    expect(usage[0].open).toBeGreaterThan(0)
+  })
+
+  it('can be taken back while the contract is still running', async () => {
+    const { tenantId, admin } = await workspace()
+    await requestCancellation(admin)
+    await withdrawCancellation(admin)
+
+    const { rows } = await ops.query(
+      'select cancellation_requested_at, contract_ends_on from tenant_lifecycle where tenant_id = $1',
+      [tenantId],
+    )
+    expect(rows[0]).toEqual({ cancellation_requested_at: null, contract_ends_on: null })
+  })
+
+  it('hands the workspace to the deletion path once the last day has passed', async () => {
+    const { tenantId, admin } = await workspace()
+    const endsOn = await requestCancellation(admin)
+
+    // Filtered to this workspace: the run walks every tenant, and another
+    // test's leftover contract would otherwise show up in this list.
+    const mine = `rechnung-${tenantId.slice(0, 8)}@example.test`
+    const notices: string[] = []
+    const after = new Date(endsOn.getTime() + 2 * 86_400_000)
+    await contractTransitions(ops, {
+      ...options(after),
+      notify: async (notice) => {
+        if (notice.to === mine) notices.push(notice.kind)
+      },
+    })
+
+    expect(notices).toEqual(['contract_ended'])
+    const { rows } = await ops.query(
+      'select state, delete_after from tenant_lifecycle where tenant_id = $1',
+      [tenantId],
+    )
+    // read-only, exportable, and gone after the grace period -- the one path
+    // from "no longer a customer" to "data gone".
+    expect(rows[0].state).toBe('deleting')
+    expect(rows[0].delete_after).not.toBeNull()
+  })
+
+  it('does nothing while the last day is still ahead', async () => {
+    const { tenantId, admin } = await workspace()
+    const endsOn = await requestCancellation(admin)
+
+    await contractTransitions(ops, options(new Date(endsOn.getTime() - 86_400_000)))
+
+    const { rows } = await ops.query('select state from tenant_lifecycle where tenant_id = $1', [
+      tenantId,
+    ])
+    expect(rows[0].state).toBe('active')
   })
 })

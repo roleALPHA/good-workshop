@@ -157,9 +157,20 @@ declare const messages: {
         "download": "Rechnung herunterladen",
         "notYet": "Beleg folgt"
       },
+      "cancel": {
+        "title": "Vertrag kündigen",
+        "intro": "Beendet den Vertrag zum Ende des laufenden Kalendermonats. Bis dahin ändert sich nichts.",
+        "open": "Vertrag kündigen",
+        "warning": "Bis zum Monatsende könnt ihr normal weiterarbeiten, und der letzte Monat wird regulär abgerechnet. Danach wird der Workspace schreibgeschützt; {graceDays} Tage lang lassen sich alle Workshops noch exportieren, dann werden die Inhalte gelöscht.",
+        "confirm": "Zum Monatsende kündigen",
+        "back": "Doch nicht",
+        "scheduled": "Der Vertrag endet am {date}.",
+        "afterwards": "Danach wird der Workspace schreibgeschützt und nach {graceDays} Tagen gelöscht.",
+        "undo": "Kündigung zurücknehmen"
+      },
       "delete": {
         "title": "Workspace löschen",
-        "intro": "Beendet den Vertrag und löscht alle Workshops, Mitglieder und Freigaben.",
+        "intro": "Löscht diesen Workspace mit allen Workshops, Mitgliedern und Freigaben — sofort, ohne die Kündigungsfrist abzuwarten.",
         "open": "Workspace löschen",
         "warning": "Der Workspace wird sofort schreibgeschützt und nach {days} Tagen endgültig gelöscht. Bis dahin können alle Workshops noch exportiert werden, und du kannst die Löschung zurücknehmen. Der laufende Monat wird noch anteilig abgerechnet.",
         "typeName": "Zum Bestätigen den Namen des Workspaces eintippen: {name}",
@@ -641,6 +652,10 @@ declare const messages: {
       "payment_failed": {
         "subject": "Zahlung für GoodWorkshop fehlgeschlagen",
         "body": "Hallo,\n\nwir konnten den Rechnungsbetrag nicht einziehen. {retry, select, none {Wir versuchen es nicht erneut.} other {Wir versuchen es am {retry} erneut.}}\n\nBitte prüfe deine Zahlungsmethode:\n{link}"
+      },
+      "contract_ended": {
+        "subject": "Dein Vertrag für GoodWorkshop ist beendet",
+        "body": "Hallo,\n\ndein Vertrag ist zum Monatsende ausgelaufen. Dein Workspace ist jetzt schreibgeschützt: lesen und exportieren geht weiterhin.\n\nBis zum {until} kannst du deine Workshops herunterladen. Danach löschen wir die Inhalte.\n{link}"
       },
       "readOnly": {
         "trial_ended": {

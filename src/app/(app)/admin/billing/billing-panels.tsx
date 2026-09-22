@@ -8,6 +8,8 @@ import { SIGNUP_COUNTRIES } from '@/cloud/registration/rules'
 import type { BillingOverview } from '@/cloud/workspace/account'
 import {
   cancelWorkspaceDeletionAction,
+  requestCancellationAction,
+  withdrawCancellationAction,
   changePlanAction,
   requestWorkspaceDeletionAction,
   startPaymentSetupAction,
@@ -249,6 +251,86 @@ export function InvoicesPanel({ invoices }: { invoices: BillingOverview['invoice
           ))}
         </ul>
       )}
+    </section>
+  )
+}
+
+/**
+ * Ending the contract, next to -- and not the same as -- deleting the workspace.
+ *
+ * The two used to be one control, and that made leaving cost three weeks of
+ * work: "delete workspace" took write access away on the spot. Notice to the
+ * end of the month is what the terms give (§ 6.2), so it is what the page
+ * offers, and the destructive one stays for people who really do want out now.
+ */
+export function CancelPanel({
+  contractEndsOn,
+  graceDays,
+}: {
+  contractEndsOn: string | null
+  graceDays: number
+}) {
+  const t = useTranslations('admin.billing.cancel')
+  const format = useFormatter()
+  const [open, setOpen] = useState(false)
+  const { error, pending, act } = useAction()
+
+  if (contractEndsOn) {
+    return (
+      <section className={card} aria-labelledby="billing-cancel">
+        <h2 id="billing-cancel" className="text-[17px] font-medium">
+          {t('title')}
+        </h2>
+        <p className="mt-1 text-[15px]">
+          {t('scheduled', {
+            date: format.dateTime(new Date(contractEndsOn), { dateStyle: 'long' }),
+          })}
+        </p>
+        <p className="mt-1 text-[14px] text-[var(--fg-muted)]">
+          {t('afterwards', { graceDays: String(graceDays) })}
+        </p>
+        <button
+          type="button"
+          className={`${primary} mt-3`}
+          disabled={pending}
+          onClick={() => act(() => withdrawCancellationAction())}
+        >
+          {t('undo')}
+        </button>
+        <Alert message={error} />
+      </section>
+    )
+  }
+
+  return (
+    <section className={card} aria-labelledby="billing-cancel">
+      <h2 id="billing-cancel" className="text-[17px] font-medium">
+        {t('title')}
+      </h2>
+      <p className="mt-1 text-[14px] text-[var(--fg-muted)]">{t('intro')}</p>
+      {!open ? (
+        <button type="button" className={`${primary} mt-3`} onClick={() => setOpen(true)}>
+          {t('open')}
+        </button>
+      ) : (
+        <>
+          <p className="mt-3 text-[15px]">{t('warning', { graceDays: String(graceDays) })}</p>
+          <div className="mt-3 flex gap-2">
+            <button
+              type="button"
+              className={primary}
+              disabled={pending}
+              onClick={() => act(() => requestCancellationAction())}
+            >
+              {t('confirm')}
+            </button>
+            <button type="button" className={primary} onClick={() => setOpen(false)}>
+              {t('back')}
+            </button>
+          </div>
+        </>
+      )}
+      <Alert message={error} />
     </section>
   )
 }

@@ -154,9 +154,20 @@
         "download": "Télécharger la facture",
         "notYet": "Document à venir"
       },
+      "cancel": {
+        "title": "Résilier le contrat",
+        "intro": "Met fin au contrat à la fin du mois civil en cours. Rien ne change d'ici là.",
+        "open": "Résilier le contrat",
+        "warning": "Vous pouvez continuer à travailler jusqu'à la fin du mois, et le dernier mois est facturé normalement. Ensuite, l'espace passe en lecture seule ; pendant {graceDays} jours, tous les ateliers restent exportables, puis les contenus sont supprimés.",
+        "confirm": "Résilier à la fin du mois",
+        "back": "Annuler",
+        "scheduled": "Le contrat prend fin le {date}.",
+        "afterwards": "Ensuite, l'espace passe en lecture seule et est supprimé {graceDays} jours plus tard.",
+        "undo": "Retirer la résiliation"
+      },
       "delete": {
         "title": "Supprimer l’espace de travail",
-        "intro": "Met fin au contrat et supprime tous les ateliers, membres et partages.",
+        "intro": "Supprime cet espace avec tous les ateliers, membres et partages — immédiatement, sans attendre le préavis.",
         "open": "Supprimer l’espace de travail",
         "warning": "L’espace de travail passe immédiatement en lecture seule et est supprimé définitivement après {days} jours. D’ici là, tous les ateliers peuvent encore être exportés et tu peux annuler la suppression. Le mois en cours est encore facturé au prorata.",
         "typeName": "Tape le nom de l’espace de travail pour confirmer : {name}",
@@ -638,6 +649,10 @@
       "payment_failed": {
         "subject": "Échec du paiement GoodWorkshop",
         "body": "Bonjour,\n\nnous n’avons pas pu prélever le montant de la facture. {retry, select, none {Nous ne réessaierons pas.} other {Nous réessaierons le {retry}.}}\n\nVérifie ton moyen de paiement :\n{link}"
+      },
+      "contract_ended": {
+        "subject": "Votre contrat GoodWorkshop a pris fin",
+        "body": "Bonjour,\n\nvotre contrat a pris fin à la fin du mois. Votre espace est désormais en lecture seule : la lecture et l'export restent possibles.\n\nVous pouvez télécharger vos ateliers jusqu'au {until}. Ensuite, nous supprimons les contenus.\n{link}"
       },
       "readOnly": {
         "trial_ended": {

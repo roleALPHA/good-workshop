@@ -158,6 +158,54 @@ begin
 end;
 $$;
 
+-- Ending the contract to the end of this calendar month (AGB § 6.2).
+--
+-- Nothing changes today: the workspace keeps working, members keep counting,
+-- and the last month is invoiced in full. What happens when the date arrives is
+-- the deletion that already exists -- the billing run schedules it -- so there
+-- is exactly one path from "no longer a customer" to "data gone", and it is the
+-- one with the export window in it.
+create or replace function app.cloud_request_own_cancellation()
+returns date
+language plpgsql
+security definer
+set search_path = pg_catalog, public
+as $$
+declare tenant uuid := app.cloud_assert_tenant_admin();
+begin
+  update tenant_lifecycle
+     set cancellation_requested_at = now(),
+         -- Vienna, like every other month boundary in the billing: asked for at
+         -- half past midnight on the first, this must not end the month before.
+         contract_ends_on = (date_trunc('month', now() at time zone 'Europe/Vienna')
+                             + interval '1 month' - interval '1 day')::date,
+         updated_at = now()
+   where tenant_id = tenant
+     and cancellation_requested_at is null
+     and state not in ('deleting');
+
+  return (select contract_ends_on from tenant_lifecycle where tenant_id = tenant);
+end;
+$$;
+
+-- Taking it back, for as long as the contract is still running. Afterwards
+-- there is nothing to take back: the deletion has its own withdrawal.
+create or replace function app.cloud_withdraw_own_cancellation()
+returns void
+language plpgsql
+security definer
+set search_path = pg_catalog, public
+as $$
+declare tenant uuid := app.cloud_assert_tenant_admin();
+begin
+  update tenant_lifecycle
+     set cancellation_requested_at = null,
+         contract_ends_on = null,
+         updated_at = now()
+   where tenant_id = tenant and state not in ('deleting');
+end;
+$$;
+
 create or replace function app.cloud_cancel_own_deletion()
 returns void
 language plpgsql
@@ -177,7 +225,9 @@ begin
     'app.cloud_update_billing_details(text, text, text, text, text, text, text, jsonb)',
     'app.cloud_set_payment_customer(text)',
     'app.cloud_request_own_deletion(integer)',
-    'app.cloud_cancel_own_deletion()'
+    'app.cloud_cancel_own_deletion()',
+    'app.cloud_request_own_cancellation()',
+    'app.cloud_withdraw_own_cancellation()'
   ] loop
     execute format('alter function %s owner to gw_ops', f);
     execute format('revoke all on function %s from public', f);
