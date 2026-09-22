@@ -97,6 +97,24 @@ export const cloudEdition: Edition = {
     }))
   },
 
+  maintenanceWindow: async () => {
+    // Not through a tenant: the window belongs to the installation, and the
+    // query has to answer the same for everybody who asks.
+    const result = await withoutTenant((tx) =>
+      tx.execute(sql`
+        select starts_at, ends_at, note from maintenance_window
+         where cancelled_at is null and ends_at > now()
+         order by starts_at limit 1
+      `),
+    )
+    const row = (
+      result as unknown as { rows: { starts_at: string; ends_at: string; note: string }[] }
+    ).rows[0]
+    return row
+      ? { startsAt: new Date(row.starts_at), endsAt: new Date(row.ends_at), note: row.note }
+      : null
+  },
+
   hasBilling: true,
 }
 

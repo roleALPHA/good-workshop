@@ -709,6 +709,10 @@ declare const messages: {
       "priceChange": "Ab dem {date} gelten neue Preise. Bis dahin ändert sich nichts.",
       "termsChange": "Ab dem {date} gelten neue Vertragsbedingungen. Bis dahin gelten die bisherigen.",
       "toBilling": "Zur Abrechnung"
+    },
+    "maintenance": {
+      "planned": "Geplante Wartung am {from} bis {until}. In dieser Zeit kann GoodWorkshop kurz nicht erreichbar sein.",
+      "running": "Wartungsarbeiten laufen, voraussichtlich bis {until}."
     }
   },
   "settings": {
@@ -1134,6 +1138,16 @@ declare const messages: {
         "unauthenticated": "Bitte neu anmelden.",
         "failed": "Das hat nicht geklappt."
       }
+    },
+    "maintenance": {
+      "title": "Wartungsfenster",
+      "intro": "Angekündigte Wartung erscheint bei allen Workspaces unter der Kopfzeile. Ein Fenster muss vor seinem Beginn angekündigt werden.",
+      "from": "Von",
+      "until": "Bis",
+      "note": "Hinweis",
+      "announce": "Ankündigen",
+      "cancel": "Absagen",
+      "error": "Das hat nicht geklappt. Liegt der Beginn in der Zukunft?"
     }
   }
 };

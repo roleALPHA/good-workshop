@@ -706,6 +706,10 @@
       "priceChange": "New prices apply from {date}. Nothing changes until then.",
       "termsChange": "New terms apply from {date}. Until then the current ones do.",
       "toBilling": "Go to billing"
+    },
+    "maintenance": {
+      "planned": "Planned maintenance on {from} until {until}. GoodWorkshop may be briefly unavailable.",
+      "running": "Maintenance is under way, expected to finish at {until}."
     }
   },
   "settings": {
@@ -1131,6 +1135,16 @@
         "unauthenticated": "Please sign in again.",
         "failed": "That did not work."
       }
+    },
+    "maintenance": {
+      "title": "Maintenance windows",
+      "intro": "An announced window appears under the header in every workspace. A window has to be announced before it starts.",
+      "from": "From",
+      "until": "Until",
+      "note": "Note",
+      "announce": "Announce",
+      "cancel": "Call off",
+      "error": "That did not work. Is the start in the future?"
     }
   }
 }

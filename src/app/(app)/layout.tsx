@@ -7,7 +7,11 @@ import { ProfileMenu } from '@/components/layout/profile-menu'
 import { getClientMessages } from '@/i18n/client-messages'
 import { readSessionCached } from '@/server/auth/session'
 import { edition } from '@/server/edition'
-import { AnnouncedChangeBanner, WorkspaceNoticeBanner } from '@/components/layout/workspace-notice'
+import {
+  AnnouncedChangeBanner,
+  MaintenanceBanner,
+  WorkspaceNoticeBanner,
+} from '@/components/layout/workspace-notice'
 
 export const dynamic = 'force-dynamic'
 
@@ -24,10 +28,11 @@ export default async function AppLayout({ children }: { children: React.ReactNod
 
   // Not in the root layout: src/app/print/layout.tsx nests inside that one, and
   // the print view deliberately ships no client JavaScript at all.
-  const [messages, notice, changes] = await Promise.all([
+  const [messages, notice, changes, maintenance] = await Promise.all([
     getClientMessages(),
     edition.workspaceNotice(session.tenantId).catch(() => null),
     edition.announcedChanges(session.tenantId).catch(() => []),
+    edition.maintenanceWindow().catch(() => null),
   ])
 
   return (
@@ -57,6 +62,7 @@ export default async function AppLayout({ children }: { children: React.ReactNod
         {/* Six weeks of notice are no use if nobody sees them. Below the state
             banner: a change that is coming is not a reason the editor is shut. */}
         <AnnouncedChangeBanner changes={changes} isAdmin={session.tenantRole === 'admin'} />
+        <MaintenanceBanner window={maintenance} />
 
         <main className="mx-auto w-full max-w-5xl flex-1 px-4 py-6">{children}</main>
         <AppFooter />
