@@ -68,7 +68,8 @@ begin
 
   insert into billing_account (
     tenant_id, customer_type, company_name, street, postal_code, city, country, vat_id,
-    billing_email, plan, plan_from, terms_accepted_at, dpa_accepted_at, business_confirmed_at
+    billing_email, plan, plan_from, terms_accepted_at, dpa_accepted_at, business_confirmed_at,
+    locale
   ) values (
     v_tenant,
     'business',
@@ -83,7 +84,10 @@ begin
     current_date,
     s.created_at,
     case when (p ->> 'acceptedDpa')::boolean then s.created_at end,
-    case when (p ->> 'confirmedBusiness')::boolean then s.created_at end
+    case when (p ->> 'confirmedBusiness')::boolean then s.created_at end,
+    -- The language the signup was made in, so the invoice and every notice
+    -- that follows are written in it.
+    coalesce(p ->> 'locale', 'de')
   );
 
   -- The VIES answer the registration was checked against, as evidence, and

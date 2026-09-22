@@ -1,11 +1,12 @@
-import { PLANS, PLAN_KEYS, isPlanKey } from './plans'
+import { PLANS, PLAN_KEYS, isPlanKey, type PlanKey } from './plans'
 import { nextChangeMonth, priceAt, type PlanPrice } from './prices'
 import type { BillingAdapters, IssuedInvoice, PaymentEvent } from './ports'
 import {
   invoiceRef,
   memberMonths,
+  invoiceLine,
+  invoiceLocaleOf,
   monthDays,
-  monthKey,
   netCents,
   nextAttempt,
   previousMonth,
@@ -13,6 +14,7 @@ import {
   type Interval,
 } from './usage'
 import { taxTreatment, type VatStatus } from '@/cloud/tax/treatment'
+import { isLocale, type Locale } from '@/i18n/config'
 import type { VatCheck } from '@/cloud/tax/vies'
 
 /**
@@ -32,10 +34,15 @@ export type Db = {
   query: (text: string, values?: unknown[]) => Promise<{ rows: any[]; rowCount: number | null }> // eslint-disable-line @typescript-eslint/no-explicit-any
 }
 
-export type Notice =
-  | { kind: 'trial_ending'; to: string; daysLeft: number }
-  | { kind: 'read_only'; to: string; reason: 'trial_ended' | 'payment_failed' }
-  | { kind: 'payment_failed'; to: string; retryAt: Date | null }
+/**
+ * What the billing run tells a customer -- in the language they registered in,
+ * which the billing account remembers.
+ */
+export type Notice = { to: string; locale: Locale } & (
+  | { kind: 'trial_ending'; daysLeft: number }
+  | { kind: 'read_only'; reason: 'trial_ended' | 'payment_failed' }
+  | { kind: 'payment_failed'; retryAt: Date | null }
+)
 
 export type RunOptions = {
   now: Date
@@ -228,7 +235,7 @@ export async function closeMonth(db: Db, month: string, options: RunOptions): Pr
 export async function invoicePeriods(db: Db, adapters: BillingAdapters, options: RunOptions) {
   const { rows } = await db.query(
     `select p.*, b.customer_type, b.company_name, b.street, b.postal_code, b.city, b.country,
-            b.vat_id, b.billing_email, b.invoicing_customer_ref, t.name as tenant_name
+            b.vat_id, b.billing_email, b.invoicing_customer_ref, b.locale, t.name as tenant_name
        from billing_period p
        join billing_account b on b.tenant_id = p.tenant_id
        left join tenant t on t.id = p.tenant_id
@@ -241,6 +248,7 @@ export async function invoicePeriods(db: Db, adapters: BillingAdapters, options:
       options.log('billing: would invoice', { ref: period.invoice_ref, netCents: period.net_cents })
       continue
     }
+    const locale = invoiceLocaleOf(period.locale)
     try {
       const customerRef = await adapters.invoicing.upsertCustomer({
         tenantId: period.tenant_id,
@@ -253,6 +261,7 @@ export async function invoicePeriods(db: Db, adapters: BillingAdapters, options:
         city: period.city,
         country: period.country,
         vatId: period.vat_id,
+        locale,
       })
       await db.query(
         `update billing_account set invoicing_customer_ref = $2, updated_at = now() where tenant_id = $1`,
@@ -267,7 +276,7 @@ export async function invoicePeriods(db: Db, adapters: BillingAdapters, options:
           ref: period.invoice_ref,
           lines: [
             {
-              description: `GoodWorkshop ${period.plan} ${monthKey(period.month)}`,
+              description: invoiceLine(PLANS[period.plan as PlanKey].unit, period.month, locale),
               quantity: Number(period.quantity),
               unitNetCents: period.unit_net_cents,
               plan: period.plan,
@@ -279,6 +288,7 @@ export async function invoicePeriods(db: Db, adapters: BillingAdapters, options:
             rate: period.tax_rate === null ? undefined : Number(period.tax_rate),
           } as never,
           collectedAfter,
+          locale,
         }))
 
       const problem = implausible(period, invoice)
@@ -338,7 +348,7 @@ export function implausible(
 
 export async function chargeDue(db: Db, adapters: BillingAdapters, options: RunOptions) {
   const { rows } = await db.query(
-    `select p.*, b.payment_customer_ref, b.billing_email
+    `select p.*, b.payment_customer_ref, b.billing_email, b.locale
        from billing_period p
        join billing_account b on b.tenant_id = p.tenant_id
       where p.status in ('invoiced', 'failed')
@@ -420,6 +430,11 @@ async function markPaid(
  * exactly what happened: the worker could not send at all, the exception
  * unwound the handling around it, and the failure became invisible.
  */
+/** What the account remembers, or German when it remembers nothing usable. */
+function localeOf(value: string | null | undefined): Locale {
+  return isLocale(value) ? value : 'de'
+}
+
 async function announce(options: RunOptions, notice: Notice): Promise<void> {
   try {
     await options.notify(notice)
@@ -434,7 +449,13 @@ async function announce(options: RunOptions, notice: Notice): Promise<void> {
 
 async function markFailed(
   db: Db,
-  period: { id: string; tenant_id: string; attempts: number; billing_email: string },
+  period: {
+    id: string
+    tenant_id: string
+    attempts: number
+    billing_email: string
+    locale: string
+  },
   reason: string,
   options: RunOptions,
 ) {
@@ -460,11 +481,13 @@ async function markFailed(
       )
     ).rowCount
 
-  await announce(options, { kind: 'payment_failed', to: period.billing_email, retryAt })
+  const locale = localeOf(period.locale)
+  await announce(options, { kind: 'payment_failed', to: period.billing_email, locale, retryAt })
   if (locked) {
     await announce(options, {
       kind: 'read_only',
       to: period.billing_email,
+      locale,
       reason: 'payment_failed',
     })
   }
@@ -481,7 +504,7 @@ export async function processPaymentEvents(db: Db, adapters: BillingAdapters, op
     const event = payload as PaymentEvent
     if (event.type === 'payment_succeeded' || event.type === 'payment_failed') {
       const { rows: periods } = await db.query(
-        `select p.*, b.billing_email from billing_period p
+        `select p.*, b.billing_email, b.locale from billing_period p
            join billing_account b on b.tenant_id = p.tenant_id
           where p.payment_ref = $1 and p.status = 'charging'`,
         [event.paymentRef],
@@ -528,7 +551,8 @@ const REMINDERS = [
 
 export async function trialTransitions(db: Db, options: RunOptions) {
   const { rows } = await db.query(
-    `select l.tenant_id, l.trial_ends_at, b.payment_method_ready, b.billing_email, b.reminders_sent
+    `select l.tenant_id, l.trial_ends_at, b.payment_method_ready, b.billing_email, b.locale,
+            b.reminders_sent
        from tenant_lifecycle l join billing_account b on b.tenant_id = l.tenant_id
       where l.state = 'trial' and l.trial_ends_at is not null`,
   )
@@ -547,6 +571,7 @@ export async function trialTransitions(db: Db, options: RunOptions) {
         await announce(options, {
           kind: 'read_only',
           to: tenant.billing_email,
+          locale: localeOf(tenant.locale),
           reason: 'trial_ended',
         })
       }
@@ -565,6 +590,7 @@ export async function trialTransitions(db: Db, options: RunOptions) {
         await announce(options, {
           kind: 'trial_ending',
           to: tenant.billing_email,
+          locale: localeOf(tenant.locale),
           daysLeft: Math.max(1, Math.ceil(left / DAY)),
         })
       }

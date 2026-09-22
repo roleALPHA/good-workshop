@@ -49,6 +49,7 @@ type Setup = {
   state?: 'trial' | 'active' | 'read_only'
   trialEndsAt?: string
   paymentReady?: boolean
+  locale?: string
 }
 
 /** A tenant with a billing account, straight into the tables. */
@@ -66,9 +67,9 @@ async function tenant(setup: Setup = {}) {
   await ops.query(
     `insert into billing_account (tenant_id, customer_type, company_name, street, postal_code, city,
        country, vat_id, vat_status, billing_email, plan, plan_from, terms_accepted_at,
-       payment_method_ready, payment_customer_ref)
+       payment_method_ready, payment_customer_ref, locale)
      values ($1, $2, 'Billing GmbH', 'Ring 1', '1010', 'Wien', $3, $4, $5, $6, $7, '2026-01-01', now(),
-       $8, $9)`,
+       $8, $9, $10)`,
     [
       id,
       'business',
@@ -79,6 +80,7 @@ async function tenant(setup: Setup = {}) {
       setup.plan ?? 'per_user',
       setup.paymentReady ?? false,
       setup.paymentReady ? `cus-${id.slice(0, 8)}` : null,
+      setup.locale ?? 'de',
     ],
   )
   await ops.query(
@@ -394,6 +396,7 @@ describe('invoicing and collecting', () => {
       lines: [{ description: 'earlier run', quantity: 1, unitNetCents: 500, plan: 'per_user' }],
       tax: { kind: 'domestic', country: 'AT', rate: 0.2 },
       collectedAfter: APRIL_2,
+      locale: 'de',
     })
     await invoicePeriods(ops, fake.adapters, options())
     expect(fake.invoices.size).toBe(1)
@@ -585,8 +588,20 @@ describe('the trial', () => {
     await trialTransitions(ops, options({ now: new Date('2026-04-04T09:00:00Z') }))
     const mine = notices.filter((n) => n.to === email)
     expect(mine).toEqual([
-      { kind: 'trial_ending', to: email, daysLeft: 3 },
-      { kind: 'trial_ending', to: email, daysLeft: 1 },
+      { kind: 'trial_ending', to: email, locale: 'de', daysLeft: 3 },
+      { kind: 'trial_ending', to: email, locale: 'de', daysLeft: 1 },
+    ])
+  })
+
+  it('writes to a customer in the language they registered in', async () => {
+    // Everything the run sends used to be German, whatever the customer chose
+    // on the website. The account remembers the language now.
+    const id = await tenant({ state: 'trial', trialEndsAt: '2026-04-05T08:00:00Z', locale: 'fr' })
+    await trialTransitions(ops, options())
+
+    const email = `billing-${id.slice(0, 8)}@example.test`
+    expect(notices.filter((n) => n.to === email)).toEqual([
+      { kind: 'trial_ending', to: email, locale: 'fr', daysLeft: 3 },
     ])
   })
 

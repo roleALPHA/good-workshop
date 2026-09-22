@@ -2,6 +2,7 @@ import { describe, expect, it } from 'vitest'
 import {
   invoiceRef,
   memberMonths,
+  invoiceLine,
   monthDays,
   monthKey,
   netCents,
@@ -123,5 +124,40 @@ describe('the month an invoice line names', () => {
     // characters of it is "Sat Aug" -- which is what stood on every invoice.
     expect(monthKey(new Date(2026, 7, 1))).toBe('2026-08')
     expect(monthKey(new Date(2026, 0, 1))).toBe('2026-01')
+  })
+})
+
+describe('what an invoice line says', () => {
+  /**
+   * The line replaces the article's name in the accounting system, so it has
+   * to stand on its own: what was used, and for which month. It used to read
+   * "GoodWorkshop per_user Sat Aug" -- a key meant for code, and a weekday
+   * where the month belonged.
+   */
+  it('names the unit and the month in German', () => {
+    expect(invoiceLine('user_month', '2026-08-01', 'de')).toBe(
+      'GoodWorkshop — Benutzer-Monate, August 2026',
+    )
+    expect(invoiceLine('workshop', '2026-01-01', 'de')).toBe(
+      'GoodWorkshop — angelegte Workshops, Jänner 2026',
+    )
+  })
+
+  it('and in English for everybody else', () => {
+    expect(invoiceLine('user_month', new Date(2026, 7, 1), 'en')).toBe(
+      'GoodWorkshop — user-months, August 2026',
+    )
+    expect(invoiceLine('workshop', '2026-12-01', 'en')).toBe(
+      'GoodWorkshop — workshops created, December 2026',
+    )
+  })
+
+  it('never leaks a plan key or a weekday', () => {
+    for (const locale of ['de', 'en'] as const) {
+      for (const unit of ['user_month', 'workshop'] as const) {
+        const line = invoiceLine(unit, '2026-08-01', locale)
+        expect(line).not.toMatch(/per_user|per_workshop|\b(Sat|Sun|Mon|Tue|Wed|Thu|Fri)\b/)
+      }
+    }
   })
 })

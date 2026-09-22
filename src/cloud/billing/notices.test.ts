@@ -10,12 +10,13 @@ vi.mock('@/server/auth/mail', () => ({
   sendMail: (...args: unknown[]) => sendMail(...args),
 }))
 
+const to = 'a@example.test'
 const notices: Notice[] = [
-  { kind: 'trial_ending', to: 'a@example.test', daysLeft: 3 },
-  { kind: 'payment_failed', to: 'a@example.test', retryAt: new Date('2026-04-05T10:00:00Z') },
-  { kind: 'payment_failed', to: 'a@example.test', retryAt: null },
-  { kind: 'read_only', to: 'a@example.test', reason: 'trial_ended' },
-  { kind: 'read_only', to: 'a@example.test', reason: 'payment_failed' },
+  { kind: 'trial_ending', to, locale: 'de', daysLeft: 3 },
+  { kind: 'payment_failed', to, locale: 'de', retryAt: new Date('2026-04-05T10:00:00Z') },
+  { kind: 'payment_failed', to, locale: 'de', retryAt: null },
+  { kind: 'read_only', to, locale: 'de', reason: 'trial_ended' },
+  { kind: 'read_only', to, locale: 'de', reason: 'payment_failed' },
 ]
 
 describe('billing mails', () => {
@@ -49,7 +50,7 @@ describe('how the worker sends them', () => {
     const { sendNotice } = await import('./notices')
     sendPlatformMail.mockResolvedValue(undefined)
 
-    await sendNotice({ kind: 'read_only', to: 'a@example.test', reason: 'trial_ended' })
+    await sendNotice({ kind: 'read_only', to, locale: 'de', reason: 'trial_ended' })
 
     expect(sendPlatformMail).toHaveBeenCalledTimes(1)
     expect(sendMail).not.toHaveBeenCalled()

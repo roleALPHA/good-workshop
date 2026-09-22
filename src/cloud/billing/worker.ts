@@ -52,7 +52,7 @@ async function once() {
         mode,
         maxInvoiceCents: Number(process.env.GW_BILLING_MAX_INVOICE_CENTS ?? 100_000),
         collectAfterDays: 2,
-        notify: (notice) => sendNotice(notice),
+        notify: (notice) => sendNotice(notice, notice.locale),
         log,
       })
     } finally {
