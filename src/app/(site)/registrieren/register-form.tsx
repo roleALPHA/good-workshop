@@ -57,7 +57,12 @@ export function RegisterForm({
     setPending(true)
     try {
       const raw = Object.fromEntries(formData.entries()) as Record<string, unknown>
-      for (const box of ['confirmedBusiness', 'acceptedTerms', 'acceptedDpa']) {
+      for (const box of [
+        'confirmedBusiness',
+        'confirmedAuthority',
+        'acceptedTerms',
+        'acceptedDpa',
+      ]) {
         raw[box] = formData.get(box) === 'on'
       }
       setResult(await register(raw))
@@ -95,6 +100,15 @@ export function RegisterForm({
             className="mt-1 size-4 shrink-0"
           />
           <span>{t('confirmBusiness')}</span>
+        </label>
+        <label className="mt-3 flex items-start gap-2 text-[15px] font-medium">
+          <input
+            type="checkbox"
+            name="confirmedAuthority"
+            required
+            className="mt-1 size-4 shrink-0"
+          />
+          <span>{t('confirmAuthority')}</span>
         </label>
       </section>
 

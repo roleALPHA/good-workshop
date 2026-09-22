@@ -459,6 +459,7 @@ declare const messages: {
       },
       "signup": {
         "business": "Die Registrierung ist nur für Unternehmen möglich. Bitte bestätige, dass du als Unternehmer bestellst.",
+        "authority": "Die Vertretungsberechtigung muss bestätigt werden.",
         "invalidEmail": "Das ist keine gültige E-Mail-Adresse.",
         "country": "Bitte wähle ein Land.",
         "companyName": "Bitte gib den Firmennamen an.",
@@ -984,6 +985,7 @@ declare const messages: {
       "businessOnlyTitle": "Nur für Unternehmen",
       "businessOnlyBody": "GoodWorkshop Cloud richtet sich ausschließlich an Unternehmen. Du registrierst dich und bestellst als Unternehmer im Sinne des § 1 UGB; ein Vertragsschluss mit Verbraucherinnen und Verbrauchern ist nicht möglich.",
       "confirmBusiness": "Ich bestelle als Unternehmer für mein Unternehmen, nicht als Verbraucher.",
+      "confirmAuthority": "Ich bin berechtigt, dieses Unternehmen zu vertreten und den Vertrag für es abzuschließen.",
       "firstName": "Vorname",
       "lastName": "Nachname",
       "email": "E-Mail-Adresse",

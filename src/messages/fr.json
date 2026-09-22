@@ -456,6 +456,7 @@
       },
       "signup": {
         "business": "L’inscription est réservée aux entreprises. Confirme que tu commandes en tant que professionnel.",
+        "authority": "Le pouvoir de représentation doit être confirmé.",
         "invalidEmail": "Ce n’est pas une adresse e-mail valide.",
         "country": "Choisis un pays.",
         "companyName": "Indique le nom de l’entreprise.",
@@ -981,6 +982,7 @@
       "businessOnlyTitle": "Réservé aux entreprises",
       "businessOnlyBody": "GoodWorkshop Cloud s’adresse exclusivement aux entreprises. Tu t’inscris et commandes en tant que professionnel (§ 1 du Code de commerce autrichien) ; aucun contrat n’est possible avec des consommateurs.",
       "confirmBusiness": "Je commande en tant que professionnel pour mon entreprise, et non en tant que consommateur.",
+      "confirmAuthority": "Je suis habilité·e à représenter cette entreprise et à conclure le contrat en son nom.",
       "firstName": "Prénom",
       "lastName": "Nom",
       "email": "Adresse e-mail",

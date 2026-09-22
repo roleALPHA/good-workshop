@@ -24,6 +24,7 @@ const address = () => {
 const signup = (email: string, overrides: Record<string, unknown> = {}) =>
   parseSignup({
     confirmedBusiness: true,
+    confirmedAuthority: true,
     firstName: 'Rita',
     lastName: 'Register',
     email,
@@ -127,7 +128,8 @@ describe('completing a registration', () => {
     const { rows: billing } = await ops.query(
       `select customer_type, company_name, country, vat_id, plan, billing_email,
               terms_accepted_at is not null as terms, dpa_accepted_at is not null as dpa,
-              business_confirmed_at is not null as business, terms_version, dpa_version
+              business_confirmed_at is not null as business, terms_version, dpa_version,
+              authority_confirmed_at is not null as authority
          from billing_account where tenant_id = $1`,
       [done.tenantId],
     )
@@ -141,6 +143,7 @@ describe('completing a registration', () => {
       terms: true,
       dpa: true,
       business: true,
+      authority: true,
       // Which wording was agreed to, not merely that something was: the version
       // of the published text as it stood when the form was submitted.
       terms_version: await readLegalVersion('agb'),

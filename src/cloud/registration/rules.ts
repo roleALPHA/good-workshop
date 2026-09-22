@@ -70,6 +70,7 @@ export type Signup = {
   plan: PlanKey
   /** Ordering as a business (§ 1 UGB), not as a consumer -- confirmed, not assumed. */
   confirmedBusiness: true
+  confirmedAuthority: true
   acceptedTerms: true
   acceptedDpa: true
 }
@@ -104,8 +105,10 @@ export function vatPrefix(country: SignupCountry): string {
 }
 
 export function parseSignup(raw: Record<string, unknown>): Signup {
-  // First, before anything else is looked at: the offer is not open to consumers.
+  // First, before anything else is looked at: the offer is not open to
+  // consumers, and whoever orders has to be able to sign for the company.
   if (raw.confirmedBusiness !== true) throw new SignupError('signup.business')
+  if (raw.confirmedAuthority !== true) throw new SignupError('signup.authority')
 
   const { firstName, lastName } = normalisePersonName({
     firstName: raw.firstName,
@@ -130,6 +133,7 @@ export function parseSignup(raw: Record<string, unknown>): Signup {
     ...details,
     plan: raw.plan,
     confirmedBusiness: true,
+    confirmedAuthority: true,
     acceptedTerms: true,
     acceptedDpa: true,
   }
