@@ -151,6 +151,15 @@ billing page's writes are SECURITY DEFINER functions that act on the current ten
 anybody who is not its admin; a refused write under row level security reaches the person as
 "this workspace is read-only", not as a failure.
 
+**Planned maintenance** is announced from the console and shows up under the header in every
+workspace (`maintenance_window`). The terms promise it "nach Möglichkeit im Voraus", so the database
+refuses a window that has already begun -- an outage under way is an incident, and telling people
+about that is a different thing than planning one. Deliberately no mail: a window at three in the
+morning reaches the people it concerns by being on the screen when they work, and an inbox full of
+night-time notices teaches everybody to ignore the next one. The table has no `tenant_id` because
+one window applies to everybody, and the console reads it through `app.op_maintenance()` like it
+reads everything else -- `gw_operator` has no grant on any table.
+
 **Signing into the operator console** is a passkey, or a link by mail. The passkey is the door to
 use; the link is the way back, because a passkey is bound to its origin and to a device, and an
 operator whose laptop is gone used to need somebody with a shell on the server. The link lives

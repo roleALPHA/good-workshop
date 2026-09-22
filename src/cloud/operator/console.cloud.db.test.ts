@@ -19,7 +19,7 @@ import {
   spendSignInLink,
   verifyOperatorSession,
 } from './auth'
-import { applyOperatorAction, listTenants, tenantDetail } from './console'
+import { listMaintenance, applyOperatorAction, listTenants, tenantDetail } from './console'
 
 /**
  * The operator console against a cloud database, as the role it runs as.
@@ -424,5 +424,71 @@ describe('signing in by mail', () => {
     } finally {
       await ops.query('update operator set disabled_at = null where id = $1', [operatorId])
     }
+  })
+})
+
+/**
+ * Planned maintenance, which AGB § 3.3 promises to announce beforehand.
+ *
+ * "Beforehand" is the load-bearing word, so the database refuses a window that
+ * has already begun: an outage under way is an incident, and telling people
+ * about that is a different thing than planning.
+ */
+describe('announcing maintenance', () => {
+  it('takes a window in the future and shows it to everybody', async () => {
+    const starts = new Date(Date.now() + 3 * 86_400_000)
+    const ends = new Date(starts.getTime() + 2 * 3_600_000)
+    // A note of its own: a window survives the run that announced it, and the
+    // one from last time is still in the table until it has passed.
+    const note = `Datenbank-Upgrade ${randomUUID().slice(0, 8)}`
+
+    await applyOperatorAction(console_, operatorId, null, {
+      kind: 'announce_maintenance',
+      startsAt: starts.toISOString(),
+      endsAt: ends.toISOString(),
+      note,
+    })
+
+    const windows = await listMaintenance(console_)
+    const mine = windows.find((window) => window.note === note)
+    expect(mine).toBeDefined()
+    expect(mine!.cancelledAt).toBeNull()
+
+    await applyOperatorAction(console_, operatorId, null, {
+      kind: 'cancel_maintenance',
+      windowId: mine!.id,
+    })
+    const after = (await listMaintenance(console_)).find((window) => window.id === mine!.id)
+    expect(after!.cancelledAt).not.toBeNull()
+
+    const { rows } = await ops.query(
+      `select action from operator_audit where operator_id = $1 order by at desc limit 2`,
+      [operatorId],
+    )
+    expect(rows.map((row) => row.action)).toEqual(['cancel_maintenance', 'announce_maintenance'])
+  })
+
+  it('refuses a window that has already started', async () => {
+    const starts = new Date(Date.now() - 3_600_000)
+    await expect(
+      applyOperatorAction(console_, operatorId, null, {
+        kind: 'announce_maintenance',
+        startsAt: starts.toISOString(),
+        endsAt: new Date(Date.now() + 3_600_000).toISOString(),
+        note: 'zu spät',
+      }),
+    ).rejects.toThrow()
+  })
+
+  it('refuses a window that ends before it begins', async () => {
+    const starts = new Date(Date.now() + 2 * 86_400_000)
+    await expect(
+      applyOperatorAction(console_, operatorId, null, {
+        kind: 'announce_maintenance',
+        startsAt: starts.toISOString(),
+        endsAt: new Date(starts.getTime() - 3_600_000).toISOString(),
+        note: 'verkehrt herum',
+      }),
+    ).rejects.toThrow()
   })
 })

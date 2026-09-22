@@ -18,6 +18,13 @@ import type { Tx } from '@/server/db'
 /** What the app shell tells a workspace about its own state. Null: nothing to say. */
 export type TenantAccess = 'full' | 'read' | 'export'
 
+/** Planned maintenance, as everybody is told about it. */
+export type MaintenanceWindow = {
+  startsAt: Date
+  endsAt: Date
+  note: string
+}
+
 export type WorkspaceNotice = {
   state: 'trial' | 'read_only' | 'payment_blocked' | 'paused' | 'deleting'
   trialEndsAt: Date | null
@@ -90,6 +97,15 @@ export type Edition = {
    * withheld, something is coming. Six weeks are a long time to say nothing.
    */
   announcedChanges(tenantId: string): Promise<AnnouncedChange[]>
+
+  /**
+   * The next planned maintenance, or the one happening now.
+   *
+   * Not tenant data -- one window applies to everybody -- which is why it takes
+   * no tenant and a self-hosted installation simply has none: whoever runs it
+   * plans their own downtime and knows about it.
+   */
+  maintenanceWindow(): Promise<MaintenanceWindow | null>
 
   /** Whether tenant admins have a billing page. */
   readonly hasBilling: boolean

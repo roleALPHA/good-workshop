@@ -66,6 +66,26 @@ export async function tenantDetail(db: Db, tenantId: string) {
   return { tenant: summary(tenants.rows[0]), periods: periods.rows, audit: audit.rows }
 }
 
+export type MaintenanceRow = {
+  id: string
+  startsAt: Date
+  endsAt: Date
+  note: string
+  cancelledAt: Date | null
+}
+
+/** The windows that have not finished yet, soonest first. */
+export async function listMaintenance(db: Db): Promise<MaintenanceRow[]> {
+  const { rows } = await db.query('select * from app.op_maintenance()')
+  return rows.map((row) => ({
+    id: row.id,
+    startsAt: row.starts_at,
+    endsAt: row.ends_at,
+    note: row.note,
+    cancelledAt: row.cancelled_at,
+  }))
+}
+
 export type OperatorAction =
   | { kind: 'pause' | 'unpause' | 'block' | 'unblock'; reason: string }
   | { kind: 'extend_trial'; days: number }
@@ -73,12 +93,15 @@ export type OperatorAction =
   | { kind: 'announce_terms'; document: string; version: string; effectiveFrom: string }
   | { kind: 'schedule_deletion'; days: number; reason: string }
   | { kind: 'cancel_deletion' }
+  | { kind: 'announce_maintenance'; startsAt: string; endsAt: string; note: string }
+  | { kind: 'cancel_maintenance'; windowId: string }
   | { kind: 'release_period'; periodId: string; decision: 'bill' | 'void' }
 
 export async function applyOperatorAction(
   db: Db,
   operatorId: string,
-  tenantId: string,
+  /** Null for the actions that are about the installation rather than a workspace. */
+  tenantId: string | null,
   action: OperatorAction,
 ): Promise<void> {
   switch (action.kind) {
@@ -120,6 +143,19 @@ export async function applyOperatorAction(
         action.version,
         action.effectiveFrom,
       ])
+      return
+    case 'announce_maintenance':
+      // Not about one tenant: a window applies to everybody, so the tenant id
+      // the console carries around is not passed in.
+      await db.query('select app.op_announce_maintenance($1, $2, $3, $4)', [
+        operatorId,
+        action.startsAt,
+        action.endsAt,
+        action.note,
+      ])
+      return
+    case 'cancel_maintenance':
+      await db.query('select app.op_cancel_maintenance($1, $2)', [operatorId, action.windowId])
       return
     case 'schedule_deletion':
       await db.query('select app.op_schedule_deletion($1, $2, $3, $4)', [

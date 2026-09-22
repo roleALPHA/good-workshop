@@ -3,7 +3,8 @@ import type { Route } from 'next'
 import { redirect } from 'next/navigation'
 import { getFormatter, getTranslations } from 'next-intl/server'
 import { operatorDb } from '@/cloud/operator/db'
-import { listTenants } from '@/cloud/operator/console'
+import { listMaintenance, listTenants } from '@/cloud/operator/console'
+import { Maintenance } from './maintenance'
 import { currentOperator } from '@/cloud/operator/session'
 import { SignOut } from './sign-out'
 
@@ -14,11 +15,12 @@ export default async function OperatorHome({
 }) {
   const operator = await currentOperator()
   if (!operator) redirect('/operator/login' as never)
-  const [{ state, q }, t, format, tenants] = await Promise.all([
+  const [{ state, q }, t, format, tenants, windows] = await Promise.all([
     searchParams,
     getTranslations('operator'),
     getFormatter(),
     listTenants(operatorDb()),
+    listMaintenance(operatorDb()),
   ])
   const needle = q?.trim().toLowerCase()
   const shown = tenants.filter(
@@ -125,6 +127,8 @@ export default async function OperatorHome({
           </tbody>
         </table>
       </div>
+
+      <Maintenance windows={windows} />
     </div>
   )
 }

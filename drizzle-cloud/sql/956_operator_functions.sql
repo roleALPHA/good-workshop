@@ -208,6 +208,71 @@ begin
 end;
 $$;
 
+-- The windows that have not finished yet. A function rather than a grant,
+-- because gw_operator has no grant on any table and this is how it reads
+-- everything else too.
+create or replace function app.op_maintenance()
+returns table (id uuid, starts_at timestamptz, ends_at timestamptz, note text, cancelled_at timestamptz)
+language sql
+security definer
+set search_path = pg_catalog, public
+stable
+as $$
+  select m.id, m.starts_at, m.ends_at, m.note, m.cancelled_at
+    from maintenance_window m
+   where m.ends_at > now()
+   order by m.starts_at;
+$$;
+
+-- Announcing planned maintenance (AGB § 3.3).
+--
+-- Not about one tenant: a window applies to everybody, so the tenant id the
+-- console carries around is not passed in. The audit entry has none either.
+create or replace function app.op_announce_maintenance(
+  p_operator uuid, p_starts_at timestamptz, p_ends_at timestamptz, p_note text
+)
+returns uuid
+language plpgsql
+security definer
+set search_path = pg_catalog, public
+as $$
+declare id uuid;
+begin
+  if p_ends_at <= p_starts_at then
+    raise exception 'a window ends after it begins' using errcode = '22023';
+  end if;
+  -- "Im Voraus" means before, not during. An outage already under way is an
+  -- incident, and telling people about it is a different thing than planning.
+  if p_starts_at <= now() then
+    raise exception 'announce maintenance before it starts' using errcode = '22023';
+  end if;
+
+  insert into maintenance_window (starts_at, ends_at, note, announced_by)
+  values (p_starts_at, p_ends_at, coalesce(p_note, ''), p_operator)
+  returning maintenance_window.id into id;
+
+  perform app.op_audit(p_operator, 'announce_maintenance', null,
+                       jsonb_build_object('startsAt', p_starts_at, 'endsAt', p_ends_at));
+  return id;
+end;
+$$;
+
+create or replace function app.op_cancel_maintenance(p_operator uuid, p_window uuid)
+returns void
+language plpgsql
+security definer
+set search_path = pg_catalog, public
+as $$
+begin
+  update maintenance_window set cancelled_at = now()
+   where id = p_window and cancelled_at is null;
+  if found then
+    perform app.op_audit(p_operator, 'cancel_maintenance', null,
+                         jsonb_build_object('window', p_window));
+  end if;
+end;
+$$;
+
 create or replace function app.op_schedule_deletion(p_operator uuid, p_tenant uuid, p_days integer, p_reason text)
 returns timestamptz
 language plpgsql
@@ -274,6 +339,9 @@ begin
     'app.op_set_blocked(uuid, uuid, boolean, text)',
     'app.op_extend_trial(uuid, uuid, integer)',
     'app.op_grant_grace(uuid, uuid, integer, text)',
+    'app.op_maintenance()',
+    'app.op_announce_maintenance(uuid, timestamptz, timestamptz, text)',
+    'app.op_cancel_maintenance(uuid, uuid)',
     'app.op_announce_terms(uuid, text, text, date)',
     'app.op_schedule_deletion(uuid, uuid, integer, text)',
     'app.op_cancel_deletion(uuid, uuid)',

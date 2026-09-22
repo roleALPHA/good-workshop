@@ -706,6 +706,10 @@
       "priceChange": "Desde el {date} se aplican nuevos precios. Hasta entonces no cambia nada.",
       "termsChange": "Desde el {date} se aplican nuevas condiciones. Hasta entonces siguen las actuales.",
       "toBilling": "Ir a facturación"
+    },
+    "maintenance": {
+      "planned": "Mantenimiento previsto el {from} hasta las {until}. GoodWorkshop puede no estar disponible un momento.",
+      "running": "Mantenimiento en curso, previsto hasta las {until}."
     }
   },
   "settings": {
@@ -1131,6 +1135,16 @@
         "unauthenticated": "Vuelve a iniciar sesión.",
         "failed": "No ha funcionado."
       }
+    },
+    "maintenance": {
+      "title": "Ventanas de mantenimiento",
+      "intro": "Una ventana anunciada aparece bajo la cabecera en todos los espacios. Debe anunciarse antes de comenzar.",
+      "from": "Desde",
+      "until": "Hasta",
+      "note": "Nota",
+      "announce": "Anunciar",
+      "cancel": "Cancelar",
+      "error": "No ha funcionado. ¿El inicio está en el futuro?"
     }
   }
 }

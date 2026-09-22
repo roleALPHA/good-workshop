@@ -26,6 +26,7 @@ export const communityEdition: Edition = {
   adoptRegisteredClient: async () => {},
   // A self-hosted installation has no trial, no billing and nobody pausing it.
   workspaceNotice: async () => null,
+  maintenanceWindow: async () => null,
   hasBilling: false,
 }
 

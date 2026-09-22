@@ -1,7 +1,12 @@
 import Link from 'next/link'
 import type { Route } from 'next'
 import { getFormatter, getTranslations } from 'next-intl/server'
-import type { AnnouncedChange, WorkspaceNotice } from '@/server/edition/types'
+import type { AnnouncedChange, MaintenanceWindow, WorkspaceNotice } from '@/server/edition/types'
+
+/** Whether an instant has passed. A request-time value, not render state. */
+function hasBegun(at: Date): boolean {
+  return at.getTime() <= Date.now()
+}
 
 /** Whole days until an instant, never negative. A request-time value, not render state. */
 function daysLeft(until: Date | null): number {
@@ -88,6 +93,41 @@ export async function AnnouncedChangeBanner({
             {t('toBilling')}
           </Link>
         )}
+      </p>
+    </div>
+  )
+}
+
+/**
+ * Planned maintenance, before it happens and while it does.
+ *
+ * AGB § 3.3 promises an announcement "nach Möglichkeit im Voraus", and a
+ * promise with no mechanism behind it is not one. Deliberately no mail: a
+ * window at three in the morning reaches the people it concerns by being on
+ * the screen when they work, and an inbox full of night-time notices teaches
+ * everybody to ignore the next one.
+ */
+export async function MaintenanceBanner({ window }: { window: MaintenanceWindow | null }) {
+  if (!window) return null
+
+  const [t, format] = await Promise.all([getTranslations('nav.maintenance'), getFormatter()])
+  const running = hasBegun(window.startsAt)
+
+  return (
+    <div role="status" className="border-b border-[var(--border)] bg-[var(--surface-raised)]">
+      <p className="mx-auto flex w-full max-w-5xl flex-wrap items-center gap-x-3 gap-y-1 px-4 py-2 text-[14px]">
+        <span>
+          {running
+            ? t('running', { until: format.dateTime(window.endsAt, { timeStyle: 'short' }) })
+            : t('planned', {
+                from: format.dateTime(window.startsAt, {
+                  dateStyle: 'long',
+                  timeStyle: 'short',
+                }),
+                until: format.dateTime(window.endsAt, { timeStyle: 'short' }),
+              })}
+        </span>
+        {window.note && <span className="text-[var(--fg-muted)]">{window.note}</span>}
       </p>
     </div>
   )

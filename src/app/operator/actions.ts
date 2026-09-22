@@ -179,6 +179,13 @@ const ActionInput = z.discriminatedUnion('kind', [
   }),
   z.object({ kind: z.literal('cancel_deletion') }),
   z.object({
+    kind: z.literal('announce_maintenance'),
+    startsAt: z.string().datetime({ offset: true }),
+    endsAt: z.string().datetime({ offset: true }),
+    note: z.string().trim().max(500),
+  }),
+  z.object({ kind: z.literal('cancel_maintenance'), windowId: z.string().uuid() }),
+  z.object({
     kind: z.literal('release_period'),
     periodId: z.string().uuid(),
     decision: z.enum(['bill', 'void']),
@@ -202,5 +209,39 @@ export async function operatorAction(
     return { ok: false, error: 'failed' }
   }
   revalidatePath(`/operator/t/${tenantId}`)
+  return { ok: true }
+}
+
+/**
+ * The actions that are not about one workspace.
+ *
+ * `operatorAction` insists on a tenant, which is right for everything that
+ * happens to a workspace and wrong for a maintenance window: one window applies
+ * to everybody, and inventing a tenant to pass would be inventing a subject.
+ */
+const WholeInstallation = z.discriminatedUnion('kind', [
+  z.object({
+    kind: z.literal('announce_maintenance'),
+    startsAt: z.string().datetime({ offset: true }),
+    endsAt: z.string().datetime({ offset: true }),
+    note: z.string().trim().max(500),
+  }),
+  z.object({ kind: z.literal('cancel_maintenance'), windowId: z.string().uuid() }),
+])
+
+export async function maintenanceAction(
+  raw: Record<string, unknown>,
+): Promise<{ ok: boolean; error?: 'input' | 'unauthenticated' | 'failed' }> {
+  const operator = await currentOperator()
+  if (!operator) return { ok: false, error: 'unauthenticated' }
+  const parsed = WholeInstallation.safeParse(raw)
+  if (!parsed.success) return { ok: false, error: 'input' }
+  try {
+    await applyOperatorAction(operatorDb(), operator.id, null, parsed.data as OperatorAction)
+  } catch (error) {
+    console.error('maintenance action failed', { error, kind: parsed.data.kind })
+    return { ok: false, error: 'failed' }
+  }
+  revalidatePath('/operator')
   return { ok: true }
 }
