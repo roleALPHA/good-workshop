@@ -32,7 +32,7 @@ describe('the community edition', () => {
     // No transaction is passed because none is touched: the community edition
     // answers without a query.
     const noTx = undefined as never
-    await expect(communityEdition.tenantWritable(noTx)).resolves.toBe(true)
+    await expect(communityEdition.tenantAccess(noTx)).resolves.toBe('full')
     await expect(communityEdition.adoptRegisteredClient(noTx, 'any')).resolves.toBeUndefined()
     await expect(communityEdition.workspaceNotice('any-tenant')).resolves.toBeNull()
     expect(communityEdition.hasBilling).toBe(false)

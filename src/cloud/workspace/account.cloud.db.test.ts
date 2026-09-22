@@ -246,7 +246,7 @@ describe('deleting a workspace', () => {
     const until = await requestWorkspaceDeletion(admin)
     expect(until.getTime() - Date.now()).toBeGreaterThan((DELETION_GRACE_DAYS - 1) * 86_400_000)
 
-    expect(await withTenant(admin, (tx) => edition.tenantWritable(tx))).toBe(false)
+    expect(await withTenant(admin, (tx) => edition.tenantAccess(tx))).toBe('read')
     const open = await ops.query(
       'select count(*)::int as n from usage_member_interval where tenant_id = $1 and active_to is null',
       [tenantId],
@@ -255,7 +255,7 @@ describe('deleting a workspace', () => {
 
     await cancelWorkspaceDeletion(admin)
     expect(await readBillingOverview(admin)).toMatchObject({ state: 'active', deleteAfter: null })
-    expect(await withTenant(admin, (tx) => edition.tenantWritable(tx))).toBe(true)
+    expect(await withTenant(admin, (tx) => edition.tenantAccess(tx))).toBe('full')
     const reopened = await ops.query(
       'select count(*)::int as n from usage_member_interval where tenant_id = $1 and active_to is null',
       [tenantId],

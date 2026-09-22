@@ -122,12 +122,12 @@ describe('operator actions', () => {
     const actor = { tenantId, memberId, tenantRole: 'admin' as const, source: 'web' as const }
 
     await applyOperatorAction(console_, operatorId, tenantId, { kind: 'pause', reason: 'Prüfung' })
-    expect(await withTenant(actor, (tx) => edition.tenantWritable(tx))).toBe(false)
+    expect(await withTenant(actor, (tx) => edition.tenantAccess(tx))).toBe('read')
     await applyOperatorAction(console_, operatorId, tenantId, {
       kind: 'unpause',
       reason: 'erledigt',
     })
-    expect(await withTenant(actor, (tx) => edition.tenantWritable(tx))).toBe(true)
+    expect(await withTenant(actor, (tx) => edition.tenantAccess(tx))).toBe('full')
 
     const detail = await tenantDetail(console_, tenantId)
     expect(detail!.audit.map((entry) => entry.action)).toEqual(['unpause', 'pause'])

@@ -44,7 +44,7 @@ async function workshopOf(actor: Actor): Promise<string> {
   return id
 }
 
-const setState = (tenantId: string, state: 'trial' | 'active' | 'read_only') =>
+const setState = (tenantId: string, state: 'trial' | 'active' | 'read_only' | 'payment_blocked') =>
   ops.query(
     `insert into tenant_lifecycle (tenant_id, state) values ($1, $2)
      on conflict (tenant_id) do update set state = excluded.state, updated_at = now()`,
@@ -130,7 +130,7 @@ describe('a read-only tenant', () => {
     await setState(B, 'read_only')
     try {
       await setOwnName(inB, { firstName: 'Lese', lastName: 'Modus' })
-      expect(await withTenant(inB, (tx) => edition.tenantWritable(tx))).toBe(false)
+      expect(await withTenant(inB, (tx) => edition.tenantAccess(tx))).toBe('read')
     } finally {
       await setState(B, 'active')
     }
@@ -138,7 +138,26 @@ describe('a read-only tenant', () => {
 
   it('writes again once the state changes, and a trial is writable', async () => {
     await setState(B, 'trial')
-    expect(await withTenant(inB, (tx) => edition.tenantWritable(tx))).toBe(true)
+    expect(await withTenant(inB, (tx) => edition.tenantAccess(tx))).toBe('full')
+  })
+
+  /**
+   * The step after read-only, and the one thing it must not take away.
+   *
+   * A workspace blocked over an unpaid invoice loses the product; it does not
+   * lose the contents. They are the customer's (AGB § 9.1), we hold them as
+   * their processor, and the way out has to stay open.
+   */
+  it('blocked over an unpaid invoice: writes refused, the way out left open', async () => {
+    await setState(B, 'payment_blocked')
+    expect(await withTenant(inB, (tx) => edition.tenantAccess(tx))).toBe('export')
+    await expect(
+      withTenant(inB, (tx) =>
+        tx.execute(
+          sql`insert into tag (id, tenant_id, name) values (${randomUUID()}, ${B}, 'neu')`,
+        ),
+      ),
+    ).rejects.toThrow()
   })
 
   /**

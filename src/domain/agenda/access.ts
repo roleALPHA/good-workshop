@@ -90,6 +90,17 @@ declare const brand: unique symbol
 /** What a tenant that may not write keeps. */
 const READ_ONLY_CAPABILITIES: readonly Capability[] = ['workshop.read', 'workshop.export']
 
+/**
+ * What a workspace blocked for non-payment keeps: the way out, and nothing
+ * else.
+ *
+ * Not `workshop.read`, so the editor and the workshop page close -- the product
+ * is what was not paid for. `workshop.export` stays, because the contents are
+ * the customer's and we are their processor; withholding them as leverage is
+ * not a lever we have.
+ */
+const EXPORT_ONLY_CAPABILITIES: readonly Capability[] = ['workshop.export']
+
 export type WorkshopAccess = {
   readonly [brand]: true
   workshopId: string
@@ -165,7 +176,8 @@ export async function assertWorkshopAccess(
   // Asked first, because it decides whether the row may be locked at all: a
   // row lock is an UPDATE in the eyes of row level security, and a tenant that
   // may not write would not find its own workshop behind one.
-  const writable = await edition.tenantWritable(tx)
+  const access = await edition.tenantAccess(tx)
+  const writable = access === 'full'
 
   const query = tx
     .select({
@@ -224,9 +236,13 @@ export async function assertWorkshopAccess(
   // the role. Withheld here rather than only refused by the database, so every
   // screen and every MCP tool that asks `can()` shows a read view instead of an
   // editor whose saves fail.
-  const allowed = writable
-    ? CAPABILITIES[role]
-    : CAPABILITIES[role].filter((c) => READ_ONLY_CAPABILITIES.includes(c))
+  const kept =
+    access === 'full'
+      ? null
+      : access === 'export'
+        ? EXPORT_ONLY_CAPABILITIES
+        : READ_ONLY_CAPABILITIES
+  const allowed = kept ? CAPABILITIES[role].filter((c) => kept.includes(c)) : CAPABILITIES[role]
   if (!allowed.includes(capability)) throw new ForbiddenError(capability)
 
   return {

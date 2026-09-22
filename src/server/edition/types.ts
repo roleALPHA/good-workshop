@@ -16,8 +16,10 @@ import type { Tx } from '@/server/db'
  * tenant id of its own -- src/server/edition/edition.test.ts holds that line.
  */
 /** What the app shell tells a workspace about its own state. Null: nothing to say. */
+export type TenantAccess = 'full' | 'read' | 'export'
+
 export type WorkspaceNotice = {
-  state: 'trial' | 'read_only' | 'paused' | 'deleting'
+  state: 'trial' | 'read_only' | 'payment_blocked' | 'paused' | 'deleting'
   trialEndsAt: Date | null
   deleteAfter: Date | null
 }
@@ -56,7 +58,15 @@ export type Edition = {
    * Whether the tenant the transaction acts in may change its content. A tenant
    * that may not keeps reading and exporting; every write capability is withheld.
    */
-  tenantWritable(tx: Tx): Promise<boolean>
+  /**
+   * How much of the product this workspace still has.
+   *
+   * `full` is the normal case. `read` keeps reading and exporting and refuses
+   * every change. `export` keeps the way out and nothing else -- a workspace
+   * that stopped paying after a reminder. The contents stay the customer's,
+   * so the door to them stays open whatever the invoice says.
+   */
+  tenantAccess(tx: Tx): Promise<TenantAccess>
 
   /**
    * Makes a self-registered OAuth client known in the tenant the transaction acts

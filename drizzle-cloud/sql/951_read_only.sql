@@ -20,16 +20,52 @@ set search_path = pg_catalog, public
 stable
 as $$
   select coalesce(
-    -- A paused workspace and one waiting to be deleted read like a read-only one.
-    (select l.state not in ('read_only', 'paused', 'deleting')
+    -- A paused workspace, a blocked one and one waiting to be deleted all read
+    -- like a read-only one as far as the content is concerned.
+    (select l.state not in ('read_only', 'payment_blocked', 'paused', 'deleting')
        from tenant_lifecycle l where l.tenant_id = app.current_tenant()),
     true
   );
 $$;
 
-alter function app.cloud_tenant_writable() owner to gw_ops;
-revoke all on function app.cloud_tenant_writable() from public;
-grant execute on function app.cloud_tenant_writable() to gw_app;
+/**
+ * How much of the product a workspace still has.
+ *
+ * Three answers, because there are three situations and not two. `read` is a
+ * workspace that may look at its work but not change it -- an expired trial, a
+ * pause, a deletion under way. `export` is one that has stopped paying after a
+ * reminder: the product is closed, and what is left is the way to take the
+ * contents out. They are the customer's, and being in arrears does not change
+ * whose they are.
+ */
+create or replace function app.cloud_tenant_access()
+returns text
+language sql
+security definer
+set search_path = pg_catalog, public
+stable
+as $$
+  select coalesce(
+    (select case
+              when l.state in ('trial', 'active') then 'full'
+              when l.state = 'payment_blocked' then 'export'
+              else 'read'
+            end
+       from tenant_lifecycle l where l.tenant_id = app.current_tenant()),
+    'full'
+  );
+$$;
+
+do $$
+declare f text;
+begin
+  foreach f in array array['app.cloud_tenant_writable()', 'app.cloud_tenant_access()'] loop
+    execute format('alter function %s owner to gw_ops', f);
+    execute format('revoke all on function %s from public', f);
+    execute format('grant execute on function %s to gw_app', f);
+  end loop;
+end
+$$;
 
 -- The content of a workshop library. Tables deliberately NOT in this list, and
 -- why, are named in src/server/edition/cloud-status.cloud.db.test.ts, which

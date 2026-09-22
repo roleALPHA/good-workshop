@@ -131,6 +131,49 @@ begin
 end;
 $$;
 
+-- Goodwill: the dunning ladder steps over this tenant until the date passes.
+--
+-- The normal case runs without anybody deciding anything -- a workspace two
+-- weeks overdue is blocked, one that pays is reopened. This is the exception
+-- for the cases where somebody has to be able to decide: a card that expired
+-- while its owner was away, a customer in the middle of running a workshop.
+--
+-- It moves the ACCESS, never the debt. The period stays open and invoiced;
+-- writing an invoice off is a bookkeeping decision and belongs in the
+-- accounting system, not in a console that cannot see the books.
+create or replace function app.op_grant_grace(p_operator uuid, p_tenant uuid, p_days integer, p_reason text)
+returns timestamptz
+language plpgsql
+security definer
+set search_path = pg_catalog, public
+as $$
+declare until timestamptz := now() + make_interval(days => p_days);
+begin
+  if p_days < 1 or p_days > 90 then
+    raise exception 'grant grace for 1 to 90 days' using errcode = '22023';
+  end if;
+  if coalesce(btrim(p_reason), '') = '' then
+    raise exception 'a reason is required' using errcode = '22023';
+  end if;
+
+  update tenant_lifecycle
+     set grace_until = until,
+         -- Back to work while it lasts. When it runs out and the invoice is
+         -- still open, the ladder picks up exactly where it stood: dunned_at
+         -- stays, so the reminder does not have to be sent again.
+         state = case when state in ('read_only', 'payment_blocked') then 'active' else state end,
+         updated_at = now()
+   where tenant_id = p_tenant and state in ('active', 'read_only', 'payment_blocked');
+
+  if found then
+    perform app.op_audit(p_operator, 'grant_grace', p_tenant,
+                         jsonb_build_object('days', p_days, 'reason', p_reason, 'until', until));
+    return until;
+  end if;
+  return null;
+end;
+$$;
+
 create or replace function app.op_schedule_deletion(p_operator uuid, p_tenant uuid, p_days integer, p_reason text)
 returns timestamptz
 language plpgsql
@@ -196,6 +239,7 @@ begin
     'app.op_set_paused(uuid, uuid, boolean, text)',
     'app.op_set_blocked(uuid, uuid, boolean, text)',
     'app.op_extend_trial(uuid, uuid, integer)',
+    'app.op_grant_grace(uuid, uuid, integer, text)',
     'app.op_schedule_deletion(uuid, uuid, integer, text)',
     'app.op_cancel_deletion(uuid, uuid)',
     'app.op_release_period(uuid, uuid, text)'
