@@ -31,8 +31,8 @@ Stand: 18. September 2026
 
 ## 5. Zahlung
 
-1. Die Zahlung erfolgt per SEPA-Lastschrift oder Kreditkarte über unseren Zahlungsdienstleister Stripe.
-2. Bei SEPA-Lastschrift wird die Frist für die Vorabankündigung (Pre-Notification) auf zwei Tage verkürzt. Die Rechnung gilt als Vorabankündigung.
+1. Die Zahlung erfolgt per Kreditkarte über unseren Zahlungsdienstleister Stripe. Der Kunde hinterlegt die Zahlungsmethode auf einer von Stripe betriebenen Seite; Kartendaten werden von uns weder erhoben noch gespeichert.
+2. Die Rechnung nennt den Tag, an dem der Betrag über die hinterlegte Zahlungsmethode eingezogen wird. Zwischen Rechnung und Einzug liegen mindestens zwei Tage.
 3. Scheitert eine Zahlung, versuchen wir sie erneut und informieren den Kunden. Bleibt die Zahlung 14 Tage nach Fälligkeit aus, dürfen wir den Dienst auf Lesen beschränken und nach erfolgloser Mahnung sperren. Es gelten die gesetzlichen Verzugszinsen für Unternehmergeschäfte (§ 456 UGB).
 
 ## 6. Laufzeit und Kündigung

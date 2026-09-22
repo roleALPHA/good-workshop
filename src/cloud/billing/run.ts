@@ -50,7 +50,7 @@ export type RunOptions = {
   mode: 'dry_run' | 'live'
   /** A computed invoice above this net amount is held for an operator. */
   maxInvoiceCents: number
-  /** Days between an invoice going out and the amount being collected (SEPA pre-notification). */
+  /** Days between an invoice going out and the amount being collected. */
   collectAfterDays: number
   notify: (notice: Notice) => Promise<void>
   log: (message: string, data?: Record<string, unknown>) => void
@@ -390,7 +390,8 @@ export async function chargeDue(db: Db, adapters: BillingAdapters, options: RunO
       } else if (result.status === 'failed') {
         await markFailed(db, period, result.reason ?? 'declined', options)
       }
-      // processing: SEPA takes days; the webhook finishes it.
+      // processing: a card that needs a further step takes its time; the
+      // webhook finishes it.
     } catch (error) {
       await db.query(
         `update billing_period set status = $2, last_error = $3, updated_at = now() where id = $1`,
