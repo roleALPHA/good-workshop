@@ -8,12 +8,14 @@ import {
   chargeDue,
   closeMonth,
   storeInvoiceDocuments,
-  syncPlanPrices,
   invoicePeriods,
   processPaymentEvents,
+  announceTermsChange,
+  pendingAnnouncements,
   recheckPendingVat,
   dunningTransitions,
   runBilling,
+  syncPlanPrices,
   trialTransitions,
   type Notice,
   type RunOptions,
@@ -29,6 +31,7 @@ import type { BillingAdapters } from './ports'
 const ops = new pg.Client({ connectionString: process.env.OPS_DATABASE_URL })
 const tenants: string[] = []
 const operators: string[] = []
+const announcements: string[] = []
 const MARCH = '2026-03-01'
 const APRIL_2 = new Date('2026-04-02T08:00:00Z')
 
@@ -141,6 +144,7 @@ afterAll(async () => {
     await ops.query(`delete from ${table} where tenant_id = any($1::uuid[])`, [tenants])
   }
   await ops.query('delete from operator_audit where operator_id = any($1::uuid[])', [operators])
+  await ops.query('delete from legal_announcement where version = any($1)', [announcements])
   await ops.query('delete from tenant where id = any($1::uuid[])', [tenants])
   await ops.query('delete from operator where id = any($1::uuid[])', [operators])
   await ops.end()
@@ -219,9 +223,10 @@ describe('prices from the accounting system', () => {
     await ops.query(`delete from plan_price where source = 'accounting'`)
   })
 
-  it('records a change from the first of the coming month, not today', async () => {
-    // A raise mid-month must not reach the month that is running: existing
-    // customers are told beforehand, and this is that promise in the data.
+  it('records a change from the first month that is six weeks away', async () => {
+    // Not merely "not this month": AGB § 4.7 promises six weeks, and on the
+    // 18th the first of the coming month is twelve days. The date itself
+    // carries the promise now, so nobody has to remember it.
     const fake = fakeAdapters()
     fake.prices.set('per_user', 900)
     await syncPlanPrices(ops, fake.adapters, options({ now: new Date('2026-09-18T10:00:00Z') }))
@@ -230,7 +235,7 @@ describe('prices from the accounting system', () => {
       `select net_cents, to_char(effective_from, 'YYYY-MM-DD') as from_day
          from plan_price where plan = 'per_user' and source = 'accounting'`,
     )
-    expect(rows).toEqual([{ net_cents: 900, from_day: '2026-10-01' }])
+    expect(rows).toEqual([{ net_cents: 900, from_day: '2026-11-01' }])
   })
 
   it('bills a month at the price that was in force when it began', async () => {
@@ -862,5 +867,78 @@ describe('VAT numbers VIES could not answer for', () => {
     )
     await closeMonth(ops, MARCH, options())
     expect(await period(id)).toMatchObject({ status: 'computed', tax_kind: 'reverse_charge' })
+  })
+})
+
+/**
+ * The six weeks AGB § 4.7 and § 14.3 promise before a change applies.
+ *
+ * Both used to be a sentence in the terms and nothing else: the price took
+ * effect on the first of the coming month -- eleven days on the 20th -- and a
+ * change of terms had no way of reaching anybody at all.
+ */
+describe('announcing a change six weeks ahead', () => {
+  it('tells every workspace on that plan, once, and not again on the next pass', async () => {
+    const id = await tenant({ plan: 'per_user' })
+    const fake = fakeAdapters({ planPrices: { per_user: 700, per_workshop: 100 } })
+    const mine = `billing-${id.slice(0, 8)}@example.test`
+
+    notices = []
+    await syncPlanPrices(ops, fake.adapters, options())
+    const first = notices.filter((n) => n.to === mine)
+    expect(first.map((n) => n.kind)).toEqual(['price_change'])
+
+    // The worker passes every ten minutes. Nobody wants that mail 144 times.
+    notices = []
+    await syncPlanPrices(ops, fake.adapters, options())
+    expect(notices.filter((n) => n.to === mine)).toEqual([])
+
+    const { rows } = await ops.query(
+      'select effective_from from price_change_notice where tenant_id = $1',
+      [id],
+    )
+    const starts: Date = rows[0].effective_from
+    expect((starts.getTime() - APRIL_2.getTime()) / 86_400_000).toBeGreaterThanOrEqual(42)
+  })
+
+  it('does not announce a price to a workspace on the other plan', async () => {
+    const id = await tenant({ plan: 'per_workshop' })
+    const fake = fakeAdapters({ planPrices: { per_user: 900, per_workshop: 100 } })
+    const mine = `billing-${id.slice(0, 8)}@example.test`
+
+    notices = []
+    await syncPlanPrices(ops, fake.adapters, options())
+    expect(notices.filter((n) => n.to === mine)).toEqual([])
+  })
+
+  it('carries an operator’s terms announcement out, once, and records what it told', async () => {
+    const id = await tenant()
+    const mine = `billing-${id.slice(0, 8)}@example.test`
+    // A version of its own per run: an announcement is told once and stays
+    // told, which is the point -- and would make this test pass only the first
+    // time it ever ran.
+    const version = `2027-01-${String((Date.now() % 28) + 1).padStart(2, '0')}-${id.slice(0, 4)}`
+    announcements.push(version)
+    await ops.query(
+      `insert into legal_announcement (document, version, effective_from) values ('agb', $2, $1)`,
+      [new Date(APRIL_2.getTime() + 60 * 86_400_000), version],
+    )
+
+    notices = []
+    await pendingAnnouncements(ops, options())
+    expect(notices.filter((n) => n.to === mine).map((n) => n.kind)).toEqual(['terms_change'])
+
+    const { rows } = await ops.query(
+      `select completed_at, told from legal_announcement where document = 'agb' and version = $1`,
+      [version],
+    )
+    expect(rows[0].completed_at).not.toBeNull()
+    expect(rows[0].told).toBeGreaterThan(0)
+
+    // Announced again: the acknowledgement rows are what stops it, so a second
+    // run tells nobody twice even if the announcement were reopened.
+    notices = []
+    await announceTermsChange(ops, 'agb', version, '2027-01-01', options())
+    expect(notices.filter((n) => n.to === mine)).toEqual([])
   })
 })

@@ -174,6 +174,40 @@ begin
 end;
 $$;
 
+-- Putting a version of a legal text into force.
+--
+-- Not a deploy: publishing a text and binding customers to it are two
+-- decisions, and the second one carries a date they can object until (AGB
+-- § 14.3, § 14.4). The six weeks are checked here rather than trusted to
+-- whoever fills the form.
+create or replace function app.op_announce_terms(
+  p_operator uuid, p_document text, p_version text, p_effective_from date
+)
+returns uuid
+language plpgsql
+security definer
+set search_path = pg_catalog, public
+as $$
+declare id uuid;
+begin
+  if p_effective_from < (current_date + 42) then
+    raise exception 'a change needs six weeks before it applies' using errcode = '22023';
+  end if;
+
+  insert into legal_announcement (document, version, effective_from, announced_by)
+  values (p_document, p_version, p_effective_from, p_operator)
+  on conflict (document, version) do nothing
+  returning legal_announcement.id into id;
+
+  if id is not null then
+    perform app.op_audit(p_operator, 'announce_terms', null,
+                         jsonb_build_object('document', p_document, 'version', p_version,
+                                            'effectiveFrom', p_effective_from));
+  end if;
+  return id;
+end;
+$$;
+
 create or replace function app.op_schedule_deletion(p_operator uuid, p_tenant uuid, p_days integer, p_reason text)
 returns timestamptz
 language plpgsql
@@ -240,6 +274,7 @@ begin
     'app.op_set_blocked(uuid, uuid, boolean, text)',
     'app.op_extend_trial(uuid, uuid, integer)',
     'app.op_grant_grace(uuid, uuid, integer, text)',
+    'app.op_announce_terms(uuid, text, text, date)',
     'app.op_schedule_deletion(uuid, uuid, integer, text)',
     'app.op_cancel_deletion(uuid, uuid)',
     'app.op_release_period(uuid, uuid, text)'

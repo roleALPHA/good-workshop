@@ -79,6 +79,24 @@ export const cloudEdition: Edition = {
     }
   },
 
+  announcedChanges: async (tenantId) => {
+    const result = await withTenantOnly(tenantId, (tx) =>
+      tx.execute(sql`
+        select 'price' as kind, effective_from from price_change_notice
+         where effective_from > current_date
+        union all
+        select 'terms' as kind, effective_from from legal_acknowledgement
+         where effective_from > current_date and objected_at is null
+         order by effective_from
+      `),
+    )
+    const rows = (result as unknown as { rows: { kind: string; effective_from: string }[] }).rows
+    return rows.map((row) => ({
+      kind: row.kind === 'terms' ? ('terms' as const) : ('price' as const),
+      effectiveFrom: new Date(row.effective_from),
+    }))
+  },
+
   hasBilling: true,
 }
 

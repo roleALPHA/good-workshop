@@ -44,12 +44,24 @@ export function currentPrice(prices: PlanPrice[], plan: PlanKey, now = new Date(
 }
 
 /**
+ * Six weeks, because that is what AGB § 4.7 promises before a price change
+ * takes effect -- and what the customer's right to end the contract over it
+ * needs to be worth anything.
+ */
+export const PRICE_NOTICE_DAYS = 42
+
+/**
  * When a price changed in the accounting system may take effect: the first of
- * the coming month. Existing customers are told before a raise, and this is
- * that promise in code rather than in a calendar reminder.
+ * the first month that is at least six weeks away.
+ *
+ * It used to be the first of the coming month, which on the 20th is eleven
+ * days -- the promise was in the terms and nowhere else. Now the date itself
+ * carries it: a change recorded today cannot start before the notice period is
+ * over, whatever anybody remembers to send.
  */
 export function nextChangeMonth(now = new Date()): string {
-  const next = new Date(Date.UTC(now.getUTCFullYear(), now.getUTCMonth() + 1, 1))
+  const earliest = new Date(now.getTime() + PRICE_NOTICE_DAYS * 86_400_000)
+  const next = new Date(Date.UTC(earliest.getUTCFullYear(), earliest.getUTCMonth() + 1, 1))
   return next.toISOString().slice(0, 10)
 }
 

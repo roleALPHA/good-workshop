@@ -663,6 +663,20 @@
           "subject": "Tu espacio de trabajo es de solo lectura",
           "body": "Hola:\n\nno hemos podido cobrar una factura tras varios intentos, por lo que tu espacio de trabajo es de solo lectura; leer y exportar sigue funcionando. Regulariza el pago:\n{link}"
         }
+      },
+      "priceChange": {
+        "per_user": {
+          "subject": "Cambio de precio de GoodWorkshop desde el {from}",
+          "body": "Hola,\n\ndesde el {from} GoodWorkshop cuesta {price} € netos por usuario y mes. Hasta entonces se aplica el precio actual.\n\nSi no estás de acuerdo, puedes rescindir el contrato hasta el {from}, con efecto en la fecha del cambio:\n{link}"
+        },
+        "per_workshop": {
+          "subject": "Cambio de precio de GoodWorkshop desde el {from}",
+          "body": "Hola,\n\ndesde el {from} GoodWorkshop cuesta {price} € netos por taller creado. Hasta entonces se aplica el precio actual.\n\nSi no estás de acuerdo, puedes rescindir el contrato hasta el {from}, con efecto en la fecha del cambio:\n{link}"
+        }
+      },
+      "terms_change": {
+        "subject": "Nuevas condiciones desde el {from}",
+        "body": "Hola,\n\nhemos cambiado nuestras condiciones. La nueva versión ({version}) se aplica desde el {from}; hasta entonces sigue vigente la actual.\n\nEl texto completo está en goodworkshop.org. Si el cambio altera tus derechos u obligaciones de forma no insignificante, puedes rescindir hasta el {from}:\n{link}"
       }
     }
   },
@@ -688,6 +702,8 @@
       "payment_blocked": "Este espacio está bloqueado por una factura pendiente. Tus talleres se pueden seguir exportando; en cuanto se complete el pago, se reabre por sí solo.",
       "paused": "Este espacio de trabajo está en pausa. El contenido se puede leer, pero no modificar.",
       "deleting": "Este espacio de trabajo se eliminará el {date}. Hasta entonces se puede leer y exportar.",
+      "priceChange": "Desde el {date} se aplican nuevos precios. Hasta entonces no cambia nada.",
+      "termsChange": "Desde el {date} se aplican nuevas condiciones. Hasta entonces siguen las actuales.",
       "toBilling": "Ir a facturación"
     }
   },
