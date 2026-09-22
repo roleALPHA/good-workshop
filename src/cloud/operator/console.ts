@@ -69,6 +69,7 @@ export async function tenantDetail(db: Db, tenantId: string) {
 export type OperatorAction =
   | { kind: 'pause' | 'unpause' | 'block' | 'unblock'; reason: string }
   | { kind: 'extend_trial'; days: number }
+  | { kind: 'grant_grace'; days: number; reason: string }
   | { kind: 'schedule_deletion'; days: number; reason: string }
   | { kind: 'cancel_deletion' }
   | { kind: 'release_period'; periodId: string; decision: 'bill' | 'void' }
@@ -100,6 +101,14 @@ export async function applyOperatorAction(
       return
     case 'extend_trial':
       await db.query('select app.op_extend_trial($1, $2, $3)', [operatorId, tenantId, action.days])
+      return
+    case 'grant_grace':
+      await db.query('select app.op_grant_grace($1, $2, $3, $4)', [
+        operatorId,
+        tenantId,
+        action.days,
+        action.reason,
+      ])
       return
     case 'schedule_deletion':
       await db.query('select app.op_schedule_deletion($1, $2, $3, $4)', [

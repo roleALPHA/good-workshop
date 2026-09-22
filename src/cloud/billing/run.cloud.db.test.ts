@@ -3,6 +3,7 @@ import pg from 'pg'
 import { uuidv7 } from 'uuidv7'
 import { afterAll, beforeAll, beforeEach, describe, expect, it } from 'vitest'
 import { fakeAdapters } from './adapters/fake'
+import { DUNNING_GRACE_DAYS } from './usage'
 import {
   chargeDue,
   closeMonth,
@@ -11,6 +12,8 @@ import {
   invoicePeriods,
   processPaymentEvents,
   recheckPendingVat,
+  dunningTransitions,
+  runBilling,
   trialTransitions,
   type Notice,
   type RunOptions,
@@ -25,6 +28,7 @@ import type { BillingAdapters } from './ports'
 
 const ops = new pg.Client({ connectionString: process.env.OPS_DATABASE_URL })
 const tenants: string[] = []
+const operators: string[] = []
 const MARCH = '2026-03-01'
 const APRIL_2 = new Date('2026-04-02T08:00:00Z')
 
@@ -136,7 +140,9 @@ afterAll(async () => {
   ]) {
     await ops.query(`delete from ${table} where tenant_id = any($1::uuid[])`, [tenants])
   }
+  await ops.query('delete from operator_audit where operator_id = any($1::uuid[])', [operators])
   await ops.query('delete from tenant where id = any($1::uuid[])', [tenants])
+  await ops.query('delete from operator where id = any($1::uuid[])', [operators])
   await ops.end()
 })
 
@@ -344,6 +350,52 @@ describe('invoicing and collecting', () => {
     return id
   }
 
+  /**
+   * A tenant whose invoice has failed for good: three attempts gone, read-only,
+   * and the reminder sent. The state the dunning ladder starts its last step in.
+   */
+  async function failedForGood() {
+    const id = await computed({ paymentReady: true })
+    const fake = fakeAdapters({ chargeOutcome: 'failed' })
+    await invoicePeriods(ops, fake.adapters, options())
+
+    let now = new Date(APRIL_2.getTime() + 3 * 86_400_000)
+    for (let attempt = 1; attempt <= 3; attempt++) {
+      await chargeDue(ops, fake.adapters, options({ now }))
+      const current = await period(id)
+      if (current.charge_after) now = new Date(current.charge_after.getTime() + 1000)
+    }
+    return id
+  }
+
+  const state = async (tenantId: string) =>
+    (await ops.query('select state from tenant_lifecycle where tenant_id = $1', [tenantId])).rows[0]
+      .state
+
+  /**
+   * A moment `days` past the reminder's deadline.
+   *
+   * Measured from the reminder the run actually recorded, not from the wall
+   * clock: these tenants are invoiced for March, so their dunning date is in
+   * April and a real "today" would be months past every deadline.
+   */
+  const dayAfterDunning = async (tenantId: string, days: number) => {
+    const { rows } = await ops.query(
+      'select dunned_at from tenant_lifecycle where tenant_id = $1',
+      [tenantId],
+    )
+    return new Date(rows[0].dunned_at.getTime() + (DUNNING_GRACE_DAYS + days) * 86_400_000)
+  }
+
+  async function anOperator() {
+    const { rows } = await ops.query(
+      `insert into operator (email, display_name) values ($1, 'Kulanz') returning id`,
+      [`op-${randomUUID()}@example.test`],
+    )
+    operators.push(rows[0].id)
+    return rows[0].id as string
+  }
+
   it('issues one invoice, waits for the pre-notification, then collects and books the payment', async () => {
     const id = await computed({ paymentReady: true })
     const fake = fakeAdapters()
@@ -492,7 +544,137 @@ describe('invoicing and collecting', () => {
       'payment_failed',
       'payment_failed',
       'read_only',
+      // The reminder § 5.4 wants before the access may be blocked, with the
+      // date it would happen on.
+      'dunning',
     ])
+  })
+
+  /**
+   * The step the terms allow and the product never took: after a reminder that
+   * went unanswered, the access itself closes (§ 5.4).
+   *
+   * What it must NOT do is lock somebody out of their own contents. They are
+   * the customer's (§ 9.1), we hold them as their processor, and an unpaid
+   * invoice is not a lien on them -- so the export stays open and only the
+   * product closes.
+   */
+  it('blocks the access once the reminder has gone unanswered, and never the export', async () => {
+    const id = await failedForGood()
+
+    // A day before the deadline: nothing yet, or the reminder was no reminder.
+    await dunningTransitions(ops, options({ now: await dayAfterDunning(id, -1) }))
+    expect(await state(id)).toBe('read_only')
+
+    notices = []
+    await dunningTransitions(ops, options({ now: await dayAfterDunning(id, 1) }))
+    expect(await state(id)).toBe('payment_blocked')
+    const email = `billing-${id.slice(0, 8)}@example.test`
+    expect(notices.filter((n) => n.to === email).map((n) => n.kind)).toEqual(['payment_blocked'])
+
+    // Writes are refused by the database, whatever path tries them, and what is
+    // left is the way out. Asked as the tenant, because both functions answer
+    // about whoever the transaction says it is.
+    await ops.query('begin')
+    await ops.query(`select set_config('app.tenant_id', $1, true)`, [id])
+    const access = await ops.query(
+      `select app.cloud_tenant_access() as access, app.cloud_tenant_writable() as writable`,
+    )
+    await ops.query('commit')
+    expect(access.rows[0]).toMatchObject({ access: 'export', writable: false })
+  })
+
+  it('reopens by itself when the money arrives, with nobody deciding anything', async () => {
+    const id = await failedForGood()
+    const blockedAt = await dayAfterDunning(id, 1)
+    await dunningTransitions(ops, options({ now: blockedAt }))
+    expect(await state(id)).toBe('payment_blocked')
+
+    notices = []
+    const fake = fakeAdapters()
+    // The customer sorts the card out, so the next run has something to collect
+    // again -- a failed period with its retry date reached.
+    await ops.query(
+      `update billing_period set charge_after = $2 where tenant_id = $1 and status = 'failed'`,
+      [id, blockedAt],
+    )
+    await chargeDue(
+      ops,
+      fake.adapters,
+      options({ now: new Date(blockedAt.getTime() + 86_400_000) }),
+    )
+
+    expect(await state(id)).toBe('active')
+    expect(notices.map((n) => n.kind)).toContain('unblocked')
+    const { rows } = await ops.query(
+      'select dunned_at, grace_until from tenant_lifecycle where tenant_id = $1',
+      [id],
+    )
+    expect(rows[0]).toEqual({ dunned_at: null, grace_until: null })
+  })
+
+  it('steps over a tenant an operator has given grace, and picks up where it stood', async () => {
+    const id = await failedForGood()
+    const operator = await anOperator()
+
+    await ops.query('select app.op_grant_grace($1, $2, $3, $4)', [
+      operator,
+      id,
+      7,
+      'Karte abgelaufen, Kunde im Urlaub',
+    ])
+    expect(await state(id)).toBe('active')
+
+    // Inside the grace: the ladder leaves it alone although the invoice is open.
+    await dunningTransitions(ops, options({ now: await dayAfterDunning(id, 1) }))
+    expect(await state(id)).toBe('active')
+
+    // The grace does not settle the debt -- the period is still owed.
+    const owed = await period(id)
+    expect(owed.status).toBe('failed')
+
+    // Once it runs out, the ladder carries on from where it stood: the reminder
+    // was sent, so the next step is the block and not another reminder.
+    const afterGrace = await dayAfterDunning(id, 9)
+    await ops.query(
+      `update tenant_lifecycle set state = 'read_only', grace_until = $2 where tenant_id = $1`,
+      [id, new Date(afterGrace.getTime() - 86_400_000)],
+    )
+    await dunningTransitions(ops, options({ now: afterGrace }))
+    expect(await state(id)).toBe('payment_blocked')
+
+    const { rows } = await ops.query(
+      `select action from operator_audit where tenant_id = $1 order by at desc limit 1`,
+      [id],
+    )
+    expect(rows[0].action).toBe('grant_grace')
+  })
+
+  /**
+   * Through `runBilling`, not through the step.
+   *
+   * Every other test here calls the steps directly, which is what let the call
+   * to the dunning step fall out of `runBilling` during a rebase and stay green:
+   * the function was still there, and nobody ran it. This one drives the run the
+   * worker drives.
+   */
+  it('takes the step when the whole run goes past, not only when it is called', async () => {
+    const id = await failedForGood()
+    const now = await dayAfterDunning(id, 1)
+
+    await runBilling(
+      ops,
+      null,
+      async (vatId) => ({
+        status: 'unavailable',
+        vatId,
+        error: 'not asked in this test',
+        checkedAt: now.toISOString(),
+      }),
+      options({ now }),
+    )
+
+    expect(await state(id)).toBe('payment_blocked')
   })
 
   it('locks the tenant even when the notice cannot be sent', async () => {

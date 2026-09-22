@@ -685,6 +685,7 @@
     "notice": {
       "trial": "Trial: {days, plural, one {one day} other {# days}} left.",
       "read_only": "This workspace is read-only: reading and exporting work, changing does not.",
+      "payment_blocked": "This workspace is blocked over an unpaid invoice. Your workshops can still be exported; once the payment goes through, it opens again by itself.",
       "paused": "This workspace is paused. Content can be read but not changed.",
       "deleting": "This workspace will be deleted on {date}. Until then it can be read and exported.",
       "toBilling": "Go to billing"
@@ -1104,6 +1105,7 @@
       "cancelDeletion": "Take back deletion",
       "days": "Days",
       "extendTrial": "Extend trial by {days} days",
+      "grantGrace": "Goodwill: {days} days",
       "bill": "Bill",
       "void": "Drop",
       "error": {

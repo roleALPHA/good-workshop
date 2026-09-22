@@ -52,9 +52,10 @@ export const cloudEdition: Edition = {
   // Tenants come from registration, not from claiming an installation.
   tenantForSetup: async () => null,
 
-  tenantWritable: async (tx) => {
-    const result = await tx.execute(sql`select app.cloud_tenant_writable() as writable`)
-    return (result as unknown as { rows: { writable: boolean }[] }).rows[0]?.writable ?? true
+  tenantAccess: async (tx) => {
+    const result = await tx.execute(sql`select app.cloud_tenant_access() as access`)
+    const value = (result as unknown as { rows: { access: string }[] }).rows[0]?.access
+    return value === 'read' || value === 'export' ? value : 'full'
   },
 
   adoptRegisteredClient: async (tx, clientKey) => {
@@ -72,7 +73,7 @@ export const cloudEdition: Edition = {
     ).rows[0]
     if (!row || row.state === 'active') return null
     return {
-      state: row.state as 'trial' | 'read_only' | 'paused' | 'deleting',
+      state: row.state as 'trial' | 'read_only' | 'payment_blocked' | 'paused' | 'deleting',
       trialEndsAt: row.trial_ends_at ? new Date(row.trial_ends_at) : null,
       deleteAfter: row.delete_after ? new Date(row.delete_after) : null,
     }

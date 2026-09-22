@@ -164,3 +164,17 @@ export function nextAttempt(attempts: number, now: Date): Date | null {
   const days = RETRY_AFTER_DAYS[attempts - 1]
   return days === undefined ? null : new Date(now.getTime() + days * 86_400_000)
 }
+
+/**
+ * Days between the reminder and the workspace being blocked (AGB § 5.4).
+ *
+ * The terms allow the block "after an unsuccessful reminder", so there has to
+ * be a reminder and it has to have had time to work. Two weeks: long enough for
+ * somebody to come back from holiday and sort out a card, short enough that a
+ * workspace nobody pays for does not run for another month.
+ */
+export const DUNNING_GRACE_DAYS = 14
+
+export function blockAfter(dunnedAt: Date): Date {
+  return new Date(dunnedAt.getTime() + DUNNING_GRACE_DAYS * 86_400_000)
+}

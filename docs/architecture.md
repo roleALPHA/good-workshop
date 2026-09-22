@@ -118,8 +118,20 @@ operator rather than guessed. The payment provider's webhook only verifies and s
 acts on stored events, once.
 
 **A workspace's state in the cloud** is `tenant_lifecycle`: `trial`, `active`, `read_only` (trial
-over without a payment method, or payment failed), `paused` (an operator's decision; billing
-continues) and `deleting`. Everything but `trial` and `active` is read-only through the same
+over without a payment method, or payment failed), `payment_blocked` (a reminder that went
+unanswered), `paused` (an operator's decision; billing continues) and `deleting`.
+
+The dunning ladder runs without anybody deciding anything, and comes back the same way: three
+failed charges make a workspace read-only and send the reminder § 5.4 asks for, two weeks later
+the access itself closes, and a payment that arrives -- on a retry or through a webhook months
+later -- reopens it. The blocked state is deliberately NOT `tenant.status = 'suspended'`, which
+signs everybody out: the contents are the customer's, we hold them as their processor, and an
+unpaid invoice is not a lien on them. So `app.cloud_tenant_access()` answers `export` there, the
+capability layer hands out `workshop.export` and nothing else, and the library keeps its rows
+without keeping the way in. `suspended` stays what it was: the hard bolt for abuse, an operator's
+decision, nothing to do with money. What an operator can do about money is `app.op_grant_grace` --
+the ladder steps over that tenant until the date passes and then carries on where it stood, the
+period stays owed, and the reason goes into `operator_audit`. Everything but `trial` and `active` is read-only through the same
 restrictive policies, and the app shell says why in a banner under the header. Blocking is
 `tenant.status = 'suspended'`, which signs everybody out. A tenant admin deletes their workspace
 from the billing page: it becomes read-only at once so that it can still be exported, member days

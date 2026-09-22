@@ -688,6 +688,7 @@ declare const messages: {
     "notice": {
       "trial": "Testphase: noch {days, plural, one {ein Tag} other {# Tage}}.",
       "read_only": "Dieser Workspace ist schreibgeschützt: Lesen und Exportieren geht, Ändern nicht.",
+      "payment_blocked": "Dieser Workspace ist wegen einer offenen Zahlung gesperrt. Deine Workshops lassen sich weiterhin exportieren; sobald die Zahlung durch ist, geht es von selbst weiter.",
       "paused": "Dieser Workspace ist pausiert. Inhalte lassen sich lesen, aber nicht ändern.",
       "deleting": "Dieser Workspace wird am {date} gelöscht. Bis dahin lässt er sich lesen und exportieren.",
       "toBilling": "Zur Abrechnung"
@@ -1107,6 +1108,7 @@ declare const messages: {
       "cancelDeletion": "Löschung zurücknehmen",
       "days": "Tage",
       "extendTrial": "Testphase um {days} Tage verlängern",
+      "grantGrace": "Kulanz: {days} Tage",
       "bill": "Abrechnen",
       "void": "Verwerfen",
       "error": {

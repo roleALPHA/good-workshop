@@ -156,6 +156,11 @@ const ActionInput = z.discriminatedUnion('kind', [
   z.object({ kind: z.enum(['pause', 'unpause', 'block', 'unblock']), reason: Reason }),
   z.object({ kind: z.literal('extend_trial'), days: z.coerce.number().int().min(1).max(90) }),
   z.object({
+    kind: z.literal('grant_grace'),
+    days: z.coerce.number().int().min(1).max(90),
+    reason: Reason,
+  }),
+  z.object({
     kind: z.literal('schedule_deletion'),
     days: z.coerce.number().int().min(0).max(90),
     reason: Reason,

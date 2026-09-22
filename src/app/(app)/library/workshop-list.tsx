@@ -30,6 +30,7 @@ export function WorkshopList({
   query,
   filtered,
   folders,
+  exportOnly = false,
 }: {
   initial: WorkshopSummary[]
   initialCursor: string | null
@@ -37,6 +38,13 @@ export function WorkshopList({
   query: { folderId?: string | null; tagId?: string; search?: string }
   filtered: boolean
   folders: FolderChoice[]
+  /**
+   * The workspace is blocked over an unpaid invoice: the product is closed and
+   * the export is not. The rows stay -- somebody has to be able to find the
+   * workshop they want out -- but the title is not a way in, because opening
+   * one would answer 404 and read as "your work is gone".
+   */
+  exportOnly?: boolean
 }) {
   const t = useTranslations('library')
   const tc = useTranslations('common')
@@ -185,10 +193,7 @@ export function WorkshopList({
 
           return (
             <li key={workshop.id} className="group">
-              <Link
-                href={`/w/${workshop.id}`}
-                className="flex flex-wrap items-baseline gap-x-3 gap-y-1 px-4 py-3 hover:bg-[var(--surface-raised)]"
-              >
+              <Row exportOnly={exportOnly} workshopId={workshop.id}>
                 <span className="min-w-0 flex-1 truncate font-medium">{workshop.title}</span>
 
                 {workshop.tags.map((tag) => (
@@ -207,7 +212,7 @@ export function WorkshopList({
                   {tStatus(workshop.status)}
                 </span>
                 {!canManage && <ReadOnlyBadge />}
-              </Link>
+              </Row>
 
               {/* Outside the Link, not inside it: a button nested in an anchor is
                   invalid markup, and the click would navigate as well as delete. */}
@@ -337,6 +342,25 @@ export function WorkshopList({
  * `pointer-coarse:` rather than always: a 44px box around one line of 13px text
  * is not a touch target under a mouse, it is wasted row height.
  */
+/** The row itself: a way into the workshop, or the same line without the way. */
+function Row({
+  exportOnly,
+  workshopId,
+  children,
+}: {
+  exportOnly: boolean
+  workshopId: string
+  children: React.ReactNode
+}) {
+  const shape = 'flex flex-wrap items-baseline gap-x-3 gap-y-1 px-4 py-3'
+  if (exportOnly) return <div className={shape}>{children}</div>
+  return (
+    <Link href={`/w/${workshopId}`} className={`${shape} hover:bg-[var(--surface-raised)]`}>
+      {children}
+    </Link>
+  )
+}
+
 const actionClass = cn(
   'inline-flex shrink-0 items-center justify-center gap-1.5 rounded px-2 py-1.5 text-[13px]',
   'pointer-coarse:min-h-11 pointer-coarse:min-w-11',

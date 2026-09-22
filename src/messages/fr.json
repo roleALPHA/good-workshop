@@ -685,6 +685,7 @@
     "notice": {
       "trial": "Essai : {days, plural, one {encore un jour} many {encore # jours} other {encore # jours}}.",
       "read_only": "Cet espace de travail est en lecture seule : lecture et export possibles, modification non.",
+      "payment_blocked": "Cet espace est bloqué en raison d'une facture impayée. Vos ateliers restent exportables ; dès que le paiement aboutit, il se rouvre de lui-même.",
       "paused": "Cet espace de travail est en pause. Le contenu peut être lu mais pas modifié.",
       "deleting": "Cet espace de travail sera supprimé le {date}. D’ici là, il peut être lu et exporté.",
       "toBilling": "Vers la facturation"
@@ -1104,6 +1105,7 @@
       "cancelDeletion": "Annuler la suppression",
       "days": "Jours",
       "extendTrial": "Prolonger l’essai de {days} jours",
+      "grantGrace": "Geste commercial : {days} jours",
       "bill": "Facturer",
       "void": "Écarter",
       "error": {

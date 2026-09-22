@@ -685,6 +685,7 @@
     "notice": {
       "trial": "Prueba: {days, plural, one {queda un día} many {quedan # días} other {quedan # días}}.",
       "read_only": "Este espacio de trabajo es de solo lectura: se puede leer y exportar, pero no modificar.",
+      "payment_blocked": "Este espacio está bloqueado por una factura pendiente. Tus talleres se pueden seguir exportando; en cuanto se complete el pago, se reabre por sí solo.",
       "paused": "Este espacio de trabajo está en pausa. El contenido se puede leer, pero no modificar.",
       "deleting": "Este espacio de trabajo se eliminará el {date}. Hasta entonces se puede leer y exportar.",
       "toBilling": "Ir a facturación"
@@ -1104,6 +1105,7 @@
       "cancelDeletion": "Anular eliminación",
       "days": "Días",
       "extendTrial": "Ampliar la prueba {days} días",
+      "grantGrace": "Cortesía: {days} días",
       "bill": "Facturar",
       "void": "Descartar",
       "error": {

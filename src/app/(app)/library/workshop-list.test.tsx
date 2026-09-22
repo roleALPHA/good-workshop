@@ -317,3 +317,33 @@ describe('the move button when dragging is on', () => {
     vi.unstubAllGlobals()
   })
 })
+
+/**
+ * A workspace blocked over an unpaid invoice.
+ *
+ * The product is closed and the export is not: the contents belong to the
+ * customer, and being in arrears does not change whose they are. So the rows
+ * stay -- somebody has to find the workshop they want out -- but the title
+ * stops being a way in, because opening one would answer 404 and read as "your
+ * work is gone".
+ */
+describe('a workspace that may only export', () => {
+  it('keeps the export and takes away the way in', () => {
+    renderWithIntl(
+      <WorkshopList
+        initial={[workshop()]}
+        initialCursor={null}
+        query={{}}
+        filtered={false}
+        folders={FOLDERS}
+        exportOnly
+      />,
+    )
+
+    expect(
+      screen.getByRole('link', { name: 'Strategie-Retreat als Markdown exportieren' }),
+    ).toHaveAttribute('href', '/api/w/w-1/export')
+    expect(screen.queryByRole('link', { name: /Strategie-Retreat$/ })).not.toBeInTheDocument()
+    expect(screen.getByText('Strategie-Retreat')).toBeInTheDocument()
+  })
+})

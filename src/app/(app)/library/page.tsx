@@ -39,6 +39,8 @@ export default async function LibraryPage({
   // worse than none. Only the cloud has such workspaces.
   const notice = session ? await edition.workspaceNotice(session.tenantId).catch(() => null) : null
   const readOnly = notice !== null && notice.state !== 'trial'
+  // Blocked over an unpaid invoice: the product is closed, the way out is not.
+  const exportOnly = notice?.state === 'payment_blocked'
 
   if (!result.ok) {
     return <p className="text-[var(--danger-fg)]">{result.message}</p>
@@ -141,6 +143,7 @@ export default async function LibraryPage({
             key={`${folder ?? ''}|${tag ?? ''}|${q ?? ''}`}
             initial={workshops}
             initialCursor={nextCursor}
+            exportOnly={exportOnly}
             // `folder` and not `folder ?? null`: null is a filter of its own on
             // the server -- "only workshops in no folder" -- so passing it for an
             // unfiltered library made the second page show nothing but the loose

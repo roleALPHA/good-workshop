@@ -20,7 +20,7 @@ export const communityEdition: Edition = {
   tenantForOAuthToken: always,
   tenantForAnonymousBrand: always,
   tenantForSetup: always,
-  tenantWritable: async () => true,
+  tenantAccess: async () => 'full',
   // Clients register in the one tenant there is; there is nothing to bring over.
   adoptRegisteredClient: async () => {},
   // A self-hosted installation has no trial, no billing and nobody pausing it.

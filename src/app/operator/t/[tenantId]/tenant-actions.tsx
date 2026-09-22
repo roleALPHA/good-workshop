@@ -116,6 +116,15 @@ export function TenantActions({
         >
           {t('extendTrial', { days })}
         </button>
+        {/* Goodwill on the ACCESS, never on the invoice: the period stays open
+            and billed, and writing one off belongs in the accounting system. */}
+        <button
+          className={button}
+          disabled={pending || !['active', 'read_only', 'payment_blocked'].includes(state)}
+          onClick={() => run({ kind: 'grant_grace', days, reason })}
+        >
+          {t('grantGrace', { days })}
+        </button>
       </div>
       {error && (
         <p role="alert" className="mt-2 text-[14px] text-[var(--danger-fg)]">
