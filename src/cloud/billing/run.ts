@@ -5,6 +5,7 @@ import {
   invoiceRef,
   memberMonths,
   monthDays,
+  monthKey,
   netCents,
   nextAttempt,
   previousMonth,
@@ -266,7 +267,7 @@ export async function invoicePeriods(db: Db, adapters: BillingAdapters, options:
           ref: period.invoice_ref,
           lines: [
             {
-              description: `GoodWorkshop ${period.plan} ${String(period.month).slice(0, 7)}`,
+              description: `GoodWorkshop ${period.plan} ${monthKey(period.month)}`,
               quantity: Number(period.quantity),
               unitNetCents: period.unit_net_cents,
               plan: period.plan,
@@ -409,6 +410,28 @@ async function markPaid(
   })
 }
 
+/**
+ * Tells the customer, and never lets that get in the way of the books.
+ *
+ * A notice is a side effect; what has just been written is the truth. When the
+ * mail fails -- a provider outage, a configuration the worker cannot reach --
+ * the run has to carry on, or a tenant that should be locked stays open and a
+ * failed charge looks like an invoice nobody ever tried to collect. Which is
+ * exactly what happened: the worker could not send at all, the exception
+ * unwound the handling around it, and the failure became invisible.
+ */
+async function announce(options: RunOptions, notice: Notice): Promise<void> {
+  try {
+    await options.notify(notice)
+  } catch (error) {
+    options.log('billing: notice could not be sent', {
+      kind: notice.kind,
+      to: notice.to,
+      error: String(error instanceof Error ? error.message : error),
+    })
+  }
+}
+
 async function markFailed(
   db: Db,
   period: { id: string; tenant_id: string; attempts: number; billing_email: string },
@@ -425,20 +448,25 @@ async function markFailed(
   )
   if (!updated.rowCount) return
 
-  await options.notify({ kind: 'payment_failed', to: period.billing_email, retryAt })
-  if (!retryAt) {
-    const locked = await db.query(
-      `update tenant_lifecycle set state = 'read_only', updated_at = now()
-        where tenant_id = $1 and state <> 'read_only' returning tenant_id`,
-      [period.tenant_id],
-    )
-    if (locked.rowCount) {
-      await options.notify({
-        kind: 'read_only',
-        to: period.billing_email,
-        reason: 'payment_failed',
-      })
-    }
+  // Locking comes before telling. The lock is what protects the business; the
+  // mail is a courtesy, and a courtesy must not decide whether the lock holds.
+  const locked =
+    !retryAt &&
+    (
+      await db.query(
+        `update tenant_lifecycle set state = 'read_only', updated_at = now()
+          where tenant_id = $1 and state <> 'read_only' returning tenant_id`,
+        [period.tenant_id],
+      )
+    ).rowCount
+
+  await announce(options, { kind: 'payment_failed', to: period.billing_email, retryAt })
+  if (locked) {
+    await announce(options, {
+      kind: 'read_only',
+      to: period.billing_email,
+      reason: 'payment_failed',
+    })
   }
 }
 
@@ -516,7 +544,11 @@ export async function trialTransitions(db: Db, options: RunOptions) {
         [tenant.tenant_id, next],
       )
       if (moved.rowCount && next === 'read_only') {
-        await options.notify({ kind: 'read_only', to: tenant.billing_email, reason: 'trial_ended' })
+        await announce(options, {
+          kind: 'read_only',
+          to: tenant.billing_email,
+          reason: 'trial_ended',
+        })
       }
       continue
     }
@@ -530,7 +562,7 @@ export async function trialTransitions(db: Db, options: RunOptions) {
         [tenant.tenant_id, reminder.key],
       )
       if (marked.rowCount) {
-        await options.notify({
+        await announce(options, {
           kind: 'trial_ending',
           to: tenant.billing_email,
           daysLeft: Math.max(1, Math.ceil(left / DAY)),

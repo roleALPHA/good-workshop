@@ -492,6 +492,56 @@ describe('invoicing and collecting', () => {
     ])
   })
 
+  it('locks the tenant even when the notice cannot be sent', async () => {
+    // The worker could not send mail at all -- it runs as the operations role
+    // and the notice read a tenant's settings from the application database --
+    // and a throwing notice undid the work before it: chargeDue's catch wrote
+    // the status back to 'invoiced', nobody was locked, and the console, which
+    // counts periods in 'failed', showed nothing at all. A notice is a side
+    // effect; what was already written is the truth.
+    const id = await computed({ paymentReady: true })
+    const fake = fakeAdapters({ chargeOutcome: 'failed' })
+    const mute = (overrides: Partial<RunOptions> = {}) =>
+      options({
+        notify: async () => {
+          throw new Error('DATABASE_URL is not set.')
+        },
+        ...overrides,
+      })
+    await invoicePeriods(ops, fake.adapters, mute())
+
+    let now = new Date(APRIL_2.getTime() + 3 * 86_400_000)
+    for (let attempt = 1; attempt <= 3; attempt++) {
+      await chargeDue(ops, fake.adapters, mute({ now }))
+      const current = await period(id)
+      expect(current).toMatchObject({ status: 'failed', attempts: attempt })
+      if (current.charge_after) now = new Date(current.charge_after.getTime() + 1000)
+    }
+
+    const { rows } = await ops.query('select state from tenant_lifecycle where tenant_id = $1', [
+      id,
+    ])
+    expect(rows[0].state).toBe('read_only')
+  })
+
+  it('ends a trial even when the notice cannot be sent', async () => {
+    // Same fault, worse reach: trials are step two of ten, so the exception
+    // took the whole run down -- no invoices, no collection, every ten minutes.
+    const id = await tenant({ state: 'trial', trialEndsAt: '2026-04-01T00:00:00Z' })
+    await trialTransitions(
+      ops,
+      options({
+        notify: async () => {
+          throw new Error('DATABASE_URL is not set.')
+        },
+      }),
+    )
+    const { rows } = await ops.query('select state from tenant_lifecycle where tenant_id = $1', [
+      id,
+    ])
+    expect(rows[0].state).toBe('read_only')
+  })
+
   it('finishes a charge that was still processing when the provider reports it', async () => {
     const id = await computed({ paymentReady: true })
     const fake = fakeAdapters({ chargeOutcome: 'processing' })

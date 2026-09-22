@@ -3,6 +3,7 @@ import {
   invoiceRef,
   memberMonths,
   monthDays,
+  monthKey,
   netCents,
   nextAttempt,
   previousMonth,
@@ -111,5 +112,16 @@ describe('amounts and references', () => {
     expect(nextAttempt(1, now)).toEqual(at('2026-04-05T10:00:00Z'))
     expect(nextAttempt(2, now)).toEqual(at('2026-04-09T10:00:00Z'))
     expect(nextAttempt(3, now)).toBeNull()
+  })
+})
+
+describe('the month an invoice line names', () => {
+  it('is YYYY-MM, whether it arrives as text or as the date the driver hands back', () => {
+    expect(monthKey('2026-08-01')).toBe('2026-08')
+    // What `select month from billing_period` yields is a Date at local
+    // midnight. `String(...)` renders that as "Sat Aug 01 2026 ...", and seven
+    // characters of it is "Sat Aug" -- which is what stood on every invoice.
+    expect(monthKey(new Date(2026, 7, 1))).toBe('2026-08')
+    expect(monthKey(new Date(2026, 0, 1))).toBe('2026-01')
   })
 })

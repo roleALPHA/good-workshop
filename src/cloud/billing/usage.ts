@@ -30,6 +30,20 @@ export function monthDays(month: string): string[] {
   )
 }
 
+/**
+ * A month as YYYY-MM, however it arrives.
+ *
+ * `billing_period.month` is a `date`, and the driver hands that back as a Date
+ * at local midnight. `String(...)` renders it as "Sat Aug 01 2026 ...", so
+ * taking seven characters gives "Sat Aug" -- which is what customers read on
+ * their invoice line until this existed.
+ */
+export function monthKey(month: string | Date): string {
+  if (typeof month === 'string') return month.slice(0, 7)
+  // Read in local time, because local midnight is where the date landed.
+  return `${month.getFullYear()}-${String(month.getMonth() + 1).padStart(2, '0')}`
+}
+
 /** The month before the one an instant falls in, in Vienna: YYYY-MM-01. */
 export function previousMonth(instant: Date): string {
   const [year, mon] = viennaDay(instant).split('-').map(Number) as [number, number]
