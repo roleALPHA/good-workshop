@@ -1009,6 +1009,10 @@
       "mailSent": "Si la dirección pertenece a un operador, el enlace va en camino.",
       "mailSubject": "Acceso a la consola de operador",
       "mailBody": "Con este enlace entras en la consola de operador. Vale quince minutos y una sola vez.\n\n{link}\n\nSi no lo has pedido, ignora este mensaje y revisa el registro de auditoría.",
+      "linkTitle": "Confirmar el acceso",
+      "linkIntro": "Un paso más: con «Iniciar sesión» entras en la consola como {email}, y después el enlace deja de funcionar. Este paso evita que los filtros de correo gasten el enlace antes que tú.",
+      "linkButton": "Iniciar sesión",
+      "linkPending": "Iniciando sesión …",
       "linkInvalid": "Este enlace no es válido, ha caducado o ya se ha usado."
     },
     "tenants": {

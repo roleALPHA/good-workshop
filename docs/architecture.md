@@ -145,10 +145,13 @@ using it cannot read a customer's work. It runs in a container started with
 `gw_operator`, a role with no grant on any tenant table: what it sees and does is the `app.op_*`
 functions in `drizzle-cloud/sql/956_operator_functions.sql`, which return names, states, counts and
 invoices -- never content -- and write `operator_audit` with the operator and the reason for every
-change. Operators are not identities; they sign in with a passkey only, against tables of their
-own, with a session of eight hours and thirty minutes idle, and their first passkey is enrolled
-through a one-time link that `scripts/operator.mjs` prints on the server. The proxy should route
-the operator host to that container alone and restrict it by address.
+change. Operators are not identities; they sign in against tables of their own, with a session of
+eight hours and thirty minutes idle, and their first passkey is enrolled through a one-time link
+that `scripts/operator.mjs` prints on the server. The passkey is the way in; a link to the address
+on file is the way back when the device holding it is gone -- fifteen minutes, once, three per
+hour, and every such sign-in in `operator_audit`, which is what makes the weaker door a visible
+one. That link is opened the same way as `/verify`: the page only looks, the button spends. The
+proxy should route the operator host to that container alone and restrict it by address.
 
 **OAuth clients in the cloud** register into a registry tenant, because registration happens
 before anybody has signed in. The consent screen copies the client into the tenant of the person

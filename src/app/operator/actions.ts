@@ -12,6 +12,7 @@ import {
   enrollmentOptions,
   requestSignInLink,
   signInOptions,
+  spendSignInLink,
   verifySignIn,
 } from '@/cloud/operator/auth'
 import { sendPlatformMail } from '@/server/auth/mail'
@@ -77,6 +78,23 @@ export async function operatorMailLink(email: unknown): Promise<void> {
     subject: t('mailSubject'),
     text: t('mailBody', { link }),
   })
+}
+
+/**
+ * Spends a sign-in link and starts the session.
+ *
+ * A Server Action rather than a GET or a POST route, for the Origin check Next
+ * does on every action: without one, any site could submit a form that signs a
+ * visitor into an account of the attacker's choosing. And because it is not a
+ * GET, no mail scanner reaches it -- which is the reason the link stopped
+ * working for a Microsoft 365 mailbox in the first place.
+ */
+export async function operatorConfirmSignIn(token: string): Promise<boolean> {
+  if (await limited()) return false
+  const operator = await spendSignInLink(operatorDb(), token)
+  if (!operator) return false
+  await startOperatorSession(operator.id)
+  return true
 }
 
 export async function operatorEnrollmentOptions(token: string) {

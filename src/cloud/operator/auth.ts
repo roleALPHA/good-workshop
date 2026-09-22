@@ -278,6 +278,27 @@ export async function requestSignInLink(
 }
 
 /**
+ * Looks at a sign-in link without spending it.
+ *
+ * Because whoever fetches the link first is usually not a person. Microsoft
+ * Defender's Safe Links opens every URL in a Microsoft 365 mailbox before it
+ * is delivered, so a link spent on GET is spent by the scanner, and the
+ * operator arrives to "already used" -- every time, for every new link. The
+ * page therefore only looks, and the button spends: a scanner fetches, it does
+ * not submit forms. The application's own magic link was fixed the same way.
+ */
+export async function peekSignInLink(db: Db, token: string): Promise<Operator | null> {
+  const { rows } = await db.query(
+    `select o.id, o.email, o.display_name from operator_login l join operator o on o.id = l.operator_id
+      where l.token_hash = $1 and l.used_at is null and l.expires_at > now() and o.disabled_at is null`,
+    [hashSecret(token)],
+  )
+  return rows[0]
+    ? { id: rows[0].id, email: rows[0].email, displayName: rows[0].display_name }
+    : null
+}
+
+/**
  * Spends a sign-in link: one use, and the operator behind it.
  *
  * The update carries the conditions, so two requests with the same token
