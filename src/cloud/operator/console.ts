@@ -70,6 +70,7 @@ export type OperatorAction =
   | { kind: 'pause' | 'unpause' | 'block' | 'unblock'; reason: string }
   | { kind: 'extend_trial'; days: number }
   | { kind: 'grant_grace'; days: number; reason: string }
+  | { kind: 'announce_terms'; document: string; version: string; effectiveFrom: string }
   | { kind: 'schedule_deletion'; days: number; reason: string }
   | { kind: 'cancel_deletion' }
   | { kind: 'release_period'; periodId: string; decision: 'bill' | 'void' }
@@ -108,6 +109,16 @@ export async function applyOperatorAction(
         tenantId,
         action.days,
         action.reason,
+      ])
+      return
+    case 'announce_terms':
+      // Not about one tenant: it binds everybody, so the tenant id the console
+      // passes around is ignored here on purpose.
+      await db.query('select app.op_announce_terms($1, $2, $3, $4)', [
+        operatorId,
+        action.document,
+        action.version,
+        action.effectiveFrom,
       ])
       return
     case 'schedule_deletion':

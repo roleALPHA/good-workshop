@@ -24,6 +24,12 @@ export type WorkspaceNotice = {
   deleteAfter: Date | null
 }
 
+/** A price or a text that changes on a day the customer was told about. */
+export type AnnouncedChange = {
+  kind: 'price' | 'terms'
+  effectiveFrom: Date
+}
+
 export type Edition = {
   readonly name: 'community' | 'cloud'
 
@@ -76,6 +82,14 @@ export type Edition = {
 
   /** For the banner under the header: a trial, a read-only, paused or deleting workspace. */
   workspaceNotice(tenantId: string): Promise<WorkspaceNotice | null>
+
+  /**
+   * What has been announced to this workspace and has not happened yet.
+   *
+   * Separate from the notice above because it is not a state: nothing is
+   * withheld, something is coming. Six weeks are a long time to say nothing.
+   */
+  announcedChanges(tenantId: string): Promise<AnnouncedChange[]>
 
   /** Whether tenant admins have a billing page. */
   readonly hasBilling: boolean

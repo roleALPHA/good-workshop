@@ -161,6 +161,18 @@ const ActionInput = z.discriminatedUnion('kind', [
     reason: Reason,
   }),
   z.object({
+    kind: z.literal('announce_terms'),
+    document: z.enum(['impressum', 'agb', 'datenschutz', 'avv']),
+    version: z
+      .string()
+      .trim()
+      .regex(/^\d{4}-\d{2}-\d{2}$/),
+    effectiveFrom: z
+      .string()
+      .trim()
+      .regex(/^\d{4}-\d{2}-\d{2}$/),
+  }),
+  z.object({
     kind: z.literal('schedule_deletion'),
     days: z.coerce.number().int().min(0).max(90),
     reason: Reason,

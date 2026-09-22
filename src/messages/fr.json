@@ -663,6 +663,20 @@
           "subject": "Ton espace de travail est en lecture seule",
           "body": "Bonjour,\n\nnous n’avons pas pu prélever une facture malgré plusieurs tentatives ; ton espace de travail est donc en lecture seule, la lecture et l’export restent possibles. Merci de régulariser le paiement :\n{link}"
         }
+      },
+      "priceChange": {
+        "per_user": {
+          "subject": "Changement de tarif GoodWorkshop à partir du {from}",
+          "body": "Bonjour,\n\nà partir du {from}, GoodWorkshop coûte {price} € HT par utilisateur et par mois. Jusque-là, le tarif actuel s'applique.\n\nSi vous n'êtes pas d'accord, vous pouvez résilier le contrat jusqu'au {from}, avec effet à la date du changement :\n{link}"
+        },
+        "per_workshop": {
+          "subject": "Changement de tarif GoodWorkshop à partir du {from}",
+          "body": "Bonjour,\n\nà partir du {from}, GoodWorkshop coûte {price} € HT par atelier créé. Jusque-là, le tarif actuel s'applique.\n\nSi vous n'êtes pas d'accord, vous pouvez résilier le contrat jusqu'au {from}, avec effet à la date du changement :\n{link}"
+        }
+      },
+      "terms_change": {
+        "subject": "Nouvelles conditions à partir du {from}",
+        "body": "Bonjour,\n\nnous avons modifié nos conditions. La nouvelle version ({version}) s'applique à partir du {from} ; jusque-là, l'actuelle reste en vigueur.\n\nLe texte complet se trouve sur goodworkshop.org. Si la modification change vos droits ou obligations de façon non négligeable, vous pouvez résilier jusqu'au {from} :\n{link}"
       }
     }
   },
@@ -688,6 +702,8 @@
       "payment_blocked": "Cet espace est bloqué en raison d'une facture impayée. Vos ateliers restent exportables ; dès que le paiement aboutit, il se rouvre de lui-même.",
       "paused": "Cet espace de travail est en pause. Le contenu peut être lu mais pas modifié.",
       "deleting": "Cet espace de travail sera supprimé le {date}. D’ici là, il peut être lu et exporté.",
+      "priceChange": "De nouveaux tarifs s'appliquent à partir du {date}. Rien ne change d'ici là.",
+      "termsChange": "De nouvelles conditions s'appliquent à partir du {date}. Jusque-là, les actuelles restent en vigueur.",
       "toBilling": "Vers la facturation"
     }
   },

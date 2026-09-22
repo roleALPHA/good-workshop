@@ -22,7 +22,13 @@ export async function sendNotice(notice: Notice, locale: Locale = 'de'): Promise
 export function noticeMail(notice: Notice, locale: Locale): Mail {
   const t = translator(
     locale,
-    `mail.billing.${notice.kind === 'read_only' ? `readOnly.${notice.reason}` : notice.kind}`,
+    `mail.billing.${
+      notice.kind === 'read_only'
+        ? `readOnly.${notice.reason}`
+        : notice.kind === 'price_change'
+          ? `priceChange.${notice.plan}`
+          : notice.kind
+    }`,
   )
   const link = new URL('/admin/billing', authConfig.appUrl).toString()
   const params: Record<string, string | number> = { link }

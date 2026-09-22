@@ -48,6 +48,8 @@ export type Notice = { to: string; locale: Locale } & (
   | { kind: 'dunning'; blockOn: Date }
   | { kind: 'payment_blocked' }
   | { kind: 'unblocked' }
+  | { kind: 'price_change'; plan: PlanKey; netCents: number; from: string }
+  | { kind: 'terms_change'; document: string; version: string; from: string }
 )
 
 export type RunOptions = {
@@ -113,6 +115,7 @@ export async function syncPlanPrices(
         [plan, netCents, from],
       )
       options.log('billing: price change recorded', { plan, netCents, from })
+      await announcePriceChange(db, plan, netCents, from, options)
     }
     await db.query(`update plan_price_sync set checked_at = now(), last_error = null`)
   } catch (error) {
@@ -120,6 +123,128 @@ export async function syncPlanPrices(
     await db.query(`update plan_price_sync set last_error = $1`, [message])
     options.log('billing: could not read prices from accounting', { error: message })
   }
+}
+
+/**
+ * Tells everybody it concerns, once, six weeks before it applies.
+ *
+ * AGB § 4.7 promises the notice and a right to end the contract over it, and
+ * neither is worth anything if nobody is told. Once per workspace and per
+ * announced month: the run passes every ten minutes, and `plan_price` is
+ * updated rather than appended when accounting corrects itself before the date
+ * arrives.
+ */
+async function announcePriceChange(
+  db: Db,
+  plan: PlanKey,
+  netCents: number,
+  from: string,
+  options: RunOptions,
+) {
+  const { rows } = await db.query(
+    `select b.tenant_id, b.billing_email, b.locale
+       from billing_account b
+       join tenant_lifecycle l on l.tenant_id = b.tenant_id
+      where b.plan = $1 and l.state not in ('deleting')
+        and not exists (select 1 from price_change_notice n
+                         where n.tenant_id = b.tenant_id and n.plan = $1 and n.effective_from = $2)`,
+    [plan, from],
+  )
+
+  for (const tenant of rows) {
+    const marked = await db.query(
+      `insert into price_change_notice (tenant_id, plan, effective_from, net_cents)
+       values ($1, $2, $3, $4) on conflict do nothing returning tenant_id`,
+      [tenant.tenant_id, plan, from, netCents],
+    )
+    if (!marked.rowCount) continue
+    await announce(options, {
+      kind: 'price_change',
+      to: tenant.billing_email,
+      locale: localeOf(tenant.locale),
+      plan,
+      netCents,
+      from,
+    })
+  }
+}
+
+/**
+ * A new version of a legal text, announced to everybody it binds.
+ *
+ * Started by an operator rather than by a deploy: publishing a text and putting
+ * it into force are two decisions, and the second one carries a date the
+ * customer can object until (AGB § 14.3 and § 14.4).
+ */
+/**
+ * Announcements an operator has made and the run has not yet sent.
+ *
+ * The decision is a row in `legal_announcement`; this is the step that turns it
+ * into mail. Marked as done with what it actually told, so an interrupted run
+ * picks up the rest rather than starting over -- `legal_acknowledgement` has a
+ * unique key per workspace and version, which is what makes that safe.
+ */
+export async function pendingAnnouncements(db: Db, options: RunOptions) {
+  const { rows } = await db.query(
+    `select id, document, version, effective_from from legal_announcement
+      where completed_at is null order by created_at`,
+  )
+  for (const announcement of rows) {
+    const told = await announceTermsChange(
+      db,
+      announcement.document,
+      announcement.version,
+      viennaDay(announcement.effective_from),
+      options,
+    )
+    await db.query(`update legal_announcement set completed_at = now(), told = $2 where id = $1`, [
+      announcement.id,
+      told,
+    ])
+    options.log('billing: terms change announced', {
+      document: announcement.document,
+      version: announcement.version,
+      told,
+    })
+  }
+}
+
+export async function announceTermsChange(
+  db: Db,
+  document: string,
+  version: string,
+  effectiveFrom: string,
+  options: RunOptions,
+): Promise<number> {
+  const { rows } = await db.query(
+    `select b.tenant_id, b.billing_email, b.locale
+       from billing_account b
+       join tenant_lifecycle l on l.tenant_id = b.tenant_id
+      where l.state not in ('deleting')
+        and not exists (select 1 from legal_acknowledgement a
+                         where a.tenant_id = b.tenant_id and a.document = $1 and a.version = $2)`,
+    [document, version],
+  )
+
+  let told = 0
+  for (const tenant of rows) {
+    const marked = await db.query(
+      `insert into legal_acknowledgement (tenant_id, document, version, effective_from)
+       values ($1, $2, $3, $4) on conflict do nothing returning tenant_id`,
+      [tenant.tenant_id, document, version, effectiveFrom],
+    )
+    if (!marked.rowCount) continue
+    told += 1
+    await announce(options, {
+      kind: 'terms_change',
+      to: tenant.billing_email,
+      locale: localeOf(tenant.locale),
+      document,
+      version,
+      from: effectiveFrom,
+    })
+  }
+  return told
 }
 
 // ── 1. Closing a month ─────────────────────────────────────────────────────
@@ -898,6 +1023,7 @@ export async function runBilling(
   await trialTransitions(db, options)
   await contractTransitions(db, options)
   await dunningTransitions(db, options)
+  await pendingAnnouncements(db, options)
   // Before closing a month: that month is billed at a price this step may have
   // recorded, and the freshness of the answer decides whether we still sell.
   if (adapters) await syncPlanPrices(db, adapters, options)

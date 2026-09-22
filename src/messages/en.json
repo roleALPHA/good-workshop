@@ -663,6 +663,20 @@
           "subject": "Your workspace is read-only",
           "body": "Hello,\n\nwe could not collect an invoice even after several attempts, so your workspace is read-only; reading and exporting still work. Please settle the payment:\n{link}"
         }
+      },
+      "priceChange": {
+        "per_user": {
+          "subject": "GoodWorkshop price change from {from}",
+          "body": "Hello,\n\nfrom {from} GoodWorkshop costs {price} € net per user and month. Until then the current price applies.\n\nIf you do not agree, you can end the contract until {from}, effective from the day the change takes effect:\n{link}"
+        },
+        "per_workshop": {
+          "subject": "GoodWorkshop price change from {from}",
+          "body": "Hello,\n\nfrom {from} GoodWorkshop costs {price} € net per workshop created. Until then the current price applies.\n\nIf you do not agree, you can end the contract until {from}, effective from the day the change takes effect:\n{link}"
+        }
+      },
+      "terms_change": {
+        "subject": "New terms from {from}",
+        "body": "Hello,\n\nwe have changed our terms. The new version ({version}) applies from {from}; until then the current one does.\n\nThe full text is at goodworkshop.org. If the change alters your rights or obligations more than insignificantly, you can end the contract until {from}:\n{link}"
       }
     }
   },
@@ -688,6 +702,8 @@
       "payment_blocked": "This workspace is blocked over an unpaid invoice. Your workshops can still be exported; once the payment goes through, it opens again by itself.",
       "paused": "This workspace is paused. Content can be read but not changed.",
       "deleting": "This workspace will be deleted on {date}. Until then it can be read and exported.",
+      "priceChange": "New prices apply from {date}. Nothing changes until then.",
+      "termsChange": "New terms apply from {date}. Until then the current ones do.",
       "toBilling": "Go to billing"
     }
   },

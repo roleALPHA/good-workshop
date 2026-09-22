@@ -663,6 +663,20 @@
           "subject": "Dein Workspace ist schreibgeschützt",
           "body": "Hallo,\n\nwir konnten eine Rechnung auch nach mehreren Versuchen nicht einziehen. Dein Workspace ist deshalb schreibgeschützt; lesen und exportieren geht weiterhin. Bitte kläre die Zahlung:\n{link}"
         }
+      },
+      "priceChange": {
+        "per_user": {
+          "subject": "Preisänderung bei GoodWorkshop ab {from}",
+          "body": "Hallo,\n\nab {from} kostet GoodWorkshop {price} € netto pro Nutzer und Monat. Bis dahin gilt der bisherige Preis.\n\nWenn du damit nicht einverstanden bist, kannst du den Vertrag bis zum {from} zum Zeitpunkt des Wirksamwerdens kündigen:\n{link}"
+        },
+        "per_workshop": {
+          "subject": "Preisänderung bei GoodWorkshop ab {from}",
+          "body": "Hallo,\n\nab {from} kostet GoodWorkshop {price} € netto pro angelegtem Workshop. Bis dahin gilt der bisherige Preis.\n\nWenn du damit nicht einverstanden bist, kannst du den Vertrag bis zum {from} zum Zeitpunkt des Wirksamwerdens kündigen:\n{link}"
+        }
+      },
+      "terms_change": {
+        "subject": "Neue Vertragsbedingungen ab {from}",
+        "body": "Hallo,\n\nwir haben unsere Bedingungen geändert. Die neue Fassung ({version}) gilt ab dem {from}; bis dahin gilt die bisherige.\n\nDen vollständigen Text findest du unter goodworkshop.org. Wenn die Änderung deine Rechte oder Pflichten nicht nur unwesentlich verändert, kannst du den Vertrag bis zum {from} kündigen:\n{link}"
       }
     }
   },
@@ -688,6 +702,8 @@
       "payment_blocked": "Dieser Workspace ist wegen einer offenen Zahlung gesperrt. Deine Workshops lassen sich weiterhin exportieren; sobald die Zahlung durch ist, geht es von selbst weiter.",
       "paused": "Dieser Workspace ist pausiert. Inhalte lassen sich lesen, aber nicht ändern.",
       "deleting": "Dieser Workspace wird am {date} gelöscht. Bis dahin lässt er sich lesen und exportieren.",
+      "priceChange": "Ab dem {date} gelten neue Preise. Bis dahin ändert sich nichts.",
+      "termsChange": "Ab dem {date} gelten neue Vertragsbedingungen. Bis dahin gelten die bisherigen.",
       "toBilling": "Zur Abrechnung"
     }
   },

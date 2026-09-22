@@ -5,7 +5,11 @@ import type { BillingAdapters, IssuedInvoice, PaymentEvent } from '../ports'
  * can say what was sent where, and lets a test decide how a charge ends.
  */
 export function fakeAdapters(
-  options: { chargeOutcome?: 'succeeded' | 'processing' | 'failed' } = {},
+  options: {
+    chargeOutcome?: 'succeeded' | 'processing' | 'failed'
+    /** What accounting says a plan costs, when a test is about a price change. */
+    planPrices?: Partial<Record<'per_user' | 'per_workshop', number>>
+  } = {},
 ) {
   const customers = new Map<string, string>()
   const invoices = new Map<string, IssuedInvoice & { lines: unknown; tax: unknown }>()
@@ -14,8 +18,8 @@ export function fakeAdapters(
   let outcome = options.chargeOutcome ?? 'succeeded'
 
   const prices = new Map<string, number>([
-    ['per_user', 500],
-    ['per_workshop', 100],
+    ['per_user', options.planPrices?.per_user ?? 500],
+    ['per_workshop', options.planPrices?.per_workshop ?? 100],
   ])
 
   const adapters: BillingAdapters = {
