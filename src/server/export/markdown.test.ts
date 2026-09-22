@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest'
 import { createDemoDay } from '@/features/agenda/fixtures/day-fixture'
-import { renderDayMarkdown } from './markdown'
+import { renderDayMarkdown, renderWorkshopMarkdown } from './markdown'
 import { ATTRIBUTION_MARKDOWN } from '@/lib/attribution'
 
 /**
@@ -115,5 +115,52 @@ describe('renderDayMarkdown', () => {
     expect(out).toContain(
       '[Apache-2.0 + Commons Clause](https://github.com/roleALPHA/good-workshop/blob/main/LICENSE)',
     )
+  })
+})
+
+describe('renderWorkshopMarkdown', () => {
+  const twoDays = () => [
+    { ...createDemoDay(), title: 'Auftakt', date: '2026-10-05' },
+    { ...createDemoDay(), title: 'Vertiefung', date: '2026-10-06' },
+  ]
+
+  it('puts every day in one file, under the workshop', () => {
+    const markdown = renderWorkshopMarkdown({ ...meta, folderPath: ['Kunden', 'Acme'] }, twoDays())
+    expect(markdown).toMatchSnapshot()
+  })
+
+  /**
+   * The day heading is `##`, and a cluster inside a day used to be `##` as
+   * well. Left alone, a cluster would read as a sibling of the day it is in --
+   * and the outline of a two-day workshop would come out flat.
+   */
+  it('moves a day’s own headings one level down', () => {
+    const single = renderDayMarkdown(meta, createDemoDay(), { flavor: 'outline' })
+    const inWorkshop = renderWorkshopMarkdown(meta, [createDemoDay()], { flavor: 'outline' })
+
+    const clusterOnItsOwn = single.match(/^## (?!Details).+$/m)
+    expect(clusterOnItsOwn).not.toBeNull()
+    expect(inWorkshop).toContain(`###${clusterOnItsOwn![0].slice(2)}`)
+  })
+
+  it('names a day that has neither title nor date by its number', () => {
+    const markdown = renderWorkshopMarkdown(meta, [{ ...createDemoDay(), title: '', date: null }])
+    expect(markdown).toContain('## Tag 1')
+  })
+
+  it('answers with the workshop rather than an error when it has no day at all', () => {
+    const markdown = renderWorkshopMarkdown(meta, [])
+    expect(markdown).toContain('# Design Sprint Kickoff')
+    expect(markdown).toContain(ATTRIBUTION_MARKDOWN.split('\n')[0]!)
+  })
+
+  it('carries the folder and the tags into the frontmatter', () => {
+    const markdown = renderWorkshopMarkdown({ ...meta, folderPath: ['Kunden', 'Acme'] }, twoDays())
+    expect(markdown).toContain('folder: "Kunden / Acme"')
+    expect(markdown).toContain('tags: ["design-sprint", "acme"]')
+    expect(markdown).toContain('days: 2')
+    expect(markdown).toContain('dates: ["2026-10-05", "2026-10-06"]')
+    // The scalar `date` belongs to a single day; with two, it would name one.
+    expect(markdown).not.toMatch(/^date: /m)
   })
 })

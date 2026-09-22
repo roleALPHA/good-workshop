@@ -319,6 +319,27 @@ test('carries facilitation notes into a handover only when asked', async ({ page
   await expect(markdown).not.toHaveAttribute('href', /notes=1/)
 })
 
+/**
+ * The other half of the same question: not "who is this copy for" but "how much
+ * of it". Both links have to follow the scope, or somebody hands over one day
+ * of a three-day workshop believing they sent the lot.
+ */
+test('hands over the whole workshop when the scope says so', async ({ page }) => {
+  const markdown = page.getByRole('link', { name: 'Markdown' })
+  const print = page.getByRole('link', { name: 'Drucken' })
+
+  await expect(markdown).toHaveAttribute('href', /\/d\/[^/]+\/export$/)
+
+  await page.getByLabel('Ganzer Workshop').check()
+
+  await expect(markdown).toHaveAttribute('href', /\/api\/w\/[^/]+\/export$/)
+  await expect(print).toHaveAttribute('href', /\/print\/w\/[^/]+$/)
+
+  const response = await page.request.get((await markdown.getAttribute('href'))!)
+  expect(response.ok()).toBeTruthy()
+  expect(await response.text()).toContain('# ')
+})
+
 test('exports the day as Markdown', async ({ page }) => {
   await addBlock(page, 'Gruppenarbeit')
 

@@ -296,7 +296,11 @@ test.describe('filing things by dragging them', () => {
     await page.mouse.up()
 
     // It says where the workshop sits now, and so does the row itself.
-    const row = page.getByRole('link', { name: new RegExp(workshop) }).locator('..')
+    // By href: the row's export link names the workshop too.
+    const row = page
+      .getByRole('link', { name: new RegExp(workshop) })
+      .and(page.locator('[href^="/w/"]'))
+      .locator('..')
     await expect(live(page)).toContainText(`liegt jetzt in ${folder}`)
     await expect(row).toContainText(folder)
 
@@ -367,7 +371,9 @@ test.describe('filing things by dragging them', () => {
 
     await page.getByRole('button', { name: /Ordner (ein|aus)blenden/ }).click()
     await sidebar(page).getByRole('link', { name: folder, exact: true }).click()
-    await expect(page.getByRole('link', { name: new RegExp(workshop) })).toBeVisible()
+    await expect(
+      page.getByRole('link', { name: new RegExp(workshop) }).and(page.locator('[href^="/w/"]')),
+    ).toBeVisible()
   })
 })
 

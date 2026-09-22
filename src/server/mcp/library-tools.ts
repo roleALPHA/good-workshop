@@ -22,8 +22,10 @@ import {
 } from '@/domain/workshop/repo'
 import { pruneUnusedTags, setWorkshopTags } from '@/domain/workshop/tags'
 import { deleteDayKeepingParked, roomEditor } from '@/server/collab/across-days'
+import { renderWorkshopExport } from '@/server/export/workshop'
 import { withTenant, type Tx } from '@/server/db'
 import { auditEvent } from '@/server/db/schema'
+import { DEFAULT_LOCALE, LOCALES } from '@/i18n/config'
 import { requireScope, type PatActor } from './auth'
 import { guarded, ok } from './respond'
 
@@ -461,6 +463,48 @@ export function registerLibraryTools(server: McpServer, { actor, authorization }
               .join('\n'),
             { days },
           )
+        })
+      }),
+  )
+
+  server.registerTool(
+    'export_workshop',
+    {
+      title: 'Export workshop',
+      description:
+        'The whole workshop as one Markdown document: every day, in order. ' +
+        'Use it to read a workshop as a text, to hand it on, or to keep a copy. ' +
+        'Facilitation notes are left out unless asked for.',
+      inputSchema: {
+        workshopId: Id,
+        flavor: z
+          .enum(['agenda', 'outline'])
+          .optional()
+          .describe('agenda: a table per day. outline: headings and prose. Default agenda.'),
+        locale: z
+          .enum(LOCALES)
+          .optional()
+          .describe('The language the document is written in. Default the workspace language.'),
+        notes: z
+          .boolean()
+          .optional()
+          .describe('Include the facilitator\u2019s private notes. Default false.'),
+      },
+    },
+    async ({ workshopId, flavor, locale, notes }) =>
+      guarded(async () => {
+        requireScope(actor, 'workshops:read')
+        return withTenant(actor, async (tx) => {
+          // The same capability the HTTP export asks for, so a token can never
+          // read through this what its member may not open in the app.
+          const access = await assertWorkshopAccess(tx, actor, workshopId, 'workshop.export')
+          const { title, markdown } = await renderWorkshopExport(
+            tx,
+            access,
+            locale ?? DEFAULT_LOCALE,
+            { flavor: flavor ?? 'agenda', includePrivateFields: notes ?? false },
+          )
+          return ok(markdown, { title })
         })
       }),
   )

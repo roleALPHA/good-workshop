@@ -3,7 +3,7 @@
 import Link from 'next/link'
 import { useCallback, useEffect, useRef, useState, useTransition } from 'react'
 import type { WorkshopSummary } from '@/domain/workshop/repo'
-import { FolderInput, Trash2 } from 'lucide-react'
+import { Download, FolderInput, Trash2 } from 'lucide-react'
 import { ReadOnlyBadge } from '@/components/read-only-badge'
 import { loadLibrary, moveWorkshopAction, trashWorkshopAction } from '@/server/actions/workshop'
 import { useTranslations } from 'next-intl'
@@ -220,6 +220,20 @@ export function WorkshopList({
                   <FolderInput aria-hidden className="size-3.5 shrink-0" />
                   <span className="truncate">{folderName ?? t('noFolder')}</span>
                 </span>
+
+                {/* Not behind `canManage`: the contents belong to the
+                    customer, and a workspace that has gone read-only -- an
+                    expired trial, an unpaid invoice -- must still be able to
+                    take them out. The route checks `workshop.export` itself. */}
+                <Link
+                  href={`/api/w/${workshop.id}/export`}
+                  title={t('export')}
+                  aria-label={t('exportLabel', { title: workshop.title })}
+                  className={actionClass}
+                >
+                  <Download aria-hidden className="size-4" />
+                  <span className="hidden sm:inline">{t('export')}</span>
+                </Link>
 
                 {canManage && (
                   <MoveControl

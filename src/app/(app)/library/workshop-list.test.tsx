@@ -62,9 +62,18 @@ function show(
   )
 }
 
-/** The row is reached through its link: the <li> itself has no name of its own. */
+/**
+ * The row is reached through its link: the <li> itself has no name of its own.
+ *
+ * By href rather than by name alone -- the row also carries an export link, and
+ * that one names the workshop too, on purpose: "Exportieren" repeated once per
+ * row tells a screen reader nothing about which workshop it would export.
+ */
 const rowFor = (title: string): HTMLElement => {
-  const row = screen.getByRole('link', { name: new RegExp(title) }).closest('li')
+  const link = screen
+    .getAllByRole('link', { name: new RegExp(title) })
+    .find((element) => element.getAttribute('href')?.startsWith('/w/'))
+  const row = link?.closest('li')
   if (!row) throw new Error(`no row for ${title}`)
   return row
 }
@@ -229,7 +238,8 @@ describe('loading the next page as the end of the list comes into view', () => {
     await scrollToEnd()
 
     expect(loadLibrary).toHaveBeenCalledWith({ cursor: 'cursor-1' })
-    expect(await screen.findByRole('link', { name: /Zweiter Workshop/ })).toBeInTheDocument()
+    await screen.findAllByRole('link', { name: /Zweiter Workshop/ })
+    expect(rowFor('Zweiter Workshop')).toBeInTheDocument()
   })
 
   /**

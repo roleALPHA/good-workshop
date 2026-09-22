@@ -53,7 +53,9 @@ test.describe('the library on a phone', () => {
     await expect(page.getByRole('heading', { name: title })).toBeVisible()
 
     await page.goto('/library')
-    await expect(page.getByRole('link', { name: new RegExp(title) })).toBeVisible()
+    await expect(
+      page.getByRole('link', { name: new RegExp(title) }).and(page.locator('[href^="/w/"]')),
+    ).toBeVisible()
 
     const overflow = await page.evaluate(() => {
       const el = document.documentElement

@@ -4,6 +4,7 @@ import { readSession } from '@/server/auth/session'
 import { assertWorkshopAccess, ForbiddenError, NotFoundError } from '@/domain/agenda/access'
 import { loadDay } from '@/domain/agenda/repo'
 import { renderDayMarkdown } from '@/server/export/markdown'
+import { exportFilename } from '@/server/export/filename'
 import { workshop as workshopTable } from '@/server/db/schema'
 import { eq } from 'drizzle-orm'
 import { getLocale } from 'next-intl/server'
@@ -78,7 +79,7 @@ export async function GET(
     return new NextResponse(markdown, {
       headers: {
         'content-type': 'text/markdown; charset=utf-8',
-        'content-disposition': `attachment; filename="${slug(title)}.md"`,
+        'content-disposition': `attachment; filename="${exportFilename(title)}.md"`,
         /**
          * Everything that changes the bytes, not just the content version.
          *
@@ -99,35 +100,4 @@ export async function GET(
       return NextResponse.json({ error: 'forbidden' }, { status: 403 })
     throw error
   }
-}
-
-/**
- * A filename that survives every language.
- *
- * The German digraphs run FIRST and the order is load-bearing: strip the
- * diacritics first and `ü` collapses to `u`, which would silently change the
- * filename of every German export on upgrade.
- *
- * Then NFD plus removing the combining marks, which handles é, ñ, ç, à and the
- * rest. Before that, "Réunion stratégie" came out as `r-union-strat-gie`.
- *
- * Deliberately not locale-dependent: the transliteration is a property of the
- * TITLE's language, and the title is free tenant text that nobody has declared
- * a language for. Unconditional ä→ae never corrupts a French title -- ä and ö
- * appear in French only in loanwords -- and it keeps one code path.
- */
-function slug(title: string): string {
-  return (
-    title
-      .toLowerCase()
-      .replaceAll('ä', 'ae')
-      .replaceAll('ö', 'oe')
-      .replaceAll('ü', 'ue')
-      .replaceAll('ß', 'ss')
-      .normalize('NFD')
-      .replace(/\p{Diacritic}/gu, '')
-      .replace(/[^a-z0-9]+/g, '-')
-      .replace(/^-|-$/g, '')
-      .slice(0, 60) || 'workshop'
-  )
 }
