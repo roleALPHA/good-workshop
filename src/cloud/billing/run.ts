@@ -897,6 +897,7 @@ export async function runBilling(
   await recheckPendingVat(db, check, options)
   await trialTransitions(db, options)
   await contractTransitions(db, options)
+  await dunningTransitions(db, options)
   // Before closing a month: that month is billed at a price this step may have
   // recorded, and the freshness of the answer decides whether we still sell.
   if (adapters) await syncPlanPrices(db, adapters, options)
