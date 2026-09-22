@@ -327,7 +327,7 @@ jobs:
           test -e ".next/server/app/(app)/admin/billing/page.js"
           test -e ".next/server/app/(app)/admin/billing/rechnung/[month]/route.js"
           test -e .next/server/app/operator/page.js
-          test -e ".next/server/app/operator/login/[token]/page.js"
+          test -e ".next/server/app/operator/login/[token]/route.js"
           test -e ".next/server/app/api/billing/webhook/route.js"
           grep -q "adapters-from-the-private-build" dist/billing-worker.mjs
 
