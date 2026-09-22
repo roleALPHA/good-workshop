@@ -2,7 +2,7 @@
 
 # Datenschutzerklärung
 
-Stand: 18. September 2026
+Stand: 22. September 2026
 
 ## Verantwortlicher
 
@@ -38,6 +38,8 @@ Stripe und Microsoft können Daten auch in den USA verarbeiten. Die Übermittlun
 ## Speicherdauer
 
 Kontodaten speichern wir für die Dauer des Vertrags. Inhalte löschen wir spätestens 30 Tage nach Vertragsende. Buchhaltungs- und Steuerunterlagen bewahren wir sieben Jahre auf (§ 132 BAO), in den gesetzlich vorgesehenen Fällen länger.
+
+Was darüber hinaus anfällt, löschen wir automatisch: abgelaufene Anmeldelinks und Einladungen nach 30 Tagen, abgelaufene oder widerrufene Sitzungen nach 30 Tagen, Protokolleinträge über Zugriffe und Änderungen im Workspace nach einem Jahr. Server-Protokolle löschen wir nach 14 Tagen.
 
 ## Ihre Rechte
 

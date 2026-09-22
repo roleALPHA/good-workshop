@@ -15,6 +15,7 @@ import {
   recheckPendingVat,
   dunningTransitions,
   runBilling,
+  sweepExpired,
   syncPlanPrices,
   trialTransitions,
   type Notice,
@@ -940,5 +941,51 @@ describe('announcing a change six weeks ahead', () => {
     notices = []
     await announceTermsChange(ops, 'agb', version, '2027-01-01', options())
     expect(notices.filter((n) => n.to === mine)).toEqual([])
+  })
+})
+
+/**
+ * Storage limitation, which the documentation used to hand to the operator.
+ *
+ * That is a fair answer for a self-hosted installation, where the operator is
+ * the controller. In the cloud we are the processor and the sentence was a gap:
+ * expired rows were treated as invalid when read and kept for ever.
+ */
+describe('sweeping what has expired', () => {
+  it('deletes rows past their period and leaves the ones inside it', async () => {
+    const id = await tenant()
+    const old = new Date(APRIL_2.getTime() - 400 * 86_400_000)
+    const recent = new Date(APRIL_2.getTime() - 2 * 86_400_000)
+
+    await ops.query(
+      `insert into audit_event (tenant_id, actor_member_id, source, action, entity_type, entity_id, created_at)
+       values ($1, null, 'web', 'workshop.create', 'workshop', $2, $3),
+              ($1, null, 'web', 'workshop.create', 'workshop', $4, $5)`,
+      [id, randomUUID(), old, randomUUID(), recent],
+    )
+
+    await sweepExpired(ops, options())
+
+    const { rows } = await ops.query(
+      'select created_at from audit_event where tenant_id = $1 order by created_at',
+      [id],
+    )
+    expect(rows).toHaveLength(1)
+    expect(rows[0].created_at.getTime()).toBe(recent.getTime())
+  })
+
+  it('does nothing at all in a dry run', async () => {
+    const id = await tenant()
+    const old = new Date(APRIL_2.getTime() - 400 * 86_400_000)
+    await ops.query(
+      `insert into audit_event (tenant_id, actor_member_id, source, action, entity_type, entity_id, created_at)
+       values ($1, null, 'web', 'workshop.create', 'workshop', $2, $3)`,
+      [id, randomUUID(), old],
+    )
+
+    await sweepExpired(ops, options({ mode: 'dry_run' }))
+
+    const { rows } = await ops.query('select 1 from audit_event where tenant_id = $1', [id])
+    expect(rows).toHaveLength(1)
   })
 })
