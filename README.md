@@ -392,7 +392,12 @@ silent. Each of those is a script, and each is meant to be a systemd timer:
 | `scripts/backup-freshness.sh` | is anything still being backed up at all   | **on a different machine**, daily      |
 
 The third one is on a different machine on purpose: run it beside the thing it watches and the
-watching stops with the host it was supposed to notice.
+watching stops with the host it was supposed to notice. It also works **without** the repository
+password, and that is the case worth having: it then reads how old the newest file in the
+repository's `snapshots/` directory is, which answers "is anything still being backed up" completely.
+Whether the repository itself is sound is what `restic check` answers in the backup run. A watcher
+that needs no secret may run on a machine that must not be able to read the backups — which is the
+whole reason it runs elsewhere.
 
 All three read `/etc/ra-backup/nas.conf` (or `$GW_BACKUP_CONF`):
 

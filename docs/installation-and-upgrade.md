@@ -116,7 +116,9 @@ dump on the same disk cannot:
   data processing agreement makes a promise about.
 - `scripts/backup-freshness.sh` — looks at the age of the newest snapshot and fails when it is too
   old or the repository does not answer. **Run it on a different machine than the one it watches**,
-  or the watching stops with the host it was meant to notice.
+  or the watching stops with the host it was meant to notice. Leave `RESTIC_PASSWORD_FILE` out of
+  its configuration and it reads the age straight from the repository directory instead — then the
+  watching machine holds no key to the backups it watches.
 
 The README has the systemd units and the configuration file. Whatever retention you set, write the
 same numbers into your privacy policy: a retention period is a promise, and one that exists only in
