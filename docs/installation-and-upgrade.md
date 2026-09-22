@@ -100,6 +100,28 @@ The bypass is defensible here because it **only reads**. Provisioning deliberate
 differently: it sets the tenant context and writes through the same door as the application. A
 provisioning path with a bypass role is one that quietly writes into the wrong tenant.
 
+## Backups that are somewhere else
+
+`scripts/backup.sh` produces a checkable dump. Three scripts beside it answer the questions a
+dump on the same disk cannot:
+
+- `scripts/backup-offsite.sh` — packs the dump, the application key and the stack's configuration
+  into one archive and pushes it into a restic repository. Encrypted before it leaves, deduplicated,
+  and rotated 14 daily / 8 weekly / 12 monthly. If the configuration is missing it still writes the
+  local archive but **exits with an error**: silently skipping is how one ends up believing in a
+  backup that is not there.
+- `scripts/backup-verify.sh` — restores the newest snapshot into a throwaway database, runs the
+  migrations against it and counts rows. `restic check` answers whether the backup is still
+  _readable_; this answers whether it comes _back_, which is a different question and the one the
+  data processing agreement makes a promise about.
+- `scripts/backup-freshness.sh` — looks at the age of the newest snapshot and fails when it is too
+  old or the repository does not answer. **Run it on a different machine than the one it watches**,
+  or the watching stops with the host it was meant to notice.
+
+The README has the systemd units and the configuration file. Whatever retention you set, write the
+same numbers into your privacy policy: a retention period is a promise, and one that exists only in
+a script is one nobody can read.
+
 ## Upgrade
 
 ```bash
