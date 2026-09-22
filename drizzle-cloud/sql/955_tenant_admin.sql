@@ -23,7 +23,9 @@ begin
 end;
 $$;
 
--- Applied by the billing run when the current month is closed.
+-- Chosen now, in force on the first of the coming month -- the run applies it
+-- when that date has arrived, not on its next pass. Choosing the plan that is
+-- already in force withdraws a pending change instead of queueing one.
 create or replace function app.cloud_change_plan(p_plan text)
 returns void
 language plpgsql
@@ -34,6 +36,10 @@ declare tenant uuid := app.cloud_assert_tenant_admin();
 begin
   update billing_account
      set next_plan = case when plan = p_plan then null else p_plan end,
+         next_plan_from = case
+           when plan = p_plan then null
+           else (date_trunc('month', now() at time zone 'Europe/Vienna') + interval '1 month')::date
+         end,
          updated_at = now()
    where tenant_id = tenant;
 end;
