@@ -110,8 +110,8 @@ dump on the same disk cannot:
   and rotated 14 daily / 8 weekly / 12 monthly. If the configuration is missing it still writes the
   local archive but **exits with an error**: silently skipping is how one ends up believing in a
   backup that is not there.
-- `scripts/backup-verify.sh` — restores the newest snapshot into a throwaway database, runs the
-  migrations against it and counts rows. `restic check` answers whether the backup is still
+- `scripts/backup-verify.sh` — restores the newest snapshot into a throwaway Postgres container,
+  creates the database roles a dump cannot carry, reads the dump in and counts rows. `restic check` answers whether the backup is still
   _readable_; this answers whether it comes _back_, which is a different question and the one the
   data processing agreement makes a promise about.
 - `scripts/backup-freshness.sh` — looks at the age of the newest snapshot and fails when it is too
