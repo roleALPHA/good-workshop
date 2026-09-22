@@ -3,6 +3,7 @@ import { normaliseVatId, parseSignup, vatIdRequired } from './rules'
 
 const business = {
   confirmedBusiness: true,
+  confirmedAuthority: true,
   firstName: 'Anna',
   lastName: 'Berger',
   email: ' Anna@Example.COM ',
@@ -33,6 +34,7 @@ describe('parseSignup', () => {
       vatId: 'ATU12345678',
       plan: 'per_user',
       confirmedBusiness: true,
+      confirmedAuthority: true,
       acceptedTerms: true,
       acceptedDpa: true,
     })
@@ -43,6 +45,20 @@ describe('parseSignup', () => {
       parseSignup({ ...business, confirmedBusiness: undefined, email: 'kaputt' }),
     ).toThrow('signup.business')
     expect(() => parseSignup({ ...business, confirmedBusiness: 'true' })).toThrow('signup.business')
+  })
+
+  /**
+   * AGB § 1.3 has whoever registers assure us they may sign for the company.
+   * The product never asked, so the assurance existed only in a document the
+   * person had not agreed to yet.
+   */
+  it('refuses anybody who has not said they may sign for the company', () => {
+    expect(() =>
+      parseSignup({ ...business, confirmedAuthority: undefined, email: 'kaputt' }),
+    ).toThrow('signup.authority')
+    expect(() => parseSignup({ ...business, confirmedAuthority: 'true' })).toThrow(
+      'signup.authority',
+    )
   })
 
   it.each([

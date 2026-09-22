@@ -114,6 +114,7 @@ export const DOMAIN_ERROR_KEYS = [
   'collab.unavailable',
   // Cloud registration
   'signup.business',
+  'signup.authority',
   'signup.invalidEmail',
   'signup.country',
   'signup.companyName',

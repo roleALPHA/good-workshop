@@ -69,7 +69,7 @@ begin
   insert into billing_account (
     tenant_id, customer_type, company_name, street, postal_code, city, country, vat_id,
     billing_email, plan, plan_from, terms_accepted_at, dpa_accepted_at, business_confirmed_at,
-    terms_version, dpa_version, locale
+    terms_version, dpa_version, authority_confirmed_at, locale
   ) values (
     v_tenant,
     'business',
@@ -90,6 +90,7 @@ begin
     -- to is what was on the screen.
     p ->> 'termsVersion',
     case when (p ->> 'acceptedDpa')::boolean then p ->> 'dpaVersion' end,
+    case when (p ->> 'confirmedAuthority')::boolean then s.created_at end,
     -- The language the signup was made in, so the invoice and every notice
     -- that follows are written in it.
     coalesce(p ->> 'locale', 'de')
