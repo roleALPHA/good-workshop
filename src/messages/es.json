@@ -987,7 +987,8 @@
       }
     },
     "legal": {
-      "germanOnly": "La versión en alemán es la jurídicamente vinculante."
+      "germanBinds": "Solo la versión alemana es jurídicamente vinculante. Las traducciones sirven para la comprensión.",
+      "notTranslated": "Este texto aún no está disponible en tu idioma. En cualquier caso, solo la versión alemana es vinculante."
     },
     "meta": {
       "description": "Planificación de talleres para la facilitación, en equipo y en tiempo real, conectada con IA. Prueba gratis 14 días."

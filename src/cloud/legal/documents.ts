@@ -1,5 +1,6 @@
 import { readFile } from 'node:fs/promises'
 import { join } from 'node:path'
+import { DEFAULT_LOCALE, type Locale } from '@/i18n/config'
 
 /**
  * The legal texts, by the path they are published under.
@@ -12,8 +13,28 @@ import { join } from 'node:path'
 export const LEGAL_DOCUMENTS = ['impressum', 'agb', 'datenschutz', 'avv'] as const
 export type LegalDocument = (typeof LEGAL_DOCUMENTS)[number]
 
-export async function readLegalDocument(document: LegalDocument): Promise<string> {
-  return readFile(join(process.cwd(), 'src', 'cloud', 'legal', `${document}.md`), 'utf8')
+/**
+ * One legal text, in a language.
+ *
+ * German has no suffix and the translations do (`agb.md`, `agb.en.md`), which
+ * is not only a naming convention: the German file is the binding one, and a
+ * reader of this directory should be able to see that without being told.
+ * A missing translation falls back to it rather than to nothing.
+ */
+export async function readLegalDocument(
+  document: LegalDocument,
+  locale: Locale = DEFAULT_LOCALE,
+): Promise<{ source: string; locale: Locale }> {
+  const dir = join(process.cwd(), 'src', 'cloud', 'legal')
+  if (locale !== DEFAULT_LOCALE) {
+    try {
+      return { source: await readFile(join(dir, `${document}.${locale}.md`), 'utf8'), locale }
+    } catch {
+      // A text nobody has translated yet is shown in German, with the note the
+      // page already carries. Better than a page that is not there.
+    }
+  }
+  return { source: await readFile(join(dir, `${document}.md`), 'utf8'), locale: DEFAULT_LOCALE }
 }
 
 /**
@@ -56,6 +77,13 @@ export function documentVersion(markdown: string): string {
   return `${year}-${String(index + 1).padStart(2, '0')}-${day.padStart(2, '0')}`
 }
 
+/**
+ * The version of a document, always the German one.
+ *
+ * A consent is recorded against the binding text, whatever language it was read
+ * in -- so a translation that is a day behind does not create a second version
+ * that nobody could ever find in the terms.
+ */
 export async function readLegalVersion(document: LegalDocument): Promise<string> {
-  return documentVersion(await readLegalDocument(document))
+  return documentVersion((await readLegalDocument(document)).source)
 }

@@ -1,8 +1,6 @@
-<!-- Vor Veröffentlichung rechtlich prüfen lassen. -->
-
 # Impressum
 
-Stand: 18. September 2026
+Stand: 22. September 2026
 
 Informationen gemäß § 5 E-Commerce-Gesetz (ECG), § 14 Unternehmensgesetzbuch (UGB) und Offenlegung gemäß § 25 Mediengesetz.
 
@@ -29,3 +27,5 @@ Medieninhaber: roleALPHA GmbH, Aschergasse 34, 1130 Wien, vertreten durch Oskar 
 ## Kundenkreis
 
 GoodWorkshop Cloud wird ausschließlich Unternehmern im Sinne des § 1 UGB angeboten.
+
+Diese Fassung wird auch in weiteren Sprachen bereitgestellt. Maßgeblich und rechtsverbindlich ist ausschließlich die deutsche Fassung; Übersetzungen dienen dem Verständnis.

@@ -990,7 +990,8 @@ declare const messages: {
       }
     },
     "legal": {
-      "germanOnly": "Rechtlich verbindlich ist die deutsche Fassung."
+      "germanBinds": "Rechtsverbindlich ist ausschließlich diese deutsche Fassung. Übersetzungen dienen dem Verständnis.",
+      "notTranslated": "Dieser Text liegt noch nicht in deiner Sprache vor. Rechtsverbindlich ist ohnehin ausschließlich die deutsche Fassung."
     },
     "meta": {
       "description": "Workshopplanung für Moderation und Facilitation, gemeinsam in Echtzeit und mit KI verbunden. 14 Tage kostenlos testen."

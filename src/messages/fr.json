@@ -987,7 +987,8 @@
       }
     },
     "legal": {
-      "germanOnly": "Seule la version allemande fait foi."
+      "germanBinds": "Seule la version allemande fait foi. Les traductions servent à la compréhension.",
+      "notTranslated": "Ce texte n'existe pas encore dans votre langue. De toute façon, seule la version allemande fait foi."
     },
     "meta": {
       "description": "Planification d’ateliers pour la facilitation, ensemble en temps réel et connectée à l’IA. Essai gratuit de 14 jours."

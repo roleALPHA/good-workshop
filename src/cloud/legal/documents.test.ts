@@ -1,4 +1,6 @@
 import { createHash } from 'node:crypto'
+import { readdirSync } from 'node:fs'
+import { join } from 'node:path'
 import { describe, expect, it } from 'vitest'
 import {
   LEGAL_DOCUMENTS,
@@ -7,6 +9,7 @@ import {
   readLegalVersion,
   type LegalDocument,
 } from './documents'
+import { DEFAULT_LOCALE, LOCALES, type Locale } from '@/i18n/config'
 
 /**
  * The published wording and the version it is filed under, held together.
@@ -20,21 +23,36 @@ import {
  */
 const PUBLISHED: Record<LegalDocument, { version: string; sha256: string }> = {
   impressum: {
-    version: '2026-09-18',
-    sha256: 'b77a0140446dfe4478ca8be7fbf995cc71c1abf707c3a1a011dfd5959df91732',
+    version: '2026-09-22',
+    sha256: 'a2a6034179905f560a927ad463db8e8f90be1a676fde6b91dbe4e265272aadce',
   },
   agb: {
-    version: '2026-09-18',
-    sha256: '1a1de81de81516acfe5048e1c6b7860679993fdbcfc67572b2f0608bc89e592e',
+    version: '2026-09-22',
+    sha256: '6c0cecd3982b69c16cca7bb79f0cbbbb08c493a599819bea36d9b8444041d3eb',
   },
   datenschutz: {
     version: '2026-09-22',
-    sha256: 'd4280ee5615e23965b65968e72d8c1c0b2de9424a4eb762f0fd009d7f4d58b99',
+    sha256: '4a2152bd47da7f9d6e7103cfee3333950093926504bfa2d6ea4454fe97c92178',
   },
   avv: {
-    version: '2026-09-18',
-    sha256: '656685db6ddcc2f720a9350f1949fb05a98270d071264a406f31e545d06a53a7',
+    version: '2026-09-22',
+    sha256: '04971359f15288f79f9720bebf1c6628d161c67441e3bf278fac56241f977599',
   },
+}
+
+/**
+ * The sentence every translation has to carry, in its own language.
+ *
+ * Only the German wording binds. A translation that does not say so is worse
+ * than no translation: somebody reads it, acts on it, and finds out afterwards
+ * that the version they read was never the contract. The test is over the
+ * FILES rather than over the ones we happen to have today, so the next language
+ * cannot be added without it.
+ */
+const BINDING_NOTICE: Record<Exclude<Locale, 'de'>, RegExp> = {
+  en: /Only the German version .* is legally binding/,
+  fr: /Seule la version allemande .* fait foi/,
+  es: /Solo la versión alemana .* es jurídicamente vinculante/,
 }
 
 describe('the version of a legal text', () => {
@@ -61,11 +79,49 @@ describe('every published text', () => {
 
   it.each(LEGAL_DOCUMENTS)('%s is the wording that version stands for', async (document) => {
     const digest = createHash('sha256')
-      .update(await readLegalDocument(document))
+      .update((await readLegalDocument(document)).source)
       .digest('hex')
     expect(
       digest,
       `${document}.md changed. Date the change in its "Stand:" line and update both lines in PUBLISHED.`,
     ).toBe(PUBLISHED[document].sha256)
+  })
+})
+
+describe('every translation', () => {
+  const files = readdirSync(join(process.cwd(), 'src', 'cloud', 'legal')).filter((name) =>
+    /\.[a-z]{2}\.md$/.test(name),
+  )
+
+  it('exists for every document and every language the application carries', () => {
+    const wanted = LEGAL_DOCUMENTS.flatMap((document) =>
+      LOCALES.filter((locale) => locale !== DEFAULT_LOCALE).map(
+        (locale) => `${document}.${locale}.md`,
+      ),
+    )
+    expect(files.sort()).toEqual(wanted.sort())
+  })
+
+  it.each(
+    LEGAL_DOCUMENTS.flatMap((document) =>
+      LOCALES.filter((locale) => locale !== DEFAULT_LOCALE).map(
+        (locale) => [document, locale] as const,
+      ),
+    ),
+  )('%s in %s says that only the German version binds', async (document, locale) => {
+    const { source, locale: served } = await readLegalDocument(document, locale)
+    expect(served).toBe(locale)
+    expect(
+      source,
+      `${document}.${locale}.md has to say that only the German version binds.`,
+    ).toMatch(BINDING_NOTICE[locale as Exclude<Locale, 'de'>])
+  })
+
+  it('falls back to German for a language nothing was translated into', async () => {
+    // Not a language the application carries: the loader answers with the
+    // binding text rather than with nothing.
+    const { source, locale } = await readLegalDocument('agb', 'it' as Locale)
+    expect(locale).toBe(DEFAULT_LOCALE)
+    expect(source).toContain('Allgemeine Geschäftsbedingungen')
   })
 })
