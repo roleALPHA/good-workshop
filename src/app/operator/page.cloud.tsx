@@ -36,7 +36,11 @@ export default async function OperatorHome({
       <div className="flex flex-wrap items-center justify-between gap-3">
         <h1 className="text-xl font-semibold tracking-tight">{t('tenants.title')}</h1>
         <p className="text-[14px] text-[var(--fg-muted)]">
-          {operator.displayName} · <SignOut />
+          {operator.displayName} ·{' '}
+          <Link href={'/operator/security' as Route} className="underline underline-offset-2">
+            {t('passkeys.title')}
+          </Link>{' '}
+          · <SignOut />
         </p>
       </div>
       <form className="mt-4 flex flex-wrap gap-2">

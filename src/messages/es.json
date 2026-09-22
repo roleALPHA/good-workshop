@@ -1015,6 +1015,21 @@
       "linkPending": "Iniciando sesión …",
       "linkInvalid": "Este enlace no es válido, ha caducado o ya se ha usado."
     },
+    "passkeys": {
+      "title": "Seguridad",
+      "intro": "Passkeys de {email}. La passkey es la vía de entrada; el enlace por correo es la vuelta cuando no hay ningún dispositivo con passkey a mano.",
+      "none": "Todavía no hay ninguna passkey. Hasta entonces solo se entra con el enlace por correo.",
+      "add": "Configurar passkey",
+      "adding": "Configurando …",
+      "failed": "No ha funcionado. Inténtalo de nuevo.",
+      "created": "Creada el {when}",
+      "lastUsed": "Último uso: {when}",
+      "never": "nunca",
+      "remove": "Quitar",
+      "removeConfirm": "Quitar de verdad",
+      "cancel": "Cancelar",
+      "back": "Volver a los workspaces"
+    },
     "tenants": {
       "title": "Espacios de trabajo",
       "search": "Buscar por nombre o correo",

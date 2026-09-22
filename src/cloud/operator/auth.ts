@@ -125,6 +125,137 @@ export async function completeEnrollment(
   return operator
 }
 
+// ── Passkeys of a signed-in operator ─────────────────────────────────────────
+
+export type Passkey = {
+  credentialId: string
+  createdAt: Date
+  lastUsedAt: Date | null
+}
+
+export async function listPasskeys(db: Db, operatorId: string): Promise<Passkey[]> {
+  const { rows } = await db.query(
+    `select credential_id, created_at, last_used_at from operator_credential
+      where operator_id = $1 order by created_at`,
+    [operatorId],
+  )
+  return rows.map((row) => ({
+    credentialId: row.credential_id,
+    createdAt: row.created_at,
+    lastUsedAt: row.last_used_at,
+  }))
+}
+
+/**
+ * A second (or first) passkey for an operator who is already signed in.
+ *
+ * Enrollment through a one-time link covers the very first device, when nobody
+ * can sign in yet. Afterwards this is the way: somebody who came in by mail
+ * adds the passkey themselves, rather than asking for a shell on the server --
+ * which is what made the mail link a replacement for the passkey instead of a
+ * way back to one.
+ *
+ * The challenge is stored against this operator, so a challenge handed to one
+ * cannot be answered into another's account. The credentials already on file
+ * are excluded, so the same authenticator does not register twice and leave
+ * two entries nobody can tell apart.
+ */
+export async function addPasskeyOptions(db: Db, operatorId: string) {
+  const { rows } = await db.query(
+    `select o.email, c.credential_id, c.transports from operator o
+       left join operator_credential c on c.operator_id = o.id
+      where o.id = $1 and o.disabled_at is null`,
+    [operatorId],
+  )
+  if (!rows[0]) throw new Error('No such operator.')
+
+  const options = await generateRegistrationOptions({
+    rpName: 'GoodWorkshop Operator',
+    rpID: authConfig.rpId,
+    userID: Buffer.from(operatorId),
+    userName: rows[0].email,
+    authenticatorSelection: { residentKey: 'required', userVerification: 'required' },
+    attestationType: 'none',
+    excludeCredentials: rows
+      .filter((row) => row.credential_id)
+      .map((row) => ({ id: row.credential_id, transports: row.transports })),
+  })
+  await db.query(
+    `insert into operator_challenge (challenge, operator_id, purpose, expires_at)
+     values ($1, $2, 'registration', $3)`,
+    [options.challenge, operatorId, new Date(Date.now() + CHALLENGE_MS)],
+  )
+  return options
+}
+
+/** Registers the passkey against the operator the challenge was issued for. */
+export async function addPasskey(
+  db: Db,
+  operatorId: string,
+  response: RegistrationResponseJSON,
+): Promise<boolean> {
+  const challenge = challengeOf(response.response.clientDataJSON)
+  const consumed = await db.query(
+    `delete from operator_challenge
+      where challenge = $1 and purpose = 'registration' and operator_id = $2 and expires_at > now()
+      returning id`,
+    [challenge, operatorId],
+  )
+  if (!consumed.rowCount) return false
+
+  const verification = await verifyRegistrationResponse({
+    response,
+    expectedChallenge: challenge,
+    expectedOrigin: operatorOrigin(),
+    expectedRPID: authConfig.rpId,
+    requireUserVerification: true,
+  })
+  if (!verification.verified || !verification.registrationInfo) return false
+  const { credential } = verification.registrationInfo
+
+  await db.query(
+    `insert into operator_credential (operator_id, credential_id, public_key, sign_count, transports)
+     values ($1, $2, $3, $4, $5)`,
+    [
+      operatorId,
+      credential.id,
+      Buffer.from(credential.publicKey).toString('base64url'),
+      credential.counter,
+      credential.transports ?? [],
+    ],
+  )
+  await db.query(
+    `insert into operator_audit (operator_id, action, detail) values ($1, 'passkey_added', $2)`,
+    [operatorId, JSON.stringify({ credentialId: credential.id })],
+  )
+  return true
+}
+
+/**
+ * Removes one of this operator's own passkeys.
+ *
+ * Scoped by operator in the statement itself: holding a session is not holding
+ * everybody's passkeys. Removing the last one is allowed -- the link by mail
+ * always remains, so nobody can lock themselves out this way.
+ */
+export async function removePasskey(
+  db: Db,
+  operatorId: string,
+  credentialId: string,
+): Promise<boolean> {
+  const { rowCount } = await db.query(
+    `delete from operator_credential where operator_id = $1 and credential_id = $2`,
+    [operatorId, credentialId],
+  )
+  if (!rowCount) return false
+
+  await db.query(
+    `insert into operator_audit (operator_id, action, detail) values ($1, 'passkey_removed', $2)`,
+    [operatorId, JSON.stringify({ credentialId })],
+  )
+  return true
+}
+
 // ── Sign-in ──────────────────────────────────────────────────────────────────
 
 export async function signInOptions(db: Db) {

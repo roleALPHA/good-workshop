@@ -146,12 +146,15 @@ using it cannot read a customer's work. It runs in a container started with
 functions in `drizzle-cloud/sql/956_operator_functions.sql`, which return names, states, counts and
 invoices -- never content -- and write `operator_audit` with the operator and the reason for every
 change. Operators are not identities; they sign in against tables of their own, with a session of
-eight hours and thirty minutes idle, and their first passkey is enrolled through a one-time link
-that `scripts/operator.mjs` prints on the server. The passkey is the way in; a link to the address
-on file is the way back when the device holding it is gone -- fifteen minutes, once, three per
-hour, and every such sign-in in `operator_audit`, which is what makes the weaker door a visible
-one. That link is opened the same way as `/verify`: the page only looks, the button spends. The
-proxy should route the operator host to that container alone and restrict it by address.
+eight hours and thirty minutes idle, and the very first passkey is enrolled through a one-time link
+that `scripts/operator.mjs` prints on the server -- once, because at that point nobody can sign in
+yet. The passkey is the way in; a link to the address on file is the way back when the device
+holding it is gone -- fifteen minutes, once, three per hour, and every such sign-in in
+`operator_audit`, which is what makes the weaker door a visible one. That link is opened the same
+way as `/verify`: the page only looks, the button spends. Whoever is signed in adds and removes
+their own passkeys under `/operator/security`, scoped by operator in the statements themselves, so
+coming back by mail leads back to a passkey instead of replacing it. The proxy should route the
+operator host to that container alone and restrict it by address.
 
 **OAuth clients in the cloud** register into a registry tenant, because registration happens
 before anybody has signed in. The consent screen copies the client into the tenant of the person

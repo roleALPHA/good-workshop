@@ -7,9 +7,12 @@ import { verifySessionCookie } from '@/server/auth/session'
 import { withTenant } from '@/server/db'
 import { edition } from '@/server/edition'
 import {
+  addPasskeyOptions,
   createOperatorSession,
+  listPasskeys,
   peekEnrollment,
   peekSignInLink,
+  removePasskey,
   requestSignInLink,
   revokeOperatorSession,
   signInOptions,
@@ -252,6 +255,83 @@ describe('operator sign-in', () => {
       options.challenge,
     ])
     expect(rowCount).toBe(1)
+  })
+})
+
+describe('managing passkeys', () => {
+  /**
+   * An operator who signed in by mail has to be able to add a passkey without
+   * a shell on the server -- otherwise the mail link is not a way back to the
+   * passkey, it is a permanent replacement for one.
+   */
+  const credential = async (owner: string, id: string) => {
+    await ops.query(
+      `insert into operator_credential (operator_id, credential_id, public_key) values ($1, $2, 'k')`,
+      [owner, id],
+    )
+  }
+
+  it('offers a challenge bound to the operator, and excludes what is already registered', async () => {
+    // Bound, because a challenge that is not tied to one operator is a
+    // challenge that registers a passkey onto somebody else's account.
+    const mine = `cred-${randomUUID()}`
+    await credential(operatorId, mine)
+
+    const options = await addPasskeyOptions(console_, operatorId)
+
+    const { rows } = await ops.query(
+      `select operator_id, purpose from operator_challenge where challenge = $1`,
+      [options.challenge],
+    )
+    expect(rows[0]).toMatchObject({ operator_id: operatorId, purpose: 'registration' })
+    // Otherwise the same authenticator registers twice and the list fills with
+    // entries nobody can tell apart.
+    expect(options.excludeCredentials?.map((c) => c.id)).toContain(mine)
+  })
+
+  it('lists what an operator has, and nothing of anybody else', async () => {
+    const other = (
+      await ops.query(
+        `insert into operator (email, display_name) values ($1, 'Andere') returning id`,
+        [`other-${randomUUID()}@example.test`],
+      )
+    ).rows[0].id
+    const mine = `cred-${randomUUID()}`
+    const theirs = `cred-${randomUUID()}`
+    await credential(operatorId, mine)
+    await credential(other, theirs)
+
+    const listed = (await listPasskeys(console_, operatorId)).map((p) => p.credentialId)
+    expect(listed).toContain(mine)
+    expect(listed).not.toContain(theirs)
+
+    // And removing is scoped the same way: holding a session is not holding
+    // everybody's passkeys.
+    expect(await removePasskey(console_, operatorId, theirs)).toBe(false)
+    const { rowCount } = await ops.query(
+      'select 1 from operator_credential where credential_id = $1',
+      [theirs],
+    )
+    expect(rowCount).toBe(1)
+
+    await ops.query('delete from operator_audit where operator_id = $1', [other])
+    await ops.query('delete from operator where id = $1', [other])
+  })
+
+  it('removes a passkey of its own, and writes it to the audit log', async () => {
+    const mine = `cred-${randomUUID()}`
+    await credential(operatorId, mine)
+
+    expect(await removePasskey(console_, operatorId, mine)).toBe(true)
+    expect((await listPasskeys(console_, operatorId)).map((p) => p.credentialId)).not.toContain(
+      mine,
+    )
+
+    const { rows } = await ops.query(
+      `select action from operator_audit where operator_id = $1 order by at desc limit 1`,
+      [operatorId],
+    )
+    expect(rows[0]?.action).toBe('passkey_removed')
   })
 })
 

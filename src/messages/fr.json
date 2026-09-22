@@ -1015,6 +1015,21 @@
       "linkPending": "Connexion …",
       "linkInvalid": "Ce lien est invalide, expiré ou déjà utilisé."
     },
+    "passkeys": {
+      "title": "Sécurité",
+      "intro": "Passkeys de {email}. La passkey est la voie d’entrée ; le lien par e-mail est le retour quand aucun appareil avec passkey n’est à portée de main.",
+      "none": "Pas encore de passkey. En attendant, la connexion ne passe que par le lien par e-mail.",
+      "add": "Configurer une passkey",
+      "adding": "Configuration …",
+      "failed": "Cela n’a pas fonctionné. Réessaie.",
+      "created": "Créée le {when}",
+      "lastUsed": "Dernière utilisation : {when}",
+      "never": "jamais",
+      "remove": "Retirer",
+      "removeConfirm": "Retirer vraiment",
+      "cancel": "Annuler",
+      "back": "Retour aux workspaces"
+    },
     "tenants": {
       "title": "Espaces de travail",
       "search": "Rechercher par nom ou e-mail",
