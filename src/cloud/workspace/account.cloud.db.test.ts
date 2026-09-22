@@ -6,6 +6,7 @@ import { withTenant, type Actor } from '@/server/db'
 import { edition } from '@/server/edition'
 import { fakeAdapters } from '@/cloud/billing/adapters/fake'
 import { closeMonth, purgeDeletedTenants, type RunOptions } from '@/cloud/billing/run'
+import { previousMonth } from '@/cloud/billing/usage'
 import {
   DELETION_GRACE_DAYS,
   cancelWorkspaceDeletion,
@@ -107,7 +108,7 @@ describe('the billing overview', () => {
 })
 
 describe('changing the plan', () => {
-  it('takes effect when the month is closed, and is refused to members', async () => {
+  it('takes effect on the first of the coming month, and is refused to members', async () => {
     const { tenantId, admin, member } = await workspace()
     await expect(changePlan(member, 'per_workshop')).rejects.toThrow('member.adminOnly')
     await changePlan(admin, 'per_workshop')
@@ -116,12 +117,39 @@ describe('changing the plan', () => {
       nextPlan: 'per_workshop',
     })
 
-    await closeMonth(ops, '2026-08-01', options(new Date('2026-09-01T06:00:00Z')))
+    // The date the change was booked for, rather than one written into the
+    // test: `cloud_change_plan` reads the database clock, and a fixed date here
+    // would pass or fail depending on the month the suite happens to run in.
+    const { rows: pending } = await ops.query(
+      'select next_plan_from from billing_account where tenant_id = $1',
+      [tenantId],
+    )
+    const effective: Date = pending[0].next_plan_from
+
+    await closeMonth(ops, previousMonth(effective), options(effective))
+    const { rows } = await ops.query(
+      'select plan, next_plan, next_plan_from, plan_from from billing_account where tenant_id = $1',
+      [tenantId],
+    )
+    expect(rows[0]).toMatchObject({ plan: 'per_workshop', next_plan: null, next_plan_from: null })
+    expect(rows[0].plan_from).toEqual(effective)
+  })
+
+  it('leaves the running month on the old plan when the run happens mid-month', async () => {
+    const { tenantId, admin } = await workspace()
+    await changePlan(admin, 'per_workshop')
+
+    // The worker closes the previous month on every run, ten minutes apart. A
+    // plan chosen on the 15th must not reach into the month it was chosen in --
+    // otherwise the switch is retroactive to the first, and the customer is
+    // billed for two weeks under a model they had not picked yet.
+    await closeMonth(ops, '2026-08-01', options(new Date('2026-09-15T06:00:00Z')))
+
     const { rows } = await ops.query(
       'select plan, next_plan from billing_account where tenant_id = $1',
       [tenantId],
     )
-    expect(rows[0]).toEqual({ plan: 'per_workshop', next_plan: null })
+    expect(rows[0]).toEqual({ plan: 'per_user', next_plan: 'per_workshop' })
   })
 
   it('cannot be forced through the database by somebody who is not an admin', async () => {

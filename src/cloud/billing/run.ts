@@ -219,11 +219,16 @@ export async function closeMonth(db: Db, month: string, options: RunOptions): Pr
 
   // A plan chosen during a month applies from the next one; the month just
   // closed was billed under the old plan, the one now running is the new one's.
+  //
+  // The date decides, not the fact that a month was closed: this runs on every
+  // pass of the worker, ten minutes apart, and without `next_plan_from` a plan
+  // chosen on the 15th was live within minutes and backdated to the first.
   await db.query(
     `update billing_account
-        set plan = next_plan, next_plan = null, plan_from = date_trunc('month', $1::timestamptz)::date,
-            updated_at = now()
-      where next_plan is not null`,
+        set plan = next_plan, next_plan = null, next_plan_from = null,
+            plan_from = next_plan_from, updated_at = now()
+      where next_plan is not null
+        and next_plan_from <= date_trunc('month', $1::timestamptz at time zone 'Europe/Vienna')::date`,
     [options.now],
   )
   options.log('billing: month closed', { month, periods: created })
