@@ -381,6 +381,65 @@ line and actually answers the question:
 gzip -dc goodworkshop.sql.gz | tail -c 400 | grep -c 'dump complete'
 ```
 
+**Three scripts for the rest of it.** A backup that lives on the machine it is a backup of is
+not one, a backup nobody has ever restored is a hope, and a backup job that stopped running is
+silent. Each of those is a script, and each is meant to be a systemd timer:
+
+| Script                        | What it answers                            | Where it runs                          |
+| ----------------------------- | ------------------------------------------ | -------------------------------------- |
+| `scripts/backup-offsite.sh`   | is today's state somewhere else, encrypted | on the server, daily                   |
+| `scripts/backup-verify.sh`    | does it actually come back                 | anywhere with a spare Postgres, weekly |
+| `scripts/backup-freshness.sh` | is anything still being backed up at all   | **on a different machine**, daily      |
+
+The third one is on a different machine on purpose: run it beside the thing it watches and the
+watching stops with the host it was supposed to notice.
+
+All three read `/etc/ra-backup/nas.conf` (or `$GW_BACKUP_CONF`):
+
+```bash
+RESTIC_REPOSITORY=sftp:nas:/backups/goodworkshop
+RESTIC_PASSWORD_FILE=/etc/ra-backup/restic.pass
+GW_BACKUP_TAG=goodworkshop
+```
+
+Retention is 14 daily, 8 weekly and 12 monthly snapshots (`GW_KEEP_DAILY` and friends). Write
+whatever you choose here into your privacy policy as well — a retention period is a promise, and
+a promise that only exists in a script is one nobody can read.
+
+```ini
+# /etc/systemd/system/goodworkshop-backup.service
+[Unit]
+Description=Nightly GoodWorkshop backup, offsite
+OnFailure=goodworkshop-backup-failed.service
+
+[Service]
+Type=oneshot
+WorkingDirectory=/opt/goodworkshop
+ExecStart=/opt/goodworkshop/scripts/backup-offsite.sh
+Environment=RESTIC_CACHE_DIR=/var/cache/restic
+Environment=HOME=/root
+Nice=10
+IOSchedulingClass=idle
+```
+
+```ini
+# /etc/systemd/system/goodworkshop-backup.timer
+[Unit]
+Description=Nightly GoodWorkshop backup
+
+[Timer]
+OnCalendar=*-*-* 03:15:00
+RandomizedDelaySec=15m
+Persistent=true
+
+[Install]
+WantedBy=timers.target
+```
+
+`Environment=HOME=/root` is not decoration: systemd sets no `HOME`, restic looks for its cache
+below it, and without one it re-downloads the repository index on every run. With a small
+repository nobody notices; as the history grows it becomes a real brake.
+
 ### Running without HTTPS
 
 Possible, with three consequences: **no passkeys**, the session cookie carries no `Secure` and

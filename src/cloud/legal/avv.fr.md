@@ -51,7 +51,7 @@ Le sous-traitant informe de tout changement envisagé au moins 30 jours à l’a
 - **Cloisonnement des clients :** séparation des clients dans la base de données par une sécurité au niveau des lignes imposée
 - **Contrôle d’accès :** connexion sans mot de passe par passkeys ou liens à usage unique envoyés par courriel ; rôles et droits par atelier et par dossier ; rôles de base de données distincts aux privilèges minimaux
 - **Exploitation :** centres de données dans l’UE ; images logicielles signées et analysées pour détecter les vulnérabilités ; mises à jour de sécurité régulières
-- **Disponibilité :** sauvegarde quotidienne avec tests de restauration
+- **Disponibilité :** sauvegarde à jour. Les données sont sauvegardées une fois par jour ; en cas de restauration, l’état peut dater de jusqu’à 24 heures. Les sauvegardes sont conservées chiffrées et séparément du système de production, et leur restaurabilité est vérifiée régulièrement.
 - **Traçabilité :** journalisation des événements pertinents pour la sécurité
 
 Cette version est également fournie dans d’autres langues. Seule la version allemande fait foi et est juridiquement contraignante ; les traductions servent à la compréhension.
