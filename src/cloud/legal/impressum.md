@@ -2,6 +2,8 @@
 
 # Impressum
 
+Stand: 18. September 2026
+
 Informationen gemäß § 5 E-Commerce-Gesetz (ECG), § 14 Unternehmensgesetzbuch (UGB) und Offenlegung gemäß § 25 Mediengesetz.
 
 ## Anbieter

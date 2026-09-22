@@ -15,7 +15,7 @@ import { ATTRIBUTION_TEXT } from '@/lib/attribution'
 import { seedBuiltinModuleTypes } from '@/domain/moduleType/seed'
 import { PLATFORM_TENANT } from '@/server/edition/cloud'
 import { TRIAL_DAYS } from '@/cloud/billing/plans'
-import { readLegalDocument } from '@/cloud/legal/documents'
+import { readLegalDocument, readLegalVersion } from '@/cloud/legal/documents'
 import type { Signup } from './rules'
 import type { VatCheck } from '@/cloud/tax/vies'
 
@@ -62,6 +62,14 @@ export async function requestSignup(
     throw new SignupError('signup.priceUnavailable')
   }
 
+  // Read before the row is written, and stored with it: the consent belongs to
+  // the wording that was on the screen, not to whatever the file says by the
+  // time the confirmation link is opened.
+  const [termsVersion, dpaVersion] = await Promise.all([
+    readLegalVersion('agb'),
+    readLegalVersion('avv'),
+  ])
+
   const secret = generateSecret(32)
 
   const outcome = await withAuth(async (tx) => {
@@ -90,6 +98,8 @@ export async function requestSignup(
         ...signup,
         locale,
         trialDays: TRIAL_DAYS,
+        termsVersion,
+        dpaVersion,
         ...(meta.vatCheck ? { vatCheck: meta.vatCheck } : {}),
       },
       requestedIp: meta.ip ?? null,

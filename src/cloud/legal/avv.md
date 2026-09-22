@@ -2,6 +2,8 @@
 
 # Auftragsverarbeitungsvereinbarung
 
+Stand: 18. September 2026
+
 nach Art. 28 DSGVO zwischen dem Kunden (Verantwortlicher) und roleALPHA GmbH, Aschergasse 34, 1130 Wien (Auftragsverarbeiter). Sie ist Bestandteil des Vertrags über GoodWorkshop Cloud und gilt mit dessen Abschluss.
 
 ## 1. Gegenstand und Dauer

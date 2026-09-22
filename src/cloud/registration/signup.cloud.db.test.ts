@@ -5,6 +5,7 @@ import { hashSecret } from '@/server/auth/tokens'
 import { verifySessionCookie } from '@/server/auth/session'
 import { completeSignup, peekSignup, requestSignup } from './signup'
 import { parseSignup } from './rules'
+import { readLegalVersion } from '@/cloud/legal/documents'
 
 /**
  * Registering, against a cloud database: what one confirmed link creates, and
@@ -53,7 +54,14 @@ async function pending(
       randomUUID(),
       hashSecret(token),
       email,
-      { ...signup(email, overrides), locale: 'de', trialDays: 14, ...extra },
+      {
+        ...signup(email, overrides),
+        locale: 'de',
+        trialDays: 14,
+        termsVersion: await readLegalVersion('agb'),
+        dpaVersion: await readLegalVersion('avv'),
+        ...extra,
+      },
       expiresIn,
     ],
   )
@@ -119,7 +127,7 @@ describe('completing a registration', () => {
     const { rows: billing } = await ops.query(
       `select customer_type, company_name, country, vat_id, plan, billing_email,
               terms_accepted_at is not null as terms, dpa_accepted_at is not null as dpa,
-              business_confirmed_at is not null as business
+              business_confirmed_at is not null as business, terms_version, dpa_version
          from billing_account where tenant_id = $1`,
       [done.tenantId],
     )
@@ -133,6 +141,10 @@ describe('completing a registration', () => {
       terms: true,
       dpa: true,
       business: true,
+      // Which wording was agreed to, not merely that something was: the version
+      // of the published text as it stood when the form was submitted.
+      terms_version: await readLegalVersion('agb'),
+      dpa_version: await readLegalVersion('avv'),
     })
 
     const { rows: types } = await ops.query(
@@ -306,6 +318,17 @@ describe('asking for a registration link', () => {
     const fresh = address()
     await requestSignup(signup(fresh), 'de')
     expect(log.mock.calls.flat().join('\n')).toContain('/registrieren/bestaetigen?token=')
+
+    // The wording that was on the screen, noted down with the request: the link
+    // may be opened a day later, by which time the file can say something else.
+    const { rows: waiting } = await ops.query(
+      `select payload from pending_signup where email = $1`,
+      [fresh],
+    )
+    expect(waiting[0].payload).toMatchObject({
+      termsVersion: await readLegalVersion('agb'),
+      dpaVersion: await readLegalVersion('avv'),
+    })
 
     const known = address()
     await completeSignup(await pending(known))
