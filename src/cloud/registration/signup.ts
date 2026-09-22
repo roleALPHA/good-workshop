@@ -16,6 +16,7 @@ import { seedBuiltinModuleTypes } from '@/domain/moduleType/seed'
 import { PLATFORM_TENANT } from '@/server/edition/cloud'
 import { TRIAL_DAYS } from '@/cloud/billing/plans'
 import { readLegalDocument, readLegalVersion } from '@/cloud/legal/documents'
+import { DEFAULT_LOCALE } from '@/i18n/config'
 import type { Signup } from './rules'
 import type { VatCheck } from '@/cloud/tax/vies'
 
@@ -171,27 +172,28 @@ export async function completeSignup(token: string): Promise<CompletedSignup> {
  */
 export async function sendWelcome(to: string, locale: Locale): Promise<void> {
   const t = translator(locale, 'mail.signupWelcome')
-  const texts = [await readLegalDocument('agb')]
+  // In the language they registered in -- the German text went to French and
+  // Spanish registrations as well, which is a welcome mail nobody can read.
+  // The German one follows it where they differ, because that is the wording
+  // the contract is made of.
+  const translated = await readLegalDocument('agb', locale)
+  const texts =
+    translated.locale === DEFAULT_LOCALE
+      ? [translated.source]
+      : [translated.source, (await readLegalDocument('agb')).source]
+
   const mail: Mail = {
     to,
     subject: t('subject'),
     text: [
       t('body', { days: TRIAL_DAYS, link: new URL('/library', authConfig.appUrl).toString() }),
       '',
-      ...texts.flatMap((source) => ['─'.repeat(72), '', stripComments(source), '']),
+      ...texts.flatMap((source) => ['─'.repeat(72), '', source.trim(), '']),
       ATTRIBUTION_TEXT,
     ].join('\n'),
   }
   await sendMail(mail, PLATFORM_TENANT)
 }
-
-/** Notes for editors are whole lines, the same rule the page renderer applies. */
-const stripComments = (source: string) =>
-  source
-    .split('\n')
-    .filter((line) => !(line.trim().startsWith('<!--') && line.trim().endsWith('-->')))
-    .join('\n')
-    .trim()
 
 function confirmSignupMail(to: string, link: string, locale: Locale): Mail {
   const t = translator(locale, 'mail.signupConfirm')

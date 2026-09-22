@@ -991,7 +991,8 @@
       }
     },
     "legal": {
-      "germanOnly": "The German version is legally binding."
+      "germanBinds": "Only the German version is legally binding. Translations are for understanding.",
+      "notTranslated": "This text is not available in your language yet. Only the German version is legally binding in any case."
     },
     "meta": {
       "description": "Workshop planning for facilitators, together in real time and connected to AI. Try it free for 14 days."
