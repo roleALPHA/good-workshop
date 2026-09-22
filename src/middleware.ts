@@ -1,4 +1,5 @@
 import { NextResponse, type NextRequest } from 'next/server'
+import { localeForPath } from '@/cloud/site/routes'
 
 /**
  * The response headers the Caddyfile claimed the application was already
@@ -71,6 +72,33 @@ export function middleware(request: NextRequest): NextResponse {
   // and so a proxy can correlate the two.
   const headers = new Headers(request.headers)
   headers.set('x-nonce', nonce)
+
+  /**
+   * The public website's language, read out of the address.
+   *
+   * It has to happen here because this is the only place that sees the
+   * pathname before the tree renders, and `<html lang>` is written by the root
+   * layout -- above every page that could otherwise have set it. The header
+   * travels the same way the nonce does and is picked up in
+   * src/i18n/request.ts; for everything behind the login `localeForPath`
+   * returns null, nothing is set, and the language comes from the person as
+   * before. In a community build those paths are not routes at all, so the
+   * table matches nothing but `/`, which only ever redirects.
+   */
+  // Always set, empty where the address names no language, and that is not
+  // tidiness. Next forwards only the headers it was told to override; a
+  // `headers.delete()` here is not communicated, so a client that sends an
+  // `x-locale` of its own would have it reach the renderer untouched on every
+  // path the table does not match -- which is the whole application behind the
+  // login. Writing an empty value overwrites it, and an empty value resolves
+  // to "no signal" in src/i18n/resolve.ts.
+  headers.set('x-locale', localeForPath(request.nextUrl.pathname) ?? '')
+  // The address itself, for the one thing in the tree that needs to know which
+  // page it is on without being told: the language switcher of the public
+  // website, which offers this page in the other three languages and therefore
+  // has to build their addresses. Set unconditionally for the same reason as
+  // x-locale above.
+  headers.set('x-pathname', request.nextUrl.pathname)
 
   const response = NextResponse.next({ request: { headers } })
 

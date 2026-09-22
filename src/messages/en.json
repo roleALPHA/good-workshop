@@ -926,11 +926,15 @@
       "impressum": "Imprint",
       "agb": "Terms",
       "datenschutz": "Privacy",
-      "avv": "DPA"
+      "avv": "DPA",
+      "methods": "Methods",
+      "faq": "Questions",
+      "compare": "Comparison",
+      "home": "Home"
     },
     "home": {
-      "title": "Plan workshops that work.",
-      "lead": "GoodWorkshop is the agenda for facilitators: day plans with times, methods and the people responsible, edited together – and connected to your AI.",
+      "title": "Plan workshops — with an agenda that does the maths.",
+      "lead": "GoodWorkshop is the workshop planner for facilitators: day plans with times, methods and the people responsible, edited live by several people — and connected to your AI.",
       "cta": "Try it free for 14 days",
       "ctaSecondary": "See pricing",
       "featuresTitle": "What GoodWorkshop does",
@@ -961,7 +965,11 @@
       "shotAgenda": "A workshop day in GoodWorkshop: blocks with time, duration, the person responsible and a description, grouped into sections.",
       "shotLibrary": "The library: workshops in folders, with search and quick actions.",
       "shotPhone": "The same workshop day on a phone, as cards to read from in the room.",
-      "shotsTitle": "What it looks like"
+      "shotsTitle": "What it looks like",
+      "moreTitle": "Read on",
+      "moreMethods": "The building blocks of an agenda: fifteen methods, what they are good for and how long they run.",
+      "moreFaq": "Frequently asked questions: pricing, data protection, self-hosting and the AI connection.",
+      "moreCompare": "Comparing with SessionLab? What GoodWorkshop does differently — and where it does less."
     },
     "pricing": {
       "title": "Pricing",
@@ -995,7 +1003,43 @@
       "notTranslated": "This text is not available in your language yet. Only the German version is legally binding in any case."
     },
     "meta": {
-      "description": "Workshop planning for facilitators, together in real time and connected to AI. Try it free for 14 days."
+      "shareImageAlt": "A workshop day in GoodWorkshop: blocks with times, durations and the person responsible.",
+      "home": {
+        "title": "GoodWorkshop: plan workshop agendas that do the maths",
+        "description": "The workshop planner for facilitators: an agenda whose times recalculate as you drag blocks, edited live with your team, ready to print and export. Free for 14 days."
+      },
+      "pricing": {
+        "title": "Pricing: per user or per workshop",
+        "description": "Two models you can switch between every month: per active member, or per workshop created. Net prices for businesses. 14 days free, no payment details."
+      },
+      "methods": {
+        "title": "Workshop methods: the building blocks of an agenda",
+        "description": "Check-in, group work, decision, energizer: what each building block is good for, how long it usually runs and which social form it takes."
+      },
+      "compare": {
+        "title": "SessionLab alternative: how GoodWorkshop compares",
+        "description": "Looking for an alternative to SessionLab? GoodWorkshop plans workshop agendas, runs in the EU or on your own server, and is connected to your AI."
+      },
+      "faq": {
+        "title": "Frequently asked questions",
+        "description": "What GoodWorkshop costs, where the data lives, how self-hosting works and what the AI connection actually does."
+      },
+      "impressum": {
+        "title": "Imprint",
+        "description": "Provider information under § 5 ECG and § 25 MedienG for GoodWorkshop Cloud."
+      },
+      "agb": {
+        "title": "Terms and conditions",
+        "description": "The terms GoodWorkshop Cloud is sold to businesses under."
+      },
+      "datenschutz": {
+        "title": "Privacy policy",
+        "description": "Which data GoodWorkshop Cloud processes, what for, for how long and on what legal basis."
+      },
+      "avv": {
+        "title": "Data processing agreement",
+        "description": "The agreement under Art. 28 GDPR between you as controller and roleALPHA as processor."
+      }
     },
     "register": {
       "title": "Try it free",
@@ -1034,6 +1078,190 @@
       "working": "Creating …",
       "invalid": "This link has expired or was already used. Just register again.",
       "exists": "There already is an account for this address. Please sign in."
+    },
+    "methods": {
+      "title": "Workshop methods: the building blocks of an agenda",
+      "lead": "A workshop day is made of blocks, and every block has a type. The type decides which fields come with it: the task for group work, the method for a decision, the opening question for a check-in. Here are all the building blocks GoodWorkshop brings — what they are good for, how long they usually run and in which social form.",
+      "durationLabel": "Typical duration",
+      "socialLabel": "Social form",
+      "entries": {
+        "admin": {
+          "name": "Welcome & housekeeping",
+          "body": "The first block of the day, and the only one nobody has to think during: the plan, the break times, where the toilets are, what happens to phones. The shorter it is, the more attention is left for the check-in that follows. Keep it brief and write the ground rules down anyway — they are what you point at when somebody talks over the group later.",
+          "duration": "10–15 minutes",
+          "social": "Plenary"
+        },
+        "check_in": {
+          "name": "Check-in",
+          "body": "Everybody speaks once before the work begins. This is not politeness, it is structure: somebody who has said nothing in the first quarter of the day tends to say little for the rest of it. One question, one round, a fixed time per person. Above twelve people, do it in pairs rather than around the circle, or the block costs you half an hour.",
+          "duration": "10–20 minutes",
+          "social": "Plenary or pairs"
+        },
+        "presentation": {
+          "name": "Input / presentation",
+          "body": "Somebody brings knowledge into the room that nobody else has — numbers, context, a technical basis. The usual mistake is length: an input running past twenty minutes without a question back tips into a lecture. Plan the digestion with it, as group work or a discussion immediately afterwards.",
+          "duration": "10–30 minutes",
+          "social": "Plenary"
+        },
+        "group_work": {
+          "name": "Group work",
+          "body": "The block where the actual work happens. Three things decide whether it does, and all three are usually missing in the room: the task in the exact words you will say, the group size, and what has to exist at the end. Count the debrief as part of it — four groups at three minutes each is twelve minutes that otherwise come out of the next break.",
+          "duration": "30–60 minutes",
+          "social": "Small groups"
+        },
+        "exercise": {
+          "name": "Exercise",
+          "body": "A guided activity with a set procedure: a simulation, a role play, a business game, silent writing. Unlike group work the method is given and the outcome is open. Write the instructions so a stand-in could read them aloud, and link the method description if there is one.",
+          "duration": "20–45 minutes",
+          "social": "varies"
+        },
+        "discussion": {
+          "name": "Plenary discussion",
+          "body": "Everybody talks to everybody about one question. The block that overruns most reliably, because nothing about it ends on its own. Set a time and a question, and write down what the discussion is meant to produce: a decision, a collection, or simply a shared picture.",
+          "duration": "15–30 minutes",
+          "social": "Plenary"
+        },
+        "decision": {
+          "name": "Decision / vote",
+          "body": "Many options become one. Dot voting for priorities, fist of five for agreement, consent for objections, majority for the rest. Write down which method applies and who decides before you start — sorting that out afterwards is why workshops end without a result.",
+          "duration": "10–20 minutes",
+          "social": "Plenary"
+        },
+        "reflection": {
+          "name": "Reflection",
+          "body": "A look back at what just happened: what did I understand, what am I taking with me, what is still open? Alone and in writing first, then shared — otherwise the group hears the first person's view and thinks onward in that direction.",
+          "duration": "10–20 minutes",
+          "social": "Individual, then plenary"
+        },
+        "energizer": {
+          "name": "Energizer",
+          "body": "Five minutes of movement against the afternoon dip. Not filler: after lunch and after two long blocks in a row, attention is measurably down, and a short activity on your feet brings back more than another coffee break. Make sure nobody is put on the spot.",
+          "duration": "5–10 minutes",
+          "social": "Plenary, standing"
+        },
+        "break": {
+          "name": "Break",
+          "body": "At least one every ninety minutes, and fifteen minutes rather than ten: a break that is too short brings nobody back on time and eats the beginning of the next block. GoodWorkshop counts breaks separately from content, so the header of the day shows how much actual work is in it.",
+          "duration": "15 minutes",
+          "social": "none"
+        },
+        "lunch": {
+          "name": "Lunch",
+          "body": "The block that gets moved most often, and the one that may be moved least — catering arrives when it arrives. Pin it to the clock and it stays put while everything else rearranges itself around it.",
+          "duration": "45–60 minutes",
+          "social": "none"
+        },
+        "buffer": {
+          "name": "Buffer",
+          "body": "Deliberately empty time. Every workshop overruns somewhere, and a planned buffer is the difference between an agenda that adapts and one that is simply wrong from half past two onwards. Budget about ten per cent of the day, and put it in front of the blocks that cannot be dropped.",
+          "duration": "15–30 minutes",
+          "social": "none"
+        },
+        "next_steps": {
+          "name": "Next steps",
+          "body": "Who does what by when. The block that decides whether the workshop reaches anybody's working week or stays a good day people remember. Capture owners and dates in the room while everybody is still there — afterwards, half of them are missing.",
+          "duration": "10–20 minutes",
+          "social": "Plenary"
+        },
+        "check_out": {
+          "name": "Check-out",
+          "body": "One last round, one question, short. It is not there to evaluate but to close: the group should end the day rather than merely stop. A quick temperature check is enough when time is tight.",
+          "duration": "10–15 minutes",
+          "social": "Plenary"
+        },
+        "note": {
+          "name": "Note",
+          "body": "Not an item on the programme but a remark in the agenda: a reminder about the projector, a hint for your co-facilitator, a thought for the next version. Counts no time and still stands in the right place.",
+          "duration": "no duration",
+          "social": "none"
+        }
+      },
+      "howTitle": "How this becomes a day",
+      "howBody": "The order is not a matter of taste. A day starts with arriving and ends with closing; in between, blocks where people take something in alternate with blocks where they work with it. A break after ninety minutes, something physical after lunch, and the next steps before the check-out. In GoodWorkshop you drag the blocks and every time after them recalculates — and lunch still stays where it is, if you pin it to the clock.",
+      "ctaTitle": "Turn the building blocks into an agenda",
+      "ctaBody": "Create the day, drag the blocks into the order you have in mind, and let the times work themselves out. Or describe what you are planning to your AI and let it write the first draft.",
+      "cta": "Try it free for 14 days"
+    },
+    "compare": {
+      "title": "GoodWorkshop as an alternative to SessionLab",
+      "lead": "Both tools plan workshop agendas, and both take the arithmetic off your hands. This page says what GoodWorkshop does differently — and, at the end, where it is the weaker choice. Anybody comparing has no use for advertising anyway.",
+      "neutral": "SessionLab is a hosted session design tool with a large public method library. What is written there is written better there than here; we name no prices and no features of somebody else's product, because both are out of date the moment we write them down. Go and look, and compare for yourself.",
+      "pointsTitle": "What GoodWorkshop does differently",
+      "selfHost": {
+        "title": "You can run it yourself",
+        "body": "The source is public, and one Docker container plus a Postgres database is all it takes. Commercial use included, with no licence cost: the workshops you earn your money with are exactly the ones you may plan with it. The cloud sells operation, not access to the software."
+      },
+      "ai": {
+        "title": "Your AI plans with you, with nothing in between",
+        "body": "GoodWorkshop is itself an MCP server. Claude, ChatGPT or Gemini connect to it directly and create workshops, rewrite agendas, park blocks. No copying out of a chat window, no add-on product — one connection you set up in the settings."
+      },
+      "data": {
+        "title": "The data sits where you want it",
+        "body": "The cloud runs in the EU, operated by an Austrian company, with a data processing agreement. If that is not enough, run it yourself and it sits in your own house. Either way you get every agenda back out as Markdown, without asking anybody."
+      },
+      "pricing": {
+        "title": "Two pricing models, one of them for irregular work",
+        "body": "Per active member per month, billed by the day — or per workshop created, with as many members as you like. The second model exists because facilitation comes in waves: three workshops in spring, then three quiet months. Guests never count."
+      },
+      "room": {
+        "title": "Built for the room, not only for the preparation",
+        "body": "The agenda works on a phone, survives bad wifi, and lets your co-facilitator edit the same day at the same time. Facilitation notes stay with you: the print view and the export leave them out by default, so the group gets the agenda and you keep the rest."
+      },
+      "limitsTitle": "Where GoodWorkshop does less",
+      "limitsBody": "GoodWorkshop has no public method library with hundreds of ready-made exercises, and no gallery of templates for every occasion. It brings fifteen building blocks, and you write the content yourself — or have your AI write it. It is also younger and smaller: fewer integrations, no team of thirty behind it. If what you want is a ready-made collection of exercises, you are better served elsewhere. If what you want is an agenda that does the arithmetic, that belongs to you and that your AI can operate, you are in the right place.",
+      "ctaTitle": "See for yourself",
+      "ctaBody": "Fourteen days, no payment details. If it does not fit, it simply runs out.",
+      "cta": "Try it free",
+      "ctaSecondary": "Run it yourself"
+    },
+    "faq": {
+      "title": "Frequently asked questions",
+      "lead": "What gets asked most often before anybody starts. If something is missing, write to us — this page grows with the questions.",
+      "entries": {
+        "cost": {
+          "q": "What does GoodWorkshop cost?",
+          "a": "There are two models and you can switch between them every month: per active member per month, billed by the day, or per workshop created with as many members as you like. All prices are net; GoodWorkshop Cloud is sold to businesses only. The exact amounts are on the pricing page. Run it yourself and it costs nothing."
+        },
+        "free": {
+          "q": "Is GoodWorkshop free?",
+          "a": "On your own server, yes — permanently, and for commercial work too. The source is under Apache 2.0 with the Commons Clause: you may use and adapt GoodWorkshop without limit, you just may not resell it as a service of your own. The cloud costs money because somebody there takes on operation, updates and backups. The first fourteen days are free, with no payment details."
+        },
+        "selfhost": {
+          "q": "Can I host GoodWorkshop myself?",
+          "a": "Yes, and it is not a side path. It needs one container and a Postgres database; with Docker Compose it is up in minutes. Images are published for amd64 and arm64. No external services, no tracking, no licence keys."
+        },
+        "data": {
+          "q": "Where is my data?",
+          "a": "In the cloud, in the EU, operated by roleALPHA GmbH in Austria, with a data processing agreement under Art. 28 GDPR. Host it yourself and it sits wherever your server does. Either way you can export every agenda as Markdown at any time."
+        },
+        "ai": {
+          "q": "How does the AI connection work?",
+          "a": "GoodWorkshop is itself an MCP server — Model Context Protocol, the interface AI assistants use to operate tools. You set the connection up once in the settings, and from then on Claude, ChatGPT, Gemini and other clients can create workshops, rewrite agendas, park blocks and move days. The AI works inside your workshop, not in a chat window next to it."
+        },
+        "collab": {
+          "q": "Can several people work at the same time?",
+          "a": "Yes. Several people edit the same day live without overwriting each other. Clients and co-facilitators without an account get a link — read-only or editing, as you choose."
+        },
+        "times": {
+          "q": "What happens when a time changes?",
+          "a": "Nothing you have to redo by hand. Move a block or change a duration and every time after it recalculates. Blocks that must not wander — lunch, the client's slot at 15:00 — you pin to the clock; if something collides with one, the row says so instead of quietly shortening it."
+        },
+        "print": {
+          "q": "Can I print or export the agenda?",
+          "a": "Yes, both. There is a print view for the room and a Markdown export for the handout and the documentation. Your facilitation notes stay out of both by default."
+        },
+        "mobile": {
+          "q": "Does it work on a phone?",
+          "a": "Yes, and that is what it is built for. In the room the agenda reads as cards on your phone, and the view survives bad wifi."
+        },
+        "migrate": {
+          "q": "I already use another tool. Can I switch?",
+          "a": "There is no automatic import. The fastest route is the AI connection: give your assistant the existing agenda as text and let it create the workshop in GoodWorkshop. For a single day that is a matter of minutes."
+        }
+      },
+      "ctaTitle": "Still a question open?",
+      "ctaBody": "The fastest answer is to try it: fourteen days, no payment details.",
+      "cta": "Try it free"
     }
   },
   "operator": {

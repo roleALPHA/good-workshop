@@ -9,9 +9,19 @@ import { RegisterForm } from './register-form'
 
 export const dynamic = 'force-dynamic'
 
+/**
+ * The one page of the website that asks not to be indexed.
+ *
+ * It is a form, and unlike every other public page it has a single address
+ * for all four languages -- the language comes from the visitor, not from the
+ * URL, because a registration is a flow and not something anybody searches
+ * for. That combination is precisely what a canonical cannot describe: one
+ * URL with four different bodies. `follow` stays on, so the links out of it
+ * still count.
+ */
 export async function generateMetadata(): Promise<Metadata> {
   const t = await getTranslations('site.register')
-  return { title: t('title') }
+  return { title: t('title'), robots: { index: false, follow: true } }
 }
 
 export default async function RegisterPage() {
