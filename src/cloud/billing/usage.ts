@@ -44,6 +44,73 @@ export function monthKey(month: string | Date): string {
   return `${month.getFullYear()}-${String(month.getMonth() + 1).padStart(2, '0')}`
 }
 
+/** The language an invoice is rendered in. Everything that is not German is English. */
+export type InvoiceLocale = 'de' | 'en'
+
+/**
+ * The stored language, reduced to the two an invoice is rendered in.
+ *
+ * Mails exist in all four; the accounting system is given German for German
+ * customers and English for everybody else.
+ */
+export function invoiceLocaleOf(locale: string | null | undefined): InvoiceLocale {
+  return locale === 'de' ? 'de' : 'en'
+}
+
+const MONTHS: Record<InvoiceLocale, readonly string[]> = {
+  // Jänner, not Januar: the invoice is issued in Austria.
+  de: [
+    'Jänner',
+    'Februar',
+    'März',
+    'April',
+    'Mai',
+    'Juni',
+    'Juli',
+    'August',
+    'September',
+    'Oktober',
+    'November',
+    'Dezember',
+  ],
+  en: [
+    'January',
+    'February',
+    'March',
+    'April',
+    'May',
+    'June',
+    'July',
+    'August',
+    'September',
+    'October',
+    'November',
+    'December',
+  ],
+}
+
+const UNITS: Record<InvoiceLocale, Record<'user_month' | 'workshop', string>> = {
+  de: { user_month: 'Benutzer-Monate', workshop: 'angelegte Workshops' },
+  en: { user_month: 'user-months', workshop: 'workshops created' },
+}
+
+/**
+ * What one line of the invoice says.
+ *
+ * It replaces the article's name in the accounting system, so it has to stand
+ * on its own: what was used, and for which month. It read "GoodWorkshop
+ * per_user Sat Aug" -- a key written for code, and a weekday where the month
+ * belonged.
+ */
+export function invoiceLine(
+  unit: 'user_month' | 'workshop',
+  month: string | Date,
+  locale: InvoiceLocale,
+): string {
+  const [year, mon] = monthKey(month).split('-') as [string, string]
+  return `GoodWorkshop — ${UNITS[locale][unit]}, ${MONTHS[locale][Number(mon) - 1]} ${year}`
+}
+
 /** The month before the one an instant falls in, in Vienna: YYYY-MM-01. */
 export function previousMonth(instant: Date): string {
   const [year, mon] = viennaDay(instant).split('-').map(Number) as [number, number]

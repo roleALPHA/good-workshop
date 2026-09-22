@@ -1,4 +1,5 @@
 import type { PlanKey } from '@/cloud/billing/plans'
+import type { InvoiceLocale } from '@/cloud/billing/usage'
 import type { TaxTreatment } from '@/cloud/tax/treatment'
 
 /**
@@ -23,6 +24,8 @@ export type BillingCustomer = {
   city: string
   country: string
   vatId: string | null
+  /** The language their documents are written in, so the accounting system renders them in it. */
+  locale: InvoiceLocale
 }
 
 export type InvoiceLine = {
@@ -66,6 +69,11 @@ export type InvoicingPort = {
     tax: Exclude<TaxTreatment, { kind: 'hold' }>
     /** Stated on the invoice: the amount will be collected (SEPA pre-notification). */
     collectedAfter: Date
+    /**
+     * The language the invoice is written in: the one the customer registered
+     * in, reduced to the two the accounting system renders.
+     */
+    locale: InvoiceLocale
   }): Promise<IssuedInvoice>
   /**
    * The invoice as it was sent, for the customer to download later. Null when
