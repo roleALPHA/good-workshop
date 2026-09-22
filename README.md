@@ -385,14 +385,19 @@ gzip -dc goodworkshop.sql.gz | tail -c 400 | grep -c 'dump complete'
 not one, a backup nobody has ever restored is a hope, and a backup job that stopped running is
 silent. Each of those is a script, and each is meant to be a systemd timer:
 
-| Script                        | What it answers                            | Where it runs                          |
-| ----------------------------- | ------------------------------------------ | -------------------------------------- |
-| `scripts/backup-offsite.sh`   | is today's state somewhere else, encrypted | on the server, daily                   |
-| `scripts/backup-verify.sh`    | does it actually come back                 | anywhere with a spare Postgres, weekly |
-| `scripts/backup-freshness.sh` | is anything still being backed up at all   | **on a different machine**, daily      |
+| Script                        | What it answers                            | Where it runs                     |
+| ----------------------------- | ------------------------------------------ | --------------------------------- |
+| `scripts/backup-offsite.sh`   | is today's state somewhere else, encrypted | on the server, daily              |
+| `scripts/backup-verify.sh`    | does it actually come back                 | on the server, weekly             |
+| `scripts/backup-freshness.sh` | is anything still being backed up at all   | **on a different machine**, daily |
 
 The third one is on a different machine on purpose: run it beside the thing it watches and the
-watching stops with the host it was supposed to notice.
+watching stops with the host it was supposed to notice. It also works **without** the repository
+password, and that is the case worth having: it then reads how old the newest file in the
+repository's `snapshots/` directory is, which answers "is anything still being backed up" completely.
+Whether the repository itself is sound is what `restic check` answers in the backup run. A watcher
+that needs no secret may run on a machine that must not be able to read the backups — which is the
+whole reason it runs elsewhere.
 
 All three read `/etc/ra-backup/nas.conf` (or `$GW_BACKUP_CONF`):
 
@@ -439,6 +444,11 @@ WantedBy=timers.target
 `Environment=HOME=/root` is not decoration: systemd sets no `HOME`, restic looks for its cache
 below it, and without one it re-downloads the repository index on every run. With a small
 repository nobody notices; as the history grows it becomes a real brake.
+
+The restore drill runs everything in throwaway containers — a Postgres the dump is read into, and
+nothing of it touches the production stack. It creates the database roles first, without passwords:
+a dump carries `owner to gw_owner` and the grants, but roles belong to the cluster and are in no
+dump. That is exactly what `db-bootstrap.mjs` does in a real restore.
 
 ### Running without HTTPS
 
