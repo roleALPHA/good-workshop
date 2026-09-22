@@ -62,21 +62,25 @@ There are exactly four ways, and three of them are switched off until an operato
 Nothing else reaches the network. There are no third-party fonts, no CDN, no analytics, no error
 reporting service — the browser talks only to your own hostname.
 
-## The gap: nothing expires by itself
+## What expires, and who has to make it
 
-This is the part an operator has to act on, and it is stated first because it is the honest
-answer rather than the flattering one.
+In the **cloud**, the billing worker sweeps these tables on every run (`sweepExpired` in
+`src/cloud/billing/run.ts`), with the periods in `RETENTION_DAYS` beside it. A test holds those
+numbers against the privacy policy, so the two cannot drift apart.
 
-**GoodWorkshop has no retention job.** Expired rows are treated as invalid when they are read,
-but they are never deleted. Over time this accumulates:
+In a **self-hosted installation** there is no worker, and this is the part an operator has to act
+on. It is stated plainly because it is the honest answer rather than the flattering one.
+
+**A community installation has no retention job.** Expired rows are treated as invalid when they
+are read, but they are never deleted. Over time this accumulates:
 
 - `email_token` rows, each with an email address and an IP, long after the link stopped working
 - `auth_session` rows with IP and user agent, including revoked and expired ones
 - `share_session` rows for every visitor who ever opened a share link
 - `audit_event` rows, indefinitely
 
-Storage limitation (Art. 5(1)(e) GDPR) is the controller's obligation, so it is yours to
-implement. Until the application does it, a scheduled job is enough. Adjust the intervals to the
+Storage limitation (Art. 5(1)(e) GDPR) is the controller's obligation, and in a self-hosted
+installation the controller is you. A scheduled job is enough. Adjust the intervals to the
 retention period you have decided on and written down:
 
 ```sql

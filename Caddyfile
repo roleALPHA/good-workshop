@@ -17,6 +17,18 @@
 		Strict-Transport-Security "max-age=31536000; includeSubDomains"
 	}
 
+	# Access logs with an end date, because the privacy policy names one: it says
+	# server logs are deleted after 14 days, and Caddy's default is to write to
+	# stdout, where Docker keeps them until the disk says otherwise. `roll_keep_for`
+	# is that sentence in the configuration rather than in a document.
+	log {
+		output file /var/log/caddy/access.log {
+			roll_size 10MiB
+			roll_keep 20
+			roll_keep_for 336h
+		}
+	}
+
 	# Live collaboration: its own process, its own port, the same hostname. Caddy
 	# forwards the WebSocket upgrade unchanged -- without this block it would end
 	# up at the Next server, which cannot serve it.

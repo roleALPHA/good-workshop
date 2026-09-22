@@ -259,6 +259,10 @@ services:
       - ./Caddyfile:/etc/caddy/Caddyfile:ro
       - caddy_data:/data
       - caddy_config:/config
+      # Its own volume, because the log has an end date now (Caddyfile) and a
+      # rolled file that lives in the container layer is gone at the next
+      # upgrade -- which would delete it early rather than on time.
+      - caddy_logs:/var/log/caddy
     depends_on: [app]
 
 volumes:
@@ -271,3 +275,4 @@ volumes:
   secret_app:
   caddy_data:
   caddy_config:
+  caddy_logs:
