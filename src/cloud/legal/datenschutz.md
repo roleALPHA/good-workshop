@@ -1,5 +1,3 @@
-<!-- Vor Veröffentlichung rechtlich prüfen lassen. -->
-
 # Datenschutzerklärung
 
 Stand: 22. September 2026
@@ -44,3 +42,5 @@ Was darüber hinaus anfällt, löschen wir automatisch: abgelaufene Anmeldelinks
 ## Ihre Rechte
 
 Sie haben das Recht auf Auskunft, Berichtigung, Löschung, Einschränkung der Verarbeitung, Datenübertragbarkeit und Widerspruch. Wenden Sie sich dafür an [office@rolealpha.com](mailto:office@rolealpha.com). Sie können sich außerdem bei der österreichischen [Datenschutzbehörde](https://www.dsb.gv.at) beschweren.
+
+Diese Fassung wird auch in weiteren Sprachen bereitgestellt. Maßgeblich und rechtsverbindlich ist ausschließlich die deutsche Fassung; Übersetzungen dienen dem Verständnis.

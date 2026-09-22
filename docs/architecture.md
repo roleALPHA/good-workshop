@@ -72,10 +72,18 @@ businesses only: the form says so before its first field and asks for it to be c
 `parseSignup` refuses anything unconfirmed before it looks at anything else, and the database
 accepts no other customer type. A business in another EU member state needs a VAT number, because
 without a valid one there is no correct invoice to issue — the billing run holds such a month for
-an operator. The welcome mail carries the terms as text, as they were agreed. The legal texts are
-Markdown in
-`src/cloud/legal/`, rendered without passing any HTML through, and prices live in exactly one
-place, `src/cloud/billing/plans.ts`, which the pricing page and billing both read.
+an operator. The welcome mail carries the terms as text, as they were agreed, in the language
+they registered in -- with the German wording after it, because that is the one the contract is
+made of. The legal texts are Markdown in `src/cloud/legal/`, rendered without passing any HTML
+through. German has no suffix and the translations do (`agb.md`, `agb.en.md`), which is not only a
+naming convention: the German file is the binding one, and somebody reading that directory should
+see it without being told. A missing translation falls back to German rather than to nothing, and a
+test insists that every translation says, in its own language, that only the German version binds --
+a translation that omits that is worse than none, because somebody acts on it and finds out
+afterwards that what they read was never the contract. A consent always records the German version,
+whatever language it was read in, so a translation that is a day behind cannot create a version
+nobody could find in the terms. Prices live in exactly one place, `src/cloud/billing/plans.ts`,
+which the pricing page and billing both read.
 
 **Billing in the cloud** runs in its own process, the billing worker (`dist/billing-worker.mjs`,
 cloud builds only), as the operations role, one run at a time under an advisory lock. Usage is
