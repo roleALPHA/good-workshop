@@ -1015,6 +1015,21 @@
       "linkPending": "Wird angemeldet …",
       "linkInvalid": "Dieser Link ist ungültig, abgelaufen oder schon benutzt."
     },
+    "passkeys": {
+      "title": "Sicherheit",
+      "intro": "Passkeys für {email}. Der Passkey ist der Weg hinein; der Link per E-Mail ist der Weg zurück, wenn kein Gerät mit Passkey zur Hand ist.",
+      "none": "Noch kein Passkey. Bis dahin geht die Anmeldung nur über den Link per E-Mail.",
+      "add": "Passkey einrichten",
+      "adding": "Wird eingerichtet …",
+      "failed": "Das hat nicht geklappt. Versuche es noch einmal.",
+      "created": "Angelegt am {when}",
+      "lastUsed": "Zuletzt benutzt: {when}",
+      "never": "noch nie",
+      "remove": "Entfernen",
+      "removeConfirm": "Wirklich entfernen",
+      "cancel": "Abbrechen",
+      "back": "Zurück zu den Workspaces"
+    },
     "tenants": {
       "title": "Workspaces",
       "search": "Suche nach Name oder E-Mail",

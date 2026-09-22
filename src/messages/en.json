@@ -1015,6 +1015,21 @@
       "linkPending": "Signing in …",
       "linkInvalid": "This link is invalid, expired or already used."
     },
+    "passkeys": {
+      "title": "Security",
+      "intro": "Passkeys for {email}. The passkey is the way in; the link by e-mail is the way back when no device with a passkey is at hand.",
+      "none": "No passkey yet. Until there is one, signing in only works through the link by e-mail.",
+      "add": "Set up passkey",
+      "adding": "Setting up …",
+      "failed": "That did not work. Please try again.",
+      "created": "Added on {when}",
+      "lastUsed": "Last used: {when}",
+      "never": "never",
+      "remove": "Remove",
+      "removeConfirm": "Really remove",
+      "cancel": "Cancel",
+      "back": "Back to the workspaces"
+    },
     "tenants": {
       "title": "Workspaces",
       "search": "Search by name or e-mail",

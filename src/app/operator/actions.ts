@@ -8,8 +8,11 @@ import { clientAddress } from '@/server/auth/client-address'
 import { rateLimiter } from '@/server/auth/ratelimit'
 import { operatorConsoleEnabled, operatorDb } from '@/cloud/operator/db'
 import {
+  addPasskey,
+  addPasskeyOptions,
   completeEnrollment,
   enrollmentOptions,
+  removePasskey,
   requestSignInLink,
   signInOptions,
   spendSignInLink,
@@ -111,6 +114,37 @@ export async function operatorEnroll(
   if (!operator) return false
   await startOperatorSession(operator.id)
   return true
+}
+
+/**
+ * The passkeys of whoever is signed in -- their own, never anybody else's.
+ *
+ * Each one re-reads the session rather than trusting an operator id from the
+ * browser: an action can be called directly, and an id in its arguments is an
+ * id the caller chooses.
+ */
+export async function operatorPasskeyOptions() {
+  const operator = await currentOperator()
+  if (!operator || (await limited())) return null
+  return addPasskeyOptions(operatorDb(), operator.id)
+}
+
+export async function operatorAddPasskey(response: RegistrationResponseJSON): Promise<boolean> {
+  const operator = await currentOperator()
+  if (!operator || (await limited())) return false
+  const added = await addPasskey(operatorDb(), operator.id, response)
+  if (added) revalidatePath('/operator/security')
+  return added
+}
+
+export async function operatorRemovePasskey(credentialId: unknown): Promise<boolean> {
+  const operator = await currentOperator()
+  if (!operator || (await limited())) return false
+  const id = z.string().trim().min(1).max(1024).safeParse(credentialId)
+  if (!id.success) return false
+  const removed = await removePasskey(operatorDb(), operator.id, id.data)
+  if (removed) revalidatePath('/operator/security')
+  return removed
 }
 
 export async function operatorSignOut(): Promise<void> {
