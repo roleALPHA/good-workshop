@@ -6,4 +6,4 @@
  */
 export const dynamic = 'force-dynamic'
 
-export { default } from '@gw/home'
+export { default, generateMetadata } from '@gw/home'

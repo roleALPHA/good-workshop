@@ -12,6 +12,33 @@ import { billingAdaptersPath } from './scripts/edition-aliases.mjs'
  */
 const edition = requestedEdition()
 
+/**
+ * The website's German addresses, from before English became the unprefixed
+ * language (src/cloud/site/routes.ts explains the change).
+ *
+ * Permanent, and that is the whole point: these five are in sent mails, in the
+ * legal footer of every page § 5 ECG requires, and in whatever a search engine
+ * has already indexed. A 301 keeps every one of those links working and hands
+ * what it is worth to the new address; a 404 would throw both away.
+ *
+ * `/faq` is deliberately absent. It is English now, and it never existed as a
+ * German address, so there is nothing to redirect and a rule here would break
+ * the page it points away from.
+ *
+ * `/en` is the mirror case: English has no prefix, so the address is not a
+ * page -- but it is the first thing somebody types who has seen `/de` or
+ * `/fr`, and sending them to the front page is kinder than a 404.
+ */
+const websiteRedirects = [
+  { source: '/preise', destination: '/de/preise', permanent: true },
+  { source: '/impressum', destination: '/de/impressum', permanent: true },
+  { source: '/agb', destination: '/de/agb', permanent: true },
+  { source: '/datenschutz', destination: '/de/datenschutz', permanent: true },
+  { source: '/avv', destination: '/de/avv', permanent: true },
+  { source: '/en', destination: '/', permanent: true },
+  { source: '/en/:path*', destination: '/:path*', permanent: true },
+]
+
 const nextConfig: NextConfig = {
   // Single self-contained artifact for the on-prem Docker image.
   output: 'standalone',
@@ -76,6 +103,7 @@ const nextConfig: NextConfig = {
     return [
       { source: '/settings/passkeys', destination: '/settings/security', permanent: true },
       { source: '/settings/tokens', destination: '/settings/ai-connection', permanent: true },
+      ...(edition === 'cloud' ? websiteRedirects : []),
     ]
   },
   typedRoutes: true,

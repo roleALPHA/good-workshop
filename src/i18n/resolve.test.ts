@@ -8,6 +8,19 @@ import { asLocale, negotiate, resolveLocale } from './resolve'
  */
 
 describe('resolveLocale', () => {
+  it('prefers the address over everything, including the person', () => {
+    // /en/pricing is a page a search engine has indexed as English and sends
+    // English visitors to. Whatever a leftover cookie or even a signed-in
+    // profile says, that page is English -- otherwise the result and the page
+    // behind it disagree, and Google drops the hreflang annotation whole.
+    expect(resolveLocale({ url: 'en', user: 'fr', cookie: 'es', acceptLanguage: 'de' })).toBe('en')
+  })
+
+  it('ignores an address that names no language', () => {
+    // Everything behind the login: there the language belongs to the person.
+    expect(resolveLocale({ url: null, user: 'fr' })).toBe('fr')
+  })
+
   it('prefers the signed-in person over everything else', () => {
     expect(resolveLocale({ user: 'fr', cookie: 'es', acceptLanguage: 'en-US' })).toBe('fr')
   })

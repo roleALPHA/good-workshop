@@ -1,9 +1,11 @@
 import Link from 'next/link'
 import type { Route } from 'next'
-import { getFormatter, getTranslations } from 'next-intl/server'
+import { getFormatter, getLocale, getTranslations } from 'next-intl/server'
 import type { PlanKey } from '@/cloud/billing/plans'
 import { readPriceList } from '@/cloud/billing/price-list'
 import { SOURCE_URL } from '@/lib/attribution'
+import type { Locale } from '@/i18n/config'
+import { breadcrumb, JsonLd, softwareApplication } from './structured-data'
 
 /**
  * Both models, for businesses. Net prices, because GoodWorkshop Cloud is not
@@ -14,9 +16,11 @@ import { SOURCE_URL } from '@/lib/attribution'
  * has confirmed.
  */
 export async function Pricing() {
-  const [t, format, priceList] = await Promise.all([
+  const [t, nav, format, locale, priceList] = await Promise.all([
     getTranslations('site.pricing'),
+    getTranslations('site.nav'),
     getFormatter(),
+    getLocale() as Promise<Locale>,
     readPriceList(),
   ])
   const euro = (cents: number) => format.number(cents / 100, { style: 'currency', currency: 'EUR' })
@@ -26,6 +30,25 @@ export async function Pricing() {
 
   return (
     <div>
+      {/* The only page that states a price, so the only page that may put one
+          in its markup -- and only the prices it printed. A plan whose price
+          the accounting system did not return shows a dash above and is left
+          out here rather than guessed at. */}
+      <JsonLd
+        data={softwareApplication({
+          locale,
+          name: 'GoodWorkshop',
+          description: t('intro'),
+          offers: plans.flatMap((key) => {
+            const netCents = priceList.prices[key]
+            return netCents === null
+              ? []
+              : [{ price: netCents / 100, unit: t(`${copy[key]}.unit`) }]
+          }),
+        })}
+      />
+      <JsonLd data={breadcrumb('pricing', locale, t('title'), nav('home'))} />
+
       <h1 className="text-3xl font-semibold tracking-tight">{t('title')}</h1>
       <p className="mt-3 max-w-2xl rounded border border-[var(--border-strong)] bg-[var(--surface-raised)] px-4 py-3 text-[15px]">
         {t('businessOnly')}

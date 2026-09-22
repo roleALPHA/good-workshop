@@ -42,6 +42,9 @@ export default getRequestConfig(async ({ locale: requested }) => {
 
   return configFor(
     resolveLocale({
+      // Set by src/middleware.ts for the public website, where the address
+      // names the language and nothing else may override it.
+      url: headerList.get('x-locale'),
       user: session?.locale,
       cookie: cookieStore.get(LOCALE_COOKIE)?.value,
       acceptLanguage: headerList.get('accept-language'),

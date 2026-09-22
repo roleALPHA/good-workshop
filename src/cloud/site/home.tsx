@@ -1,3 +1,4 @@
+import type { Metadata } from 'next'
 import Image from 'next/image'
 import Link from 'next/link'
 import type { Route } from 'next'
@@ -6,15 +7,48 @@ import { getLocale, getTranslations } from 'next-intl/server'
 import { Bot, Github, Printer, Share2, Timer, Users } from 'lucide-react'
 import { readSessionCached } from '@/server/auth/session'
 import { SOURCE_URL } from '@/lib/attribution'
+import type { Locale } from '@/i18n/config'
+import { siteMetadata } from './metadata'
+import { pathFor } from './routes'
+import { JsonLd, softwareApplication } from './structured-data'
 import { SiteShell } from './site-shell'
 
 /**
  * The cloud's front page. Somebody already signed in has no use for a sales
  * page and goes straight to their library.
+ *
+ * The default export carries the shell because it answers `/` through
+ * src/app/page.tsx, which sits outside the `(site)` group and therefore
+ * outside the layout that would otherwise provide it. `<Home>` is the same
+ * page without it, for the prefixed routes under `(site)/[lang]`, where the
+ * layout does -- two shells nested inside each other would render the
+ * navigation and the legal footer twice.
  */
+/** Re-exported by src/app/page.tsx, which answers `/`. */
+export async function generateMetadata(): Promise<Metadata> {
+  return siteMetadata('home')
+}
+
 export default async function CloudHome() {
+  await sendMembersToTheirLibrary()
+  return (
+    <SiteShell>
+      <Home />
+    </SiteShell>
+  )
+}
+
+/** Shared by every language's front page; see the note above. */
+export async function sendMembersToTheirLibrary() {
   if (await readSessionCached().catch(() => null)) redirect('/library')
-  const [t, locale] = await Promise.all([getTranslations('site.home'), getLocale()])
+}
+
+export async function Home() {
+  const [t, nav, locale] = await Promise.all([
+    getTranslations('site.home'),
+    getTranslations('site.nav'),
+    getLocale() as Promise<Locale>,
+  ])
 
   const features = [
     ['plan', Timer],
@@ -24,8 +58,30 @@ export default async function CloudHome() {
     ['print', Printer],
   ] as const
 
+  /**
+   * The three pages worth reading next, linked from the page every link
+   * points at. Internal links are how a crawler finds a page at all -- the
+   * sitemap offers them, a link is what makes them look worth fetching.
+   */
+  const more = [
+    ['methods', pathFor('methods', locale), nav('methods'), t('moreMethods')],
+    ['faq', pathFor('faq', locale), nav('faq'), t('moreFaq')],
+    ['compare', pathFor('compare', locale), nav('compare'), t('moreCompare')],
+  ] as const
+
   return (
-    <SiteShell>
+    <>
+      {/* No `offers`: the prices come out of the accounting system and are
+          read on the pricing page. Naming one here would be a price this page
+          does not show, which is the one thing schema.org markup must not do. */}
+      <JsonLd
+        data={softwareApplication({
+          locale,
+          name: 'GoodWorkshop',
+          description: t('lead'),
+        })}
+      />
+
       <section className="max-w-2xl py-6">
         <h1 className="text-3xl font-semibold tracking-tight sm:text-4xl">{t('title')}</h1>
         <p className="mt-4 text-[17px] leading-relaxed text-[var(--fg-muted)]">{t('lead')}</p>
@@ -37,7 +93,7 @@ export default async function CloudHome() {
             {t('cta')}
           </Link>
           <Link
-            href={'/preise' as Route}
+            href={pathFor('pricing', locale) as Route}
             className="rounded border border-[var(--border-strong)] px-4 py-3 text-[16px] hover:bg-[var(--surface-raised)]"
           >
             {t('ctaSecondary')}
@@ -120,6 +176,27 @@ export default async function CloudHome() {
           {t('selfHostCta')}
         </a>
       </section>
-    </SiteShell>
+
+      <section className="mt-10" aria-labelledby="more">
+        <h2 id="more" className="text-xl font-semibold tracking-tight">
+          {t('moreTitle')}
+        </h2>
+        <ul className="mt-4 grid gap-4 sm:grid-cols-3">
+          {more.map(([key, href, label, body]) => (
+            <li key={key}>
+              <Link
+                href={href as Route}
+                className="block h-full rounded border border-[var(--border)] p-4 hover:bg-[var(--surface-raised)]"
+              >
+                <span className="text-[16px] font-medium underline underline-offset-2">
+                  {label}
+                </span>
+                <span className="mt-1 block text-[15px] text-[var(--fg-muted)]">{body}</span>
+              </Link>
+            </li>
+          ))}
+        </ul>
+      </section>
+    </>
   )
 }

@@ -1,5 +1,17 @@
+import type { Metadata } from 'next'
 import { redirect } from 'next/navigation'
 import { needsSetup } from '@/server/settings/setup'
+
+/**
+ * Nothing to describe: this page only ever redirects, and a self-hosted
+ * installation has no public website to be found in a search index.
+ *
+ * It exists because src/app/page.tsx re-exports whichever front page the build
+ * has, and the cloud's carries a canonical and an hreflang block.
+ */
+export function generateMetadata(): Metadata {
+  return {}
+}
 
 /**
  * The address somebody types is the one they expect to get in through.
