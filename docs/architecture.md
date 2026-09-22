@@ -89,9 +89,18 @@ accounting and payments, so a repeated or interrupted run neither invoices nor c
 carry the price there for the invoice anyway, and the second copy is the one that goes stale -- the
 registration page advertised one euro for a while after the price had gone to five. The billing
 worker reads the article price and appends a row to `plan_price`; the web container reads that
-table and needs no access to accounting at all. A change takes effect on the first of the coming
-month, so a month that is running never gets more expensive than was announced, and every price
-ever in force stays on record. When accounting has not answered for a day, the pricing page shows
+table and needs no access to accounting at all. A change takes effect on the first month that
+is at least six weeks away -- what the terms promise before a price applies, and what the right to
+end the contract over it needs to be worth anything. The date carries the promise, so nobody has to
+remember to wait; every workspace on that plan is told once, and `price_change_notice` is where the
+run remembers that it did. Every price ever in force stays on record.
+
+**A new version of a legal text** works the same way from the other end. Publishing a text and
+binding customers to it are two decisions: the second is an operator action that writes
+`legal_announcement` with a date at least six weeks out, and the run turns that row into mail and
+into one `legal_acknowledgement` per workspace -- which is also what stops it telling anybody twice.
+The console and the worker are different database roles, which is why the decision is a row rather
+than a function call. When accounting has not answered for a day, the pricing page shows
 no price and registration refuses -- existing workspaces are unaffected, because a stale sync is
 our problem, not theirs. What stays in `plans.ts` is what accounting does not know: that a user
 month is counted by the day and a workshop once, when it is created.
