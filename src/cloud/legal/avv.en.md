@@ -51,7 +51,7 @@ After the contract ends, the controller can export their data. The processor del
 - **Tenant separation:** customers are separated in the database by enforced row-level security
 - **Access control:** sign-in without a password, via passkeys or one-time e-mail links; roles and rights per workshop and folder; separate database roles with minimal privileges
 - **Operations:** data centres within the EU; signed software images scanned for vulnerabilities; regular security updates
-- **Availability:** daily backup with restore tests
+- **Availability:** backups current to the day. The data is backed up once a day; in the event of a restore, the state may be up to 24 hours old. Backups are stored encrypted and separately from the production system and are regularly checked for restorability.
 - **Accountability:** logging of security-relevant events
 
 This version is also provided in other languages. Only the German version is authoritative and legally binding; translations are provided for understanding.

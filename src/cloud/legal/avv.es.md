@@ -51,7 +51,7 @@ Tras la finalización del contrato, el responsable puede exportar sus datos. El 
 - **Separación de clientes:** separación de los clientes en la base de datos mediante seguridad a nivel de fila forzada
 - **Control de acceso:** acceso sin contraseña mediante passkeys o enlaces de un solo uso por correo; roles y derechos por taller y carpeta; roles de base de datos separados con privilegios mínimos
 - **Operación:** centros de datos en la UE; imágenes de software firmadas y analizadas en busca de vulnerabilidades; actualizaciones de seguridad periódicas
-- **Disponibilidad:** copia de seguridad diaria con pruebas de restauración
+- **Disponibilidad:** copia de seguridad al día. Los datos se copian una vez al día; en caso de restauración, el estado puede tener hasta 24 horas de antigüedad. Las copias se conservan cifradas y separadas del sistema productivo, y su restaurabilidad se comprueba periódicamente.
 - **Trazabilidad:** registro de los eventos relevantes para la seguridad
 
 Esta versión se facilita también en otros idiomas. Solo la versión alemana es determinante y jurídicamente vinculante; las traducciones sirven para la comprensión.

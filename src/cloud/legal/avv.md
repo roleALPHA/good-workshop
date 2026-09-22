@@ -49,7 +49,7 @@ Nach Vertragsende kann der Verantwortliche seine Daten exportieren. Der Auftrags
 - **Mandantentrennung:** Trennung der Kunden in der Datenbank durch erzwungene Row-Level-Security
 - **Zugriffskontrolle:** Anmeldung ohne Passwort über Passkeys oder einmalige E-Mail-Links; Rollen und Rechte je Workshop und Ordner; getrennte Datenbankrollen mit minimalen Rechten
 - **Betrieb:** Rechenzentren in der EU; signierte und auf Schwachstellen geprüfte Software-Images; regelmäßige Sicherheitsupdates
-- **Verfügbarkeit:** tägliche Datensicherung mit Wiederherstellungstests
+- **Verfügbarkeit:** tagesaktuelle Sicherung. Die Daten werden einmal täglich gesichert; im Wiederherstellungsfall kann der Stand bis zu 24 Stunden zurückliegen. Die Sicherungen werden verschlüsselt und getrennt vom Produktivsystem aufbewahrt und regelmäßig auf Wiederherstellbarkeit geprüft.
 - **Nachvollziehbarkeit:** Protokollierung sicherheitsrelevanter Ereignisse
 
 Diese Fassung wird auch in weiteren Sprachen bereitgestellt. Maßgeblich und rechtsverbindlich ist ausschließlich die deutsche Fassung; Übersetzungen dienen dem Verständnis.
