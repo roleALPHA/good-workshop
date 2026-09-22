@@ -1009,6 +1009,10 @@
       "mailSent": "Si l’adresse appartient à un opérateur, le lien est en route.",
       "mailSubject": "Connexion à la console opérateur",
       "mailBody": "Ce lien te connecte à la console opérateur. Il vaut quinze minutes et une seule fois.\n\n{link}\n\nSi tu ne l’as pas demandé, ignore ce message et consulte le journal d’audit.",
+      "linkTitle": "Confirmer la connexion",
+      "linkIntro": "Encore une étape : avec « Se connecter », tu accèdes à la console en tant que {email}, et le lien ne fonctionne plus ensuite. Cette étape empêche les filtres de messagerie d’utiliser le lien avant toi.",
+      "linkButton": "Se connecter",
+      "linkPending": "Connexion …",
       "linkInvalid": "Ce lien est invalide, expiré ou déjà utilisé."
     },
     "tenants": {

@@ -1009,6 +1009,10 @@
       "mailSent": "Wenn die Adresse zu einem Operator gehört, ist der Link unterwegs.",
       "mailSubject": "Anmeldung zur Operator-Konsole",
       "mailBody": "Mit diesem Link meldest du dich an der Operator-Konsole an. Er gilt 15 Minuten und genau einmal.\n\n{link}\n\nWenn du das nicht angefordert hast, ignoriere diese Nachricht — und sieh im Prüfprotokoll nach.",
+      "linkTitle": "Anmeldung bestätigen",
+      "linkIntro": "Noch ein Schritt: Mit „Anmelden“ bist du als {email} in der Konsole, danach gilt der Link nicht mehr. Der Schritt verhindert, dass Mailfilter den Link vor dir verbrauchen.",
+      "linkButton": "Anmelden",
+      "linkPending": "Wird angemeldet …",
       "linkInvalid": "Dieser Link ist ungültig, abgelaufen oder schon benutzt."
     },
     "tenants": {

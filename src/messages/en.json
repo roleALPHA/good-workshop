@@ -1009,6 +1009,10 @@
       "mailSent": "If the address belongs to an operator, the link is on its way.",
       "mailSubject": "Sign in to the operator console",
       "mailBody": "This link signs you in to the operator console. It lives fifteen minutes and works once.\n\n{link}\n\nIf you did not ask for it, ignore this message — and have a look at the audit log.",
+      "linkTitle": "Confirm sign-in",
+      "linkIntro": "One more step: “Sign in” and you are in the console as {email}, after which the link stops working. This step keeps mail filters from using up the link before you do.",
+      "linkButton": "Sign in",
+      "linkPending": "Signing in …",
       "linkInvalid": "This link is invalid, expired or already used."
     },
     "tenants": {

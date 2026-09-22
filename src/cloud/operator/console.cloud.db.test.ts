@@ -2,13 +2,14 @@ import { randomUUID } from 'node:crypto'
 import pg from 'pg'
 import { uuidv7 } from 'uuidv7'
 import { afterAll, beforeAll, describe, expect, it } from 'vitest'
-import { hashSecret } from '@/server/auth/tokens'
+import { generateSecret, hashSecret } from '@/server/auth/tokens'
 import { verifySessionCookie } from '@/server/auth/session'
 import { withTenant } from '@/server/db'
 import { edition } from '@/server/edition'
 import {
   createOperatorSession,
   peekEnrollment,
+  peekSignInLink,
   requestSignInLink,
   revokeOperatorSession,
   signInOptions,
@@ -271,6 +272,37 @@ describe('signing in by mail', () => {
     const link = await linkFor(operatorEmail)
     expect(await spendSignInLink(console_, link!.token)).toMatchObject({ id: operatorId })
     expect(await spendSignInLink(console_, link!.token)).toBeNull()
+  })
+
+  it('survives being looked at, so a mail scanner cannot spend it', async () => {
+    // Defender Safe Links fetches every URL in a Microsoft 365 mailbox before
+    // delivery. When following the link spent it, the scanner went first and
+    // the operator arrived to "already used" -- every time, for every new
+    // link. Looking must therefore leave the link untouched.
+    await ops.query('delete from operator_login where operator_id = $1', [operatorId])
+    const link = await linkFor(operatorEmail)
+
+    expect(await peekSignInLink(console_, link!.token)).toMatchObject({ id: operatorId })
+    expect(await peekSignInLink(console_, link!.token)).toMatchObject({ id: operatorId })
+    expect(await spendSignInLink(console_, link!.token)).toMatchObject({ id: operatorId })
+  })
+
+  it('shows nothing for a link that is spent, run out or unknown', async () => {
+    // So the page says so at once, instead of offering a button that is
+    // certain to fail.
+    await ops.query('delete from operator_login where operator_id = $1', [operatorId])
+    const spent = await linkFor(operatorEmail)
+    await spendSignInLink(console_, spent!.token)
+    expect(await peekSignInLink(console_, spent!.token)).toBeNull()
+
+    const expired = await linkFor(operatorEmail)
+    await ops.query(
+      `update operator_login set expires_at = now() - interval '1 minute' where token_hash = $1`,
+      [hashSecret(expired!.token)],
+    )
+    expect(await peekSignInLink(console_, expired!.token)).toBeNull()
+
+    expect(await peekSignInLink(console_, generateSecret(32))).toBeNull()
   })
 
   it('refuses a link that has run out', async () => {
