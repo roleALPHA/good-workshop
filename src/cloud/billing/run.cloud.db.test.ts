@@ -13,6 +13,7 @@ import {
   processPaymentEvents,
   recheckPendingVat,
   dunningTransitions,
+  runBilling,
   trialTransitions,
   type Notice,
   type RunOptions,
@@ -647,6 +648,33 @@ describe('invoicing and collecting', () => {
       [id],
     )
     expect(rows[0].action).toBe('grant_grace')
+  })
+
+  /**
+   * Through `runBilling`, not through the step.
+   *
+   * Every other test here calls the steps directly, which is what let the call
+   * to the dunning step fall out of `runBilling` during a rebase and stay green:
+   * the function was still there, and nobody ran it. This one drives the run the
+   * worker drives.
+   */
+  it('takes the step when the whole run goes past, not only when it is called', async () => {
+    const id = await failedForGood()
+    const now = await dayAfterDunning(id, 1)
+
+    await runBilling(
+      ops,
+      null,
+      async (vatId) => ({
+        status: 'unavailable',
+        vatId,
+        error: 'not asked in this test',
+        checkedAt: now.toISOString(),
+      }),
+      options({ now }),
+    )
+
+    expect(await state(id)).toBe('payment_blocked')
   })
 
   it('locks the tenant even when the notice cannot be sent', async () => {
