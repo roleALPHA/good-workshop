@@ -7,6 +7,19 @@ GoodWorkshop speaks German, English, French and Spanish. **German is the source 
 what the code was written in, what the E2E suite asserts against, and what every other catalog
 is a translation of.
 
+**That rule is about the chrome, not about every string in the product.** Two things follow
+different rules and both are deliberate:
+
+- The **public website** serves English without a prefix and the other three under one
+  (`src/cloud/site/routes.ts`). `SITE_PRIMARY_LOCALE` and `DEFAULT_LOCALE` answer different
+  questions and are not the same constant.
+- The **Discover catalogue** — its methods, designs and filter vocabulary — has **English as its
+  source**, and its translations live in the database rather than in `src/messages`. They have
+  to: that content is written at runtime, and a file catalog would mean a release for every
+  method. The operator console that edits it is chrome again, so its labels are German-source
+  like everything else. One screen, two rules, and the difference is which side of the form you
+  are looking at.
+
 ## Where the language comes from
 
 ```

@@ -503,6 +503,44 @@ There is deliberately **no** area for user administration and none for access: a
 must never be able to invite users, make anybody an admin, or share a workshop or folder.
 Handing out access on somebody's behalf is a step a model must not be able to take.
 
+## Operator MCP
+
+That sentence is about a **customer's** token reaching a workspace. The operator console has an
+MCP endpoint of its own, and it can block a workspace and schedule its deletion — which is
+administration over MCP, so the difference has to be written down rather than assumed.
+
+It is a different subject, and every layer says so:
+
+|                          | customers                | operator                                        |
+| ------------------------ | ------------------------ | ----------------------------------------------- |
+| endpoint                 | `/api/mcp`               | `/operator/api/mcp`                             |
+| process                  | the public web container | the console container (`GW_OPERATOR_CONSOLE=1`) |
+| database role            | `gw_app`                 | `gw_operator`                                   |
+| network                  | the open internet        | the tailnet only                                |
+| credential               | `gwp_` / `gwo_`          | `gwop_`, issued by hand, expires within 90 days |
+| scopes                   | `SCOPES` (`workshops:*`) | `OPERATOR_SCOPES` (`ops:*`, `catalog:*`)        |
+| reaches workshop content | yes, the person's own    | **never**                                       |
+
+The boundary is not a policy but a grant: `gw_app` has `EXECUTE` on none of the `app.op_*`
+functions, so the operator tools could not run at `/api/mcp` even if somebody registered them
+there. Postgres refuses before any code would.
+
+**What an operator sees is figures, never content.** States, plans, member and workshop counts,
+invoices, audit entries. No workshop, no agenda, no block ever crosses that boundary.
+
+**Destructive actions are staged.** Blocking, scheduling a deletion, announcing new terms and
+writing off a billing period do not happen on one call. The first call describes what would
+happen — naming the workspace, its member and workshop counts — and returns a handle; a second
+call performs it. That second call takes **no arguments of its own**: what happens is read back
+out of the staged row, so a confirmation cannot perform a different action by construction
+rather than by checking. A handle works once, belongs to one operator and expires after five
+minutes. Staging is audited on its own, because an action that was proposed and never confirmed
+is worth seeing.
+
+The two scope vocabularies are separate on purpose. `SCOPES` is rendered as checkboxes on a
+customer's own token screen; an `ops:danger` appearing there would be a bug waiting for a
+screenshot.
+
 **A model is a collaborator, not a second write path.** Writing tools go through the same room
 as a browser: the model appears in the presence list, its block shows up immediately for
 everybody who has the day open, and both changes merge rather than overwrite. If the
