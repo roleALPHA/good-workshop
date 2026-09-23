@@ -53,9 +53,7 @@ describe("a 'use server' file", () => {
   const complaint = (node: ts.Statement): string | null => {
     if (ts.isTypeAliasDeclaration(node) || ts.isInterfaceDeclaration(node)) return null
     if (ts.isFunctionDeclaration(node)) {
-      const async = ts
-        .getModifiers(node)
-        ?.some((m) => m.kind === ts.SyntaxKind.AsyncKeyword)
+      const async = ts.getModifiers(node)?.some((m) => m.kind === ts.SyntaxKind.AsyncKeyword)
       return async ? null : `${node.name?.text ?? '(anonymous)'} is not async`
     }
     if (ts.isVariableStatement(node)) {
