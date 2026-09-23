@@ -116,6 +116,7 @@ export const cloudEdition: Edition = {
   },
 
   hasBilling: true,
+  hasCatalog: true,
 }
 
 /** What `@gw/edition` resolves to in a cloud build. */

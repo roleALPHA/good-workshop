@@ -3,7 +3,7 @@ import { fileURLToPath } from 'node:url'
 import createNextIntlPlugin from 'next-intl/plugin'
 import type { NextConfig } from 'next'
 import { requestedEdition } from './scripts/edition.mjs'
-import { billingAdaptersPath } from './scripts/edition-aliases.mjs'
+import { billingAdaptersPath, catalogPath } from './scripts/edition-aliases.mjs'
 
 /**
  * Which edition this build is. Read from the build environment here and in
@@ -78,6 +78,10 @@ const nextConfig: NextConfig = {
         edition === 'cloud'
           ? './src/cloud/site/home.tsx'
           : './src/components/home/community-home.tsx',
+      // The Discover catalogue. The private cloud build points this at the real
+      // one; every other build gets a catalogue with nothing in it -- which is
+      // a state the screens have to render anyway, so it is not an error path.
+      '@gw/catalog': catalogPath(process.env, './src/cloud/catalog/unavailable.ts'),
     },
   },
 
