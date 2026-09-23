@@ -59,7 +59,15 @@ export type Facet = {
 /** What both lists are narrowed by. Empty means "everything published". */
 export type CatalogQuery = {
   locale: Locale
-  /** Facet kind to the value keys asked for. Values within a kind are OR, kinds are AND. */
+  /**
+   * Facet kind to the value keys asked for. Every chosen value is a
+   * requirement.
+   *
+   * AND throughout, including within one kind, because that is what the
+   * question actually means: "works seated" plus "needs no reading" asks for
+   * something that is both, not something that is either. A kind that allows
+   * only one choice cannot tell the difference, so one rule covers both.
+   */
   facets?: Record<string, string[]>
   /** The number of people in the room; matches designs whose range covers it. */
   groupSize?: number
