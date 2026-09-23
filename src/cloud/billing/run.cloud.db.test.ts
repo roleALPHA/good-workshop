@@ -3,6 +3,7 @@ import pg from 'pg'
 import { uuidv7 } from 'uuidv7'
 import { afterAll, beforeAll, beforeEach, describe, expect, it } from 'vitest'
 import { fakeAdapters } from './adapters/fake'
+import { billingFixture, type BillingSetup } from './fixture'
 import { DUNNING_GRACE_DAYS } from './usage'
 import {
   chargeDue,
@@ -30,9 +31,11 @@ import type { BillingAdapters } from './ports'
  */
 
 const ops = new pg.Client({ connectionString: process.env.OPS_DATABASE_URL })
-const tenants: string[] = []
-const operators: string[] = []
-const announcements: string[] = []
+// The same fixture the invoice captures use, so a person reviewing an
+// invoice reviews the tenant these tests make their assertions about.
+const fixture = billingFixture(ops)
+const { operators, announcements } = fixture
+const { tenant, interval, workshopCreated } = fixture
 const MARCH = '2026-03-01'
 const APRIL_2 = new Date('2026-04-02T08:00:00Z')
 
@@ -48,69 +51,6 @@ const options = (overrides: Partial<RunOptions> = {}): RunOptions => ({
   log: () => {},
   ...overrides,
 })
-
-type Setup = {
-  plan?: 'per_user' | 'per_workshop'
-  country?: string
-  vatStatus?: string
-  vatId?: string | null
-  state?: 'trial' | 'active' | 'read_only'
-  trialEndsAt?: string
-  paymentReady?: boolean
-  locale?: string
-}
-
-/** A tenant with a billing account, straight into the tables. */
-async function tenant(setup: Setup = {}) {
-  const id = randomUUID()
-  tenants.push(id)
-  await ops.query(`insert into tenant (id, slug, name) values ($1, $2, 'Billing')`, [
-    id,
-    `bill-${id.slice(0, 8)}`,
-  ])
-  await ops.query(
-    `insert into tenant_lifecycle (tenant_id, state, trial_ends_at) values ($1, $2, $3)`,
-    [id, setup.state ?? 'active', setup.trialEndsAt ?? '2026-01-15T00:00:00Z'],
-  )
-  await ops.query(
-    `insert into billing_account (tenant_id, customer_type, company_name, street, postal_code, city,
-       country, vat_id, vat_status, billing_email, plan, plan_from, terms_accepted_at,
-       payment_method_ready, payment_customer_ref, locale)
-     values ($1, $2, 'Billing GmbH', 'Ring 1', '1010', 'Wien', $3, $4, $5, $6, $7, '2026-01-01', now(),
-       $8, $9, $10)`,
-    [
-      id,
-      'business',
-      setup.country ?? 'AT',
-      setup.vatId ?? null,
-      setup.vatStatus ?? 'none',
-      `billing-${id.slice(0, 8)}@example.test`,
-      setup.plan ?? 'per_user',
-      setup.paymentReady ?? false,
-      setup.paymentReady ? `cus-${id.slice(0, 8)}` : null,
-      setup.locale ?? 'de',
-    ],
-  )
-  await ops.query(
-    `insert into tax_evidence (tenant_id, kind, country) values ($1, 'billing_address', $2)`,
-    [id, setup.country ?? 'AT'],
-  )
-  return id
-}
-
-async function interval(tenantId: string, from: string, to: string | null) {
-  await ops.query(
-    `insert into usage_member_interval (tenant_id, member_id, active_from, active_to) values ($1, $2, $3, $4)`,
-    [tenantId, randomUUID(), from, to],
-  )
-}
-
-async function workshopCreated(tenantId: string, at: string, inTrial = false) {
-  await ops.query(
-    `insert into usage_workshop_created (workshop_id, tenant_id, created_at, in_trial) values ($1, $2, $3, $4)`,
-    [randomUUID(), tenantId, at, inTrial],
-  )
-}
 
 const period = async (tenantId: string) =>
   (
@@ -134,20 +74,7 @@ beforeEach(() => {
 })
 
 afterAll(async () => {
-  for (const table of [
-    'billing_period',
-    'billing_account',
-    'tax_evidence',
-    'vat_check',
-    'usage_member_interval',
-    'usage_workshop_created',
-  ]) {
-    await ops.query(`delete from ${table} where tenant_id = any($1::uuid[])`, [tenants])
-  }
-  await ops.query('delete from operator_audit where operator_id = any($1::uuid[])', [operators])
-  await ops.query('delete from legal_announcement where version = any($1)', [announcements])
-  await ops.query('delete from tenant where id = any($1::uuid[])', [tenants])
-  await ops.query('delete from operator where id = any($1::uuid[])', [operators])
+  await fixture.cleanup()
   await ops.end()
 })
 
@@ -349,7 +276,7 @@ describe('closing a month', () => {
 })
 
 describe('invoicing and collecting', () => {
-  async function computed(setup: Setup = {}) {
+  async function computed(setup: BillingSetup = {}) {
     const id = await tenant(setup)
     await interval(id, '2026-01-01T00:00:00Z', null)
     await closeMonth(ops, MARCH, options())

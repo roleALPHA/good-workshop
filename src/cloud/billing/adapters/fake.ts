@@ -1,8 +1,18 @@
+import { createHmac } from 'node:crypto'
 import type { BillingAdapters, IssuedInvoice, PaymentEvent } from '../ports'
+
+/** What a correctly signed webhook body carries, for tests. */
+export function fakeWebhookSignature(body: string): string {
+  return createHmac('sha256', 'fake-webhook-secret').update(body).digest('hex')
+}
 
 /**
  * In-memory accounting and payments, for tests. Records every call so a test
  * can say what was sent where, and lets a test decide how a charge ends.
+ *
+ * Held to the same contract as the real adapters by
+ * ../conformance/fake.test.ts -- a double that drifts from the contract makes
+ * every test that believes it agree with nothing.
  */
 export function fakeAdapters(
   options: {
@@ -38,6 +48,12 @@ export function fakeAdapters(
         return invoices.get(ref) ?? null
       },
       async issueInvoice({ ref, lines, tax }) {
+        // An accounting system posts one document per reference. Without this
+        // the double allowed what the real one must never do -- a second
+        // invoice number for a month that already has one -- and the
+        // conformance suite is where that showed.
+        const already = invoices.get(ref)
+        if (already) return already
         const net = lines.reduce(
           (sum, line) => sum + Math.round(line.quantity * line.unitNetCents),
           0,
@@ -86,7 +102,10 @@ export function fakeAdapters(
         }
       },
       parseWebhook(body, signature) {
-        if (signature !== 'valid') return null
+        // Bound to the body, not a magic word: a signature that verifies for
+        // any payload is not a signature, and the suite that says so has to be
+        // able to say it here too.
+        if (!signature || signature !== fakeWebhookSignature(body)) return null
         return JSON.parse(body) as PaymentEvent
       },
     },
