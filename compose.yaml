@@ -202,6 +202,9 @@ services:
       # without it the server formats in the CONTAINER's zone and the browser in
       # the visitor's, so the same timestamp renders two ways on one page.
       GW_TIMEZONE: ${GW_TIMEZONE:-Europe/Berlin}
+      # Off by default. `1` only together with the override from the README
+      # ("Automatic updates"): it hands this container the migration roles too.
+      GW_MIGRATE_ON_START: ${GW_MIGRATE_ON_START:-}
     # EINS. Der Web-Container kennt das Passwort von gw_app und von keiner
     # anderen Rolle -- das ist der "zwei Anker"-Punkt von oben, in Dateiform.
     # Were the superuser secret here too, the whole wall would be worth one line.
