@@ -162,8 +162,8 @@ cp .env.example .env
 
 The releases are published to the GitHub Container Registry, and `compose.yaml` pulls the one
 `GW_VERSION` names when the stack first comes up. `latest` always points at the newest stable
-release (currently `v0.7.2`). Every release is also published under its own tag, without the
-`v` (`0.7.2`) — set that instead to stay on one version until you decide to update. There is
+release (currently `v0.7.3`). Every release is also published under its own tag, without the
+`v` (`0.7.3`) — set that instead to stay on one version until you decide to update. There is
 nothing to build.
 
 To run a state that carries no tag of its own, build it and give it the name `compose.yaml`
@@ -183,7 +183,7 @@ missing:
 ```bash
 GW_APP_URL=https://workshop.example.com   # the address the app is reachable at
 GW_HOSTNAME=workshop.example.com          # the name in the certificate (profile `tls`)
-GW_VERSION=latest                         # the newest stable release, or e.g. 0.7.2 to pin one
+GW_VERSION=latest                         # the newest stable release, or e.g. 0.7.3 to pin one
 ```
 
 **Mail can wait.** The first start does not need it: the setup screen shows your sign-in link
@@ -320,6 +320,45 @@ docker compose run --rm migrate node scripts/preflight.mjs
 > cluster belong to the workshop whose day they sit on. Existing installations may have rows
 > where that is not true. The preflight finds them and names them one by one; where they
 > belong is a question about content, which no script should guess.
+
+#### Automatic updates
+
+An updater such as Watchtower replaces **only** the container it watches. The `migrate` service
+never runs, and the new `app` would serve against the old schema. For that case `app` can run
+the same chain itself before it starts — at a price: it then holds the superuser and `gw_owner`
+passwords as well, and the role separation described above is gone for this container. Decide
+that, don't drift into it.
+
+A `compose.override.yaml` next to `compose.yaml`:
+
+```yaml
+services:
+  app:
+    labels:
+      - com.centurylinklabs.watchtower.enable=true
+    environment:
+      GW_MIGRATE_ON_START: '1'
+      MIGRATION_DATABASE_URL: postgres://gw_owner@db:5432/goodworkshop
+      MIGRATION_DATABASE_PASSWORD_FILE: /run/db-secrets/gw_owner/password
+      ADMIN_DATABASE_URL: postgres://postgres@db:5432/goodworkshop
+      ADMIN_DATABASE_PASSWORD_FILE: /run/db-secrets/postgres/password
+    volumes:
+      - secret_postgres:/run/db-secrets/postgres:ro
+      - secret_gw_owner:/run/db-secrets/gw_owner:ro
+
+  watchtower:
+    image: nickfedor/watchtower:latest
+    restart: unless-stopped
+    command: --label-enable --cleanup --schedule "0 0 4 * * *"
+    volumes:
+      - /var/run/docker.sock:/var/run/docker.sock
+```
+
+`nickfedor/watchtower` rather than `containrrr/watchtower`: the original is no longer maintained
+and speaks Docker API 1.25, which Docker 29 refuses — it then restarts in a loop and updates
+nothing, without anything else noticing. A failed step keeps `app` from starting, exactly like
+the `migrate` service; the log names the step. `migrate` still runs on a normal `up` — both are
+idempotent, running twice costs nothing.
 
 ### Backing up
 
@@ -472,7 +511,7 @@ ssh -L 3000:127.0.0.1:3000 server
 | -------------------------------------------------------- | ------------ | --------------------------------------------------------------------------------------------------------------------------------------------- |
 | `GW_APP_URL`                                             | yes          | Address the app is reachable at. Sign-in links and the WebAuthn origin are derived from it.                                                   |
 | `GW_HOSTNAME`                                            | for `tls`    | Name in the certificate. Passed through to Caddy.                                                                                             |
-| `GW_VERSION`                                             | yes          | Image tag: `latest` for the newest stable release, or a release such as `0.7.2` to stay on it. Shown in the page footer and by `/api/health`. |
+| `GW_VERSION`                                             | yes          | Image tag: `latest` for the newest stable release, or a release such as `0.7.3` to stay on it. Shown in the page footer and by `/api/health`. |
 | `GW_MAIL_TRANSPORT`                                      | no           | `smtp`, `graph`, `console` or `none`. Empty: mail follows the settings under **Mail delivery** in the interface.                              |
 | `SMTP_URL` / `SMTP_URL_FILE`                             | with `smtp`  | Relay URL, directly or from a file.                                                                                                           |
 | `SMTP_FROM`                                              | with `smtp`  | Sender address.                                                                                                                               |
@@ -489,6 +528,7 @@ ssh -L 3000:127.0.0.1:3000 server
 | `GW_SECRET_KEY` / `GW_SECRET_KEY_FILE`                   | no           | Encrypts the mail credentials entered in the interface. Leave empty: the stack generates it. **Belongs in the backup** — see "Backing up".    |
 | `GW_TRUSTED_PROXIES`                                     | no           | Number of proxies in front (default 1). Only for throttling and logs, never for a permission.                                                 |
 | `GW_SESSION_IDLE_DAYS`                                   | no           | After how many unused days a session expires (default 14).                                                                                    |
+| `GW_MIGRATE_ON_START`                                    | no           | `1` runs the migrations in `app` before it starts, for updaters like Watchtower. Needs the override under "Automatic updates". Default off.   |
 | `GW_PORT`, `GW_COLLAB_PORT`                              | no           | Ports on `127.0.0.1`, in case the defaults are taken.                                                                                         |
 | `GW_COLLAB_URL`, `GW_COLLAB_INTERNAL_URL`                | no           | Only needed if the collaboration service is not at `/collab` on the same host.                                                                |
 
@@ -614,7 +654,7 @@ exact versions that went into it. The published image additionally carries an SP
 generated by BuildKit, which you can read without pulling the image:
 
 ```bash
-docker buildx imagetools inspect ghcr.io/rolealpha/good-workshop:0.7.2 --format '{{ json .SBOM }}'
+docker buildx imagetools inspect ghcr.io/rolealpha/good-workshop:0.7.3 --format '{{ json .SBOM }}'
 ```
 
 **Running it for other people.** If you host this for anyone but yourself, you are the
