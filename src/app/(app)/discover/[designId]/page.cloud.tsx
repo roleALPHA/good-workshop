@@ -4,20 +4,22 @@ import type { Route } from 'next'
 import { notFound } from 'next/navigation'
 import { getLocale, getTranslations } from 'next-intl/server'
 import { catalog } from '@gw/catalog'
+import { loadLibrary } from '@/server/actions/workshop'
 import { formatDuration } from '@/features/agenda/duration'
 import { LegalMarkdown } from '@/cloud/legal/markdown'
 import type { DesignDay, DesignDetail } from '@/cloud/catalog/ports'
 import type { Locale } from '@/i18n/config'
 import { People } from '../people'
+import { AdoptPanel } from '../adopt-panel'
 
 /**
  * One design, day by day, before anybody adopts it.
  *
  * The whole point of the screen is that a person sees what they are getting:
- * how many days, what is in them, how long each block runs. Adopting it is the
- * next step and deliberately not here yet -- the function that writes a design
- * into somebody's workshops lands with the screen that offers it, so that a
- * model never gains a power the interface does not have.
+ * how many days, what is in them, how long each block runs -- and only then
+ * the control that writes it into their workspace. The function behind that
+ * control is the same one the MCP tool calls, so that a model never gains a
+ * power the interface does not have.
  *
  * Addressed by id and not a slug: a design has no slug anywhere in this
  * feature, so there is no public address for one to leak. See ports.ts.
@@ -41,7 +43,17 @@ export async function generateMetadata(props: Props): Promise<Metadata> {
 }
 
 export default async function DesignPage(props: Props) {
-  const [design, t] = await Promise.all([read(props), getTranslations('discover')])
+  const [design, t, library] = await Promise.all([
+    read(props),
+    getTranslations('discover'),
+    // The workshops this person could append to. One page of them: the choice
+    // is "which of mine", and somebody with three hundred workshops picks the
+    // one they just opened, not the two hundredth.
+    loadLibrary(),
+  ])
+  const workshops = library.ok
+    ? library.data.workshops.map((workshop) => ({ id: workshop.id, title: workshop.title }))
+    : []
 
   return (
     <div className="max-w-3xl">
@@ -90,6 +102,26 @@ export default async function DesignPage(props: Props) {
           <LegalMarkdown source={design.body} />
         </div>
       )}
+
+      <div className="mt-8">
+        <AdoptPanel
+          designId={design.id}
+          workshops={workshops}
+          labels={{
+            title: t('adoptTitle'),
+            asNew: t('adoptNew'),
+            append: t('adoptAppend'),
+            choose: t('adoptChoose'),
+            submit: t('adoptSubmit'),
+            working: t('adoptWorking'),
+            open: t('adoptOpen'),
+            noWorkshops: t('adoptNoWorkshops'),
+            degraded: (count) => t('adoptDegraded', { count }),
+            dropped: (count) => t('adoptDropped', { count }),
+            daysFailed: (count) => t('adoptDaysFailed', { count }),
+          }}
+        />
+      </div>
 
       <div className="mt-8">
         {design.days.map((day, index) => (

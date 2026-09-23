@@ -1325,6 +1325,17 @@
     "back": "Zurück zu Discover",
     "notFound": "Dieses Design gibt es nicht.",
     "dayHeading": "Tag {n, number}",
-    "parked": "Geparkt"
+    "parked": "Geparkt",
+    "adoptTitle": "In deinen Workspace übernehmen",
+    "adoptNew": "Als neuen Workshop",
+    "adoptAppend": "An einen bestehenden Workshop anhängen",
+    "adoptChoose": "Workshop wählen",
+    "adoptSubmit": "Übernehmen",
+    "adoptWorking": "Wird übernommen …",
+    "adoptOpen": "Zum Workshop",
+    "adoptDegraded": "{count, plural, one {# Block kam als Notiz an, weil dieser Workspace seinen Typ nicht hat.} other {# Blöcke kamen als Notiz an, weil dieser Workspace ihre Typen nicht hat.}}",
+    "adoptDropped": "{count, plural, one {Bei # Block blieb die Beschreibung leer.} other {Bei # Blöcken blieb die Beschreibung leer.}}",
+    "adoptDaysFailed": "{count, plural, one {# Tag konnte nicht geschrieben werden und ist leer.} other {# Tage konnten nicht geschrieben werden und sind leer.}}",
+    "adoptNoWorkshops": "Du hast noch keinen Workshop, an den sich etwas anhängen ließe."
   }
 }

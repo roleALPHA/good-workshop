@@ -178,8 +178,13 @@ export async function fail<T>(
  * somebody in the third. The field path is the part that is worth showing and
  * is language-neutral; the rest is "check this input", which the catalog says
  * in four languages.
+ *
+ * Exported for the one action that cannot go through `action()` above:
+ * adopting a catalogue design opens collaboration rooms and must not do that
+ * inside a transaction. It still owes the same answer for bad input, and two
+ * mappings that agree today are two mappings that drift.
  */
-function firstIssue(error: z.ZodError): { key: string; params?: Record<string, string> } {
+export function firstIssue(error: z.ZodError): { key: string; params?: Record<string, string> } {
   const path = error.issues[0]?.path ?? []
   return path.length > 0
     ? { key: 'invalidField', params: { field: path.join('.') } }

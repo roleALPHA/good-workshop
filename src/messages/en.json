@@ -1325,6 +1325,17 @@
     "back": "Back to Discover",
     "notFound": "This design does not exist.",
     "dayHeading": "Day {n, number}",
-    "parked": "Parked"
+    "parked": "Parked",
+    "adoptTitle": "Adopt into your workspace",
+    "adoptNew": "As a new workshop",
+    "adoptAppend": "Append to an existing workshop",
+    "adoptChoose": "Choose a workshop",
+    "adoptSubmit": "Adopt",
+    "adoptWorking": "Adopting …",
+    "adoptOpen": "Open the workshop",
+    "adoptDegraded": "{count, plural, one {# block arrived as a note, because this workspace does not have its type.} other {# blocks arrived as notes, because this workspace does not have their types.}}",
+    "adoptDropped": "{count, plural, one {# block arrived without its description.} other {# blocks arrived without their descriptions.}}",
+    "adoptDaysFailed": "{count, plural, one {# day could not be written and is empty.} other {# days could not be written and are empty.}}",
+    "adoptNoWorkshops": "You have no workshop yet to append anything to."
   }
 }

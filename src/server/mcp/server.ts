@@ -1,5 +1,7 @@
 import { McpServer } from '@modelcontextprotocol/sdk/server/mcp.js'
 import type { PatActor } from './auth'
+import { edition } from '@/server/edition'
+import { registerCatalogTools } from './catalog-tools'
 import { registerLibraryTools } from './library-tools'
 import { registerTools } from './tools'
 import { displayVersion } from '@/lib/version'
@@ -71,5 +73,10 @@ export function buildMcpServer(actor: PatActor, authorization: string): McpServe
 
   registerLibraryTools(server, { actor, authorization })
   registerTools(server, { actor, authorization })
+  // Only where there is a catalogue. A self-hosted installation would
+  // otherwise be offered four tools that can only ever answer "nothing", which
+  // is worse than not offering them: a model reads a tool list as a statement
+  // about what this server can do.
+  if (edition.hasCatalog) registerCatalogTools(server, { actor, authorization })
   return server
 }
