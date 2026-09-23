@@ -112,7 +112,10 @@ export function faqPage(entries: { question: string; answer: string }[]) {
 }
 
 /** The named things on a page, in the order the page shows them. */
-export function itemList(name: string, items: { name: string; description?: string }[]) {
+export function itemList(
+  name: string,
+  items: { name: string; description?: string; url?: string }[],
+) {
   return {
     '@context': 'https://schema.org',
     '@type': 'ItemList',
@@ -123,6 +126,7 @@ export function itemList(name: string, items: { name: string; description?: stri
       position: index + 1,
       name: item.name,
       ...(item.description ? { description: item.description } : {}),
+      ...(item.url ? { url: siteUrl(item.url) } : {}),
     })),
   }
 }
@@ -130,17 +134,60 @@ export function itemList(name: string, items: { name: string; description?: stri
 /**
  * Where a page sits, for the trail under a search result.
  *
- * Two levels, because that is how deep this website is. Inventing a middle
- * level to make the trail look richer would describe a structure that has no
- * page behind it.
+ * Two levels for every page, and a third only where there genuinely is one:
+ * a method sits below the methods directory. Inventing a middle level to make
+ * a trail look richer would describe a structure with no page behind it, which
+ * is the same mistake in the other direction.
  */
-export function breadcrumb(page: SitePage, locale: Locale, title: string, home: string) {
+export function breadcrumb(
+  page: SitePage,
+  locale: Locale,
+  title: string,
+  home: string,
+  below?: { name: string; path: string },
+) {
   return {
     '@context': 'https://schema.org',
     '@type': 'BreadcrumbList',
     itemListElement: [
       { '@type': 'ListItem', position: 1, name: home, item: siteUrl(pathFor('home', locale)) },
       { '@type': 'ListItem', position: 2, name: title, item: siteUrl(pathFor(page, locale)) },
+      ...(below
+        ? [{ '@type': 'ListItem', position: 3, name: below.name, item: siteUrl(below.path) }]
+        : []),
     ],
+  }
+}
+
+/**
+ * One method, as the kind of thing schema.org has a word for.
+ *
+ * `Article` and not `HowTo`: a HowTo needs numbered steps, and what the page
+ * shows today is a paragraph. Emitting an empty `step: []` to claim the richer
+ * type would describe a page that does not exist -- which is rule 1 of this
+ * file. When a method grows real steps, the type can grow with it.
+ */
+export function methodArticle({
+  name,
+  description,
+  locale,
+  path,
+  updated,
+}: {
+  name: string
+  description: string
+  locale: Locale
+  path: string
+  updated?: string
+}) {
+  return {
+    '@context': 'https://schema.org',
+    '@type': 'Article',
+    headline: name,
+    description,
+    inLanguage: locale,
+    mainEntityOfPage: siteUrl(path),
+    publisher: organization(),
+    ...(updated ? { dateModified: updated } : {}),
   }
 }

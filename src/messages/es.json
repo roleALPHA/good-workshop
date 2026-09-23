@@ -1097,103 +1097,14 @@
       "lead": "Un día de taller se compone de bloques, y cada bloque tiene un tipo. El tipo decide qué campos lo acompañan: la consigna en el trabajo en grupo, el procedimiento en la decisión, la pregunta de apertura en el check-in. Aquí están todas las piezas que trae GoodWorkshop: para qué sirven, cuánto suelen durar y en qué forma social.",
       "durationLabel": "Duración habitual",
       "socialLabel": "Forma social",
-      "entries": {
-        "admin": {
-          "name": "Bienvenida y organización",
-          "body": "El primer bloque del día y el único durante el cual nadie tiene que pensar: el recorrido, las horas de pausa, dónde están los baños, qué se hace con los móviles. Cuanto más breve, más atención queda para el check-in que viene después. Hazlo corto y aun así anota las reglas del juego: son la referencia cuando más tarde alguien interrumpa.",
-          "duration": "10–15 minutos",
-          "social": "Plenario"
-        },
-        "check_in": {
-          "name": "Check-in",
-          "body": "Todo el mundo habla una vez antes de que empiece el trabajo. No es cortesía, es estática: quien no ha dicho nada en el primer cuarto del día suele decir poco después. Una pregunta, una ronda, un tiempo fijo por persona. Con más de doce personas, mejor en parejas que en ronda, o el bloque te costará media hora.",
-          "duration": "10–20 minutos",
-          "social": "Plenario o parejas"
-        },
-        "presentation": {
-          "name": "Aporte / presentación",
-          "body": "Alguien trae a la sala un conocimiento que nadie más tiene: cifras, contexto, una base técnica. El error más habitual es la duración: un aporte de más de veinte minutos sin una pregunta de vuelta se convierte en clase magistral. Planifica la digestión a continuación, como trabajo en grupo o discusión.",
-          "duration": "10–30 minutos",
-          "social": "Plenario"
-        },
-        "group_work": {
-          "name": "Trabajo en grupo",
-          "body": "El bloque donde ocurre el trabajo de verdad. Tres datos deciden si ocurre, y en la sala suelen faltar los tres: la consigna con las palabras exactas, el tamaño de los grupos y qué debe existir al final. Cuenta la puesta en común: cuatro grupos a tres minutos son doce minutos que, si no, salen de la siguiente pausa.",
-          "duration": "30–60 minutos",
-          "social": "Grupos pequeños"
-        },
-        "exercise": {
-          "name": "Ejercicio",
-          "body": "Una actividad guiada con un procedimiento definido: simulación, juego de rol, juego de empresa, escritura en silencio. A diferencia del trabajo en grupo, el procedimiento está dado y el resultado queda abierto. Anota la consigna de modo que una sustituta pudiera leerla en voz alta, y enlaza la ficha del método si existe.",
-          "duration": "20–45 minutos",
-          "social": "variable"
-        },
-        "discussion": {
-          "name": "Discusión en plenario",
-          "body": "Todo el mundo habla con todo el mundo sobre una pregunta. El bloque que más fiablemente se alarga, porque nada en él termina por sí solo. Fija un tiempo y una pregunta, y anota a qué debe llevar la discusión: una decisión, una recopilación o simplemente una imagen compartida.",
-          "duration": "15–30 minutos",
-          "social": "Plenario"
-        },
-        "decision": {
-          "name": "Decisión / votación",
-          "body": "De muchas opciones queda una. Votación con puntos para prioridades, fist of five para el acuerdo, consentimiento para las objeciones, mayoría para el resto. Anota antes qué procedimiento rige y quién decide: aclararlo después es la razón por la que hay talleres que terminan sin resultado.",
-          "duration": "10–20 minutos",
-          "social": "Plenario"
-        },
-        "reflection": {
-          "name": "Reflexión",
-          "body": "Una mirada atrás sobre lo que acaba de pasar: qué he entendido, qué me llevo, qué queda abierto. Primero a solas y por escrito, después compartido; si no, el grupo oye la opinión de la primera persona y sigue pensando en esa dirección.",
-          "duration": "10–20 minutos",
-          "social": "Individual y luego plenario"
-        },
-        "energizer": {
-          "name": "Energizer",
-          "body": "Cinco minutos de movimiento contra el bajón de la tarde. No es relleno: después de comer y después de dos bloques largos seguidos la atención baja de forma medible, y una actividad breve de pie recupera más que otra pausa de café. Cuida que nadie quede expuesto.",
-          "duration": "5–10 minutos",
-          "social": "Plenario, de pie"
-        },
-        "break": {
-          "name": "Pausa",
-          "body": "Al menos una cada noventa minutos, y mejor quince minutos que diez: una pausa demasiado corta no devuelve a nadie puntual y se come el comienzo del bloque siguiente. En GoodWorkshop las pausas se cuentan aparte del contenido, para que en la cabecera del día se vea cuánto trabajo hay realmente dentro.",
-          "duration": "15 minutos",
-          "social": "ninguna"
-        },
-        "lunch": {
-          "name": "Comida",
-          "body": "El bloque que más se mueve y el que menos debería moverse: el catering llega cuando llega. Fíjalo a la hora y se queda donde está mientras todo lo demás se reordena a su alrededor.",
-          "duration": "45–60 minutos",
-          "social": "ninguna"
-        },
-        "buffer": {
-          "name": "Margen",
-          "body": "Tiempo vacío a propósito. Todo taller se alarga en algún punto, y un margen previsto es la diferencia entre una agenda que se ajusta y otra que a partir de las dos y media simplemente es falsa. Calcula un diez por ciento del día y colócalo antes de los bloques que no pueden caerse.",
-          "duration": "15–30 minutos",
-          "social": "ninguna"
-        },
-        "next_steps": {
-          "name": "Próximos pasos",
-          "body": "Quién hace qué y para cuándo. El bloque que decide si el taller llega al día a día de trabajo o se queda en un buen día que se recuerda. Registra responsables y plazos en la sala, mientras están todos: después siempre falta la mitad.",
-          "duration": "10–20 minutos",
-          "social": "Plenario"
-        },
-        "check_out": {
-          "name": "Check-out",
-          "body": "Una última ronda, una pregunta, corta. No sirve para evaluar sino para cerrar: el grupo debe terminar el día y no solo dejar de trabajar. Una ronda de ánimo basta cuando el tiempo aprieta.",
-          "duration": "10–15 minutos",
-          "social": "Plenario"
-        },
-        "note": {
-          "name": "Nota",
-          "body": "No es un punto del programa sino una observación dentro de la agenda: un recordatorio sobre el proyector, un aviso para la co-facilitación, una idea para la próxima versión. No cuenta tiempo y aun así está en el sitio correcto.",
-          "duration": "sin duración",
-          "social": "ninguna"
-        }
-      },
       "howTitle": "Cómo esto se convierte en un día",
       "howBody": "El orden no es cuestión de gusto. Un día empieza con la llegada y termina con el cierre; en medio se alternan los bloques en los que se recibe con los bloques en los que se trabaja lo recibido. Una pausa a los noventa minutos, algo de movimiento después de comer y los próximos pasos antes del check-out. En GoodWorkshop mueves los bloques y todas las horas posteriores se recalculan; la comida, aun así, se queda donde está si la fijas a la hora.",
       "ctaTitle": "Convertir las piezas en una agenda",
       "ctaBody": "Crea el día, arrastra los bloques al orden que tienes en mente y deja que las horas se calculen solas. O describe a tu IA lo que planeas y deja que escriba el primer borrador.",
-      "cta": "Probar 14 días gratis"
+      "cta": "Probar 14 días gratis",
+      "emptyTitle": "La colección se está escribiendo.",
+      "emptyBody": "Los primeros métodos aparecerán aquí en cuanto estén listos.",
+      "back": "Todos los métodos"
     },
     "compare": {
       "title": "GoodWorkshop como alternativa a SessionLab",
@@ -1221,7 +1132,7 @@
         "body": "La agenda funciona en el móvil, sobrevive a un wifi malo y permite que la co-facilitación edite el mismo día a la vez. Tus notas de facilitación se quedan contigo: la vista de impresión y la exportación las dejan fuera por defecto, para que el grupo reciba la agenda y tú conserves el resto."
       },
       "limitsTitle": "Dónde GoodWorkshop puede menos",
-      "limitsBody": "GoodWorkshop no tiene una biblioteca pública de métodos con cientos de ejercicios preparados ni una galería de plantillas para cada ocasión. Trae quince piezas, y el contenido lo escribes tú, o dejas que lo escriba tu IA. También es más joven y más pequeño: menos integraciones, sin un equipo de treinta personas detrás. Si lo que buscas es una colección de ejercicios lista para usar, estarás mejor servida en otro sitio. Si lo que buscas es una agenda que calcule, que sea tuya y que tu IA sepa manejar, estás en el sitio correcto.",
+      "limitsBody": "La biblioteca de GoodWorkshop es deliberadamente pequeña. Discover reúne una selección de métodos y diseños de taller listos que escribimos y mantenemos nosotros: docenas, no cientos, y ninguna galería de plantillas para cada ocasión. Si lo que buscas es la mayor colección posible para explorar, estarás mejor servida en otro sitio. GoodWorkshop también es más joven y más pequeño: menos integraciones, sin un equipo de treinta personas detrás. Si lo que buscas es una agenda que calcule, que sea tuya, que tu IA sepa manejar —y un puñado de diseños que adoptas en un solo paso—, estás en el sitio correcto.",
       "ctaTitle": "Compruébalo tú",
       "ctaBody": "Catorce días, sin datos de pago. Si no encaja, simplemente se acaba.",
       "cta": "Probar gratis",

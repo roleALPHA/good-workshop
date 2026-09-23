@@ -1,8 +1,17 @@
 import type { MetadataRoute } from 'next'
 import { edition } from '@/server/edition'
 import { LOCALES } from '@/i18n/config'
+import { catalog } from '@gw/catalog'
 import { siteUrl } from '@/cloud/site/metadata'
-import { SITE_PAGES, alternatesFor, pathFor, type SitePage } from '@/cloud/site/routes'
+import {
+  SITE_PAGES,
+  alternatesFor,
+  alternatesForMethod,
+  methodPathFor,
+  pathFor,
+  type SitePage,
+} from '@/cloud/site/routes'
+import type { Locale } from '@/i18n/config'
 
 /**
  * Every public page, in every language, from the one table that knows them.
@@ -43,9 +52,13 @@ const PRIORITY: Record<SitePage, number> = {
   avv: 0.3,
 }
 
-export default function sitemap(): MetadataRoute.Sitemap {
+export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
   if (edition.name !== 'cloud') return []
 
+  return [...pages(), ...(await methods())]
+}
+
+function pages(): MetadataRoute.Sitemap {
   return SITE_PAGES.flatMap((page) => {
     const { languages, xDefault } = alternatesFor(page)
     // Each of the four entries repeats the whole set, itself included. That is
@@ -63,5 +76,41 @@ export default function sitemap(): MetadataRoute.Sitemap {
       priority: PRIORITY[page],
       alternates,
     }))
+  })
+}
+
+/**
+ * One entry per method per language it is published in -- not per language.
+ *
+ * Publication is per language here, unlike every page above: a method written
+ * only in English has one address. Offering four would be four promises, three
+ * of which answer 404, and a crawler that finds them stops believing the file.
+ *
+ * Below the directory's own priority, because a directory is what somebody
+ * browsing wants and a method page is what somebody searching wants. Both are
+ * worth having; only one of them is the way in.
+ */
+async function methods(): Promise<MetadataRoute.Sitemap> {
+  const published = await catalog.publishedMethodSlugs()
+
+  const byMethod = new Map<string, Partial<Record<Locale, string>>>()
+  for (const entry of published) {
+    byMethod.set(entry.id, { ...byMethod.get(entry.id), [entry.locale]: entry.slug })
+  }
+
+  return published.map((entry) => {
+    const { languages, xDefault } = alternatesForMethod(byMethod.get(entry.id) ?? {})
+    return {
+      url: siteUrl(methodPathFor(entry.slug, entry.locale)),
+      priority: 0.6,
+      alternates: {
+        languages: {
+          ...Object.fromEntries(
+            Object.entries(languages).map(([locale, path]) => [locale, siteUrl(path)]),
+          ),
+          ...(xDefault ? { 'x-default': siteUrl(xDefault) } : {}),
+        },
+      },
+    }
   })
 }
