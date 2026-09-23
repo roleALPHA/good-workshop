@@ -5,10 +5,12 @@ import { getFormatter, getTranslations } from 'next-intl/server'
 import { operatorDb } from '@/cloud/operator/db'
 import { listPasskeys } from '@/cloud/operator/auth'
 import { listOperatorTokens } from '@/cloud/operator/tokens'
+import { listOperatorConnections } from '@/cloud/operator/oauth'
 import { OPERATOR_SCOPES } from '@/cloud/operator/scopes'
 import { currentOperator } from '@/cloud/operator/session'
 import { Passkeys } from '../passkeys'
 import { Tokens } from '../tokens'
+import { Connections } from '../connections'
 
 export const dynamic = 'force-dynamic'
 
@@ -24,11 +26,12 @@ export default async function OperatorSecurity() {
   const operator = await currentOperator()
   if (!operator) redirect('/operator/login' as never)
 
-  const [t, format, passkeys, tokens] = await Promise.all([
+  const [t, format, passkeys, tokens, connections] = await Promise.all([
     getTranslations('operator.passkeys'),
     getFormatter(),
     listPasskeys(operatorDb(), operator.id),
     listOperatorTokens(operatorDb(), operator.id),
+    listOperatorConnections(operatorDb(), operator.id),
   ])
   const when = (value: Date | null) =>
     value ? format.dateTime(value, { dateStyle: 'medium', timeStyle: 'short' }) : t('never')
@@ -66,6 +69,19 @@ export default async function OperatorSecurity() {
           expiresAt: token.expiresAt.toISOString(),
           lastUsedAt: token.lastUsedAt?.toISOString() ?? null,
           revokedAt: token.revokedAt?.toISOString() ?? null,
+        }))}
+      />
+
+      <Connections
+        connections={connections.map((connection) => ({
+          clientId: connection.clientId,
+          name: connection.name,
+          scopes: connection.scopes,
+          // Formatted here, where the request's locale is known; the component
+          // is a client one and would otherwise render the server's idea of a
+          // date. The same reason the token rows are serialised above.
+          connected: when(connection.connectedAt),
+          lastUsed: when(connection.lastUsedAt),
         }))}
       />
     </div>

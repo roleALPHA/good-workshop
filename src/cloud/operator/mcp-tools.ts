@@ -15,6 +15,7 @@ import {
   setCatalogDays,
   setCatalogStatus,
 } from './catalog'
+import { disconnectOperatorClient, listOperatorConnections } from './oauth'
 import { actionFrom, stageAction, takeAction, type ConfirmedKind } from './pending'
 import { requireOperatorScope } from './scopes'
 import type { OperatorActor } from './tokens'
@@ -69,6 +70,53 @@ export function registerOperatorTools(server: McpServer, actor: OperatorActor): 
             'No workspaces.',
           { tenants },
         )
+      }),
+  )
+
+  server.registerTool(
+    'list_connections',
+    {
+      title: 'List connected clients',
+      description:
+        'The applications that currently hold an OAuth token for this operator, one row each ' +
+        'with the scopes they were granted and when they last acted. Not a list of tokens: an ' +
+        'access token lasts an hour, so a connected client mints twenty-four a day.',
+      inputSchema: {},
+    },
+    async () =>
+      opGuarded(async () => {
+        requireOperatorScope(actor.scopes, 'ops:read')
+        const connections = await listOperatorConnections(db, actor.operatorId)
+        return ok(
+          connections.map((c) => `${c.clientId}  ${c.name}  ${c.scopes.join(' ')}`).join('\n') ||
+            'Nothing is connected.',
+          { connections },
+        )
+      }),
+  )
+
+  server.registerTool(
+    'disconnect_client',
+    {
+      title: 'Disconnect a client',
+      description:
+        'Revokes every token one client holds, both kinds at once. Revoking only the access ' +
+        'token would leave a refresh token that mints another within the minute. This can end ' +
+        "the caller's own connection, which is a legitimate thing to ask for and takes effect " +
+        'immediately.',
+      inputSchema: { clientId: Id },
+    },
+    async ({ clientId }) =>
+      opGuarded(async () => {
+        // Not staged, unlike the destructive tenant actions. Nothing is lost
+        // and nobody else is affected: the worst outcome is that whoever asked
+        // has to connect again, which is the same cost as the confirmation
+        // step would have been.
+        requireOperatorScope(actor.scopes, 'ops:lifecycle')
+        const count = await disconnectOperatorClient(db, actor.operatorId, clientId)
+        return count === 0
+          ? fail('That client holds nothing of yours.')
+          : ok(`Disconnected. ${count} token(s) revoked.`, { revoked: count })
       }),
   )
 

@@ -11,6 +11,7 @@ import {
   setCatalogStatus,
 } from '@/cloud/operator/catalog'
 import { issueOperatorToken, revokeOperatorToken } from '@/cloud/operator/tokens'
+import { disconnectOperatorClient } from '@/cloud/operator/oauth'
 import { OPERATOR_SCOPES, isOperatorScope } from '@/cloud/operator/scopes'
 import { LOCALES } from '@/i18n/config'
 import { clientAddress } from '@/server/auth/client-address'
@@ -401,6 +402,27 @@ export async function revokeTokenAction(raw: unknown): Promise<OperatorResult> {
   if (!input.success) return { ok: false, error: 'input' }
   try {
     await revokeOperatorToken(operatorDb(), operator.id, input.data.tokenId)
+    revalidatePath('/operator/security')
+    return { ok: true }
+  } catch {
+    return { ok: false, error: 'failed' }
+  }
+}
+
+/**
+ * Ends a client's connection: every token it holds, at once.
+ *
+ * Both kinds, in one statement in SQL. Revoking the access token alone would
+ * leave a refresh token that mints another one within the minute, so this
+ * would have been a pause rather than a disconnection.
+ */
+export async function disconnectClientAction(raw: unknown): Promise<OperatorResult> {
+  const operator = await currentOperator()
+  if (!operator) return { ok: false, error: 'unauthenticated' }
+  const input = z.object({ clientId: z.string().uuid() }).safeParse(raw)
+  if (!input.success) return { ok: false, error: 'input' }
+  try {
+    await disconnectOperatorClient(operatorDb(), operator.id, input.data.clientId)
     revalidatePath('/operator/security')
     return { ok: true }
   } catch {

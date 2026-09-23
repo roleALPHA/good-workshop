@@ -14,7 +14,7 @@ import {
 import { OAuthError, type OAuthStore } from '@/domain/oauth/store'
 import type { OpenStore } from '@/server/oauth/endpoints'
 import { operatorConsoleEnabled, operatorDb } from './db'
-import type { OperatorScope } from './scopes'
+import { isOperatorScope, type OperatorScope } from './scopes'
 
 /**
  * The operator console's authorization server, as an OAuthStore.
@@ -175,3 +175,50 @@ export async function createOperatorAuthorizationCode(
  */
 export const openOperatorStore: OpenStore = async () =>
   operatorConsoleEnabled() ? (use) => use(operatorStore(operatorDb())) : null
+
+export type OperatorConnection = {
+  clientId: string
+  name: string
+  scopes: OperatorScope[]
+  connectedAt: Date
+  lastUsedAt: Date | null
+  live: number
+}
+
+/**
+ * The clients currently holding something, one row each.
+ *
+ * Not the tokens. An access token lasts an hour, so a connected client mints
+ * twenty-four a day, and a list of those answers no question anybody has. What
+ * somebody wants to know at this screen is which clients can act as them, and
+ * the answer is a short list with a way to end each one.
+ */
+export async function listOperatorConnections(
+  db: Db,
+  operatorId: string,
+): Promise<OperatorConnection[]> {
+  const { rows } = await db.query('select * from app.op_connections($1)', [operatorId])
+  return rows.map((row) => ({
+    clientId: row.client_id,
+    name: row.name,
+    // Filtered rather than cast, like the token scopes: a scope dropped from
+    // the vocabulary must stop meaning anything, not linger on an old row.
+    scopes: ((row.scopes ?? []) as string[]).filter(isOperatorScope),
+    connectedAt: row.connected_at,
+    lastUsedAt: row.last_used_at,
+    live: Number(row.live),
+  }))
+}
+
+/** Revokes every token a client holds. Returns how many there were. */
+export async function disconnectOperatorClient(
+  db: Db,
+  operatorId: string,
+  clientId: string,
+): Promise<number> {
+  const { rows } = await db.query('select app.op_disconnect($1,$2) as count', [
+    operatorId,
+    clientId,
+  ])
+  return Number(rows[0].count)
+}
