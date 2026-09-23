@@ -1329,7 +1329,8 @@
       "filterValue": "Valor",
       "filterGroup": "Filtro",
       "addValue": "Añadir un valor",
-      "retire": "Retirar"
+      "retire": "Retirar",
+      "backToTenants": "Volver a los espacios"
     },
     "tokens": {
       "title": "Acceso MCP",

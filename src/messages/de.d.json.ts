@@ -1332,7 +1332,8 @@ declare const messages: {
       "filterValue": "Wert",
       "filterGroup": "Filter",
       "addValue": "Wert hinzufügen",
-      "retire": "Zurückziehen"
+      "retire": "Zurückziehen",
+      "backToTenants": "Zurück zur Übersicht"
     },
     "tokens": {
       "title": "MCP-Zugänge",
