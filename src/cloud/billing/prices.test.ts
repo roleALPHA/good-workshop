@@ -54,14 +54,30 @@ describe('when a change takes effect', () => {
     expect(nextChangeMonth(new Date('2026-12-31T23:59:00Z'))).toBe('2027-03-01')
   })
 
-  it('leaves at least the notice period between today and the day it starts', () => {
-    for (const day of ['2026-01-01', '2026-02-14', '2026-06-30', '2026-11-20']) {
-      const now = new Date(`${day}T12:00:00Z`)
-      const starts = new Date(`${nextChangeMonth(now)}T00:00:00Z`)
-      expect((starts.getTime() - now.getTime()) / 86_400_000).toBeGreaterThanOrEqual(
-        PRICE_NOTICE_DAYS,
-      )
+  /**
+   * Every day of a year rather than a handful: the promise is a property of the
+   * function, and the days on which it could break -- the ones where today plus
+   * six weeks lands exactly on a first, and the two on which the clocks change
+   * -- are not the days anybody thinks to write down.
+   */
+  it('leaves at least the notice period between today and the day it starts, on every day', () => {
+    const day = new Date('2026-01-01T12:00:00Z')
+    let landedOnAFirst = 0
+    while (day.getUTCFullYear() < 2027) {
+      const month = nextChangeMonth(day)
+      const starts = new Date(`${month}T00:00:00Z`)
+      expect(month).toMatch(/^\d{4}-\d{2}-01$/)
+      const days = (starts.getTime() - day.getTime()) / 86_400_000
+      expect(days).toBeGreaterThanOrEqual(PRICE_NOTICE_DAYS)
+      // And never further off than it has to be: a customer told about a raise
+      // eleven weeks out is told about something else by the time it applies.
+      expect(days).toBeLessThan(PRICE_NOTICE_DAYS + 32)
+      // The boundary worth knowing we crossed: six weeks out is itself a first.
+      const earliest = new Date(day.getTime() + PRICE_NOTICE_DAYS * 86_400_000)
+      if (earliest.getUTCDate() === 1) landedOnAFirst += 1
+      day.setUTCDate(day.getUTCDate() + 1)
     }
+    expect(landedOnAFirst).toBeGreaterThan(0)
   })
 })
 

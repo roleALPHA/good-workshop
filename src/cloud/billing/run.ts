@@ -180,9 +180,16 @@ async function announcePriceChange(
  * Announcements an operator has made and the run has not yet sent.
  *
  * The decision is a row in `legal_announcement`; this is the step that turns it
- * into mail. Marked as done with what it actually told, so an interrupted run
- * picks up the rest rather than starting over -- `legal_acknowledgement` has a
- * unique key per workspace and version, which is what makes that safe.
+ * into mail. An interrupted run picks up the rest rather than starting over --
+ * `legal_acknowledgement` has a unique key per workspace and version, which is
+ * what makes that safe.
+ *
+ * It stays open until the day it applies, and that is the point rather than an
+ * oversight. Marking it done after the first pass left out everybody who
+ * registered between the announcement and its effective date -- they agreed to
+ * the old wording, got no mail and saw no banner, and the six weeks § 4.7
+ * promises were six weeks nobody told them about. Telling twice is not the
+ * risk: the acknowledgement row per workspace and version prevents that.
  */
 export async function pendingAnnouncements(db: Db, options: RunOptions) {
   const { rows } = await db.query(
@@ -197,10 +204,14 @@ export async function pendingAnnouncements(db: Db, options: RunOptions) {
       viennaDay(announcement.effective_from),
       options,
     )
-    await db.query(`update legal_announcement set completed_at = now(), told = $2 where id = $1`, [
-      announcement.id,
-      told,
-    ])
+    await db.query(
+      `update legal_announcement
+          set told = coalesce(told, 0) + $2,
+              completed_at = case when effective_from <= ($3::timestamptz at time zone 'Europe/Vienna')::date
+                                  then now() end
+        where id = $1`,
+      [announcement.id, told, options.now],
+    )
     options.log('billing: terms change announced', {
       document: announcement.document,
       version: announcement.version,

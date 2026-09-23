@@ -651,6 +651,18 @@
         "subject": "GoodWorkshop payment failed",
         "body": "Hello,\n\nwe could not collect the invoice amount. {retry, select, none {We will not try again.} other {We will try again on {retry}.}}\n\nPlease check your payment method:\n{link}"
       },
+      "dunning": {
+        "subject": "Payment reminder for GoodWorkshop",
+        "body": "Hello,\n\nwe have not been able to collect the outstanding invoice. Please settle it by {blockOn}.\n\nIf no payment arrives by then, we will block access to the workspace on {blockOn}. Your content stays; you can still read and export it.\n\nPlease check your payment method:\n{link}"
+      },
+      "payment_blocked": {
+        "subject": "Your access to GoodWorkshop is blocked",
+        "body": "Hello,\n\nthe outstanding invoice is still unpaid, so we have blocked access to the workspace.\n\nYour content is kept in full, and you can still read and export it. As soon as the payment arrives, the workspace opens again by itself:\n{link}"
+      },
+      "unblocked": {
+        "subject": "Your workspace is open again",
+        "body": "Hello,\n\nthe payment has arrived. Your workspace is open again and you can carry on as before:\n{link}"
+      },
       "contract_ended": {
         "subject": "Your GoodWorkshop contract has ended",
         "body": "Hello,\n\nyour contract ran out at the end of the month. Your workspace is now read-only: reading and exporting still work.\n\nYou can download your workshops until {until}. After that we delete the contents.\n{link}"

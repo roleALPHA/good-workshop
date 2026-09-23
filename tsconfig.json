@@ -35,6 +35,10 @@
       "@gw/edition": ["./src/server/edition/community.ts"],
       "@gw/home": ["./src/components/home/community-home.tsx"],
       "@gw/billing-adapters": ["./src/cloud/billing/adapters/unavailable.ts"],
+      // The contract the private build checks its own adapters against.
+      // Aliased rather than imported by path so that the specifier the
+      // private build uses is the specifier this repository proves.
+      "@gw/billing-conformance": ["./src/cloud/billing/conformance/index.ts"],
       "@gw/catalog": ["./src/cloud/catalog/unavailable.ts"]
     }
   },

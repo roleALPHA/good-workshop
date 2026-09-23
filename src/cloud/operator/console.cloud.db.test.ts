@@ -85,6 +85,10 @@ beforeAll(async () => {
 })
 
 afterAll(async () => {
+  // A maintenance window belongs to the installation rather than to a tenant,
+  // so deleting the tenants does not take it with them -- and one left behind
+  // is shown to every test that asks afterwards.
+  await ops.query('delete from maintenance_window where announced_by = $1', [operatorId])
   await ops.query('delete from operator_audit where operator_id = $1', [operatorId])
   await ops.query('delete from operator where id = $1', [operatorId])
   await ops.query('delete from tenant where id = any($1::uuid[])', [tenants])
@@ -490,5 +494,53 @@ describe('announcing maintenance', () => {
         note: 'verkehrt herum',
       }),
     ).rejects.toThrow()
+  })
+})
+
+describe('announcing a change of terms', () => {
+  const versions: string[] = []
+  const day = (offset: number) =>
+    new Date(Date.now() + offset * 86_400_000).toISOString().slice(0, 10)
+
+  const announce = (effectiveFrom: string) => {
+    const version = `2027-09-${String((Date.now() % 28) + 1).padStart(2, '0')}-${randomUUID().slice(0, 6)}`
+    versions.push(version)
+    return applyOperatorAction(console_, operatorId, null, {
+      kind: 'announce_terms',
+      document: 'agb',
+      version,
+      effectiveFrom,
+    })
+  }
+
+  afterAll(async () => {
+    await ops.query('delete from legal_announcement where version = any($1)', [versions])
+  })
+
+  /**
+   * AGB § 4.7 promises six weeks, and the database is where that promise is
+   * kept: an operator in a hurry, a console with a date picker and a mistyped
+   * month all end at the same check. The boundary itself is the test -- "some
+   * time in the past is refused" would pass against a rule of one day.
+   */
+  it('refuses a date inside the six weeks and takes the first one outside it', async () => {
+    await expect(announce(day(41))).rejects.toThrow()
+    await expect(announce(day(42))).resolves.toBeUndefined()
+  })
+
+  it('refuses a date in the past outright', async () => {
+    await expect(announce(day(-1))).rejects.toThrow()
+  })
+
+  it('records who announced it, so the decision has a name on it', async () => {
+    await announce(day(60))
+    const { rows } = await ops.query(
+      `select announced_by, completed_at from legal_announcement where version = $1`,
+      [versions.at(-1)],
+    )
+    expect(rows[0].announced_by).toBe(operatorId)
+    // Not yet told anybody: the billing run does that, and keeps it open until
+    // the day it applies.
+    expect(rows[0].completed_at).toBeNull()
   })
 })

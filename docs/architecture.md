@@ -128,7 +128,10 @@ worker then only closes months and moves trials. The private build names its ada
 left empty, as every public build leaves it, the alias falls back to the adapters that refuse.
 CI builds the cloud edition against a stub outside `src/` and checks that the stub is what ends
 up in the bundle, because a build that ignored the argument would silently ship adapters that
-cannot bill. `GW_BILLING_MODE` is a dry run unless it is
+cannot bill. What the adapters have to _do_ is stated once, as a suite
+(`src/cloud/billing/conformance/`) that runs against any implementation: here against the fake
+in the ordinary unit suite, and in the private build against Odoo and Stripe staging. So the
+first check of the promise is not the first invoice a customer receives. `GW_BILLING_MODE` is a dry run unless it is
 exactly `live`. Anything the run cannot decide -- a VAT number still pending, contradicting
 evidence, an invoice whose tax is not what was billed, an amount above the limit -- is held for an
 operator rather than guessed. The payment provider's webhook only verifies and stores; the worker
