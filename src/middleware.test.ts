@@ -112,3 +112,51 @@ describe('security headers', () => {
     expect(forwarded).not.toBe('')
   })
 })
+
+/**
+ * The other thing this middleware carries to the renderer.
+ *
+ * `<html lang>` is written by the root layout, above every page that could set
+ * a language of its own, so the public website's locale has to be decided
+ * before the tree renders -- and this is the only place that sees the address
+ * that early.
+ *
+ * Asserted through Next's own forwarding mechanism: a header the middleware
+ * overrides is echoed as `x-middleware-request-<name>` and named in
+ * `x-middleware-override-headers`. That is what the server reads on the other
+ * side, so it is what the test reads too.
+ */
+describe('the language of the public website', () => {
+  const forwarded = (path: string, headers?: HeadersInit) => {
+    const response = middleware(
+      new NextRequest(new URL(`https://ws.example.com${path}`), { headers }),
+    )
+    return {
+      value: response.headers.get('x-middleware-request-x-locale'),
+      overridden: (response.headers.get('x-middleware-override-headers') ?? '').split(','),
+    }
+  }
+
+  it('reads the language out of the address', () => {
+    expect(forwarded('/de/preise').value).toBe('de')
+    expect(forwarded('/fr/tarifs').value).toBe('fr')
+    // English is the unprefixed language, so its pages name it all the same.
+    expect(forwarded('/pricing').value).toBe('en')
+    expect(forwarded('/').value).toBe('en')
+  })
+
+  it('names no language for the application behind the login', () => {
+    expect(forwarded('/library').value).toBe('')
+    expect(forwarded('/w/abc').value).toBe('')
+  })
+
+  it('overwrites one a client sent, on every path', () => {
+    // Not a deletion: Next forwards only the headers named in the override
+    // list, so a header this middleware merely removes still arrives. An
+    // `x-locale: fr` on a request to /library would otherwise pick the
+    // language of a page that belongs to somebody's profile.
+    const { value, overridden } = forwarded('/library', { 'x-locale': 'fr' })
+    expect(overridden).toContain('x-locale')
+    expect(value).toBe('')
+  })
+})

@@ -10,6 +10,14 @@ import { DEFAULT_LOCALE, isLocale, LOCALES, type Locale } from './config'
  */
 
 export type LocaleSources = {
+  /**
+   * The language the address itself names, for the pages that have one.
+   *
+   * Only the public website does: `src/cloud/site/routes.ts` turns a pathname
+   * into this, and returns null for everything behind the login. It outranks
+   * the person on purpose -- see resolveLocale.
+   */
+  url?: string | null
   /** identity.locale, for a signed-in person. Untrusted: see asLocale. */
   user?: string | null
   /** The gw_locale cookie, which is all a signed-out visitor has. */
@@ -18,8 +26,20 @@ export type LocaleSources = {
   acceptLanguage?: string | null
 }
 
+/**
+ * The address wins where there is one, and the person wins everywhere else.
+ *
+ * That order looks backwards -- a signed-in person's own setting overruled by
+ * a URL -- and it is the only order that works for a page in a search index.
+ * `/en/pricing` is indexed as English and linked from English results; serving
+ * it in German to a visitor whose cookie happens to say so makes the result
+ * and the page disagree, and Google answers by dropping the hreflang
+ * annotation for the whole set. Behind the login no address names a language,
+ * `url` is null, and the old chain decides exactly as before.
+ */
 export function resolveLocale(sources: LocaleSources): Locale {
   return (
+    asLocale(sources.url) ??
     asLocale(sources.user) ??
     asLocale(sources.cookie) ??
     negotiate(sources.acceptLanguage) ??

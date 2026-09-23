@@ -1,8 +1,10 @@
 import Link from 'next/link'
 import type { Route } from 'next'
-import { getTranslations } from 'next-intl/server'
+import { getLocale, getTranslations } from 'next-intl/server'
 import { AppFooter } from '@/components/layout/app-footer'
-import { LanguageSwitcher } from '@/components/settings/language-switcher'
+import type { Locale } from '@/i18n/config'
+import { LanguageLinks } from './language-links'
+import { pathFor } from './routes'
 
 /**
  * The frame around every page of the public website: the product mark, the way
@@ -13,22 +15,41 @@ import { LanguageSwitcher } from '@/components/settings/language-switcher'
  * community build does not treat as pages.
  */
 export async function SiteShell({ children }: { children: React.ReactNode }) {
-  const t = await getTranslations('site.nav')
+  const [t, locale] = await Promise.all([
+    getTranslations('site.nav'),
+    getLocale() as Promise<Locale>,
+  ])
+
+  /**
+   * The pages worth an entry in the header, in the order somebody weighing
+   * the product reads them. They are here and not only in the footer because
+   * a link in the main navigation is what tells a crawler a page matters --
+   * and because the two pages that answer a question somebody typed into a
+   * search box should be reachable from wherever they landed.
+   */
+  const pages = [
+    ['methods', t('methods')],
+    ['faq', t('faq')],
+    ['pricing', t('pricing')],
+  ] as const
 
   return (
     <div className="flex min-h-dvh flex-col bg-[var(--bg)]">
       <header className="border-b border-[var(--border)] bg-[var(--surface)]">
         <nav className="mx-auto flex w-full max-w-5xl flex-wrap items-center gap-x-4 gap-y-2 px-4 py-3">
-          <Link href={'/' as Route} className="font-semibold tracking-tight">
+          <Link href={pathFor('home', locale) as Route} className="font-semibold tracking-tight">
             GoodWorkshop
           </Link>
           <span className="flex-1" />
-          <Link
-            href={'/preise' as Route}
-            className="rounded px-2 py-2 text-[15px] text-[var(--fg-muted)] hover:bg-[var(--surface-raised)]"
-          >
-            {t('pricing')}
-          </Link>
+          {pages.map(([page, label]) => (
+            <Link
+              key={page}
+              href={pathFor(page, locale) as Route}
+              className="rounded px-2 py-2 text-[15px] text-[var(--fg-muted)] hover:bg-[var(--surface-raised)]"
+            >
+              {label}
+            </Link>
+          ))}
           <Link
             href="/login"
             className="rounded px-2 py-2 text-[15px] text-[var(--fg-muted)] hover:bg-[var(--surface-raised)]"
@@ -51,7 +72,7 @@ export async function SiteShell({ children }: { children: React.ReactNode }) {
           <LegalLinks />
         </nav>
         <div className="flex justify-center px-4 pt-3">
-          <LanguageSwitcher compact />
+          <LanguageLinks />
         </div>
         <AppFooter />
       </footer>
@@ -61,18 +82,20 @@ export async function SiteShell({ children }: { children: React.ReactNode }) {
 
 /** The legal pages, in the order people look for them. */
 export async function LegalLinks() {
-  const t = await getTranslations('site.nav')
-  const links = [
-    ['/impressum', t('impressum')],
-    ['/agb', t('agb')],
-    ['/datenschutz', t('datenschutz')],
-    ['/avv', t('avv')],
-  ] as const
+  const [t, locale] = await Promise.all([
+    getTranslations('site.nav'),
+    getLocale() as Promise<Locale>,
+  ])
+  const links = ['impressum', 'agb', 'datenschutz', 'avv'] as const
   return (
     <>
-      {links.map(([href, label]) => (
-        <Link key={href} href={href as Route} className="py-2 underline-offset-2 hover:underline">
-          {label}
+      {links.map((page) => (
+        <Link
+          key={page}
+          href={pathFor(page, locale) as Route}
+          className="py-2 underline-offset-2 hover:underline"
+        >
+          {t(page)}
         </Link>
       ))}
     </>

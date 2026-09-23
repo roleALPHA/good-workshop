@@ -10,17 +10,34 @@ is a translation of.
 ## Where the language comes from
 
 ```
-identity.locale  →  gw_locale cookie  →  Accept-Language  →  de
+URL  →  identity.locale  →  gw_locale cookie  →  Accept-Language  →  de
 ```
 
 Resolved once, in `src/i18n/request.ts`, by the pure function in `src/i18n/resolve.ts`.
 
-There is **no locale in the URL**. The application lives entirely behind a session, so there is
-nothing to index and nothing to share as a language-specific link; the language is a property
-of the person, not of the address. That also keeps next-intl's middleware out of the tree,
-which matters more than it sounds: `src/middleware.ts` carries the CSP nonce to the renderer
-through `NextResponse.next({ request: { headers } })`, and a second `NextResponse.next()` from
-a composed middleware drops it silently. The symptom is not an error — it is a theme flash on
+**Behind the login there is no locale in the URL.** The application lives entirely behind a
+session, so there is nothing to index and nothing to share as a language-specific link; the
+language is a property of the person, not of the address.
+
+**On the cloud's public website there is, and it outranks the person.** Those pages are in a
+search index: `/pricing` is indexed as English and `/de/preise` as German, and a visitor who
+arrives from an English result has to find English there whatever a leftover cookie says.
+Otherwise the result and the page disagree, and Google drops the hreflang annotation for the
+whole set. English is the language served without a prefix — see `src/cloud/site/routes.ts`,
+which is the one table of what lives where, and note that this is a different decision from
+`DEFAULT_LOCALE`: German is still the source text every catalog is translated from.
+
+The address is read in `src/middleware.ts` and travels to the renderer as `x-locale`, the same
+way the CSP nonce does. It has to happen there rather than in a page, because `<html lang>` is
+written by the root layout — above every page that could set a language of its own. The header
+is set on **every** request, empty where the path names no language: Next forwards only the
+headers it was told to override, so a `headers.delete()` would leave a client's own `x-locale`
+standing on every path behind the login.
+
+None of this brings in next-intl's middleware, which matters more than it sounds:
+`src/middleware.ts` carries the CSP nonce to the renderer through
+`NextResponse.next({ request: { headers } })`, and a second `NextResponse.next()` from a
+composed middleware drops it silently. The symptom is not an error — it is a theme flash on
 every page load.
 
 Resolution happens in `getRequestConfig` and not in middleware because `readSession()` reaches

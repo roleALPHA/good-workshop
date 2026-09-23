@@ -6,8 +6,15 @@ import { ATTRIBUTION_TEXT } from '@/lib/attribution'
 import type { Notice } from './run'
 
 /**
- * The mails the billing worker sends. German until billing accounts remember a
- * language.
+ * The mails the billing worker sends, in the language the billing account
+ * remembers.
+ *
+ * Every sentence its message asks for has to be handed over here. next-intl
+ * answers a missing placeholder exactly as it answers a missing message -- with
+ * the bare key -- so a translated mail whose parameter was forgotten goes out
+ * with "subject" as its subject, and nothing upstream can tell. That is what
+ * happened to the price and terms announcements; notices.test.ts now walks
+ * every kind of notice against every catalog.
  *
  * Configured from the environment alone. The worker runs as the operations
  * role and has no grant on any tenant table, so the usual path -- read what an
@@ -31,17 +38,29 @@ export function noticeMail(notice: Notice, locale: Locale): Mail {
     }`,
   )
   const link = new URL('/admin/billing', authConfig.appUrl).toString()
+  const day = (date: Date) => date.toISOString().slice(0, 10)
   const params: Record<string, string | number> = { link }
   if (notice.kind === 'trial_ending') params.days = notice.daysLeft
   if (notice.kind === 'payment_failed') {
-    params.retry = notice.retryAt ? notice.retryAt.toISOString().slice(0, 10) : 'none'
+    params.retry = notice.retryAt ? day(notice.retryAt) : 'none'
   }
-  if (notice.kind === 'contract_ended') {
-    params.until = notice.exportUntil.toISOString().slice(0, 10)
+  if (notice.kind === 'contract_ended') params.until = day(notice.exportUntil)
+  if (notice.kind === 'dunning') params.blockOn = day(notice.blockOn)
+  if (notice.kind === 'price_change') {
+    params.from = notice.from
+    // Euro, because that is what the sentence says and what the customer pays.
+    params.price = notice.netCents / 100
+  }
+  if (notice.kind === 'terms_change') {
+    params.from = notice.from
+    params.version = notice.version
   }
   return {
     to: notice.to,
-    subject: t('subject'),
+    // With the same parameters as the body: the price and terms subjects name
+    // the day the change applies, and a subject rendered without them falls
+    // back to the word "subject".
+    subject: t('subject', params),
     text: [t('body', params), '', ATTRIBUTION_TEXT].join('\n'),
   }
 }

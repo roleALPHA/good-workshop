@@ -1,12 +1,23 @@
 import type { Metadata, Viewport } from 'next'
 import { headers } from 'next/headers'
 import { getLocale, getTranslations } from 'next-intl/server'
+import { authConfig } from '@/server/auth/config'
 import { ThemeProvider } from '@/components/theme-provider'
 import '@/styles/globals.css'
 
 export async function generateMetadata(): Promise<Metadata> {
   const t = await getTranslations('meta')
   return {
+    /**
+     * What every relative URL in a page's metadata is resolved against.
+     *
+     * Without it Next drops a relative canonical and a relative Open Graph
+     * image rather than guessing, and the tags simply do not appear -- which
+     * on the public website means four translations competing as duplicates.
+     * GW_APP_URL, not the request: behind a reverse proxy the request's host
+     * is whatever the proxy passed on.
+     */
+    metadataBase: new URL(authConfig.origin),
     // The product name, not a string: it is the same in every language and is
     // not interpolated from tenant data. Same rule as <AppFooter>.
     title: {

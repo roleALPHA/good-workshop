@@ -50,9 +50,13 @@ ARG GW_EDITION=community
 # this build context. Only the private cloud build passes it; left empty, the
 # build uses the adapters that refuse every invoice and every charge.
 ARG GW_BILLING_ADAPTERS=
+# Where the cloud build finds the Discover catalogue. Left empty, the build gets
+# a catalogue with nothing in it -- an empty library, not a broken one.
+ARG GW_CATALOG=
 COPY --from=deps /app/node_modules ./node_modules
 COPY . .
-RUN GW_EDITION=${GW_EDITION} GW_BILLING_ADAPTERS=${GW_BILLING_ADAPTERS} pnpm build && \
+RUN GW_EDITION=${GW_EDITION} GW_BILLING_ADAPTERS=${GW_BILLING_ADAPTERS} \
+    GW_CATALOG=${GW_CATALOG} pnpm build && \
     if [ "${GW_EDITION}" != "cloud" ]; then rm -rf drizzle-cloud && mkdir drizzle-cloud; fi
 
 # --- runner -----------------------------------------------------------------

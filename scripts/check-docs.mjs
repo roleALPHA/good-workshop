@@ -63,6 +63,9 @@ const INTERNAL = {
   GW_BILLING_ADAPTERS:
     'Build argument of the private cloud build: the module with the real accounting and ' +
     'payment adapters. Unset, billing refuses to run.',
+  GW_CATALOG:
+    'Build argument of the private cloud build: the module with the Discover catalogue -- the ' +
+    'curated methods and designs. Unset, the catalogue is empty.',
   GW_BILLING_MODE:
     'Cloud billing worker: `live` sends invoices and collects; anything else is a dry run.',
   GW_BILLING_INTERVAL_MS: 'Cloud billing worker: time between runs. Tuning knob.',

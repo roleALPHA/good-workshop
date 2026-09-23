@@ -231,3 +231,129 @@ describe('invoices', () => {
     expect(await readInvoiceDocument(inA.actor, 'nonsense')).toBeNull()
   })
 })
+
+describe('a maintenance window', () => {
+  const windows: string[] = []
+  const announce = async (startsIn: number, lastsMs = 2 * 3_600_000, cancelled = false) => {
+    const startsAt = new Date(Date.now() + startsIn)
+    const { rows } = await ops.query(
+      `insert into maintenance_window (starts_at, ends_at, note, cancelled_at)
+       values ($1, $2, $3, $4) returning id`,
+      [
+        startsAt,
+        new Date(startsAt.getTime() + lastsMs),
+        `Fenster ${randomUUID().slice(0, 8)}`,
+        cancelled ? new Date() : null,
+      ],
+    )
+    windows.push(rows[0].id)
+    return rows[0].id as string
+  }
+
+  const clear = async () => {
+    await ops.query('delete from maintenance_window where id = any($1::uuid[])', [windows])
+    windows.length = 0
+  }
+
+  afterAll(clear)
+
+  it('is the same window for every workspace, because it belongs to none', async () => {
+    await clear()
+    await announce(3 * 86_400_000)
+
+    // The table has no tenant_id on purpose: one installation goes down, not
+    // one customer. Both tenants have to be told the same thing.
+    // Asked twice, because the question takes no tenant at all: the signature
+    // is what makes "the same for everybody" true rather than merely likely.
+    const forA = await edition.maintenanceWindow()
+    const forB = await edition.maintenanceWindow()
+    expect(forA).not.toBeNull()
+    expect(forB).toEqual(forA)
+  })
+
+  it('shows the next one that is still to come, and hides what is over or called off', async () => {
+    await clear()
+    const soon = await announce(2 * 86_400_000)
+    await announce(5 * 86_400_000)
+    await announce(-10 * 86_400_000)
+    await announce(4 * 86_400_000, 2 * 3_600_000, true)
+
+    const shown = await edition.maintenanceWindow()
+    const { rows } = await ops.query('select note from maintenance_window where id = $1', [soon])
+    expect(shown?.note).toBe(rows[0].note)
+  })
+
+  it('keeps showing one that has already started, so the banner can say it is running', async () => {
+    await clear()
+    // Began an hour ago and runs for another hour.
+    await announce(-3_600_000, 2 * 3_600_000)
+
+    const shown = await edition.maintenanceWindow()
+    expect(shown).not.toBeNull()
+    expect(shown!.startsAt.getTime()).toBeLessThan(Date.now())
+    expect(shown!.endsAt.getTime()).toBeGreaterThan(Date.now())
+  })
+
+  it('answers with nothing when there is none', async () => {
+    // Every upcoming window, not only the ones this file made: the table has no
+    // tenant_id, so "none" is a statement about the whole installation and
+    // cannot be made while somebody else's row is still standing.
+    await clear()
+    await ops.query('delete from maintenance_window where cancelled_at is null and ends_at > now()')
+    expect(await edition.maintenanceWindow()).toBeNull()
+  })
+})
+
+describe('an announced change', () => {
+  const clear = async () => {
+    await ops.query('delete from legal_acknowledgement where tenant_id = any($1::uuid[])', [[A, B]])
+    await ops.query('delete from price_change_notice where tenant_id = any($1::uuid[])', [[A, B]])
+  }
+
+  afterAll(clear)
+
+  const day = (offset: number) =>
+    new Date(Date.now() + offset * 86_400_000).toISOString().slice(0, 10)
+
+  it('is shown to the workspace it was announced to, and to no other', async () => {
+    await clear()
+    await ops.query(
+      `insert into legal_acknowledgement (tenant_id, document, version, effective_from)
+       values ($1, 'agb', '2027-01-01', $2)`,
+      [A, day(30)],
+    )
+    await ops.query(
+      `insert into price_change_notice (tenant_id, plan, effective_from, net_cents)
+       values ($1, 'per_user', $2, 900)`,
+      [A, day(45)],
+    )
+
+    expect((await edition.announcedChanges(A)).map((change) => change.kind)).toEqual([
+      'terms',
+      'price',
+    ])
+    // B has its own announcements or none; it never reads A's.
+    expect(await edition.announcedChanges(B)).toEqual([])
+  })
+
+  it('stops showing a change on the day it applies', async () => {
+    await clear()
+    await ops.query(
+      `insert into legal_acknowledgement (tenant_id, document, version, effective_from)
+       values ($1, 'agb', '2027-02-01', $2)`,
+      [A, day(0)],
+    )
+    // A change in force is not news any more; it is the agreement.
+    expect(await edition.announcedChanges(A)).toEqual([])
+  })
+
+  it('stops showing a change the workspace has objected to', async () => {
+    await clear()
+    await ops.query(
+      `insert into legal_acknowledgement (tenant_id, document, version, effective_from, objected_at)
+       values ($1, 'agb', '2027-03-01', $2, now())`,
+      [A, day(30)],
+    )
+    expect(await edition.announcedChanges(A)).toEqual([])
+  })
+})

@@ -3,6 +3,7 @@ import pg from 'pg'
 import { uuidv7 } from 'uuidv7'
 import { afterAll, beforeAll, beforeEach, describe, expect, it } from 'vitest'
 import { fakeAdapters } from './adapters/fake'
+import { billingFixture, type BillingSetup } from './fixture'
 import { DUNNING_GRACE_DAYS } from './usage'
 import {
   chargeDue,
@@ -30,9 +31,11 @@ import type { BillingAdapters } from './ports'
  */
 
 const ops = new pg.Client({ connectionString: process.env.OPS_DATABASE_URL })
-const tenants: string[] = []
-const operators: string[] = []
-const announcements: string[] = []
+// The same fixture the invoice captures use, so a person reviewing an
+// invoice reviews the tenant these tests make their assertions about.
+const fixture = billingFixture(ops)
+const { operators, announcements } = fixture
+const { tenant, interval, workshopCreated } = fixture
 const MARCH = '2026-03-01'
 const APRIL_2 = new Date('2026-04-02T08:00:00Z')
 
@@ -48,69 +51,6 @@ const options = (overrides: Partial<RunOptions> = {}): RunOptions => ({
   log: () => {},
   ...overrides,
 })
-
-type Setup = {
-  plan?: 'per_user' | 'per_workshop'
-  country?: string
-  vatStatus?: string
-  vatId?: string | null
-  state?: 'trial' | 'active' | 'read_only'
-  trialEndsAt?: string
-  paymentReady?: boolean
-  locale?: string
-}
-
-/** A tenant with a billing account, straight into the tables. */
-async function tenant(setup: Setup = {}) {
-  const id = randomUUID()
-  tenants.push(id)
-  await ops.query(`insert into tenant (id, slug, name) values ($1, $2, 'Billing')`, [
-    id,
-    `bill-${id.slice(0, 8)}`,
-  ])
-  await ops.query(
-    `insert into tenant_lifecycle (tenant_id, state, trial_ends_at) values ($1, $2, $3)`,
-    [id, setup.state ?? 'active', setup.trialEndsAt ?? '2026-01-15T00:00:00Z'],
-  )
-  await ops.query(
-    `insert into billing_account (tenant_id, customer_type, company_name, street, postal_code, city,
-       country, vat_id, vat_status, billing_email, plan, plan_from, terms_accepted_at,
-       payment_method_ready, payment_customer_ref, locale)
-     values ($1, $2, 'Billing GmbH', 'Ring 1', '1010', 'Wien', $3, $4, $5, $6, $7, '2026-01-01', now(),
-       $8, $9, $10)`,
-    [
-      id,
-      'business',
-      setup.country ?? 'AT',
-      setup.vatId ?? null,
-      setup.vatStatus ?? 'none',
-      `billing-${id.slice(0, 8)}@example.test`,
-      setup.plan ?? 'per_user',
-      setup.paymentReady ?? false,
-      setup.paymentReady ? `cus-${id.slice(0, 8)}` : null,
-      setup.locale ?? 'de',
-    ],
-  )
-  await ops.query(
-    `insert into tax_evidence (tenant_id, kind, country) values ($1, 'billing_address', $2)`,
-    [id, setup.country ?? 'AT'],
-  )
-  return id
-}
-
-async function interval(tenantId: string, from: string, to: string | null) {
-  await ops.query(
-    `insert into usage_member_interval (tenant_id, member_id, active_from, active_to) values ($1, $2, $3, $4)`,
-    [tenantId, randomUUID(), from, to],
-  )
-}
-
-async function workshopCreated(tenantId: string, at: string, inTrial = false) {
-  await ops.query(
-    `insert into usage_workshop_created (workshop_id, tenant_id, created_at, in_trial) values ($1, $2, $3, $4)`,
-    [randomUUID(), tenantId, at, inTrial],
-  )
-}
 
 const period = async (tenantId: string) =>
   (
@@ -134,20 +74,7 @@ beforeEach(() => {
 })
 
 afterAll(async () => {
-  for (const table of [
-    'billing_period',
-    'billing_account',
-    'tax_evidence',
-    'vat_check',
-    'usage_member_interval',
-    'usage_workshop_created',
-  ]) {
-    await ops.query(`delete from ${table} where tenant_id = any($1::uuid[])`, [tenants])
-  }
-  await ops.query('delete from operator_audit where operator_id = any($1::uuid[])', [operators])
-  await ops.query('delete from legal_announcement where version = any($1)', [announcements])
-  await ops.query('delete from tenant where id = any($1::uuid[])', [tenants])
-  await ops.query('delete from operator where id = any($1::uuid[])', [operators])
+  await fixture.cleanup()
   await ops.end()
 })
 
@@ -349,7 +276,7 @@ describe('closing a month', () => {
 })
 
 describe('invoicing and collecting', () => {
-  async function computed(setup: Setup = {}) {
+  async function computed(setup: BillingSetup = {}) {
     const id = await tenant(setup)
     await interval(id, '2026-01-01T00:00:00Z', null)
     await closeMonth(ops, MARCH, options())
@@ -933,8 +860,10 @@ describe('announcing a change six weeks ahead', () => {
       `select completed_at, told from legal_announcement where document = 'agb' and version = $1`,
       [version],
     )
-    expect(rows[0].completed_at).not.toBeNull()
     expect(rows[0].told).toBeGreaterThan(0)
+    // Still open: its day has not come, and workspaces that register before it
+    // does have to be told as well.
+    expect(rows[0].completed_at).toBeNull()
 
     // Announced again: the acknowledgement rows are what stops it, so a second
     // run tells nobody twice even if the announcement were reopened.
@@ -987,5 +916,360 @@ describe('sweeping what has expired', () => {
 
     const { rows } = await ops.query('select 1 from audit_event where tenant_id = $1', [id])
     expect(rows).toHaveLength(1)
+  })
+})
+
+const periodOf = async (tenantId: string, month: string) =>
+  (
+    await ops.query('select * from billing_period where tenant_id = $1 and month = $2', [
+      tenantId,
+      month,
+    ])
+  ).rows[0]
+
+const APRIL = '2026-04-01'
+const MAY_2 = new Date('2026-05-02T08:00:00Z')
+
+describe('a plan change across the month boundary', () => {
+  /**
+   * The switch is a date, and the month it falls in is billed on either side of
+   * it. account.cloud.db.test.ts has the half an admin sees -- that a plan
+   * chosen on the 15th does not reach into the month it was chosen in. This is
+   * the other half: that the two invoices around the switch each carry the plan
+   * that was in force, with the price and the unit that go with it.
+   */
+  const switchTo = (tenantId: string, plan: string, from: string) =>
+    ops.query(
+      `update billing_account set next_plan = $2, next_plan_from = $3 where tenant_id = $1`,
+      [tenantId, plan, from],
+    )
+
+  it('bills the month before the switch on the old plan and the month after on the new one', async () => {
+    const id = await tenant({ plan: 'per_user' })
+    await interval(id, '2026-01-01T00:00:00Z', null)
+    await workshopCreated(id, '2026-04-08T10:00:00Z')
+    await workshopCreated(id, '2026-04-20T10:00:00Z')
+    await switchTo(id, 'per_workshop', APRIL)
+
+    // Closing March happens in April, which is when the switch falls due. The
+    // period has to be computed before the account moves, or the month that has
+    // already been used is billed under a plan nobody was on while using it.
+    await closeMonth(ops, MARCH, options())
+    expect(await periodOf(id, MARCH)).toMatchObject({
+      plan: 'per_user',
+      quantity: '1.00',
+      unit_net_cents: 500,
+      net_cents: 500,
+    })
+
+    await closeMonth(ops, APRIL, options({ now: MAY_2 }))
+    expect(await periodOf(id, APRIL)).toMatchObject({
+      plan: 'per_workshop',
+      quantity: '2.00',
+      unit_net_cents: 100,
+      net_cents: 200,
+    })
+  })
+
+  it('leaves the account alone while the switch is still in a later month', async () => {
+    const id = await tenant({ plan: 'per_user' })
+    await interval(id, '2026-01-01T00:00:00Z', null)
+    await switchTo(id, 'per_workshop', '2026-06-01')
+
+    await closeMonth(ops, MARCH, options())
+
+    expect(await periodOf(id, MARCH)).toMatchObject({ plan: 'per_user' })
+    const { rows } = await ops.query(
+      'select plan, next_plan from billing_account where tenant_id = $1',
+      [id],
+    )
+    expect(rows[0]).toEqual({ plan: 'per_user', next_plan: 'per_workshop' })
+  })
+
+  it('takes the last choice when the plan is changed twice before it falls due', async () => {
+    const id = await tenant({ plan: 'per_user' })
+    await interval(id, '2026-01-01T00:00:00Z', null)
+    await switchTo(id, 'per_workshop', APRIL)
+    // Changed their mind on the way: one column, so the second choice replaces
+    // the first rather than queueing behind it.
+    await switchTo(id, 'per_user', APRIL)
+
+    await closeMonth(ops, MARCH, options())
+
+    const { rows } = await ops.query(
+      'select plan, next_plan, next_plan_from from billing_account where tenant_id = $1',
+      [id],
+    )
+    expect(rows[0]).toMatchObject({ plan: 'per_user', next_plan: null, next_plan_from: null })
+  })
+
+  it('applies a switch once, however many times the worker passes', async () => {
+    const id = await tenant({ plan: 'per_user' })
+    await interval(id, '2026-01-01T00:00:00Z', null)
+    await switchTo(id, 'per_workshop', APRIL)
+
+    // Ten minutes apart, all month long.
+    for (let pass = 0; pass < 3; pass++) {
+      await closeMonth(ops, MARCH, options({ now: new Date(APRIL_2.getTime() + pass * 600_000) }))
+    }
+
+    const periods = await ops.query(
+      'select count(*)::int as n from billing_period where tenant_id = $1',
+      [id],
+    )
+    expect(periods.rows[0].n).toBe(1)
+    const { rows } = await ops.query(
+      `select plan, next_plan, to_char(plan_from, 'YYYY-MM-DD') as plan_from
+         from billing_account where tenant_id = $1`,
+      [id],
+    )
+    expect(rows[0]).toEqual({ plan: 'per_workshop', next_plan: null, plan_from: APRIL })
+  })
+
+  it('bills the closing month at its own price even as the plan moves under it', async () => {
+    const id = await tenant({ plan: 'per_user' })
+    await interval(id, '2026-01-01T00:00:00Z', null)
+    await ops.query(
+      `insert into plan_price (plan, net_cents, effective_from, source)
+       values ('per_user', 700, '2026-04-01', 'accounting')
+       on conflict (plan, effective_from) do update set net_cents = 700`,
+    )
+    await switchTo(id, 'per_workshop', APRIL)
+
+    await closeMonth(ops, MARCH, options())
+
+    // March, at March's price, on March's plan -- while both the price and the
+    // plan have already changed for the month the run is happening in.
+    expect(await periodOf(id, MARCH)).toMatchObject({ plan: 'per_user', unit_net_cents: 500 })
+  })
+})
+
+describe('the turn of the month', () => {
+  it('closes December when the run happens at half past midnight in Vienna', async () => {
+    const id = await tenant({ plan: 'per_user' })
+    await interval(id, '2026-11-01T00:00:00Z', null)
+
+    // 23:30 UTC on New Year's Eve is 00:30 on New Year's Day in Vienna. The
+    // worker runs every ten minutes, so it runs inside this hour every year.
+    const justAfterMidnight = new Date('2026-12-31T23:30:00Z')
+    const fake = fakeAdapters()
+    await runBilling(
+      ops,
+      fake.adapters,
+      async (vatId) => ({
+        status: 'unavailable',
+        vatId,
+        error: 'not asked in this test',
+        checkedAt: justAfterMidnight.toISOString(),
+      }),
+      options({ now: justAfterMidnight }),
+    )
+
+    expect(await periodOf(id, '2026-12-01')).toMatchObject({ quantity: '1.00' })
+    // And not the month before that, which is what closing "last month" from a
+    // UTC calendar would have picked.
+    expect(await periodOf(id, '2026-11-01')).toBeUndefined()
+  })
+
+  it('counts a whole month as one in the month the clocks go forward', async () => {
+    const id = await tenant({ plan: 'per_user' })
+    await interval(id, '2026-01-01T00:00:00Z', null)
+
+    // March has 31 days and one of them is 23 hours long. A member who was
+    // there for all of it is one member-month, not 0.999.
+    await closeMonth(ops, MARCH, options())
+    expect(await periodOf(id, MARCH)).toMatchObject({ quantity: '1.00', net_cents: 500 })
+  })
+
+  it('keeps the new month out of the month it is closing', async () => {
+    const id = await tenant({ plan: 'per_user' })
+    await interval(id, '2026-01-01T00:00:00Z', null)
+    // Joined on the first of the month the run happens in.
+    await interval(id, '2026-04-01T09:00:00Z', null)
+    const late = await tenant({ plan: 'per_workshop' })
+    await workshopCreated(late, '2026-03-31T23:30:00Z')
+    await workshopCreated(late, '2026-04-01T00:30:00Z')
+
+    await closeMonth(ops, MARCH, options())
+
+    expect(await periodOf(id, MARCH)).toMatchObject({ quantity: '1.00' })
+    // 23:30 UTC on 31 March is already 1 April in Vienna, and 00:30 UTC on
+    // 1 April is 02:30 -- so neither workshop belongs to March. The month is
+    // still closed, as an empty one: a period that is void, not one that is
+    // missing, because "nothing was used" is an answer and "no row" is not.
+    expect(await periodOf(late, MARCH)).toMatchObject({ quantity: '0.00', status: 'void' })
+  })
+
+  it('invoices and collects once however often the run passes over the same month', async () => {
+    const id = await tenant({ plan: 'per_user', paymentReady: true })
+    await interval(id, '2026-01-01T00:00:00Z', null)
+    const fake = fakeAdapters()
+
+    const collecting = options({ now: new Date(APRIL_2.getTime() + 3 * 86_400_000) })
+    for (let pass = 0; pass < 3; pass++) {
+      await closeMonth(ops, MARCH, options())
+      await invoicePeriods(ops, fake.adapters, options())
+      await chargeDue(ops, fake.adapters, collecting)
+    }
+
+    const mine = await periodOf(id, MARCH)
+    expect([...fake.invoices.keys()].filter((ref) => ref === mine.invoice_ref)).toHaveLength(1)
+    expect(
+      fake.charges.filter((charge) => charge.idempotencyKey.includes(mine.invoice_ref)),
+    ).toHaveLength(1)
+  })
+})
+
+describe('the language of an invoice', () => {
+  /**
+   * Mails are written in four languages, invoices in two: the accounting system
+   * renders German and English. What matters here is that the customer record
+   * and the invoice agree -- a partner created in German with an English
+   * invoice line is a mistake nobody sees until the PDF is in front of them.
+   */
+  it.each([
+    ['de', 'de', 'Benutzer-Monate, März 2026'],
+    ['en', 'en', 'user-months, March 2026'],
+    ['fr', 'en', 'user-months, March 2026'],
+    ['es', 'en', 'user-months, March 2026'],
+  ])('is written in %s in %s, and says so on the line', async (registered, invoiced, line) => {
+    const id = await tenant({ plan: 'per_user', locale: registered })
+    await interval(id, '2026-01-01T00:00:00Z', null)
+    await closeMonth(ops, MARCH, options())
+
+    const fake = fakeAdapters()
+    const sent: { locale: string }[] = []
+    const upsert = fake.adapters.invoicing.upsertCustomer
+    fake.adapters.invoicing.upsertCustomer = async (customer) => {
+      if (customer.tenantId === id) sent.push({ locale: customer.locale })
+      return upsert(customer)
+    }
+    await invoicePeriods(ops, fake.adapters, options())
+
+    const mine = await periodOf(id, MARCH)
+    const invoice = fake.invoices.get(mine.invoice_ref)
+    expect(invoice).toBeDefined()
+    expect((invoice!.lines as { description: string }[])[0]!.description).toContain(line)
+    // The customer was created in the same language the invoice is rendered in.
+    expect(sent).toEqual([{ locale: invoiced }])
+  })
+
+  it('writes the mail in the language they registered in, not the one the invoice uses', async () => {
+    const id = await tenant({
+      plan: 'per_user',
+      locale: 'fr',
+      state: 'trial',
+      trialEndsAt: new Date(APRIL_2.getTime() + 3 * 86_400_000).toISOString(),
+    })
+    const mine = `billing-${id.slice(0, 8)}@example.test`
+
+    notices = []
+    await trialTransitions(ops, options())
+
+    // French for the mail, English for the invoice: the asymmetry is deliberate
+    // and this is where it is stated.
+    expect(notices.find((notice) => notice.to === mine)?.locale).toBe('fr')
+  })
+})
+
+describe('a change of terms while people are signing up', () => {
+  const announce = async (effectiveFrom: Date) => {
+    const version = `2027-02-${String((Date.now() % 28) + 1).padStart(2, '0')}-${randomUUID().slice(0, 4)}`
+    announcements.push(version)
+    await ops.query(
+      `insert into legal_announcement (document, version, effective_from) values ('agb', $2, $1)`,
+      [effectiveFrom, version],
+    )
+    return version
+  }
+
+  /**
+   * The announcement is told once and then marked done. A workspace that
+   * registers between the day it goes out and the day it applies agreed to the
+   * old wording -- so it is exactly the workspace that has to be told, and the
+   * one a "done" flag walks past.
+   */
+  it('tells a workspace that registered after the announcement had gone out', async () => {
+    const effectiveFrom = new Date(APRIL_2.getTime() + 60 * 86_400_000)
+    const early = await tenant()
+    const version = await announce(effectiveFrom)
+
+    // Filtered by version throughout: an announcement now stays open until the
+    // day it applies, so a database that has seen other runs has other open
+    // ones in it -- as production will.
+    const onlyMine = (to: string) =>
+      notices.filter(
+        (notice) =>
+          notice.to === to && notice.kind === 'terms_change' && notice.version === version,
+      )
+
+    notices = []
+    await pendingAnnouncements(ops, options())
+    expect(onlyMine(`billing-${early.slice(0, 8)}@example.test`)).toHaveLength(1)
+
+    // Signs up the next day, still under the old terms.
+    const late = await tenant()
+    const theirs = `billing-${late.slice(0, 8)}@example.test`
+
+    notices = []
+    await pendingAnnouncements(ops, options({ now: new Date(APRIL_2.getTime() + 86_400_000) }))
+
+    expect(onlyMine(theirs)).toHaveLength(1)
+    // Its own version, not "exactly one row": every announcement still open
+    // reaches a workspace that has just appeared, and that is the behaviour --
+    // a newcomer is behind on all of them, not only on the latest.
+    const { rows } = await ops.query(
+      `select version from legal_acknowledgement where tenant_id = $1 and version = $2`,
+      [late, version],
+    )
+    expect(rows).toHaveLength(1)
+  })
+
+  it('closes the announcement on the day it applies, and not before', async () => {
+    const effectiveFrom = new Date(APRIL_2.getTime() + 60 * 86_400_000)
+    const version = await announce(effectiveFrom)
+    await tenant()
+
+    const completedAt = async () =>
+      (await ops.query('select completed_at from legal_announcement where version = $1', [version]))
+        .rows[0].completed_at
+
+    await pendingAnnouncements(ops, options())
+    expect(await completedAt()).toBeNull()
+
+    // Still open a month later, so anybody who signed up in between is caught.
+    await pendingAnnouncements(ops, options({ now: new Date(APRIL_2.getTime() + 30 * 86_400_000) }))
+    expect(await completedAt()).toBeNull()
+
+    // Past its day there is nothing left to announce: it is simply the terms.
+    await pendingAnnouncements(
+      ops,
+      options({ now: new Date(effectiveFrom.getTime() + 86_400_000) }),
+    )
+    expect(await completedAt()).not.toBeNull()
+  })
+
+  it('never tells the same workspace twice while the announcement stays open', async () => {
+    const effectiveFrom = new Date(APRIL_2.getTime() + 60 * 86_400_000)
+    const version = await announce(effectiveFrom)
+    const id = await tenant()
+    const mine = `billing-${id.slice(0, 8)}@example.test`
+
+    notices = []
+    for (let pass = 0; pass < 3; pass++) {
+      await pendingAnnouncements(
+        ops,
+        options({ now: new Date(APRIL_2.getTime() + pass * 86_400_000) }),
+      )
+    }
+
+    // The acknowledgement row per workspace and version is what holds this --
+    // not the completed flag, which is exactly why dropping that flag is safe.
+    expect(
+      notices.filter(
+        (notice) =>
+          notice.to === mine && notice.kind === 'terms_change' && notice.version === version,
+      ),
+    ).toHaveLength(1)
   })
 })

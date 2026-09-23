@@ -37,6 +37,18 @@ describe('the community edition', () => {
     await expect(communityEdition.workspaceNotice('any-tenant')).resolves.toBeNull()
     expect(communityEdition.hasBilling).toBe(false)
   })
+
+  /**
+   * The banners the cloud grew: a price or terms change six weeks ahead, and a
+   * maintenance window for the installation. A self-hosted installation has
+   * neither -- nobody announces terms to themselves -- and each of these is a
+   * query away from a table that only the cloud schema has. Answering "nothing"
+   * without asking is what keeps the community edition from needing it.
+   */
+  it('announces nothing, because there is nobody to announce to', async () => {
+    await expect(communityEdition.announcedChanges('any-tenant')).resolves.toEqual([])
+    await expect(communityEdition.maintenanceWindow()).resolves.toBeNull()
+  })
 })
 
 describe('the fixed tenant id', () => {

@@ -11,6 +11,9 @@ export default defineConfig({
       '@gw/billing-adapters': fileURLToPath(
         new URL('./src/cloud/billing/adapters/unavailable.ts', import.meta.url),
       ),
+      '@gw/billing-conformance': fileURLToPath(
+        new URL('./src/cloud/billing/conformance/index.ts', import.meta.url),
+      ),
       '@gw/home': fileURLToPath(
         new URL('./src/components/home/community-home.tsx', import.meta.url),
       ),

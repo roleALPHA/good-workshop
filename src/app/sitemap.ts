@@ -1,0 +1,67 @@
+import type { MetadataRoute } from 'next'
+import { edition } from '@/server/edition'
+import { LOCALES } from '@/i18n/config'
+import { siteUrl } from '@/cloud/site/metadata'
+import { SITE_PAGES, alternatesFor, pathFor, type SitePage } from '@/cloud/site/routes'
+
+/**
+ * Every public page, in every language, from the one table that knows them.
+ *
+ * Empty in a community build, and that is the honest answer rather than a
+ * missing file: a self-hosted installation is entirely behind a login and has
+ * no public page to offer. It cannot be a `*.cloud.ts` route the way the pages
+ * are -- Next resolves `sitemap.xml` by file name and does not find it under
+ * one -- so the edition is checked here instead, through the same build-time
+ * alias everything else uses.
+ *
+ * Dynamic rather than generated at build time. The absolute URLs come from
+ * GW_APP_URL, and the image is built once and run by whoever runs it; baking
+ * the build machine's idea of the hostname into the sitemap is exactly the
+ * kind of mistake that is invisible until a search console reports every URL
+ * as unreachable.
+ *
+ * No `lastModified`. A date that is really "whenever this container started"
+ * is worse than none: a crawler that learns the field is meaningless stops
+ * reading it, including on the day it would have mattered.
+ */
+export const dynamic = 'force-dynamic'
+
+/**
+ * What a page is worth relative to the others on this site -- nothing more.
+ * The front page and the three pages somebody actually searches for lead; the
+ * legal texts are there to be found by name, not to rank.
+ */
+const PRIORITY: Record<SitePage, number> = {
+  home: 1,
+  pricing: 0.8,
+  methods: 0.8,
+  compare: 0.8,
+  faq: 0.7,
+  impressum: 0.3,
+  agb: 0.3,
+  datenschutz: 0.3,
+  avv: 0.3,
+}
+
+export default function sitemap(): MetadataRoute.Sitemap {
+  if (edition.name !== 'cloud') return []
+
+  return SITE_PAGES.flatMap((page) => {
+    const { languages, xDefault } = alternatesFor(page)
+    // Each of the four entries repeats the whole set, itself included. That is
+    // not redundancy -- an hreflang annotation that a page does not return for
+    // itself is ignored, and the sitemap is one of the three places Google
+    // accepts the annotation at all.
+    const alternates = {
+      languages: {
+        ...Object.fromEntries(LOCALES.map((locale) => [locale, siteUrl(languages[locale])])),
+        'x-default': siteUrl(xDefault),
+      },
+    }
+    return LOCALES.map((locale) => ({
+      url: siteUrl(pathFor(page, locale)),
+      priority: PRIORITY[page],
+      alternates,
+    }))
+  })
+}

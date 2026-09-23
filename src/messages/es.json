@@ -651,6 +651,18 @@
         "subject": "Ha fallado el pago de GoodWorkshop",
         "body": "Hola:\n\nno hemos podido cobrar el importe de la factura. {retry, select, none {No volveremos a intentarlo.} other {Lo volveremos a intentar el {retry}.}}\n\nRevisa tu método de pago:\n{link}"
       },
+      "dunning": {
+        "subject": "Recordatorio de pago de GoodWorkshop",
+        "body": "Hola,\n\nno hemos podido cobrar la factura pendiente. Abónala antes del {blockOn}, por favor.\n\nSi no recibimos el pago, el {blockOn} bloquearemos el acceso al espacio de trabajo. Tus contenidos se conservan: podrás seguir leyéndolos y exportándolos.\n\nRevisa tu método de pago:\n{link}"
+      },
+      "payment_blocked": {
+        "subject": "Tu acceso a GoodWorkshop está bloqueado",
+        "body": "Hola,\n\nla factura pendiente sigue sin pagarse, así que hemos bloqueado el acceso al espacio de trabajo.\n\nTus contenidos se conservan íntegros y puedes seguir leyéndolos y exportándolos. En cuanto recibamos el pago, el espacio se desbloquea solo:\n{link}"
+      },
+      "unblocked": {
+        "subject": "Tu espacio de trabajo vuelve a estar disponible",
+        "body": "Hola,\n\nhemos recibido el pago. Tu espacio de trabajo vuelve a estar disponible y puedes seguir trabajando como siempre:\n{link}"
+      },
       "contract_ended": {
         "subject": "Tu contrato de GoodWorkshop ha finalizado",
         "body": "Hola,\n\ntu contrato finalizó al terminar el mes. Tu espacio ahora es de solo lectura: leer y exportar siguen funcionando.\n\nPuedes descargar tus talleres hasta el {until}. Después eliminaremos los contenidos.\n{link}"
@@ -710,7 +722,8 @@
     "maintenance": {
       "planned": "Mantenimiento previsto el {from} hasta las {until}. GoodWorkshop puede no estar disponible un momento.",
       "running": "Mantenimiento en curso, previsto hasta las {until}."
-    }
+    },
+    "discover": "Discover"
   },
   "settings": {
     "intro": "Tu cuenta: nombre, idioma, seguridad y conexión IA.",
@@ -926,11 +939,15 @@
       "impressum": "Aviso legal",
       "agb": "Condiciones",
       "datenschutz": "Privacidad",
-      "avv": "Encargo de tratamiento"
+      "avv": "Encargo de tratamiento",
+      "methods": "Métodos",
+      "faq": "Preguntas",
+      "compare": "Comparación",
+      "home": "Inicio"
     },
     "home": {
-      "title": "Planifica talleres que funcionan.",
-      "lead": "GoodWorkshop es la agenda para la facilitación: programas del día con horarios, métodos y responsables, editados en equipo y conectados con tu IA.",
+      "title": "Planifica talleres — con una agenda que calcula sola.",
+      "lead": "GoodWorkshop es el planificador de talleres para facilitación y moderación: recorridos del día con horas, métodos y responsables, editados en directo entre varias personas y conectados con tu IA.",
       "cta": "Probar gratis 14 días",
       "ctaSecondary": "Ver precios",
       "featuresTitle": "Qué hace GoodWorkshop",
@@ -961,7 +978,11 @@
       "shotAgenda": "Un día de taller en GoodWorkshop: bloques con hora, duración, persona responsable y descripción, agrupados en secciones.",
       "shotLibrary": "La biblioteca: talleres en carpetas, con búsqueda y acciones rápidas.",
       "shotPhone": "El mismo día de taller en el móvil, como tarjetas para seguir en la sala.",
-      "shotsTitle": "Así se ve"
+      "shotsTitle": "Así se ve",
+      "moreTitle": "Seguir leyendo",
+      "moreMethods": "Las piezas de una agenda: quince métodos, para qué sirven y cuánto duran.",
+      "moreFaq": "Preguntas frecuentes: precios, protección de datos, alojamiento propio y conexión con la IA.",
+      "moreCompare": "¿Comparas con SessionLab? Qué hace GoodWorkshop de otra manera y dónde puede menos."
     },
     "pricing": {
       "title": "Precios",
@@ -995,7 +1016,43 @@
       "notTranslated": "Este texto aún no está disponible en tu idioma. En cualquier caso, solo la versión alemana es vinculante."
     },
     "meta": {
-      "description": "Planificación de talleres para la facilitación, en equipo y en tiempo real, conectada con IA. Prueba gratis 14 días."
+      "shareImageAlt": "Un día de taller en GoodWorkshop: bloques con hora, duración y persona responsable.",
+      "home": {
+        "title": "GoodWorkshop: planifica la agenda de tus talleres",
+        "description": "El planificador de talleres para facilitación y moderación: una agenda cuyas horas se recalculan al mover un bloque, editada en directo entre varios, lista para imprimir y exportar. 14 días gratis."
+      },
+      "pricing": {
+        "title": "Precios: por persona o por taller",
+        "description": "Dos modelos, intercambiables cada mes: por miembro activo o por taller creado. Precios netos, para empresas. 14 días gratis, sin datos de pago."
+      },
+      "methods": {
+        "title": "Métodos de facilitación: las piezas de una agenda",
+        "description": "Check-in, trabajo en grupo, decisión, energizer: para qué sirve cada pieza, cuánto suele durar y en qué forma social se desarrolla."
+      },
+      "compare": {
+        "title": "Alternativa a SessionLab: GoodWorkshop en comparación",
+        "description": "¿Buscas una alternativa a SessionLab? GoodWorkshop planifica agendas de taller, funciona en la UE o en tu propio servidor y habla con tu IA."
+      },
+      "faq": {
+        "title": "Preguntas frecuentes",
+        "description": "Qué cuesta GoodWorkshop, dónde están los datos, cómo alojarlo por tu cuenta y qué hace realmente la conexión con la IA."
+      },
+      "impressum": {
+        "title": "Aviso legal",
+        "description": "Identificación del proveedor según el § 5 ECG y el § 25 MedienG para GoodWorkshop Cloud."
+      },
+      "agb": {
+        "title": "Condiciones generales",
+        "description": "Las condiciones bajo las que GoodWorkshop Cloud se vende a empresas."
+      },
+      "datenschutz": {
+        "title": "Política de privacidad",
+        "description": "Qué datos trata GoodWorkshop Cloud, con qué fin, durante cuánto tiempo y sobre qué base jurídica."
+      },
+      "avv": {
+        "title": "Contrato de encargo de tratamiento",
+        "description": "El contrato del art. 28 del RGPD entre tú, como responsable, y roleALPHA, como encargada del tratamiento."
+      }
     },
     "register": {
       "title": "Probar gratis",
@@ -1034,6 +1091,190 @@
       "working": "Creando …",
       "invalid": "Este enlace ha caducado o ya se ha usado. Vuelve a registrarte.",
       "exists": "Ya existe una cuenta para esta dirección. Inicia sesión."
+    },
+    "methods": {
+      "title": "Métodos de facilitación: las piezas de una agenda",
+      "lead": "Un día de taller se compone de bloques, y cada bloque tiene un tipo. El tipo decide qué campos lo acompañan: la consigna en el trabajo en grupo, el procedimiento en la decisión, la pregunta de apertura en el check-in. Aquí están todas las piezas que trae GoodWorkshop: para qué sirven, cuánto suelen durar y en qué forma social.",
+      "durationLabel": "Duración habitual",
+      "socialLabel": "Forma social",
+      "entries": {
+        "admin": {
+          "name": "Bienvenida y organización",
+          "body": "El primer bloque del día y el único durante el cual nadie tiene que pensar: el recorrido, las horas de pausa, dónde están los baños, qué se hace con los móviles. Cuanto más breve, más atención queda para el check-in que viene después. Hazlo corto y aun así anota las reglas del juego: son la referencia cuando más tarde alguien interrumpa.",
+          "duration": "10–15 minutos",
+          "social": "Plenario"
+        },
+        "check_in": {
+          "name": "Check-in",
+          "body": "Todo el mundo habla una vez antes de que empiece el trabajo. No es cortesía, es estática: quien no ha dicho nada en el primer cuarto del día suele decir poco después. Una pregunta, una ronda, un tiempo fijo por persona. Con más de doce personas, mejor en parejas que en ronda, o el bloque te costará media hora.",
+          "duration": "10–20 minutos",
+          "social": "Plenario o parejas"
+        },
+        "presentation": {
+          "name": "Aporte / presentación",
+          "body": "Alguien trae a la sala un conocimiento que nadie más tiene: cifras, contexto, una base técnica. El error más habitual es la duración: un aporte de más de veinte minutos sin una pregunta de vuelta se convierte en clase magistral. Planifica la digestión a continuación, como trabajo en grupo o discusión.",
+          "duration": "10–30 minutos",
+          "social": "Plenario"
+        },
+        "group_work": {
+          "name": "Trabajo en grupo",
+          "body": "El bloque donde ocurre el trabajo de verdad. Tres datos deciden si ocurre, y en la sala suelen faltar los tres: la consigna con las palabras exactas, el tamaño de los grupos y qué debe existir al final. Cuenta la puesta en común: cuatro grupos a tres minutos son doce minutos que, si no, salen de la siguiente pausa.",
+          "duration": "30–60 minutos",
+          "social": "Grupos pequeños"
+        },
+        "exercise": {
+          "name": "Ejercicio",
+          "body": "Una actividad guiada con un procedimiento definido: simulación, juego de rol, juego de empresa, escritura en silencio. A diferencia del trabajo en grupo, el procedimiento está dado y el resultado queda abierto. Anota la consigna de modo que una sustituta pudiera leerla en voz alta, y enlaza la ficha del método si existe.",
+          "duration": "20–45 minutos",
+          "social": "variable"
+        },
+        "discussion": {
+          "name": "Discusión en plenario",
+          "body": "Todo el mundo habla con todo el mundo sobre una pregunta. El bloque que más fiablemente se alarga, porque nada en él termina por sí solo. Fija un tiempo y una pregunta, y anota a qué debe llevar la discusión: una decisión, una recopilación o simplemente una imagen compartida.",
+          "duration": "15–30 minutos",
+          "social": "Plenario"
+        },
+        "decision": {
+          "name": "Decisión / votación",
+          "body": "De muchas opciones queda una. Votación con puntos para prioridades, fist of five para el acuerdo, consentimiento para las objeciones, mayoría para el resto. Anota antes qué procedimiento rige y quién decide: aclararlo después es la razón por la que hay talleres que terminan sin resultado.",
+          "duration": "10–20 minutos",
+          "social": "Plenario"
+        },
+        "reflection": {
+          "name": "Reflexión",
+          "body": "Una mirada atrás sobre lo que acaba de pasar: qué he entendido, qué me llevo, qué queda abierto. Primero a solas y por escrito, después compartido; si no, el grupo oye la opinión de la primera persona y sigue pensando en esa dirección.",
+          "duration": "10–20 minutos",
+          "social": "Individual y luego plenario"
+        },
+        "energizer": {
+          "name": "Energizer",
+          "body": "Cinco minutos de movimiento contra el bajón de la tarde. No es relleno: después de comer y después de dos bloques largos seguidos la atención baja de forma medible, y una actividad breve de pie recupera más que otra pausa de café. Cuida que nadie quede expuesto.",
+          "duration": "5–10 minutos",
+          "social": "Plenario, de pie"
+        },
+        "break": {
+          "name": "Pausa",
+          "body": "Al menos una cada noventa minutos, y mejor quince minutos que diez: una pausa demasiado corta no devuelve a nadie puntual y se come el comienzo del bloque siguiente. En GoodWorkshop las pausas se cuentan aparte del contenido, para que en la cabecera del día se vea cuánto trabajo hay realmente dentro.",
+          "duration": "15 minutos",
+          "social": "ninguna"
+        },
+        "lunch": {
+          "name": "Comida",
+          "body": "El bloque que más se mueve y el que menos debería moverse: el catering llega cuando llega. Fíjalo a la hora y se queda donde está mientras todo lo demás se reordena a su alrededor.",
+          "duration": "45–60 minutos",
+          "social": "ninguna"
+        },
+        "buffer": {
+          "name": "Margen",
+          "body": "Tiempo vacío a propósito. Todo taller se alarga en algún punto, y un margen previsto es la diferencia entre una agenda que se ajusta y otra que a partir de las dos y media simplemente es falsa. Calcula un diez por ciento del día y colócalo antes de los bloques que no pueden caerse.",
+          "duration": "15–30 minutos",
+          "social": "ninguna"
+        },
+        "next_steps": {
+          "name": "Próximos pasos",
+          "body": "Quién hace qué y para cuándo. El bloque que decide si el taller llega al día a día de trabajo o se queda en un buen día que se recuerda. Registra responsables y plazos en la sala, mientras están todos: después siempre falta la mitad.",
+          "duration": "10–20 minutos",
+          "social": "Plenario"
+        },
+        "check_out": {
+          "name": "Check-out",
+          "body": "Una última ronda, una pregunta, corta. No sirve para evaluar sino para cerrar: el grupo debe terminar el día y no solo dejar de trabajar. Una ronda de ánimo basta cuando el tiempo aprieta.",
+          "duration": "10–15 minutos",
+          "social": "Plenario"
+        },
+        "note": {
+          "name": "Nota",
+          "body": "No es un punto del programa sino una observación dentro de la agenda: un recordatorio sobre el proyector, un aviso para la co-facilitación, una idea para la próxima versión. No cuenta tiempo y aun así está en el sitio correcto.",
+          "duration": "sin duración",
+          "social": "ninguna"
+        }
+      },
+      "howTitle": "Cómo esto se convierte en un día",
+      "howBody": "El orden no es cuestión de gusto. Un día empieza con la llegada y termina con el cierre; en medio se alternan los bloques en los que se recibe con los bloques en los que se trabaja lo recibido. Una pausa a los noventa minutos, algo de movimiento después de comer y los próximos pasos antes del check-out. En GoodWorkshop mueves los bloques y todas las horas posteriores se recalculan; la comida, aun así, se queda donde está si la fijas a la hora.",
+      "ctaTitle": "Convertir las piezas en una agenda",
+      "ctaBody": "Crea el día, arrastra los bloques al orden que tienes en mente y deja que las horas se calculen solas. O describe a tu IA lo que planeas y deja que escriba el primer borrador.",
+      "cta": "Probar 14 días gratis"
+    },
+    "compare": {
+      "title": "GoodWorkshop como alternativa a SessionLab",
+      "lead": "Ambas herramientas planifican agendas de taller y ambas te quitan el cálculo de las horas. Esta página dice qué hace GoodWorkshop de otra manera y, al final, dónde puede menos. Quien compara no tiene ningún uso para la publicidad.",
+      "neutral": "SessionLab es un servicio alojado de diseño de sesiones con una gran biblioteca pública de métodos. Lo que allí está escrito está mejor escrito allí que aquí; no citamos precios ni funciones de un producto ajeno, porque ambas cosas quedan desactualizadas en cuanto las escribimos. Míralo allí y compara por ti misma.",
+      "pointsTitle": "Qué hace GoodWorkshop de otra manera",
+      "selfHost": {
+        "title": "Puedes alojarlo tú",
+        "body": "El código fuente es público, y basta con un contenedor Docker y una base de datos Postgres. Uso comercial incluido, sin coste de licencia: los talleres con los que te ganas la vida son exactamente los que puedes planificar con él. La nube vende la operación, no el acceso al software."
+      },
+      "ai": {
+        "title": "Tu IA planifica contigo, sin capa intermedia",
+        "body": "GoodWorkshop es en sí mismo un servidor MCP. Claude, ChatGPT o Gemini se conectan directamente y crean talleres, reescriben agendas, apartan bloques. Sin copiar de una ventana de chat y sin producto adicional: una conexión que configuras en los ajustes."
+      },
+      "data": {
+        "title": "Los datos están donde tú quieras",
+        "body": "La nube funciona en la UE, operada por una sociedad austríaca, con contrato de encargo de tratamiento. Si eso no te basta, alójalo tú y estarán en tu casa. En ambos casos sacas cada agenda en Markdown sin pedir permiso a nadie."
+      },
+      "pricing": {
+        "title": "Dos modelos de precio, uno para el trabajo irregular",
+        "body": "Por miembro activo y mes, facturado por días, o por taller creado, con tantos miembros como quieras. El segundo modelo existe porque la facilitación llega a oleadas: tres talleres en primavera y luego tres meses de calma. Las personas invitadas nunca cuentan."
+      },
+      "room": {
+        "title": "Hecho para la sala, no solo para la preparación",
+        "body": "La agenda funciona en el móvil, sobrevive a un wifi malo y permite que la co-facilitación edite el mismo día a la vez. Tus notas de facilitación se quedan contigo: la vista de impresión y la exportación las dejan fuera por defecto, para que el grupo reciba la agenda y tú conserves el resto."
+      },
+      "limitsTitle": "Dónde GoodWorkshop puede menos",
+      "limitsBody": "GoodWorkshop no tiene una biblioteca pública de métodos con cientos de ejercicios preparados ni una galería de plantillas para cada ocasión. Trae quince piezas, y el contenido lo escribes tú, o dejas que lo escriba tu IA. También es más joven y más pequeño: menos integraciones, sin un equipo de treinta personas detrás. Si lo que buscas es una colección de ejercicios lista para usar, estarás mejor servida en otro sitio. Si lo que buscas es una agenda que calcule, que sea tuya y que tu IA sepa manejar, estás en el sitio correcto.",
+      "ctaTitle": "Compruébalo tú",
+      "ctaBody": "Catorce días, sin datos de pago. Si no encaja, simplemente se acaba.",
+      "cta": "Probar gratis",
+      "ctaSecondary": "Alojarlo yo"
+    },
+    "faq": {
+      "title": "Preguntas frecuentes",
+      "lead": "Lo que más se pregunta antes de empezar. Si falta algo, escríbenos: esta página crece con las preguntas.",
+      "entries": {
+        "cost": {
+          "q": "¿Cuánto cuesta GoodWorkshop?",
+          "a": "Hay dos modelos, intercambiables cada mes: por miembro activo y mes, facturado por días, o por taller creado con tantos miembros como quieras. Todos los precios son netos; GoodWorkshop Cloud se vende exclusivamente a empresas. Los importes exactos están en la página de precios. Alojado por ti, no cuesta nada."
+        },
+        "free": {
+          "q": "¿GoodWorkshop es gratuito?",
+          "a": "En tu propio servidor sí, de forma permanente y también para trabajo comercial. El código está bajo Apache 2.0 con Commons Clause: puedes usar y adaptar GoodWorkshop sin límite, solo no revenderlo como servicio propio. La nube cuesta dinero porque allí alguien se encarga de la operación, las actualizaciones y las copias de seguridad. Los primeros catorce días son gratis, sin datos de pago."
+        },
+        "selfhost": {
+          "q": "¿Puedo alojar GoodWorkshop yo mismo?",
+          "a": "Sí, y no es un camino secundario. Hace falta un contenedor y una base de datos Postgres; con Docker Compose está en pie en unos minutos. Las imágenes se publican para amd64 y arm64. Sin servicios externos, sin rastreo, sin claves de licencia."
+        },
+        "data": {
+          "q": "¿Dónde están mis datos?",
+          "a": "En la nube, dentro de la UE, operada por roleALPHA GmbH en Austria, con contrato de encargo de tratamiento según el art. 28 del RGPD. Si lo alojas tú, están donde esté tu servidor. En ambos casos exportas cada agenda en Markdown cuando quieras."
+        },
+        "ai": {
+          "q": "¿Cómo funciona la conexión con la IA?",
+          "a": "GoodWorkshop es en sí mismo un servidor MCP: Model Context Protocol, la interfaz con la que los asistentes de IA manejan herramientas. Configuras la conexión una vez en los ajustes y, a partir de ahí, Claude, ChatGPT, Gemini y otros clientes pueden crear talleres, reescribir agendas, apartar bloques y mover días. La IA trabaja dentro de tu taller, no en una ventana de chat al lado."
+        },
+        "collab": {
+          "q": "¿Pueden trabajar varias personas a la vez?",
+          "a": "Sí. Varias personas editan el mismo día en directo sin sobrescribirse. Las clientas y la co-facilitación sin cuenta reciben un enlace, de solo lectura o de edición, según lo configures."
+        },
+        "times": {
+          "q": "¿Qué pasa cuando cambia una hora?",
+          "a": "Nada que tengas que rehacer a mano. Si mueves un bloque o cambias una duración, todas las horas posteriores se recalculan. Los bloques que no pueden desplazarse —la comida, el turno de la clienta a las 15:00— los fijas a la hora; si algo choca con uno, la fila lo dice en vez de acortarlo en silencio."
+        },
+        "print": {
+          "q": "¿Puedo imprimir o exportar la agenda?",
+          "a": "Sí, ambas cosas. Hay una vista de impresión para la sala y una exportación en Markdown para el material y la documentación. Tus notas de facilitación quedan fuera de las dos por defecto."
+        },
+        "mobile": {
+          "q": "¿Funciona en el móvil?",
+          "a": "Sí, y para eso está pensado. En la sala la agenda se lee como tarjetas en el teléfono, y la vista sobrevive a un wifi malo."
+        },
+        "migrate": {
+          "q": "Ya trabajo con otra herramienta. ¿Puedo cambiarme?",
+          "a": "No hay importación automática. El camino más rápido es la conexión con la IA: dale a tu asistente la agenda existente como texto y deja que cree el taller en GoodWorkshop. Para un solo día es cuestión de minutos."
+        }
+      },
+      "ctaTitle": "¿Te queda alguna pregunta?",
+      "ctaBody": "La respuesta más rápida es probarlo: catorce días, sin datos de pago.",
+      "cta": "Probar gratis"
     }
   },
   "operator": {
@@ -1147,5 +1388,32 @@
       "cancel": "Cancelar",
       "error": "No ha funcionado. ¿El inicio está en el futuro?"
     }
+  },
+  "discover": {
+    "nav": "Discover",
+    "title": "Discover",
+    "lead": "Diseños de taller listos para adoptar — y los métodos con los que están hechos. Seleccionados por nosotros, no por la multitud.",
+    "emptyTitle": "Aquí todavía no hay nada.",
+    "emptyBody": "La biblioteca se está construyendo. Los primeros diseños aparecerán aquí en cuanto se escriban.",
+    "noMatchTitle": "Ningún diseño coincide.",
+    "noMatchBody": "Quita un filtro o concede más tiempo.",
+    "filtersLabel": "Filtros",
+    "clear": "Quitar los filtros",
+    "groupSizeLabel": "Tamaño del grupo",
+    "groupSizeHint": "¿Cuántas personas hay en la sala?",
+    "timeLabel": "Tiempo disponible, en minutos",
+    "searchLabel": "Buscar",
+    "apply": "Aplicar",
+    "more": "Cargar más",
+    "days": "{count, plural, one {# día} many {# días} other {# días}}",
+    "peopleAny": "cualquier número de personas",
+    "peopleFrom": "desde {min, number} personas",
+    "peopleTo": "hasta {max, number} personas",
+    "peopleRange": "{min, number}–{max, number} personas",
+    "untranslated": "Este texto aún no está en tu idioma.",
+    "back": "Volver a Discover",
+    "notFound": "Este diseño no existe.",
+    "dayHeading": "Día {n, number}",
+    "parked": "Apartado"
   }
 }
