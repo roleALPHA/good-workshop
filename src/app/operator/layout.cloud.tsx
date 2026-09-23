@@ -16,9 +16,15 @@ export const metadata: Metadata = { robots: { index: false, follow: false }, tit
  */
 export default async function OperatorLayout({ children }: { children: React.ReactNode }) {
   if (!operatorConsoleEnabled()) notFound()
-  const messages = (await getMessages()) as { operator: AbstractIntlMessages }
+  const messages = (await getMessages()) as {
+    operator: AbstractIntlMessages
+    common: AbstractIntlMessages
+  }
   return (
-    <NextIntlClientProvider messages={{ operator: messages.operator }}>
+    // `common` as well as `operator`: the console's own text is English and in
+    // the source, but it reuses shared components -- CopyBlock says "copied"
+    // out of this catalogue -- and a missing namespace renders as the bare key.
+    <NextIntlClientProvider messages={{ operator: messages.operator, common: messages.common }}>
       <div className="flex min-h-dvh flex-col">
         <main className="mx-auto w-full max-w-6xl flex-1 px-4 py-6">{children}</main>
         <AppFooter />
