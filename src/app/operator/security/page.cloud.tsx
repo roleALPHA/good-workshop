@@ -4,8 +4,11 @@ import { redirect } from 'next/navigation'
 import { getFormatter, getTranslations } from 'next-intl/server'
 import { operatorDb } from '@/cloud/operator/db'
 import { listPasskeys } from '@/cloud/operator/auth'
+import { listOperatorTokens } from '@/cloud/operator/tokens'
+import { OPERATOR_SCOPES } from '@/cloud/operator/scopes'
 import { currentOperator } from '@/cloud/operator/session'
 import { Passkeys } from '../passkeys'
+import { Tokens } from '../tokens'
 
 export const dynamic = 'force-dynamic'
 
@@ -21,10 +24,11 @@ export default async function OperatorSecurity() {
   const operator = await currentOperator()
   if (!operator) redirect('/operator/login' as never)
 
-  const [t, format, passkeys] = await Promise.all([
+  const [t, format, passkeys, tokens] = await Promise.all([
     getTranslations('operator.passkeys'),
     getFormatter(),
     listPasskeys(operatorDb(), operator.id),
+    listOperatorTokens(operatorDb(), operator.id),
   ])
   const when = (value: Date | null) =>
     value ? format.dateTime(value, { dateStyle: 'medium', timeStyle: 'short' }) : t('never')
@@ -46,6 +50,22 @@ export default async function OperatorSecurity() {
           credentialId: passkey.credentialId,
           created: when(passkey.createdAt),
           lastUsed: when(passkey.lastUsedAt),
+        }))}
+      />
+
+      <Tokens
+        scopes={OPERATOR_SCOPES}
+        tokens={tokens.map((token) => ({
+          id: token.id,
+          name: token.name,
+          scopes: token.scopes,
+          // Serialised here rather than passed as Date: this crosses to a
+          // client component, and a Date would arrive as a string anyway --
+          // better to say so than to type a lie.
+          createdAt: token.createdAt.toISOString(),
+          expiresAt: token.expiresAt.toISOString(),
+          lastUsedAt: token.lastUsedAt?.toISOString() ?? null,
+          revokedAt: token.revokedAt?.toISOString() ?? null,
         }))}
       />
     </div>
