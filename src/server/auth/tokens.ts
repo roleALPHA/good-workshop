@@ -107,3 +107,42 @@ export function parseOperatorToken(token: string): { tokenKey: string; secret: s
   const match = /^gwop_([A-Za-z0-9_-]{12})_([A-Za-z0-9_-]{20,})$/.exec(token.trim())
   return match ? { tokenKey: match[1]!, secret: match[2]! } : null
 }
+
+/**
+ * The operator console's OAuth tokens: `gwopa_<key>_<secret>` for an access
+ * token, `gwopr_<key>_<secret>` for a refresh token.
+ *
+ * A fifth and sixth prefix, for the reason the four above give and one more.
+ * The console runs its own authorization server, so there are now two of every
+ * kind of OAuth credential in the system, and the pair that must never be
+ * confused is the access tokens: one reaches a single workspace as a member,
+ * the other reaches EVERY workspace as the platform. Distinct prefixes mean a
+ * customer's `gwo_` presented at /operator/api/mcp is refused before any
+ * lookup, and an operator's `gwopa_` presented at /api/mcp likewise.
+ *
+ * Neither is a prefix of `gwop_` or of `gwo_`: every parser here anchors on a
+ * literal `_` after a fixed prefix, so `gwopa_` cannot be read as `gwop_` with
+ * a key beginning in `a`.
+ */
+export function generateOperatorOAuthToken(kind: 'access' | 'refresh'): {
+  token: string
+  tokenKey: string
+  secretHash: string
+} {
+  const tokenKey = randomBytes(9).toString('base64url').slice(0, 12)
+  const secret = generateSecret(32)
+  const prefix = kind === 'access' ? 'gwopa' : 'gwopr'
+  return { token: `${prefix}_${tokenKey}_${secret}`, tokenKey, secretHash: hashSecret(secret) }
+}
+
+export function parseOperatorOAuthToken(
+  token: string,
+): { kind: 'access' | 'refresh'; tokenKey: string; secret: string } | null {
+  const match = /^gwop([ar])_([A-Za-z0-9_-]{12})_([A-Za-z0-9_-]{20,})$/.exec(token.trim())
+  if (!match) return null
+  return {
+    kind: match[1] === 'a' ? 'access' : 'refresh',
+    tokenKey: match[2]!,
+    secret: match[3]!,
+  }
+}

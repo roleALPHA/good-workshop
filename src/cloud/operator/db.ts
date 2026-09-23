@@ -1,5 +1,6 @@
 import pg from 'pg'
 import { dbOptions } from '../../../scripts/db-connect.mjs'
+import { operatorConsoleEnabled } from '@/server/operator/enabled'
 
 /**
  * The operator console's own connection, as gw_operator.
@@ -11,9 +12,10 @@ import { dbOptions } from '../../../scripts/db-connect.mjs'
  */
 let pool: pg.Pool | null = null
 
-export function operatorConsoleEnabled(): boolean {
-  return process.env.GW_OPERATOR_CONSOLE === '1' && Boolean(process.env.OPERATOR_DATABASE_URL)
-}
+// Defined in src/server/operator/enabled.ts and re-exported here, because the
+// two OAuth discovery documents are plain routes that must not import from
+// src/cloud. One definition; see that file for why.
+export { operatorConsoleEnabled }
 
 export function operatorDb(): pg.Pool {
   if (!operatorConsoleEnabled()) {

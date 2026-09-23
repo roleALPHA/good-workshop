@@ -3,8 +3,8 @@ import { and, eq, isNull, sql } from 'drizzle-orm'
 import type { Tx } from '@/server/db'
 import { oauthClient, oauthGrant, oauthToken } from '@/server/db/schema'
 import { generateOAuthToken, generateSecret, hashSecret } from '@/server/auth/tokens'
-import { DomainError } from '@/domain/errors'
 import type { Scope } from '@/domain/tenant/tokens'
+import { OAuthError } from './store'
 import {
   ACCESS_TOKEN_TTL_SECONDS,
   AUTHORIZATION_CODE_TTL_SECONDS,
@@ -12,7 +12,9 @@ import {
   registrableRedirectUri,
 } from './rules'
 
-export class OAuthError extends DomainError {}
+// Defined with the port, so both stores can throw it. Re-exported here
+// because every existing caller imports it from this module.
+export { OAuthError } from './store'
 
 export type RegisteredClient = {
   id: string
@@ -210,4 +212,19 @@ export async function redeemRefreshToken(tx: Tx, tokenKey: string, secretHash: s
       resource: oauthToken.resource,
     })
   return rows[0] ?? null
+}
+
+/**
+ * Revokes a token the bearer proves it holds, of either kind.
+ *
+ * The secret hash is part of the WHERE, not just the key: revocation is
+ * unauthenticated by RFC 7009, so possession of the token is the only thing
+ * that may authorise it. Matching on the key alone would let anybody who
+ * learns a key -- it travels in every request -- revoke somebody's session.
+ */
+export async function revokeToken(tx: Tx, tokenKey: string, secretHash: string): Promise<void> {
+  await tx
+    .update(oauthToken)
+    .set({ revokedAt: sql`now()` })
+    .where(and(eq(oauthToken.tokenKey, tokenKey), eq(oauthToken.secretHash, secretHash)))
 }
