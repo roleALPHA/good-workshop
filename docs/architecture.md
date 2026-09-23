@@ -511,15 +511,15 @@ administration over MCP, so the difference has to be written down rather than as
 
 It is a different subject, and every layer says so:
 
-|                          | customers                | operator                                        |
-| ------------------------ | ------------------------ | ----------------------------------------------- |
-| endpoint                 | `/api/mcp`               | `/operator/api/mcp`                             |
-| process                  | the public web container | the console container (`GW_OPERATOR_CONSOLE=1`) |
-| database role            | `gw_app`                 | `gw_operator`                                   |
-| network                  | the open internet        | the tailnet only                                |
-| credential               | `gwp_` / `gwo_`          | `gwop_`, issued by hand, expires within 90 days |
-| scopes                   | `SCOPES` (`workshops:*`) | `OPERATOR_SCOPES` (`ops:*`, `catalog:*`)        |
-| reaches workshop content | yes, the person's own    | **never**                                       |
+|                          | customers                | operator                                           |
+| ------------------------ | ------------------------ | -------------------------------------------------- |
+| endpoint                 | `/api/mcp`               | `/operator/api/mcp`                                |
+| process                  | the public web container | the console container (`GW_OPERATOR_CONSOLE=1`)    |
+| database role            | `gw_app`                 | `gw_operator`                                      |
+| network                  | the open internet        | the tailnet only                                   |
+| credential               | `gwp_` / `gwo_` / `gwr_` | `gwop_` by hand, or `gwopa_` / `gwopr_` over OAuth |
+| scopes                   | `SCOPES` (`workshops:*`) | `OPERATOR_SCOPES` (`ops:*`, `catalog:*`)           |
+| reaches workshop content | yes, the person's own    | **never**                                          |
 
 The boundary is not a policy but a grant: `gw_app` has `EXECUTE` on none of the `app.op_*`
 functions, so the operator tools could not run at `/api/mcp` even if somebody registered them
@@ -540,6 +540,45 @@ is worth seeing.
 The two scope vocabularies are separate on purpose. `SCOPES` is rendered as checkboxes on a
 customer's own token screen; an `ops:danger` appearing there would be a bug waiting for a
 screenshot.
+
+### The console runs its own authorization server
+
+An operator connects a client the way a customer does: OAuth 2.1, dynamic registration, PKCE,
+a consent screen, a refresh token that rotates. Everything above the rows is literally the same
+code — `src/domain/oauth/rules.ts` for the decisions, `src/server/oauth/endpoints.ts` for
+registration, token and revocation. A second copy of PKCE or of the single-use code would be a
+second place for one of them to be subtly wrong.
+
+What is not shared is what cannot be:
+
+- **The rows.** `gw_operator` has no grant on any table, so every call is an `app.op_*`
+  function. The customers' store is Drizzle against tenant-scoped tables as `gw_app`.
+- **The consent screen.** It needs an operator session, not a tenant one, and it says what a
+  client will be able to do across _every_ workspace.
+- **The prefixes.** `gwopa_` and `gwopr_` exist so that a customer's `gwo_` presented at
+  `/operator/api/mcp` is refused by its shape, before any lookup — and the reverse.
+
+**An access token is an `operator_token` row.** Deliberately: `app.op_resolve_token` stays the
+one way a bearer becomes an operator, so the check that a _disabled_ operator's credentials stop
+working applies to OAuth tokens without anybody having to remember it twice. A refresh token
+lives in the same table and is refused there, because it is not a credential for anything.
+
+**`ops:danger` is never offered by default.** It has to be asked for by name. A permission that
+can arrive by omission is a permission nobody chose — and it is still only the first of three
+gates, ahead of the consent screen and the staged confirmation.
+
+**Two documents, two answers, one route.** `/.well-known/oauth-authorization-server` and
+`/.well-known/oauth-protected-resource` are ordinary routes, and which server they describe is a
+property of the _process_ (`GW_OPERATOR_CONSOLE=1`), never of the Host header: a metadata
+document assembled from the request is one an attacker can aim elsewhere. `deploy/Caddyfile`
+forwards exactly these two paths on `ops.goodworkshop.org`; every other endpoint of that server
+lives under `/operator`, which is all the proxy passes through. Without that matcher a client
+would receive the login page, as HTML, with HTTP 200.
+
+**The console's session cookie is `sameSite=strict`,** so an operator arriving from an MCP
+client looks signed out on that first, cross-site navigation. The consent screen therefore
+offers the passkey in place of its content and returns to itself — same-site by then, with the
+cookie attached. Redirecting to the login page would have lost the request.
 
 **A model is a collaborator, not a second write path.** Writing tools go through the same room
 as a browser: the model appears in the presence list, its block shows up immediately for

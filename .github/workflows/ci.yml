@@ -335,6 +335,14 @@ jobs:
           test -e .next/server/app/operator/page.js
           test -e ".next/server/app/operator/login/[token]/page.js"
           test -e .next/server/app/operator/security/page.js
+          # The console's own authorization server. Its endpoints are
+          # `route.cloud.ts`, so they exist only here -- and if one goes
+          # missing, discovery still succeeds and the failure surfaces as a
+          # client hanging on a 404 it cannot explain.
+          test -e .next/server/app/operator/oauth/authorize/page.js
+          test -e .next/server/app/operator/api/oauth/token/route.js
+          test -e .next/server/app/operator/api/oauth/register/route.js
+          test -e .next/server/app/operator/api/oauth/revoke/route.js
           test -e ".next/server/app/api/billing/webhook/route.js"
           grep -q "adapters-from-the-private-build" dist/billing-worker.mjs
 

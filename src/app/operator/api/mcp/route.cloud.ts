@@ -8,6 +8,7 @@ import { displayVersion } from '@/lib/version'
 import { operatorConsoleEnabled, operatorDb } from '@/cloud/operator/db'
 import { registerOperatorTools } from '@/cloud/operator/mcp-tools'
 import { resolveOperatorBearer } from '@/cloud/operator/tokens'
+import { operatorProfile, unauthorizedChallenge } from '@/server/oauth/metadata'
 
 /**
  * The operator console over MCP.
@@ -47,12 +48,24 @@ export async function POST(request: NextRequest) {
   ).catch(() => null)
 
   if (!actor) {
-    // No `WWW-Authenticate` with a metadata document, unlike the customers'
-    // endpoint: there is no authorization server to discover and no client
-    // registration to offer. An operator token is issued by hand in the
-    // console, and pointing a stranger at a flow that does not exist would be
-    // an invitation to try.
-    return NextResponse.json({ error: 'invalid_token' }, { status: 401 })
+    // The same 401 the customers' endpoint sends, and it now says the same
+    // thing: RFC 9728's `resource_metadata` is what turns a refusal into a way
+    // forward, so a client that has never seen this server finds the console's
+    // authorization server and starts the flow. There used to be nothing to
+    // point at -- an operator token was issued by hand -- and the comment here
+    // said so.
+    //
+    // Pointing at it is not an invitation. The flow ends at a consent screen
+    // behind the console's passkey session, on a name only served inside the
+    // tailnet; a stranger who follows the pointer reaches a door they cannot
+    // open, having learned nothing the certificate log does not already say.
+    return NextResponse.json(
+      { error: 'invalid_token' },
+      {
+        status: 401,
+        headers: { 'www-authenticate': unauthorizedChallenge(operatorProfile()) },
+      },
+    )
   }
 
   const body = await request.json().catch(() => null)

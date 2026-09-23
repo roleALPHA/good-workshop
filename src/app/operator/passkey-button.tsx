@@ -10,8 +10,20 @@ import {
   operatorSignInOptions,
 } from './actions'
 
-/** Signing in, or enrolling the first passkey from a one-time link. */
-export function PasskeyButton({ token }: { token?: string }) {
+/**
+ * Signing in, or enrolling the first passkey from a one-time link.
+ *
+ * `next` is where to land afterwards, and the OAuth consent screen is why it
+ * exists: arriving there from an MCP client is a CROSS-SITE navigation, so the
+ * console's `sameSite=strict` cookie is withheld and the operator looks signed
+ * out even when they are not. That screen therefore offers this button in
+ * place of its content and sends the operator back to itself -- by then a
+ * same-site navigation, with the cookie attached.
+ *
+ * It is never read from a query parameter. Every caller passes a literal, or a
+ * path it built itself, so there is no value here an attacker supplies.
+ */
+export function PasskeyButton({ token, next = '/operator' }: { token?: string; next?: string }) {
   const t = useTranslations('operator.signIn')
   const [pending, setPending] = useState(false)
   const [failed, setFailed] = useState(false)
@@ -30,8 +42,9 @@ export function PasskeyButton({ token }: { token?: string }) {
         if (options) ok = await operatorSignIn(await startAuthentication({ optionsJSON: options }))
       }
       if (ok) {
-        // eslint-disable-next-line @next/next/no-location-assign-relative-destination -- a full navigation after the cookie was set
-        window.location.href = '/operator'
+        // A full navigation rather than the router: the cookie was just set,
+        // and the next render has to be a fresh request that carries it.
+        window.location.href = next
         return
       }
       setFailed(true)

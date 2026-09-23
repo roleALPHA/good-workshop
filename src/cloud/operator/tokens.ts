@@ -1,5 +1,10 @@
 import type pg from 'pg'
-import { generateOperatorToken, hashSecret, parseOperatorToken } from '@/server/auth/tokens'
+import {
+  generateOperatorToken,
+  hashSecret,
+  parseOperatorOAuthToken,
+  parseOperatorToken,
+} from '@/server/auth/tokens'
 import { isOperatorScope, type OperatorScope } from './scopes'
 
 /**
@@ -77,6 +82,16 @@ export async function revokeOperatorToken(db: Db, operatorId: string, id: string
  * never reaches a lookup -- which matters because this endpoint can reach
  * every tenant, and "no such token" and "not that kind of token" should not
  * take the same path.
+ *
+ * TWO SHAPES ARE OPERATOR CREDENTIALS: `gwop_`, issued by hand in the console,
+ * and `gwopa_`, minted by the console's OAuth flow. One lookup for both --
+ * app.op_resolve_token -- because everything that makes a bearer safe to
+ * believe lives in that function: the expiry, the revocation, and the check
+ * that the operator behind it has not been disabled since. A second path for
+ * OAuth would be a second place to forget the third one.
+ *
+ * `gwopr_`, a refresh token, is not a credential for anything and is refused
+ * here by its shape. The database refuses it again, in case this ever changes.
  */
 export async function resolveOperatorBearer(
   db: Db,
@@ -85,7 +100,9 @@ export async function resolveOperatorBearer(
   const match = /^Bearer\s+(.+)$/i.exec(header ?? '')
   if (!match) return null
 
-  const parsed = parseOperatorToken(match[1]!)
+  const presented = match[1]!
+  const oauth = parseOperatorOAuthToken(presented)
+  const parsed = oauth?.kind === 'access' ? oauth : parseOperatorToken(presented)
   if (!parsed) return null
 
   const { rows } = await db.query('select * from app.op_resolve_token($1, $2)', [

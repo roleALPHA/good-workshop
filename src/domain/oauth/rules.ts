@@ -110,10 +110,33 @@ export const OAUTH_SCOPES: readonly Scope[] = [
  * refresh token, it is not a permission on anything.
  */
 export function narrowScopes(requested: string | null | undefined): Scope[] {
+  return narrowTo(requested, SCOPES, OAUTH_SCOPES)
+}
+
+/**
+ * The same narrowing, against a vocabulary the caller names.
+ *
+ * Two authorization servers run out of this file -- the customers' one at
+ * /api/mcp and the operator console's at /operator/api/mcp -- and they share
+ * every rule above but not their scopes. Parameterising the two lists is what
+ * lets the second one exist without a second copy of PKCE, of the redirect
+ * check and of this dropping rule, which are the parts where a divergence
+ * would be a hole rather than a difference.
+ *
+ * `vocabulary` is everything the server understands; `offered` is what a
+ * request that names no scope at all receives. They are deliberately allowed
+ * to differ: a scope that must be asked for BY NAME is one that never arrives
+ * by omission.
+ */
+export function narrowTo<S extends string>(
+  requested: string | null | undefined,
+  vocabulary: readonly S[],
+  offered: readonly S[],
+): S[] {
   const asked = (requested ?? '').split(/\s+/).filter(Boolean)
   // No scope named at all means what is on offer; the consent screen says what that is.
-  if (asked.length === 0) return [...OAUTH_SCOPES]
-  return SCOPES.filter((scope) => asked.includes(scope))
+  if (asked.length === 0) return [...offered]
+  return vocabulary.filter((scope) => asked.includes(scope))
 }
 
 /** Whether the client asked to be able to come back without the user. */
