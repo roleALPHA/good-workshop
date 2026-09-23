@@ -722,7 +722,8 @@
     "maintenance": {
       "planned": "Maintenance prévue le {from} jusqu’à {until}. GoodWorkshop peut être brièvement indisponible.",
       "running": "Maintenance en cours, fin prévue à {until}."
-    }
+    },
+    "discover": "Discover"
   },
   "settings": {
     "intro": "Ton compte : nom, langue, sécurité et connexion IA.",
@@ -1387,5 +1388,32 @@
       "cancel": "Annuler",
       "error": "Cela n'a pas fonctionné. Le début est-il dans le futur ?"
     }
+  },
+  "discover": {
+    "nav": "Discover",
+    "title": "Discover",
+    "lead": "Des déroulés d'atelier prêts à reprendre — et les méthodes dont ils sont faits. Choisis par nous, pas par la foule.",
+    "emptyTitle": "Il n'y a encore rien ici.",
+    "emptyBody": "La bibliothèque est en construction. Les premiers déroulés apparaîtront ici dès qu'ils seront écrits.",
+    "noMatchTitle": "Aucun déroulé ne correspond.",
+    "noMatchBody": "Retirez un filtre ou accordez plus de temps.",
+    "filtersLabel": "Filtres",
+    "clear": "Réinitialiser les filtres",
+    "groupSizeLabel": "Taille du groupe",
+    "groupSizeHint": "Combien de personnes dans la salle ?",
+    "timeLabel": "Temps disponible, en minutes",
+    "searchLabel": "Rechercher",
+    "apply": "Appliquer",
+    "more": "Afficher plus",
+    "days": "{count, plural, one {# jour} many {# jours} other {# jours}}",
+    "peopleAny": "n'importe quel nombre de personnes",
+    "peopleFrom": "à partir de {min, number} personnes",
+    "peopleTo": "jusqu'à {max, number} personnes",
+    "peopleRange": "{min, number}–{max, number} personnes",
+    "untranslated": "Ce texte n'existe pas encore dans votre langue.",
+    "back": "Retour à Discover",
+    "notFound": "Ce déroulé n'existe pas.",
+    "dayHeading": "Jour {n, number}",
+    "parked": "Mis de côté"
   }
 }

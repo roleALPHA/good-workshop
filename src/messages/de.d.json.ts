@@ -654,6 +654,18 @@ declare const messages: {
         "subject": "Zahlung für GoodWorkshop fehlgeschlagen",
         "body": "Hallo,\n\nwir konnten den Rechnungsbetrag nicht einziehen. {retry, select, none {Wir versuchen es nicht erneut.} other {Wir versuchen es am {retry} erneut.}}\n\nBitte prüfe deine Zahlungsmethode:\n{link}"
       },
+      "dunning": {
+        "subject": "Zahlungserinnerung für GoodWorkshop",
+        "body": "Hallo,\n\nwir konnten die offene Rechnung bisher nicht einziehen. Bitte gleiche sie bis zum {blockOn} aus.\n\nGeht bis dahin keine Zahlung ein, sperren wir am {blockOn} den Zugang zum Workspace. Deine Inhalte bleiben erhalten; lesen und exportieren kannst du sie auch dann.\n\nBitte prüfe deine Zahlungsmethode:\n{link}"
+      },
+      "payment_blocked": {
+        "subject": "Dein Zugang zu GoodWorkshop ist gesperrt",
+        "body": "Hallo,\n\ndie offene Rechnung ist weiterhin nicht beglichen, deshalb haben wir den Zugang zum Workspace gesperrt.\n\nDeine Inhalte bleiben vollständig erhalten, und du kannst sie weiterhin lesen und exportieren. Sobald die Zahlung eingegangen ist, geben wir den Workspace von selbst wieder frei:\n{link}"
+      },
+      "unblocked": {
+        "subject": "Dein Workspace ist wieder freigegeben",
+        "body": "Hallo,\n\ndie Zahlung ist bei uns eingegangen. Dein Workspace ist wieder freigegeben, und du kannst wie gewohnt weiterarbeiten:\n{link}"
+      },
       "contract_ended": {
         "subject": "Dein Vertrag für GoodWorkshop ist beendet",
         "body": "Hallo,\n\ndein Vertrag ist zum Monatsende ausgelaufen. Dein Workspace ist jetzt schreibgeschützt: lesen und exportieren geht weiterhin.\n\nBis zum {until} kannst du deine Workshops herunterladen. Danach löschen wir die Inhalte.\n{link}"
@@ -713,7 +725,8 @@ declare const messages: {
     "maintenance": {
       "planned": "Geplante Wartung am {from} bis {until}. In dieser Zeit kann GoodWorkshop kurz nicht erreichbar sein.",
       "running": "Wartungsarbeiten laufen, voraussichtlich bis {until}."
-    }
+    },
+    "discover": "Discover"
   },
   "settings": {
     "intro": "Dein Konto: Name, Sprache, Sicherheit und KI-Verbindung.",
@@ -1378,6 +1391,33 @@ declare const messages: {
       "cancel": "Absagen",
       "error": "Das hat nicht geklappt. Liegt der Beginn in der Zukunft?"
     }
+  },
+  "discover": {
+    "nav": "Discover",
+    "title": "Discover",
+    "lead": "Fertige Workshop-Designs zum Übernehmen — und die Methoden, aus denen sie gebaut sind. Von uns kuratiert, nicht von der Menge.",
+    "emptyTitle": "Hier ist noch nichts.",
+    "emptyBody": "Die Bibliothek wird gerade aufgebaut. Sobald die ersten Designs stehen, erscheinen sie hier.",
+    "noMatchTitle": "Dazu passt kein Design.",
+    "noMatchBody": "Nimm einen Filter weg oder gib mehr Zeit an.",
+    "filtersLabel": "Filter",
+    "clear": "Filter zurücksetzen",
+    "groupSizeLabel": "Gruppengröße",
+    "groupSizeHint": "Wie viele Personen sind im Raum?",
+    "timeLabel": "Verfügbare Zeit in Minuten",
+    "searchLabel": "Suchen",
+    "apply": "Anwenden",
+    "more": "Mehr laden",
+    "days": "{count, plural, one {# Tag} other {# Tage}}",
+    "peopleAny": "beliebig viele Personen",
+    "peopleFrom": "ab {min, number} Personen",
+    "peopleTo": "bis {max, number} Personen",
+    "peopleRange": "{min, number}–{max, number} Personen",
+    "untranslated": "Dieser Text liegt noch nicht auf Deutsch vor.",
+    "back": "Zurück zu Discover",
+    "notFound": "Dieses Design gibt es nicht.",
+    "dayHeading": "Tag {n, number}",
+    "parked": "Geparkt"
   }
 };
 export default messages;
