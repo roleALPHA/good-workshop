@@ -860,8 +860,10 @@ describe('announcing a change six weeks ahead', () => {
       `select completed_at, told from legal_announcement where document = 'agb' and version = $1`,
       [version],
     )
-    expect(rows[0].completed_at).not.toBeNull()
     expect(rows[0].told).toBeGreaterThan(0)
+    // Still open: its day has not come, and workspaces that register before it
+    // does have to be told as well.
+    expect(rows[0].completed_at).toBeNull()
 
     // Announced again: the acknowledgement rows are what stops it, so a second
     // run tells nobody twice even if the announcement were reopened.
@@ -914,5 +916,107 @@ describe('sweeping what has expired', () => {
 
     const { rows } = await ops.query('select 1 from audit_event where tenant_id = $1', [id])
     expect(rows).toHaveLength(1)
+  })
+})
+
+describe('a change of terms while people are signing up', () => {
+  const announce = async (effectiveFrom: Date) => {
+    const version = `2027-02-${String((Date.now() % 28) + 1).padStart(2, '0')}-${randomUUID().slice(0, 4)}`
+    announcements.push(version)
+    await ops.query(
+      `insert into legal_announcement (document, version, effective_from) values ('agb', $2, $1)`,
+      [effectiveFrom, version],
+    )
+    return version
+  }
+
+  /**
+   * The announcement is told once and then marked done. A workspace that
+   * registers between the day it goes out and the day it applies agreed to the
+   * old wording -- so it is exactly the workspace that has to be told, and the
+   * one a "done" flag walks past.
+   */
+  it('tells a workspace that registered after the announcement had gone out', async () => {
+    const effectiveFrom = new Date(APRIL_2.getTime() + 60 * 86_400_000)
+    const early = await tenant()
+    const version = await announce(effectiveFrom)
+
+    // Filtered by version throughout: an announcement now stays open until the
+    // day it applies, so a database that has seen other runs has other open
+    // ones in it -- as production will.
+    const onlyMine = (to: string) =>
+      notices.filter(
+        (notice) =>
+          notice.to === to && notice.kind === 'terms_change' && notice.version === version,
+      )
+
+    notices = []
+    await pendingAnnouncements(ops, options())
+    expect(onlyMine(`billing-${early.slice(0, 8)}@example.test`)).toHaveLength(1)
+
+    // Signs up the next day, still under the old terms.
+    const late = await tenant()
+    const theirs = `billing-${late.slice(0, 8)}@example.test`
+
+    notices = []
+    await pendingAnnouncements(ops, options({ now: new Date(APRIL_2.getTime() + 86_400_000) }))
+
+    expect(onlyMine(theirs)).toHaveLength(1)
+    // Its own version, not "exactly one row": every announcement still open
+    // reaches a workspace that has just appeared, and that is the behaviour --
+    // a newcomer is behind on all of them, not only on the latest.
+    const { rows } = await ops.query(
+      `select version from legal_acknowledgement where tenant_id = $1 and version = $2`,
+      [late, version],
+    )
+    expect(rows).toHaveLength(1)
+  })
+
+  it('closes the announcement on the day it applies, and not before', async () => {
+    const effectiveFrom = new Date(APRIL_2.getTime() + 60 * 86_400_000)
+    const version = await announce(effectiveFrom)
+    await tenant()
+
+    const completedAt = async () =>
+      (await ops.query('select completed_at from legal_announcement where version = $1', [version]))
+        .rows[0].completed_at
+
+    await pendingAnnouncements(ops, options())
+    expect(await completedAt()).toBeNull()
+
+    // Still open a month later, so anybody who signed up in between is caught.
+    await pendingAnnouncements(ops, options({ now: new Date(APRIL_2.getTime() + 30 * 86_400_000) }))
+    expect(await completedAt()).toBeNull()
+
+    // Past its day there is nothing left to announce: it is simply the terms.
+    await pendingAnnouncements(
+      ops,
+      options({ now: new Date(effectiveFrom.getTime() + 86_400_000) }),
+    )
+    expect(await completedAt()).not.toBeNull()
+  })
+
+  it('never tells the same workspace twice while the announcement stays open', async () => {
+    const effectiveFrom = new Date(APRIL_2.getTime() + 60 * 86_400_000)
+    const version = await announce(effectiveFrom)
+    const id = await tenant()
+    const mine = `billing-${id.slice(0, 8)}@example.test`
+
+    notices = []
+    for (let pass = 0; pass < 3; pass++) {
+      await pendingAnnouncements(
+        ops,
+        options({ now: new Date(APRIL_2.getTime() + pass * 86_400_000) }),
+      )
+    }
+
+    // The acknowledgement row per workspace and version is what holds this --
+    // not the completed flag, which is exactly why dropping that flag is safe.
+    expect(
+      notices.filter(
+        (notice) =>
+          notice.to === mine && notice.kind === 'terms_change' && notice.version === version,
+      ),
+    ).toHaveLength(1)
   })
 })
