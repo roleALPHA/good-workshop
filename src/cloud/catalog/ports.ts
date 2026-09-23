@@ -73,7 +73,6 @@ export type CatalogQuery = {
 /** Shared by the two summaries: what a row in a list shows. */
 type CatalogSummary = {
   id: string
-  slug: string
   name: string
   summary: string
   /**
@@ -87,7 +86,16 @@ type CatalogSummary = {
   maxParticipants: number | null
 }
 
-export type MethodSummary = CatalogSummary & { durationMinutes: number }
+/**
+ * A method has a slug; a design does not.
+ *
+ * That asymmetry is the rule "a public method page never shows design details"
+ * turned into a fact of the types. A method is published to the open web and
+ * needs a readable address. A design is only ever seen behind a session, so it
+ * is addressed by id -- and there is therefore no design URL in existence to
+ * leak into a page, a sitemap or a link, whatever anybody writes later.
+ */
+export type MethodSummary = CatalogSummary & { slug: string; durationMinutes: number }
 
 export type MethodDetail = MethodSummary & {
   /** The body, as Markdown. Rendered by the page; never trusted as HTML. */

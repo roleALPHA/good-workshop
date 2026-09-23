@@ -722,7 +722,8 @@
     "maintenance": {
       "planned": "Geplante Wartung am {from} bis {until}. In dieser Zeit kann GoodWorkshop kurz nicht erreichbar sein.",
       "running": "Wartungsarbeiten laufen, voraussichtlich bis {until}."
-    }
+    },
+    "discover": "Discover"
   },
   "settings": {
     "intro": "Dein Konto: Name, Sprache, Sicherheit und KI-Verbindung.",
@@ -1387,5 +1388,32 @@
       "cancel": "Absagen",
       "error": "Das hat nicht geklappt. Liegt der Beginn in der Zukunft?"
     }
+  },
+  "discover": {
+    "nav": "Discover",
+    "title": "Discover",
+    "lead": "Fertige Workshop-Designs zum Übernehmen — und die Methoden, aus denen sie gebaut sind. Von uns kuratiert, nicht von der Menge.",
+    "emptyTitle": "Hier ist noch nichts.",
+    "emptyBody": "Die Bibliothek wird gerade aufgebaut. Sobald die ersten Designs stehen, erscheinen sie hier.",
+    "noMatchTitle": "Dazu passt kein Design.",
+    "noMatchBody": "Nimm einen Filter weg oder gib mehr Zeit an.",
+    "filtersLabel": "Filter",
+    "clear": "Filter zurücksetzen",
+    "groupSizeLabel": "Gruppengröße",
+    "groupSizeHint": "Wie viele Personen sind im Raum?",
+    "timeLabel": "Verfügbare Zeit in Minuten",
+    "searchLabel": "Suchen",
+    "apply": "Anwenden",
+    "more": "Mehr laden",
+    "days": "{count, plural, one {# Tag} other {# Tage}}",
+    "peopleAny": "beliebig viele Personen",
+    "peopleFrom": "ab {min, number} Personen",
+    "peopleTo": "bis {max, number} Personen",
+    "peopleRange": "{min, number}–{max, number} Personen",
+    "untranslated": "Dieser Text liegt noch nicht auf Deutsch vor.",
+    "back": "Zurück zu Discover",
+    "notFound": "Dieses Design gibt es nicht.",
+    "dayHeading": "Tag {n, number}",
+    "parked": "Geparkt"
   }
 }

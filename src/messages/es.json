@@ -722,7 +722,8 @@
     "maintenance": {
       "planned": "Mantenimiento previsto el {from} hasta las {until}. GoodWorkshop puede no estar disponible un momento.",
       "running": "Mantenimiento en curso, previsto hasta las {until}."
-    }
+    },
+    "discover": "Discover"
   },
   "settings": {
     "intro": "Tu cuenta: nombre, idioma, seguridad y conexión IA.",
@@ -1387,5 +1388,32 @@
       "cancel": "Cancelar",
       "error": "No ha funcionado. ¿El inicio está en el futuro?"
     }
+  },
+  "discover": {
+    "nav": "Discover",
+    "title": "Discover",
+    "lead": "Diseños de taller listos para adoptar — y los métodos con los que están hechos. Seleccionados por nosotros, no por la multitud.",
+    "emptyTitle": "Aquí todavía no hay nada.",
+    "emptyBody": "La biblioteca se está construyendo. Los primeros diseños aparecerán aquí en cuanto se escriban.",
+    "noMatchTitle": "Ningún diseño coincide.",
+    "noMatchBody": "Quita un filtro o concede más tiempo.",
+    "filtersLabel": "Filtros",
+    "clear": "Quitar los filtros",
+    "groupSizeLabel": "Tamaño del grupo",
+    "groupSizeHint": "¿Cuántas personas hay en la sala?",
+    "timeLabel": "Tiempo disponible, en minutos",
+    "searchLabel": "Buscar",
+    "apply": "Aplicar",
+    "more": "Cargar más",
+    "days": "{count, plural, one {# día} many {# días} other {# días}}",
+    "peopleAny": "cualquier número de personas",
+    "peopleFrom": "desde {min, number} personas",
+    "peopleTo": "hasta {max, number} personas",
+    "peopleRange": "{min, number}–{max, number} personas",
+    "untranslated": "Este texto aún no está en tu idioma.",
+    "back": "Volver a Discover",
+    "notFound": "Este diseño no existe.",
+    "dayHeading": "Día {n, number}",
+    "parked": "Apartado"
   }
 }

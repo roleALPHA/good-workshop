@@ -90,7 +90,7 @@ describe('robots.txt', () => {
     // Not a secret -- a crawler gets a redirect from all of these. It is a
     // question of crawl budget, and of /s/<token>, which is somebody's agenda.
     const disallow = [rule().disallow].flat()
-    for (const path of ['/library', '/w/', '/s/', '/api/', '/print/', '/login']) {
+    for (const path of ['/library', '/discover', '/w/', '/s/', '/api/', '/print/', '/login']) {
       expect(disallow, path).toContain(path)
     }
   })

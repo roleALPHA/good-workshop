@@ -35,6 +35,7 @@ export default function robots(): MetadataRoute.Robots {
         disallow: [
           // Behind a session.
           '/library',
+          '/discover',
           '/w/',
           '/f/',
           '/settings/',

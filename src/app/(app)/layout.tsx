@@ -1,6 +1,8 @@
 import { redirect } from 'next/navigation'
 import Link from 'next/link'
+import type { Route } from 'next'
 import { NextIntlClientProvider } from 'next-intl'
+import { getTranslations } from 'next-intl/server'
 import { AppFooter } from '@/components/layout/app-footer'
 import { BrandMark, BrandStyle } from '@/components/layout/tenant-brand'
 import { ProfileMenu } from '@/components/layout/profile-menu'
@@ -28,8 +30,9 @@ export default async function AppLayout({ children }: { children: React.ReactNod
 
   // Not in the root layout: src/app/print/layout.tsx nests inside that one, and
   // the print view deliberately ships no client JavaScript at all.
-  const [messages, notice, changes, maintenance] = await Promise.all([
+  const [messages, nav, notice, changes, maintenance] = await Promise.all([
     getClientMessages(),
+    getTranslations('nav'),
     edition.workspaceNotice(session.tenantId).catch(() => null),
     edition.announcedChanges(session.tenantId).catch(() => []),
     edition.maintenanceWindow().catch(() => null),
@@ -45,6 +48,24 @@ export default async function AppLayout({ children }: { children: React.ReactNod
               <BrandMark />
             </Link>
             <span className="flex-1" />
+            {/* The one product-level link the header carries besides the mark.
+                It is here and not in the profile menu because that menu is
+                everything about your own account, and Discover is a place --
+                a peer of the library rather than a setting.
+
+                Gated on a boolean from the edition, never on an import from
+                src/cloud: the community image must not contain the catalogue,
+                and CI asserts it with `! test -e /app/src/cloud`. A cast
+                because typedRoutes checks against the community build, where
+                /discover is not a route at all. */}
+            {edition.hasCatalog && (
+              <Link
+                href={'/discover' as Route}
+                className="rounded px-2 py-2 text-[15px] text-[var(--fg-muted)] hover:bg-[var(--surface-raised)]"
+              >
+                {nav('discover')}
+              </Link>
+            )}
             {/* Everything about your own account, and for admins the
                 administration, sits behind your name. The header used to carry
                 up to eight separate links; see profile-menu.tsx. */}
