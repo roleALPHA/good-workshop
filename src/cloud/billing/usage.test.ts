@@ -1,5 +1,8 @@
 import { describe, expect, it } from 'vitest'
 import {
+  blockAfter,
+  DUNNING_GRACE_DAYS,
+  invoiceLocaleOf,
   invoiceRef,
   memberMonths,
   invoiceLine,
@@ -35,10 +38,38 @@ describe('calendar', () => {
     expect(viennaDay(at('2026-01-31T23:30:00Z'))).toBe('2026-02-01')
   })
 
+  /**
+   * The offset is one hour in winter and two in summer, and the worker runs
+   * every ten minutes -- so it runs inside both of the windows where the UTC
+   * day and the Vienna day disagree. Which month a run closes is decided here.
+   */
+  it.each([
+    // Winter, UTC+1: an hour before midnight UTC is already tomorrow.
+    ['2026-12-31T23:00:00Z', '2027-01-01'],
+    ['2026-12-31T22:59:00Z', '2026-12-31'],
+    // Summer, UTC+2: two hours before.
+    ['2026-06-30T22:00:00Z', '2026-07-01'],
+    ['2026-06-30T21:59:00Z', '2026-06-30'],
+    // The night the clocks go forward: 02:00 becomes 03:00 local.
+    ['2026-03-29T00:30:00Z', '2026-03-29'],
+    ['2026-03-29T22:30:00Z', '2026-03-30'],
+    // And back: 03:00 becomes 02:00 local.
+    ['2026-10-25T00:30:00Z', '2026-10-25'],
+    ['2026-10-25T23:30:00Z', '2026-10-26'],
+  ])('%s falls on %s in Vienna', (instant, day) => {
+    expect(viennaDay(at(instant))).toBe(day)
+  })
+
   it.each([
     ['2026-03-01T10:00:00Z', '2026-02-01'],
     ['2026-01-01T00:30:00Z', '2025-12-01'],
     ['2025-12-31T23:30:00Z', '2025-12-01'],
+    // 00:30 in Vienna on New Year's Day is 23:30 UTC on New Year's Eve. The
+    // run that happens then has to close December, not November.
+    ['2026-12-31T23:30:00Z', '2026-12-01'],
+    // The first run of a month that begins with a clock change.
+    ['2026-04-01T00:30:00Z', '2026-03-01'],
+    ['2026-11-01T00:30:00Z', '2026-10-01'],
   ])('the month before %s is %s', (now, expected) => {
     expect(previousMonth(at(now))).toBe(expected)
   })
@@ -114,6 +145,40 @@ describe('amounts and references', () => {
     expect(nextAttempt(2, now)).toEqual(at('2026-04-09T10:00:00Z'))
     expect(nextAttempt(3, now)).toBeNull()
   })
+
+  it('names the day the access may be blocked, two weeks after the reminder', () => {
+    // AGB § 5.4 gives the customer this span, and the reminder mail states the
+    // date -- so the number is part of what was promised, not a tuning knob.
+    expect(DUNNING_GRACE_DAYS).toBe(14)
+    expect(blockAfter(at('2026-04-02T10:00:00Z'))).toEqual(at('2026-04-16T10:00:00Z'))
+    // Across a clock change the span stays fourteen times 24 hours; the
+    // customer is never given a shorter one.
+    expect(blockAfter(at('2026-03-20T10:00:00Z'))).toEqual(at('2026-04-03T10:00:00Z'))
+  })
+})
+
+describe('the language an invoice is written in', () => {
+  /**
+   * Mails exist in four languages, invoices in two: the accounting system
+   * renders German and English. The rule is "everything that is not German is
+   * English", and it is written down here rather than left to be rediscovered
+   * from a switch statement.
+   */
+  it.each([
+    ['de', 'de'],
+    ['en', 'en'],
+    ['fr', 'en'],
+    ['es', 'en'],
+    // Nothing else is ever stored -- billing_account.locale has a check
+    // constraint -- but a column that gains a value must not silently pick a
+    // language for somebody.
+    ['de-AT', 'en'],
+    ['DE', 'en'],
+    [null, 'en'],
+    [undefined, 'en'],
+  ])('%s is invoiced in %s', (stored, expected) => {
+    expect(invoiceLocaleOf(stored)).toBe(expected)
+  })
 })
 
 describe('the month an invoice line names', () => {
@@ -149,6 +214,34 @@ describe('what an invoice line says', () => {
     )
     expect(invoiceLine('workshop', '2026-12-01', 'en')).toBe(
       'GoodWorkshop — workshops created, December 2026',
+    )
+  })
+
+  /**
+   * All twelve, because the two that are wrong are wrong in one language only:
+   * January is Jänner on an invoice issued in Austria, and a month name taken
+   * from a Date is a weekday.
+   */
+  it.each([
+    [1, 'Jänner 2026', 'January 2026'],
+    [2, 'Februar 2026', 'February 2026'],
+    [3, 'März 2026', 'March 2026'],
+    [4, 'April 2026', 'April 2026'],
+    [5, 'Mai 2026', 'May 2026'],
+    [6, 'Juni 2026', 'June 2026'],
+    [7, 'Juli 2026', 'July 2026'],
+    [8, 'August 2026', 'August 2026'],
+    [9, 'September 2026', 'September 2026'],
+    [10, 'Oktober 2026', 'October 2026'],
+    [11, 'November 2026', 'November 2026'],
+    [12, 'Dezember 2026', 'December 2026'],
+  ])('month %i is %s in German and %s in English', (month, german, english) => {
+    const first = `2026-${String(month).padStart(2, '0')}-01`
+    expect(invoiceLine('user_month', first, 'de')).toBe(`GoodWorkshop — Benutzer-Monate, ${german}`)
+    expect(invoiceLine('user_month', first, 'en')).toBe(`GoodWorkshop — user-months, ${english}`)
+    // Also from the Date the driver hands back for a `date` column.
+    expect(invoiceLine('workshop', new Date(2026, month - 1, 1), 'de')).toBe(
+      `GoodWorkshop — angelegte Workshops, ${german}`,
     )
   })
 
