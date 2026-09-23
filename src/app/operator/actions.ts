@@ -4,6 +4,15 @@ import { revalidatePath } from 'next/cache'
 import type { AuthenticationResponseJSON, RegistrationResponseJSON } from '@simplewebauthn/server'
 import { headers } from 'next/headers'
 import { z } from 'zod'
+import {
+  retireCatalogFacet,
+  saveCatalogFacet,
+  saveCatalogMethod,
+  setCatalogStatus,
+} from '@/cloud/operator/catalog'
+import { issueOperatorToken, revokeOperatorToken } from '@/cloud/operator/tokens'
+import { OPERATOR_SCOPES, isOperatorScope } from '@/cloud/operator/scopes'
+import { LOCALES } from '@/i18n/config'
 import { clientAddress } from '@/server/auth/client-address'
 import { rateLimiter } from '@/server/auth/ratelimit'
 import { operatorConsoleEnabled, operatorDb } from '@/cloud/operator/db'
@@ -195,7 +204,7 @@ const ActionInput = z.discriminatedUnion('kind', [
 export async function operatorAction(
   tenantId: string,
   raw: Record<string, unknown>,
-): Promise<{ ok: boolean; error?: 'input' | 'unauthenticated' | 'failed' }> {
+): Promise<OperatorResult> {
   const operator = await currentOperator()
   if (!operator) return { ok: false, error: 'unauthenticated' }
   const parsed = ActionInput.safeParse(raw)
@@ -245,3 +254,159 @@ export async function maintenanceAction(
   revalidatePath('/operator')
   return { ok: true }
 }
+
+// ── The Discover catalogue and the MCP credentials ──────────────────────────
+//
+// The same funnel as everything above: the operator from the session, a Zod
+// parse, and then one app.op_* function. The function validates again and
+// writes the audit entry; nothing here is the only thing standing between an
+// argument and the database.
+
+/** What every action here answers with. Named once, since there are now eight. */
+export type OperatorResult = { ok: boolean; error?: 'input' | 'unauthenticated' | 'failed' }
+
+/**
+ * Per language, and deliberately not keyed on the locale enum: Zod would then
+ * demand all four, and a method translated into two is the normal case. The
+ * database's own check constraint rejects a locale that is not one of ours.
+ */
+const Text = z.record(z.string(), z.record(z.string(), z.string()))
+
+const MethodForm = z.object({
+  key: z.string().regex(/^[a-z][a-z0-9_]{1,48}$/u),
+  moduleTypeKey: z.string().regex(/^[a-z][a-z0-9_]{1,48}$/u),
+  defaultDurationMinutes: z.coerce.number().int().min(0).max(1440),
+  groupSize: z.string().trim().optional(),
+  facets: z.array(z.string()).optional(),
+  text: Text,
+})
+
+export async function saveMethodAction(raw: unknown): Promise<OperatorResult> {
+  const operator = await currentOperator()
+  if (!operator) return { ok: false, error: 'unauthenticated' }
+  const input = MethodForm.safeParse(raw)
+  if (!input.success) return { ok: false, error: 'input' }
+  try {
+    await saveCatalogMethod(operatorDb(), operator.id, input.data)
+    revalidatePath('/operator/discover')
+    return { ok: true }
+  } catch {
+    return { ok: false, error: 'failed' }
+  }
+}
+
+export async function setCatalogStatusAction(raw: unknown): Promise<OperatorResult> {
+  const operator = await currentOperator()
+  if (!operator) return { ok: false, error: 'unauthenticated' }
+  const input = z
+    .object({
+      kind: z.enum(['method', 'design']),
+      id: z.string().uuid(),
+      locales: z.array(z.enum(LOCALES)).default([]),
+      published: z.boolean(),
+    })
+    .safeParse(raw)
+  if (!input.success) return { ok: false, error: 'input' }
+  try {
+    await setCatalogStatus(
+      operatorDb(),
+      operator.id,
+      input.data.kind,
+      input.data.id,
+      input.data.locales,
+      input.data.published,
+    )
+    revalidatePath('/operator/discover')
+    return { ok: true }
+  } catch {
+    // The one refusal worth its own answer: a language with no address cannot
+    // be published, and "failed" would send somebody looking in the wrong place.
+    return { ok: false, error: 'failed' }
+  }
+}
+
+export async function saveFacetAction(raw: unknown): Promise<OperatorResult> {
+  const operator = await currentOperator()
+  if (!operator) return { ok: false, error: 'unauthenticated' }
+  const input = z
+    .object({
+      group: z.string(),
+      key: z.string().regex(/^[a-z][a-z0-9_]{1,48}$/u),
+      sortOrder: z.coerce.number().int().optional(),
+      text: Text,
+    })
+    .safeParse(raw)
+  if (!input.success) return { ok: false, error: 'input' }
+  try {
+    await saveCatalogFacet(operatorDb(), operator.id, input.data)
+    revalidatePath('/operator/discover')
+    return { ok: true }
+  } catch {
+    return { ok: false, error: 'failed' }
+  }
+}
+
+export async function retireFacetAction(raw: unknown): Promise<OperatorResult> {
+  const operator = await currentOperator()
+  if (!operator) return { ok: false, error: 'unauthenticated' }
+  const input = z.object({ facetId: z.string().uuid() }).safeParse(raw)
+  if (!input.success) return { ok: false, error: 'input' }
+  try {
+    await retireCatalogFacet(operatorDb(), operator.id, input.data.facetId)
+    revalidatePath('/operator/discover')
+    return { ok: true }
+  } catch {
+    return { ok: false, error: 'failed' }
+  }
+}
+
+/**
+ * Issuing a credential, and the one place its secret exists.
+ *
+ * It is returned once and never stored: the row keeps the key and a hash. A
+ * screen that could show it again would be a screen worth stealing.
+ */
+export async function issueTokenAction(raw: unknown): Promise<OperatorResult & { token?: string }> {
+  const operator = await currentOperator()
+  if (!operator) return { ok: false, error: 'unauthenticated' }
+  const input = z
+    .object({
+      name: z.string().trim().min(1).max(80),
+      scopes: z.array(z.string()).min(1),
+      days: z.coerce.number().int().min(1).max(90),
+    })
+    .safeParse(raw)
+  if (!input.success) return { ok: false, error: 'input' }
+
+  const scopes = input.data.scopes.filter(isOperatorScope)
+  if (scopes.length === 0) return { ok: false, error: 'input' }
+
+  try {
+    const { token } = await issueOperatorToken(operatorDb(), operator.id, {
+      name: input.data.name,
+      scopes,
+      days: input.data.days,
+    })
+    revalidatePath('/operator/security')
+    return { ok: true, token }
+  } catch {
+    return { ok: false, error: 'failed' }
+  }
+}
+
+export async function revokeTokenAction(raw: unknown): Promise<OperatorResult> {
+  const operator = await currentOperator()
+  if (!operator) return { ok: false, error: 'unauthenticated' }
+  const input = z.object({ tokenId: z.string().uuid() }).safeParse(raw)
+  if (!input.success) return { ok: false, error: 'input' }
+  try {
+    await revokeOperatorToken(operatorDb(), operator.id, input.data.tokenId)
+    revalidatePath('/operator/security')
+    return { ok: true }
+  } catch {
+    return { ok: false, error: 'failed' }
+  }
+}
+
+/** The vocabulary the token form offers. Exported so the screen cannot drift. */
+export const ISSUABLE_SCOPES = OPERATOR_SCOPES
