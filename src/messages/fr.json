@@ -905,6 +905,7 @@
       "newTitle": "Jour {number, number}",
       "title": "Nom de la journée",
       "date": "Date de la journée",
+      "start": "Début de la journée",
       "moveEarlier": "Avancer la journée",
       "moveLater": "Reculer la journée",
       "delete": "Supprimer la journée d'atelier",

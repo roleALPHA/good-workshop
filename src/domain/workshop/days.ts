@@ -17,7 +17,9 @@ import { DomainError } from '@/domain/errors'
  * other part of its content; see update_day in src/server/mcp/tools.ts.
  *
  * The date is the exception, and only because the materialiser does not carry
- * it back to the table: written here, it is written where it is read.
+ * it back to the table: written here, it is written where it is read. The start
+ * time of a NEW day is a second exception for the same reason it is a table
+ * write at all -- there is no room yet to say it in.
  */
 
 export class DayError extends DomainError {}
@@ -35,9 +37,23 @@ export async function createDay(
   const contentVersion = await bumpContentVersion(tx, access, expectedVersion)
 
   const siblings = await tx
-    .select({ id: workshopDay.id, position: workshopDay.position })
+    .select({
+      id: workshopDay.id,
+      position: workshopDay.position,
+      startTime: workshopDay.startTime,
+    })
     .from(workshopDay)
     .where(eq(workshopDay.workshopId, access.workshopId))
+
+  const ordered = sortByPosition(siblings)
+
+  // A workshop that begins at half past eight begins at half past eight on
+  // every day of it. Only the first day of all falls back to the column
+  // default, which is the one place the hour is written down.
+  const startTime =
+    input.startMinute === undefined
+      ? ordered[ordered.length - 1]?.startTime
+      : toTime(input.startMinute)
 
   const dayId = uuidv7()
   await tx.insert(workshopDay).values({
@@ -45,8 +61,8 @@ export async function createDay(
     workshopId: access.workshopId,
     title: input.title,
     date: input.date ?? null,
-    ...(input.startMinute === undefined ? {} : { startTime: toTime(input.startMinute) }),
-    position: keyAtEnd(sortByPosition(siblings)),
+    ...(startTime === undefined ? {} : { startTime }),
+    position: keyAtEnd(ordered),
   })
 
   return { dayId, contentVersion }

@@ -908,6 +908,7 @@ declare const messages: {
       "newTitle": "Tag {number, number}",
       "title": "Name des Tags",
       "date": "Datum des Tags",
+      "start": "Beginn des Tags",
       "moveEarlier": "Tag nach vorn",
       "moveLater": "Tag nach hinten",
       "delete": "Workshoptag löschen",

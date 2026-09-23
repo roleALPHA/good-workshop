@@ -4,7 +4,7 @@ import { uuidv7 } from 'uuidv7'
 import { afterAll, beforeAll, beforeEach, describe, expect, it } from 'vitest'
 import { assertWorkshopAccess, NotFoundError } from '@/domain/agenda/access'
 import { withTenant, type Actor } from '@/server/db'
-import { moveDay } from './days'
+import { createDay, moveDay } from './days'
 import { listDays } from './repo'
 
 /**
@@ -113,5 +113,46 @@ describe('moveDay', () => {
     await expect(move(days[0]!, days[1]!, version - 1n)).rejects.toThrow()
     const after = await move(days[0]!, days[1]!, version)
     expect(after).toBeGreaterThan(version)
+  })
+})
+
+describe('createDay', () => {
+  const add = (input: { title: string; startMinute?: number }, id = workshopId) =>
+    withTenant(actor(), async (tx) =>
+      createDay(tx, await assertWorkshopAccess(tx, actor(), id, 'workshop.content.write'), input),
+    )
+
+  const startOf = async (dayId: string) =>
+    (await ops.query('select start_time from workshop_day where id = $1', [dayId])).rows[0]
+      .start_time
+
+  it("carries the last day's start time over to the new one", async () => {
+    await ops.query(`update workshop_day set start_time = '08:30' where id = $1`, [days[2]!])
+
+    const { dayId } = await add({ title: 'Tag 4' })
+
+    // A workshop that begins at half past eight begins at half past eight on
+    // every day of it -- nobody sets that four times.
+    expect(await startOf(dayId)).toBe('08:30:00')
+  })
+
+  it('takes the start time it is given over the one it would inherit', async () => {
+    await ops.query(`update workshop_day set start_time = '08:30' where id = $1`, [days[2]!])
+
+    const { dayId } = await add({ title: 'Tag 4', startMinute: 13 * 60 + 15 })
+
+    expect(await startOf(dayId)).toBe('13:15:00')
+  })
+
+  it('leaves the first day of a workshop at the hour the column says', async () => {
+    const id = uuidv7()
+    await ops.query(
+      `insert into workshop (id, tenant_id, title, owner_id, position) values ($1, $2, 'Leer', $3, 'a0')`,
+      [id, TENANT, memberId],
+    )
+
+    const { dayId } = await add({ title: 'Tag 1' }, id)
+
+    expect(await startOf(dayId)).toBe('09:00:00')
   })
 })

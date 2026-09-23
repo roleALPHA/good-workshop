@@ -905,6 +905,7 @@
       "newTitle": "Día {number, number}",
       "title": "Nombre de la jornada",
       "date": "Fecha de la jornada",
+      "start": "Inicio de la jornada",
       "moveEarlier": "Mover la jornada antes",
       "moveLater": "Mover la jornada después",
       "delete": "Eliminar jornada del taller",
