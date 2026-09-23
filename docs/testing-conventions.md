@@ -57,6 +57,33 @@ pnpm db:bootstrap && pnpm db:migrate && pnpm test:db:cloud
 node scripts/edition.mjs write   # back to community, or the next migrate applies cloud
 ```
 
+### The billing adapters are held to a contract, not to a fake
+
+The accounting and payment adapters (Odoo, Stripe) live in the private cloud build. This
+repository has the contract in `src/cloud/billing/ports.ts`, a fake, and
+`src/cloud/billing/conformance/` — a suite that runs against _any_ `BillingAdapters`:
+
+```ts
+import { describeBillingAdapters } from '@gw/billing-conformance'
+describeBillingAdapters({ name: 'Odoo staging', adapters, ref, customer })
+```
+
+`conformance/fake.test.ts` runs it against the fake in the ordinary unit suite. The private
+build points the same specifier at the same file and runs it against staging. Two things make
+this worth its weight:
+
+- Every database test believes the fake about what Odoo would do. A double that drifts from
+  the contract makes those tests agree with each other and with nothing else. Writing the
+  suite found two such drifts on the first run.
+- `COVERED` in `conformance/suite.ts` is typed `Record<keyof InvoicingPort, string>`. A method
+  added to a port without a statement about it fails `pnpm typecheck` — which is the only
+  check that can hold for a contract whose other implementation this repository never sees.
+
+What the ports cannot show is what the document _says_: whether the reverse-charge sentence is
+on the invoice is a question only a person reading the PDF can answer. That is what the
+invoice capture in the private build is for, and it is deliberately not in this repository —
+real invoices from a real accounting system are not something a public checkout should carry.
+
 ### Component tests drive real `userEvent`
 
 Never direct state manipulation. What is tested is what the user sees — **roles and accessible
