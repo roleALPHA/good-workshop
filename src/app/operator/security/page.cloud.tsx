@@ -8,9 +8,11 @@ import { listOperatorTokens } from '@/cloud/operator/tokens'
 import { listOperatorConnections } from '@/cloud/operator/oauth'
 import { OPERATOR_SCOPES } from '@/cloud/operator/scopes'
 import { currentOperator } from '@/cloud/operator/session'
+import { operatorProfile } from '@/server/oauth/metadata'
 import { Passkeys } from '../passkeys'
 import { Tokens } from '../tokens'
 import { Connections } from '../connections'
+import { OAuthGuide } from '../oauth-guide'
 
 export const dynamic = 'force-dynamic'
 
@@ -84,6 +86,11 @@ export default async function OperatorSecurity() {
           lastUsed: when(connection.lastUsedAt),
         }))}
       />
+
+      {/* The endpoint the discovery document advertises, not one assembled here
+          a second time: `resource_documentation` points a refused client at this
+          page, and the address it finds has to be the one it was refused at. */}
+      <OAuthGuide endpoint={operatorProfile().resource} />
     </div>
   )
 }
