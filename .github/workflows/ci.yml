@@ -319,9 +319,15 @@ jobs:
           GW_BILLING_ADAPTERS: ./private-adapters/index.ts
       - name: The cloud build has its website
         run: |
-          for route in preise registrieren registrieren/bestaetigen impressum agb datenschutz avv; do
+          # The public addresses are English since the site was made findable;
+          # the check moved with them rather than quietly passing on nothing.
+          for route in pricing registrieren registrieren/bestaetigen imprint terms privacy \
+                       data-processing faq sessionlab-alternative workshop-methods; do
             test -e ".next/server/app/(site)/${route}/page.js" || { echo "missing: /${route}"; exit 1; }
           done
+          # The localised landing page and the pages below it.
+          test -e ".next/server/app/(site)/[lang]/page.js"
+          test -e ".next/server/app/(site)/[lang]/[slug]/page.js"
           test -e .next/standalone/src/cloud/legal/agb.md
           test -e dist/billing-worker.mjs
           test -e ".next/server/app/(app)/admin/billing/page.js"
