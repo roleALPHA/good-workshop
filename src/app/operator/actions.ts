@@ -12,7 +12,7 @@ import {
 } from '@/cloud/operator/catalog'
 import { issueOperatorToken, revokeOperatorToken } from '@/cloud/operator/tokens'
 import { disconnectOperatorClient } from '@/cloud/operator/oauth'
-import { OPERATOR_SCOPES, isOperatorScope } from '@/cloud/operator/scopes'
+import { isOperatorScope } from '@/cloud/operator/scopes'
 import { LOCALES } from '@/i18n/config'
 import { clientAddress } from '@/server/auth/client-address'
 import { rateLimiter } from '@/server/auth/ratelimit'
@@ -429,6 +429,3 @@ export async function disconnectClientAction(raw: unknown): Promise<OperatorResu
     return { ok: false, error: 'failed' }
   }
 }
-
-/** The vocabulary the token form offers. Exported so the screen cannot drift. */
-export const ISSUABLE_SCOPES = OPERATOR_SCOPES
