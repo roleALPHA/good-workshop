@@ -91,21 +91,65 @@ export function pathFor(page: SitePage, locale: Locale): string {
  * Null is the important answer: everything behind the login goes through here
  * too, and for those the language comes from the person rather than the URL.
  */
-export function pageForPath(pathname: string): { page: SitePage; locale: Locale } | null {
+/**
+ * The shape a method's address may take, checked WITHOUT asking the database.
+ *
+ * This module is imported by src/middleware.ts, which runs on the edge and has
+ * no database. So the router recognises the shape and the page decides whether
+ * that method exists -- which is also the right split: an address that is not
+ * a slug at all is not a 404 worth a query.
+ */
+const DETAIL_SLUG = /^[a-z0-9]+(?:-[a-z0-9]+)*$/u
+
+export function pageForPath(
+  pathname: string,
+): { page: SitePage; locale: Locale; detail?: string } | null {
   // A person types a trailing slash, a link generator emits one, and neither
   // means a different page.
   const path = pathname.length > 1 ? pathname.replace(/\/+$/u, '') : pathname
   const [, first = '', second = '', ...rest] = path.split('/')
-  if (rest.length > 0) return null
 
   const prefixed = isLocale(first) && first !== SITE_PRIMARY_LOCALE
   const locale = prefixed ? first : SITE_PRIMARY_LOCALE
   const slug = prefixed ? second : first
-  // A prefixed path has at most two segments, an unprefixed one at most one.
-  if (!prefixed && second !== '') return null
+  const detail = prefixed ? (rest[0] ?? '') : second
+  // A prefixed address has at most three segments, an unprefixed one at most
+  // two -- and the third is only ever a method.
+  if (rest.length > (prefixed ? 1 : 0)) return null
 
   const page = SITE_PAGES.find((candidate) => SLUGS[candidate][locale] === slug)
-  return page ? { page, locale } : null
+  if (!page) return null
+  if (detail === '') return { page, locale }
+  // Only the methods directory has pages beneath it. Everything else keeps the
+  // flat shape it had, so a stray segment is still nothing.
+  if (page !== 'methods' || !DETAIL_SLUG.test(detail)) return null
+  return { page, locale, detail }
+}
+
+/** Where one method lives in a language. */
+export function methodPathFor(slug: string, locale: Locale): string {
+  return `${pathFor('methods', locale)}/${slug}`
+}
+
+/**
+ * The hreflang set of a method, over the languages it is actually published in.
+ *
+ * Not all four: a method published only in English has one address. Naming a
+ * French URL that answers 404 would be an annotation pointing at nothing, and
+ * Google drops a set where one member does not return it.
+ */
+export function alternatesForMethod(slugs: Partial<Record<Locale, string>>): {
+  languages: Partial<Record<Locale, string>>
+  xDefault: string | null
+} {
+  const languages = Object.fromEntries(
+    LOCALES.flatMap((locale) => {
+      const slug = slugs[locale]
+      return slug ? [[locale, methodPathFor(slug, locale)]] : []
+    }),
+  ) as Partial<Record<Locale, string>>
+  const source = slugs[SITE_PRIMARY_LOCALE]
+  return { languages, xDefault: source ? methodPathFor(source, SITE_PRIMARY_LOCALE) : null }
 }
 
 /**

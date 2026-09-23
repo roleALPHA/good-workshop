@@ -1097,103 +1097,14 @@
       "lead": "Une journée d'atelier est faite de blocs, et chaque bloc a un type. Le type détermine les champs qui l'accompagnent : la consigne pour le travail en groupe, le procédé pour la décision, la question d'ouverture pour le check-in. Voici toutes les briques fournies par GoodWorkshop — à quoi elles servent, combien de temps elles durent d'ordinaire et dans quelle forme sociale.",
       "durationLabel": "Durée habituelle",
       "socialLabel": "Forme sociale",
-      "entries": {
-        "admin": {
-          "name": "Accueil et organisation",
-          "body": "Le premier bloc de la journée, et le seul pendant lequel personne n'a besoin de réfléchir : le déroulé, les horaires de pause, où sont les toilettes, ce qu'on fait des téléphones. Plus il est bref, plus il reste d'attention pour le check-in qui suit. Faites court, et notez quand même les règles du jeu — c'est à elles que vous vous référerez si quelqu'un coupe la parole plus tard.",
-          "duration": "10 à 15 minutes",
-          "social": "Plénière"
-        },
-        "check_in": {
-          "name": "Check-in",
-          "body": "Chacun prend la parole une fois avant que le travail commence. Ce n'est pas de la politesse, c'est de la statique : qui n'a rien dit dans le premier quart de la journée parle peu ensuite. Une question, un tour, un temps fixe par personne. Au-delà de douze personnes, préférez le binôme au tour de table, sinon le bloc vous coûte une demi-heure.",
-          "duration": "10 à 20 minutes",
-          "social": "Plénière ou binômes"
-        },
-        "presentation": {
-          "name": "Apport / présentation",
-          "body": "Quelqu'un apporte dans la salle un savoir que personne d'autre n'a : des chiffres, un contexte, une base technique. L'erreur la plus fréquente est la longueur : au-delà de vingt minutes sans question en retour, l'apport bascule en cours magistral. Prévoyez la digestion dans la foulée, en travail de groupe ou en discussion.",
-          "duration": "10 à 30 minutes",
-          "social": "Plénière"
-        },
-        "group_work": {
-          "name": "Travail en groupe",
-          "body": "Le bloc où le travail a vraiment lieu. Trois indications décident de sa réussite, et elles manquent souvent dans la salle : la consigne mot pour mot, la taille des groupes et ce qui doit exister à la fin. Comptez la restitution avec : quatre groupes à trois minutes, ce sont douze minutes qui sinon sortent de la pause suivante.",
-          "duration": "30 à 60 minutes",
-          "social": "Petits groupes"
-        },
-        "exercise": {
-          "name": "Exercice",
-          "body": "Une activité guidée au déroulé défini : simulation, jeu de rôle, jeu d'entreprise, écriture silencieuse. Contrairement au travail de groupe, le procédé est donné et le résultat reste ouvert. Notez la consigne pour qu'un remplaçant puisse la lire à voix haute, et mettez le lien de la fiche méthode s'il en existe une.",
-          "duration": "20 à 45 minutes",
-          "social": "variable"
-        },
-        "discussion": {
-          "name": "Discussion en plénière",
-          "body": "Tout le monde parle avec tout le monde autour d'une question. Le bloc qui déborde le plus sûrement, parce que rien en lui ne s'arrête de soi-même. Fixez un temps et une question, et notez ce que la discussion doit produire : une décision, une collecte, ou simplement une image commune.",
-          "duration": "15 à 30 minutes",
-          "social": "Plénière"
-        },
-        "decision": {
-          "name": "Décision / vote",
-          "body": "De plusieurs options, il n'en reste qu'une. Vote par gommettes pour les priorités, fist of five pour l'adhésion, consentement pour les objections, majorité pour le reste. Notez avant de commencer quel procédé s'applique et qui décide — régler cela après coup, c'est la raison pour laquelle des ateliers finissent sans résultat.",
-          "duration": "10 à 20 minutes",
-          "social": "Plénière"
-        },
-        "reflection": {
-          "name": "Réflexion",
-          "body": "Un regard en arrière sur ce qui vient de se passer : qu'est-ce que j'ai compris, qu'est-ce que j'emporte, qu'est-ce qui reste ouvert ? D'abord seul et par écrit, puis partagé — sinon le groupe entend l'avis de la première personne et poursuit dans cette direction.",
-          "duration": "10 à 20 minutes",
-          "social": "Individuel, puis plénière"
-        },
-        "energizer": {
-          "name": "Energizer",
-          "body": "Cinq minutes de mouvement contre le creux de l'après-midi. Ce n'est pas du remplissage : après le déjeuner et après deux longs blocs d'affilée, l'attention est mesurablement basse, et une activité debout en récupère plus qu'une pause café de plus. Veillez à ce que personne ne soit exposé.",
-          "duration": "5 à 10 minutes",
-          "social": "Plénière, debout"
-        },
-        "break": {
-          "name": "Pause",
-          "body": "Au moins une toutes les quatre-vingt-dix minutes, et plutôt quinze minutes que dix : une pause trop courte ne ramène personne à l'heure et mange le début du bloc suivant. Dans GoodWorkshop, les pauses sont comptées à part du contenu, pour qu'on voie en tête de journée combien de travail elle contient vraiment.",
-          "duration": "15 minutes",
-          "social": "aucune"
-        },
-        "lunch": {
-          "name": "Déjeuner",
-          "body": "Le bloc qu'on déplace le plus souvent, et celui qu'on peut le moins déplacer — le traiteur arrive quand il arrive. Épinglez-le à l'heure : il reste en place pendant que tout le reste se réorganise autour.",
-          "duration": "45 à 60 minutes",
-          "social": "aucune"
-        },
-        "buffer": {
-          "name": "Marge",
-          "body": "Du temps volontairement vide. Tout atelier déborde quelque part, et une marge prévue fait la différence entre un agenda qui s'ajuste et un agenda qui, à partir de quatorze heures trente, est simplement faux. Comptez environ dix pour cent de la journée, et placez-la avant les blocs qui ne peuvent pas sauter.",
-          "duration": "15 à 30 minutes",
-          "social": "aucune"
-        },
-        "next_steps": {
-          "name": "Prochaines étapes",
-          "body": "Qui fait quoi et pour quand. Le bloc qui décide si l'atelier arrive dans le quotidien de travail ou reste une bonne journée dont on se souvient. Notez les responsables et les échéances dans la salle, tant que tout le monde est là — après, il en manque toujours la moitié.",
-          "duration": "10 à 20 minutes",
-          "social": "Plénière"
-        },
-        "check_out": {
-          "name": "Check-out",
-          "body": "Un dernier tour, une question, court. Il ne sert pas à évaluer mais à clore : le groupe doit terminer la journée et pas seulement s'arrêter. Un tour de ressenti suffit quand le temps manque.",
-          "duration": "10 à 15 minutes",
-          "social": "Plénière"
-        },
-        "note": {
-          "name": "Note",
-          "body": "Pas un point du programme mais une remarque dans l'agenda : un rappel sur le vidéoprojecteur, une indication pour la co-animation, une idée pour la prochaine version. Ne compte aucun temps et se trouve quand même au bon endroit.",
-          "duration": "sans durée",
-          "social": "aucune"
-        }
-      },
       "howTitle": "Comment cela devient une journée",
       "howBody": "L'ordre n'est pas affaire de goût. Une journée commence par l'arrivée et finit par la clôture ; entre les deux, les blocs où l'on reçoit alternent avec les blocs où l'on travaille la matière. Une pause après quatre-vingt-dix minutes, du mouvement après le déjeuner, et les prochaines étapes avant le check-out. Dans GoodWorkshop, vous déplacez les blocs et tous les horaires qui suivent se recalculent — et le déjeuner reste tout de même en place si vous l'épinglez à l'heure.",
       "ctaTitle": "Faire un agenda avec ces briques",
       "ctaBody": "Créez la journée, glissez les blocs dans l'ordre que vous avez en tête, et laissez les horaires se calculer tout seuls. Ou décrivez votre intention à votre IA et laissez-la écrire le premier jet.",
-      "cta": "Essayer 14 jours gratuitement"
+      "cta": "Essayer 14 jours gratuitement",
+      "emptyTitle": "La collection est en cours d’écriture.",
+      "emptyBody": "Les premières méthodes apparaîtront ici dès qu’elles seront prêtes.",
+      "back": "Toutes les méthodes"
     },
     "compare": {
       "title": "GoodWorkshop comme alternative à SessionLab",
@@ -1221,7 +1132,7 @@
         "body": "L'agenda fonctionne sur un téléphone, survit à un mauvais wifi et permet à la co-animation de modifier la même journée en même temps. Vos notes d'animation restent chez vous : la vue d'impression et l'export les laissent de côté par défaut, pour que le groupe ait l'agenda et vous le reste."
       },
       "limitsTitle": "Là où GoodWorkshop en fait moins",
-      "limitsBody": "GoodWorkshop n'a pas de bibliothèque publique de méthodes avec des centaines d'exercices tout faits, ni de galerie de modèles pour chaque occasion. Il apporte quinze briques, et le contenu, vous l'écrivez vous-même — ou vous le faites écrire par votre IA. Il est aussi plus jeune et plus petit : moins d'intégrations, pas d'équipe de trente personnes derrière. Si vous cherchez une collection d'exercices prête à l'emploi, vous serez mieux servi ailleurs. Si vous cherchez un agenda qui calcule, qui vous appartient et que votre IA sait manipuler, vous êtes au bon endroit.",
+      "limitsBody": "La bibliothèque de GoodWorkshop est volontairement petite. Discover rassemble des méthodes et des déroulés d’atelier tout prêts que nous écrivons et entretenons nous-mêmes : quelques dizaines, pas des centaines, et aucune galerie de modèles pour chaque occasion. Si vous cherchez la plus grande collection possible à parcourir, vous serez mieux servi ailleurs. GoodWorkshop est aussi plus jeune et plus petit : moins d’intégrations, pas d’équipe de trente personnes derrière. Si vous cherchez un agenda qui calcule, qui vous appartient, que votre IA sait manipuler — et une poignée de déroulés que vous reprenez en une étape —, vous êtes au bon endroit.",
       "ctaTitle": "Voir par vous-même",
       "ctaBody": "Quatorze jours, sans données de paiement. Si cela ne convient pas, cela s'arrête tout seul.",
       "cta": "Essayer gratuitement",

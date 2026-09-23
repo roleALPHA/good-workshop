@@ -1097,103 +1097,14 @@
       "lead": "Ein Workshoptag besteht aus Blöcken, und jeder Block hat einen Typ. Der Typ bestimmt, welche Felder mitkommen: der Arbeitsauftrag bei der Gruppenarbeit, das Verfahren bei der Entscheidung, die Impulsfrage beim Check-in. Hier stehen alle Bausteine, die GoodWorkshop mitbringt — wofür sie taugen, wie lange sie üblicherweise laufen und in welcher Sozialform.",
       "durationLabel": "Typische Dauer",
       "socialLabel": "Sozialform",
-      "entries": {
-        "admin": {
-          "name": "Begrüßung & Organisatorisches",
-          "body": "Der erste Block des Tages, und der einzige, in dem niemand mitdenken muss: Ablauf, Pausenzeiten, wo die Toiletten sind, wie mit Handys umgegangen wird. Je knapper er ausfällt, desto mehr Aufmerksamkeit bleibt für den Check-in danach. Halte ihn kurz und schreib die Spielregeln trotzdem auf — sie sind der Bezugspunkt, wenn später jemand dazwischenredet.",
-          "duration": "10–15 Minuten",
-          "social": "Plenum"
-        },
-        "check_in": {
-          "name": "Check-in",
-          "body": "Alle kommen einmal zu Wort, bevor die Arbeit beginnt. Das ist keine Höflichkeit, sondern Statik: wer im ersten Viertel nichts gesagt hat, sagt erfahrungsgemäß auch später wenig. Eine Frage, eine Runde, eine feste Zeit pro Person. Bei mehr als zwölf Personen lieber zu zweit als reihum, sonst kostet der Block eine halbe Stunde.",
-          "duration": "10–20 Minuten",
-          "social": "Plenum oder Paare"
-        },
-        "presentation": {
-          "name": "Impuls / Präsentation",
-          "body": "Jemand bringt Wissen in den Raum, das sonst niemand hat — Zahlen, Kontext, eine fachliche Grundlage. Der häufigste Fehler ist die Länge: ein Impuls über zwanzig Minuten ohne Gegenfrage kippt in Frontalunterricht. Plane die Verarbeitung gleich mit ein, als Gruppenarbeit oder Diskussion direkt danach.",
-          "duration": "10–30 Minuten",
-          "social": "Plenum"
-        },
-        "group_work": {
-          "name": "Gruppenarbeit",
-          "body": "Der Block, in dem die eigentliche Arbeit passiert. Entscheidend sind drei Angaben, die im Raum oft fehlen: der Arbeitsauftrag im Wortlaut, die Gruppengröße und was am Ende vorliegen soll. Rechne die Auswertung dazu — vier Gruppen à drei Minuten sind zwölf Minuten, die sonst aus der nächsten Pause kommen.",
-          "duration": "30–60 Minuten",
-          "social": "Kleingruppen"
-        },
-        "exercise": {
-          "name": "Übung",
-          "body": "Eine angeleitete Aktivität mit einem klaren Ablauf: Simulation, Rollenspiel, Planspiel, stilles Schreiben. Anders als die Gruppenarbeit ist das Verfahren vorgegeben und das Ergebnis offen. Notiere die Anleitung so, dass eine Vertretung sie vorlesen könnte, und verlinke die Methodenbeschreibung, wenn es eine gibt.",
-          "duration": "20–45 Minuten",
-          "social": "wechselnd"
-        },
-        "discussion": {
-          "name": "Plenumsdiskussion",
-          "body": "Alle reden miteinander über eine Leitfrage. Der Block, der am zuverlässigsten überzieht, weil er keine natürliche Grenze hat. Setz eine Zeit und eine Frage, und halte fest, worauf die Diskussion hinauslaufen soll: eine Entscheidung, eine Sammlung oder nur ein gemeinsames Bild.",
-          "duration": "15–30 Minuten",
-          "social": "Plenum"
-        },
-        "decision": {
-          "name": "Entscheidung / Abstimmung",
-          "body": "Aus vielen Optionen wird eine. Punktabfrage für Prioritäten, Fist of Five für Zustimmung, Konsent für Widerstände, Mehrheit für den Rest. Notiere vorher, welches Verfahren gilt und wer entscheidet — die Frage danach zu klären, ist der Grund, warum Workshops ohne Ergebnis enden.",
-          "duration": "10–20 Minuten",
-          "social": "Plenum"
-        },
-        "reflection": {
-          "name": "Reflexion",
-          "body": "Ein Blick zurück auf das, was gerade passiert ist: Was habe ich verstanden, was nehme ich mit, was ist offen geblieben? Erst einzeln und schriftlich, dann geteilt — sonst hört die Gruppe die Meinung der ersten Person und denkt in ihre Richtung weiter.",
-          "duration": "10–20 Minuten",
-          "social": "Einzelarbeit, dann Plenum"
-        },
-        "energizer": {
-          "name": "Energizer",
-          "body": "Fünf Minuten Bewegung gegen das Nachmittagsloch. Kein Füllmaterial: nach dem Mittagessen und nach zwei langen Blöcken hintereinander ist die Aufmerksamkeit messbar unten, und eine kurze Aktivität im Stehen holt mehr zurück als eine weitere Kaffeepause. Achte darauf, dass niemand vorgeführt wird.",
-          "duration": "5–10 Minuten",
-          "social": "Plenum, im Stehen"
-        },
-        "break": {
-          "name": "Pause",
-          "body": "Alle neunzig Minuten mindestens eine, und lieber fünfzehn Minuten als zehn: eine zu kurze Pause holt niemanden pünktlich zurück und frisst den Anfang des nächsten Blocks. In GoodWorkshop zählen Pausen getrennt vom Inhalt, damit im Kopf der Tagesplanung sichtbar ist, wie viel Arbeit tatsächlich drinsteckt.",
-          "duration": "15 Minuten",
-          "social": "keine"
-        },
-        "lunch": {
-          "name": "Mittagessen",
-          "body": "Der Block, der am häufigsten verschoben wird, und der, der am wenigsten verschoben werden darf — das Catering kommt, wann es kommt. Pinne ihn auf die Uhrzeit, dann bleibt er stehen, während sich alles andere darum herum bewegt.",
-          "duration": "45–60 Minuten",
-          "social": "keine"
-        },
-        "buffer": {
-          "name": "Puffer",
-          "body": "Bewusst leere Zeit. Jeder Workshop überzieht irgendwo, und ein eingeplanter Puffer ist der Unterschied zwischen einer Agenda, die sich anpasst, und einer, die ab halb drei nur noch falsch ist. Rechne mit zehn Prozent des Tages, und plane ihn vor die Blöcke, die nicht wegfallen dürfen.",
-          "duration": "15–30 Minuten",
-          "social": "keine"
-        },
-        "next_steps": {
-          "name": "Nächste Schritte",
-          "body": "Wer macht was bis wann. Der Block, an dem sich entscheidet, ob der Workshop im Arbeitsalltag ankommt oder als guter Tag in Erinnerung bleibt. Erfasse Verantwortliche und Fristen im Raum, solange alle da sind — hinterher fehlt immer die Hälfte.",
-          "duration": "10–20 Minuten",
-          "social": "Plenum"
-        },
-        "check_out": {
-          "name": "Check-out",
-          "body": "Eine letzte Runde, eine Frage, kurz. Sie dient nicht der Auswertung, sondern dem Abschluss: die Gruppe soll den Tag beenden und nicht einfach aufhören. Eine Stimmungsabfrage genügt, wenn die Zeit knapp ist.",
-          "duration": "10–15 Minuten",
-          "social": "Plenum"
-        },
-        "note": {
-          "name": "Notiz",
-          "body": "Kein Programmpunkt, sondern eine Bemerkung in der Agenda: eine Erinnerung an den Beamer, ein Hinweis für die Co-Moderation, ein Gedanke zur nächsten Fassung. Zählt keine Zeit und steht trotzdem an der richtigen Stelle.",
-          "duration": "keine Dauer",
-          "social": "keine"
-        }
-      },
       "howTitle": "Wie daraus ein Tag wird",
       "howBody": "Die Reihenfolge ist keine Geschmacksfrage. Ein Tag beginnt mit Ankommen und endet mit Abschluss; dazwischen wechseln sich Blöcke, in denen aufgenommen wird, mit Blöcken ab, in denen verarbeitet wird. Nach neunzig Minuten kommt eine Pause, nach dem Mittagessen etwas Bewegung, und vor dem Check-out stehen die nächsten Schritte. In GoodWorkshop verschiebst du die Blöcke, und alle Uhrzeiten dahinter rechnen sich neu — das Mittagessen bleibt trotzdem stehen, wenn du es auf die Uhrzeit pinnst.",
       "ctaTitle": "Aus den Bausteinen eine Agenda machen",
       "ctaBody": "Leg den Tag an, zieh die Blöcke in die Reihenfolge, die dir vorschwebt, und lass die Zeiten sich selbst ausrechnen. Oder beschreib deiner KI, was du vorhast, und lass sie den ersten Entwurf schreiben.",
-      "cta": "14 Tage kostenlos testen"
+      "cta": "14 Tage kostenlos testen",
+      "emptyTitle": "Die Sammlung wird gerade geschrieben.",
+      "emptyBody": "Sobald die ersten Methoden stehen, erscheinen sie hier.",
+      "back": "Alle Methoden"
     },
     "compare": {
       "title": "GoodWorkshop als Alternative zu SessionLab",
@@ -1221,7 +1132,7 @@
         "body": "Die Agenda funktioniert auf dem Handy, übersteht schlechtes WLAN und lässt die Co-Moderation denselben Tag gleichzeitig bearbeiten. Moderationsnotizen bleiben bei dir: die Druckansicht und der Export lassen sie standardmäßig weg, damit die Gruppe die Agenda bekommt und du den Rest behältst."
       },
       "limitsTitle": "Wo GoodWorkshop weniger kann",
-      "limitsBody": "GoodWorkshop hat keine öffentliche Methodenbibliothek mit hunderten fertigen Übungen und keine Galerie mit Vorlagen für jeden Anlass. Es bringt fünfzehn Bausteine mit, und die Inhalte schreibst du selbst — oder lässt sie dir von deiner KI schreiben. Es ist außerdem jünger und kleiner: weniger Integrationen, kein Team von dreißig Leuten dahinter. Wenn du eine fertige Übungssammlung suchst, bist du anderswo besser bedient. Wenn du eine Agenda suchst, die rechnet, die dir gehört und die deine KI bedienen kann, bist du hier richtig.",
+      "limitsBody": "Die Bibliothek von GoodWorkshop ist bewusst klein. Discover enthält eine kuratierte Sammlung von Methoden und fertigen Workshop-Designs, die wir selbst schreiben und pflegen: Dutzende, nicht Hunderte, und keine Galerie mit Vorlagen für jeden Anlass. Wer die größtmögliche Sammlung zum Stöbern sucht, ist anderswo besser bedient. GoodWorkshop ist außerdem jünger und kleiner: weniger Integrationen, kein Team von dreißig Leuten dahinter. Wenn du eine Agenda suchst, die rechnet, die dir gehört, die deine KI bedienen kann — und eine Handvoll Designs, die du in einem Schritt in einen Workshop übernimmst —, bist du hier richtig.",
       "ctaTitle": "Selbst ausprobieren",
       "ctaBody": "Vierzehn Tage, ohne Zahlungsdaten. Wenn es nicht passt, läuft es aus.",
       "cta": "Kostenlos testen",

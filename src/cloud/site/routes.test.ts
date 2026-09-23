@@ -4,6 +4,8 @@ import {
   SITE_PAGES,
   SITE_PRIMARY_LOCALE,
   alternatesFor,
+  alternatesForMethod,
+  methodPathFor,
   localeForPath,
   pageForPath,
   pathFor,
@@ -148,5 +150,76 @@ describe('the alternates of a page', () => {
       const { languages } = alternatesFor(page as SitePage)
       expect(Object.keys(languages).sort()).toEqual([...LOCALES].sort())
     }
+  })
+})
+
+describe('one method below the directory', () => {
+  it('is recognised in every language', () => {
+    expect(pageForPath('/workshop-methods/dot-voting')).toEqual({
+      page: 'methods',
+      locale: 'en',
+      detail: 'dot-voting',
+    })
+    expect(pageForPath('/de/workshop-methoden/punktabfrage')).toEqual({
+      page: 'methods',
+      locale: 'de',
+      detail: 'punktabfrage',
+    })
+  })
+
+  it('pins the language from the address, the way every other page does', () => {
+    // The middleware reads this. Without it a method page would take its
+    // language from a cookie and serve German at a French address.
+    expect(localeForPath('/fr/methodes-d-animation/check-in')).toBe('fr')
+    expect(localeForPath('/workshop-methods/check-in')).toBe('en')
+  })
+
+  it('exists only below the methods directory', () => {
+    // Everything else keeps the flat shape it had, so a stray segment is still
+    // nothing rather than a page that renders empty.
+    expect(pageForPath('/pricing/anything')).toBeNull()
+    expect(pageForPath('/de/preise/anything')).toBeNull()
+    expect(pageForPath('/faq/anything')).toBeNull()
+  })
+
+  it('refuses an address that is not a slug, without asking anybody', () => {
+    // Checked by shape, because src/middleware.ts imports this and runs on the
+    // edge with no database. Whether the method EXISTS is the page's question.
+    expect(pageForPath('/workshop-methods/Punkt_Abfrage')).toBeNull()
+    expect(pageForPath('/workshop-methods/-leading')).toBeNull()
+    expect(pageForPath('/workshop-methods/a/b')).toBeNull()
+    expect(pageForPath('/de/workshop-methoden/a/b')).toBeNull()
+  })
+
+  it('builds the address it recognises', () => {
+    expect(methodPathFor('dot-voting', 'en')).toBe('/workshop-methods/dot-voting')
+    expect(methodPathFor('punktabfrage', 'de')).toBe('/de/workshop-methoden/punktabfrage')
+    expect(pageForPath(methodPathFor('x-y', 'fr'))).toEqual({
+      page: 'methods',
+      locale: 'fr',
+      detail: 'x-y',
+    })
+  })
+})
+
+describe('the alternates of one method', () => {
+  it('name only the languages it is published in', () => {
+    // A method that exists in two languages has two addresses. Naming four
+    // would annotate two pages that answer 404, and a set with a member that
+    // does not return it is dropped whole.
+    const { languages, xDefault } = alternatesForMethod({ en: 'check-in', de: 'check-in' })
+    expect(languages).toEqual({
+      en: '/workshop-methods/check-in',
+      de: '/de/workshop-methoden/check-in',
+    })
+    expect(xDefault).toBe('/workshop-methods/check-in')
+  })
+
+  it('has no default when the source language is not published', () => {
+    // x-default is "what somebody gets whose language is none of these", and
+    // that answer is the unprefixed one. Without it, there is none to give.
+    const { languages, xDefault } = alternatesForMethod({ de: 'punktabfrage' })
+    expect(languages).toEqual({ de: '/de/workshop-methoden/punktabfrage' })
+    expect(xDefault).toBeNull()
   })
 })

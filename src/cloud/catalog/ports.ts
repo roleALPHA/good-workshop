@@ -176,12 +176,16 @@ export type CatalogPort = {
   getDesign(id: string, locale: Locale): Promise<DesignDetail | null>
 
   /**
-   * Every published method's slug per language, for the sitemap.
+   * Every published method's address, by method and language.
    *
    * Per language and not one list, because publication is per language: a
    * method that exists only in English has one address, not four. Naming a
    * French URL that answers 404 -- or worse, answers in English -- is the
    * duplicate the whole routing scheme exists to avoid.
+   *
+   * `id` is what makes this answer two questions with one query: the sitemap
+   * groups by it to emit one entry per address, and a method page groups by it
+   * to name the languages it is actually published in.
    */
-  publishedMethodSlugs(): Promise<{ locale: Locale; slug: string }[]>
+  publishedMethodSlugs(): Promise<{ id: string; locale: Locale; slug: string }[]>
 }

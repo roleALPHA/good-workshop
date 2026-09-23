@@ -8,6 +8,10 @@ export default defineConfig({
     alias: {
       '@': fileURLToPath(new URL('./src', import.meta.url)),
       '@gw/edition': fileURLToPath(new URL('./src/server/edition/community.ts', import.meta.url)),
+      // The empty catalogue, which is what a public build has. A test that
+      // wants rows mocks this module; one that does not gets the honest
+      // nothing rather than a fixture pretending to be a library.
+      '@gw/catalog': fileURLToPath(new URL('./src/cloud/catalog/unavailable.ts', import.meta.url)),
       '@gw/billing-adapters': fileURLToPath(
         new URL('./src/cloud/billing/adapters/unavailable.ts', import.meta.url),
       ),

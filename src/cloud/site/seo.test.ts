@@ -26,6 +26,29 @@ const ORIGIN = 'https://goodworkshop.example'
  */
 vi.mock('@/server/edition', () => ({ edition: { name: 'cloud' } }))
 
+/**
+ * Two methods, one of them published in only two languages.
+ *
+ * The partial one is the point: the sitemap has to offer two addresses for it
+ * and annotate exactly those two, not four. A fixture where everything is
+ * translated would pass whatever the code did.
+ */
+vi.mock('@gw/catalog', () => ({
+  catalog: {
+    publishedMethodSlugs: async () => [
+      { id: 'm1', locale: 'en', slug: 'dot-voting' },
+      { id: 'm1', locale: 'de', slug: 'punktabfrage' },
+      { id: 'm1', locale: 'fr', slug: 'vote-par-gommettes' },
+      { id: 'm1', locale: 'es', slug: 'votacion-con-puntos' },
+      { id: 'm2', locale: 'en', slug: 'check-in' },
+      { id: 'm2', locale: 'de', slug: 'check-in' },
+    ],
+  },
+}))
+
+/** 4 addresses for the complete method, 2 for the partial one. */
+const METHOD_ENTRIES = 6
+
 /** The other half of the switch, for the two tests that assert on it. */
 const asCommunity = () => {
   ;(edition as { name: string }).name = 'community'
@@ -39,9 +62,9 @@ beforeEach(() => {
 })
 
 describe('the sitemap', () => {
-  it('offers every page in every language', () => {
-    const urls = sitemap().map((entry) => entry.url)
-    expect(urls).toHaveLength(SITE_PAGES.length * LOCALES.length)
+  it('offers every page in every language', async () => {
+    const urls = (await sitemap()).map((entry) => entry.url)
+    expect(urls).toHaveLength(SITE_PAGES.length * LOCALES.length + METHOD_ENTRIES)
     for (const page of SITE_PAGES) {
       for (const locale of LOCALES) {
         expect(urls).toContain(`${ORIGIN}${pathFor(page, locale)}`)
@@ -49,26 +72,43 @@ describe('the sitemap', () => {
     }
   })
 
-  it('gives absolute URLs on the configured origin', () => {
+  it('gives absolute URLs on the configured origin', async () => {
     // A relative URL in a sitemap is not merely ignored -- the file is
     // rejected, and with it every page in it.
-    for (const { url } of sitemap()) {
+    for (const { url } of await sitemap()) {
       expect(url.startsWith(`${ORIGIN}/`), url).toBe(true)
     }
   })
 
-  it('repeats the whole set of alternates on every entry, itself included', () => {
+  it('repeats the whole set of alternates on every entry, itself included', async () => {
     // hreflang is a mutual claim: an annotation that the page it points at
-    // does not return for itself is discarded, and so is the whole set.
-    for (const entry of sitemap()) {
-      const languages = entry.alternates?.languages ?? {}
-      expect(Object.keys(languages).sort()).toEqual([...LOCALES, 'x-default'].sort())
-      expect(Object.values(languages)).toContain(entry.url)
+    // does not return for itself is discarded, and so is the whole set. That
+    // holds for every entry, however many languages it has.
+    for (const entry of await sitemap()) {
+      expect(Object.values(entry.alternates?.languages ?? {}), entry.url).toContain(entry.url)
     }
   })
 
-  it('points x-default at the unprefixed page', () => {
-    for (const entry of sitemap()) {
+  it('names all four languages for a page, and only the published ones for a method', async () => {
+    // The difference is the point. A page exists in four languages by
+    // construction; a method is published per language, and offering four
+    // addresses for one that has two would be two promises that answer 404.
+    const entries = await sitemap()
+    const page = entries.find((entry) => entry.url === `${ORIGIN}/pricing`)
+    expect(Object.keys(page?.alternates?.languages ?? {}).sort()).toEqual(
+      [...LOCALES, 'x-default'].sort(),
+    )
+
+    const partial = entries.find((entry) => entry.url.endsWith('/workshop-methods/check-in'))
+    expect(Object.keys(partial?.alternates?.languages ?? {}).sort()).toEqual([
+      'de',
+      'en',
+      'x-default',
+    ])
+  })
+
+  it('points x-default at the unprefixed page', async () => {
+    for (const entry of await sitemap()) {
       expect(entry.alternates?.languages?.['x-default']).toBe(
         entry.alternates?.languages?.[SITE_PRIMARY_LOCALE],
       )
@@ -118,9 +158,9 @@ describe('a self-hosted installation', () => {
     expect(robots().sitemap).toBeUndefined()
   })
 
-  it('publishes no sitemap', () => {
+  it('publishes no sitemap', async () => {
     asCommunity()
-    expect(sitemap()).toEqual([])
+    expect(await sitemap()).toEqual([])
   })
 })
 

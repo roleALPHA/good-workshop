@@ -2,7 +2,8 @@ import type { Metadata } from 'next'
 import { getLocale, getTranslations } from 'next-intl/server'
 import { authConfig } from '@/server/auth/config'
 import { LOCALES, type Locale } from '@/i18n/config'
-import { alternatesFor, pathFor, type SitePage } from './routes'
+import { catalog } from '@gw/catalog'
+import { alternatesFor, alternatesForMethod, methodPathFor, pathFor, type SitePage } from './routes'
 
 /**
  * The head of every page of the public website, built in one place.
@@ -82,5 +83,50 @@ export async function siteMetadata(page: SitePage): Promise<Metadata> {
       ],
     },
     twitter: { card: 'summary_large_image', title, description },
+  }
+}
+
+/**
+ * The head of one method's page.
+ *
+ * Its hreflang set names only the languages the method is actually published
+ * in, which is why it cannot reuse `siteMetadata`: that one speaks for pages
+ * that exist in all four by construction. A method published only in English
+ * has one address, and annotating three that answer 404 would have the whole
+ * set discarded.
+ */
+export async function methodMetadata(slug: string): Promise<Metadata> {
+  const [locale, all] = await Promise.all([
+    getLocale() as Promise<Locale>,
+    catalog.publishedMethodSlugs(),
+  ])
+  const here = all.find((entry) => entry.slug === slug && entry.locale === locale)
+  const method = await catalog.getMethod(slug, locale)
+  // Nothing to describe. The page itself answers 404; emitting a title for it
+  // would be a description of a page nobody can open.
+  if (!here || !method) return {}
+
+  const slugs = Object.fromEntries(
+    all.filter((entry) => entry.id === here.id).map((entry) => [entry.locale, entry.slug]),
+  ) as Partial<Record<Locale, string>>
+  const { languages, xDefault } = alternatesForMethod(slugs)
+  const canonical = methodPathFor(slug, locale)
+
+  return {
+    title: method.name,
+    description: method.summary,
+    alternates: {
+      canonical,
+      languages: { ...languages, ...(xDefault ? { 'x-default': xDefault } : {}) },
+    },
+    openGraph: {
+      type: 'article',
+      siteName: 'GoodWorkshop',
+      title: method.name,
+      description: method.summary,
+      url: siteUrl(canonical),
+      locale: OG_LOCALES[locale],
+    },
+    twitter: { card: 'summary_large_image', title: method.name, description: method.summary },
   }
 }
