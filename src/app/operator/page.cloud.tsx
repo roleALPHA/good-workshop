@@ -39,6 +39,13 @@ export default async function OperatorHome({
         <h1 className="text-xl font-semibold tracking-tight">{t('tenants.title')}</h1>
         <p className="text-[14px] text-[var(--fg-muted)]">
           {operator.displayName} ·{' '}
+          {/* The whole navigation of this console is this one line. A page
+              nobody links to is a page nobody finds -- Discover was reachable
+              only by typing its address. */}
+          <Link href={'/operator/discover' as Route} className="underline underline-offset-2">
+            {t('discover.title')}
+          </Link>{' '}
+          ·{' '}
           <Link href={'/operator/security' as Route} className="underline underline-offset-2">
             {t('passkeys.title')}
           </Link>{' '}

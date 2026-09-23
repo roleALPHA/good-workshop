@@ -1329,7 +1329,8 @@
       "filterValue": "Value",
       "filterGroup": "Filter",
       "addValue": "Add a value",
-      "retire": "Withdraw"
+      "retire": "Withdraw",
+      "backToTenants": "Back to the workspaces"
     },
     "tokens": {
       "title": "MCP access",
