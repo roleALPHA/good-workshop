@@ -36,9 +36,13 @@ describe("the console's OAuth instructions", () => {
    * sends somebody to a 404 with no way to tell which of the two is wrong.
    */
   it('hands out the endpoint it was given, and invents none of it', () => {
-    render(<OAuthGuide endpoint={ENDPOINT} />)
+    const { container } = render(<OAuthGuide endpoint={ENDPOINT} />)
     expect(screen.getAllByText(ENDPOINT).length).toBeGreaterThan(0)
-    expect(screen.queryByText(/ops\.goodworkshop\.org/)).not.toBeInTheDocument()
+    // The whole rendered text, as a string: a `getByText(/…/)` would only match
+    // an element whose ENTIRE text is the host, so a hardcoded address inside a
+    // sentence would slip past it. (It also reads to CodeQL as an unanchored
+    // check on a URL, which is fair -- this is the assertion that was meant.)
+    expect(container.textContent).not.toContain('goodworkshop.org')
   })
 
   it('adds Claude Code without a header, so the client signs itself in', () => {
