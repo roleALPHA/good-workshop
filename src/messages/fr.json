@@ -651,6 +651,18 @@
         "subject": "Échec du paiement GoodWorkshop",
         "body": "Bonjour,\n\nnous n’avons pas pu prélever le montant de la facture. {retry, select, none {Nous ne réessaierons pas.} other {Nous réessaierons le {retry}.}}\n\nVérifie ton moyen de paiement :\n{link}"
       },
+      "dunning": {
+        "subject": "Rappel de paiement pour GoodWorkshop",
+        "body": "Bonjour,\n\nnous n’avons pas pu prélever la facture en attente. Merci de la régler avant le {blockOn}.\n\nSans paiement d’ici là, nous bloquerons l’accès à l’espace de travail le {blockOn}. Tes contenus sont conservés ; tu pourras toujours les lire et les exporter.\n\nMerci de vérifier ton moyen de paiement :\n{link}"
+      },
+      "payment_blocked": {
+        "subject": "Ton accès à GoodWorkshop est bloqué",
+        "body": "Bonjour,\n\nla facture en attente n’est toujours pas réglée : nous avons donc bloqué l’accès à l’espace de travail.\n\nTes contenus sont intégralement conservés et tu peux toujours les lire et les exporter. Dès réception du paiement, l’espace se rouvre de lui-même :\n{link}"
+      },
+      "unblocked": {
+        "subject": "Ton espace de travail est de nouveau accessible",
+        "body": "Bonjour,\n\nnous avons reçu ton paiement. Ton espace de travail est de nouveau accessible et tu peux reprendre ton travail :\n{link}"
+      },
       "contract_ended": {
         "subject": "Votre contrat GoodWorkshop a pris fin",
         "body": "Bonjour,\n\nvotre contrat a pris fin à la fin du mois. Votre espace est désormais en lecture seule : la lecture et l'export restent possibles.\n\nVous pouvez télécharger vos ateliers jusqu'au {until}. Ensuite, nous supprimons les contenus.\n{link}"

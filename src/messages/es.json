@@ -651,6 +651,18 @@
         "subject": "Ha fallado el pago de GoodWorkshop",
         "body": "Hola:\n\nno hemos podido cobrar el importe de la factura. {retry, select, none {No volveremos a intentarlo.} other {Lo volveremos a intentar el {retry}.}}\n\nRevisa tu método de pago:\n{link}"
       },
+      "dunning": {
+        "subject": "Recordatorio de pago de GoodWorkshop",
+        "body": "Hola,\n\nno hemos podido cobrar la factura pendiente. Abónala antes del {blockOn}, por favor.\n\nSi no recibimos el pago, el {blockOn} bloquearemos el acceso al espacio de trabajo. Tus contenidos se conservan: podrás seguir leyéndolos y exportándolos.\n\nRevisa tu método de pago:\n{link}"
+      },
+      "payment_blocked": {
+        "subject": "Tu acceso a GoodWorkshop está bloqueado",
+        "body": "Hola,\n\nla factura pendiente sigue sin pagarse, así que hemos bloqueado el acceso al espacio de trabajo.\n\nTus contenidos se conservan íntegros y puedes seguir leyéndolos y exportándolos. En cuanto recibamos el pago, el espacio se desbloquea solo:\n{link}"
+      },
+      "unblocked": {
+        "subject": "Tu espacio de trabajo vuelve a estar disponible",
+        "body": "Hola,\n\nhemos recibido el pago. Tu espacio de trabajo vuelve a estar disponible y puedes seguir trabajando como siempre:\n{link}"
+      },
       "contract_ended": {
         "subject": "Tu contrato de GoodWorkshop ha finalizado",
         "body": "Hola,\n\ntu contrato finalizó al terminar el mes. Tu espacio ahora es de solo lectura: leer y exportar siguen funcionando.\n\nPuedes descargar tus talleres hasta el {until}. Después eliminaremos los contenidos.\n{link}"
