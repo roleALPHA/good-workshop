@@ -83,3 +83,27 @@ export function parseOAuthToken(
     secret: match[3]!,
   }
 }
+
+/**
+ * An operator's bearer token: `gwop_<key>_<secret>`.
+ *
+ * A fourth prefix, and the reason is the one the two above already state. The
+ * operator console reaches every tenant; a customer's personal access token
+ * presented at its MCP endpoint -- or an operator token presented at the
+ * customer one -- is refused BY ITS SHAPE, before anything is looked up. Two
+ * credentials that are both strings are otherwise told apart only by whichever
+ * lookup happens to fail first.
+ *
+ * `gwop_` and not `gwo_`: that one is already an OAuth access token, and a
+ * prefix that is a prefix of another prefix is a parser waiting to be wrong.
+ */
+export function generateOperatorToken(): { token: string; tokenKey: string; tokenHash: string } {
+  const tokenKey = randomBytes(9).toString('base64url').slice(0, 12)
+  const secret = generateSecret(32)
+  return { token: `gwop_${tokenKey}_${secret}`, tokenKey, tokenHash: hashSecret(secret) }
+}
+
+export function parseOperatorToken(token: string): { tokenKey: string; secret: string } | null {
+  const match = /^gwop_([A-Za-z0-9_-]{12})_([A-Za-z0-9_-]{20,})$/.exec(token.trim())
+  return match ? { tokenKey: match[1]!, secret: match[2]! } : null
+}
