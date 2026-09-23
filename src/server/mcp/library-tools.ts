@@ -525,7 +525,9 @@ export function registerLibraryTools(server: McpServer, { actor, authorization }
           .min(0)
           .max(1439)
           .optional()
-          .describe('Minutes since midnight, e.g. 540 = 09:00. Defaults to 09:00.'),
+          .describe(
+            'Minutes since midnight, e.g. 540 = 09:00. Defaults to the start time of the last day, and to 09:00 for the first day of a workshop.',
+          ),
         expectedVersion: Version,
       },
     },

@@ -53,7 +53,7 @@ const tabNames = () =>
 
 describe('the day tabs', () => {
   it('link every day and mark the one on screen, under the name it is being given', () => {
-    render(<DayTabs nav={nav()} activeTitle="Auftakt" activeDate={null} />)
+    render(<DayTabs nav={nav()} activeTitle="Auftakt" activeDate={null} activeStartMinute={540} />)
 
     expect(tabs().getByRole('link', { name: 'Auftakt' })).toHaveAttribute('aria-current', 'page')
     expect(tabs().getByRole('link', { name: 'Tag 2' })).toHaveAttribute('href', '/w/w-1/d/d-2')
@@ -66,6 +66,7 @@ describe('the day tabs', () => {
         nav={nav({ canManage: false, days: [{ id: 'd-1', title: 'Tag 1', date: null }] })}
         activeTitle="Tag 1"
         activeDate={null}
+        activeStartMinute={540}
       />,
     )
     expect(screen.queryByRole('navigation', { name: 'Tage' })).not.toBeInTheDocument()
@@ -73,7 +74,7 @@ describe('the day tabs', () => {
 
   it('add a day behind the last one and open it', async () => {
     createDayAction.mockResolvedValue({ ok: true, data: { dayId: 'd-4' } })
-    render(<DayTabs nav={nav()} activeTitle="Tag 1" activeDate={null} />)
+    render(<DayTabs nav={nav()} activeTitle="Tag 1" activeDate={null} activeStartMinute={540} />)
 
     await userEvent.click(screen.getByRole('button', { name: 'Neuer Workshoptag' }))
 
@@ -89,6 +90,7 @@ describe('the day tabs', () => {
         nav={nav()}
         activeTitle="Tag 1"
         activeDate="2026-10-01"
+        activeStartMinute={540}
         onRetitle={onRetitle}
         onRedate={onRedate}
       />,
@@ -107,9 +109,33 @@ describe('the day tabs', () => {
     expect(onRedate).toHaveBeenLastCalledWith(null)
   })
 
+  it('start the day on screen at the hour it really starts', async () => {
+    const onRestart = vi.fn()
+    render(
+      <DayTabs
+        nav={nav()}
+        activeTitle="Tag 1"
+        activeDate={null}
+        activeStartMinute={540}
+        onRestart={onRestart}
+      />,
+    )
+
+    const start = screen.getByLabelText('Beginn des Tags')
+    expect(start).toHaveValue('09:00')
+
+    fireEvent.change(start, { target: { value: '08:30' } })
+    expect(onRestart).toHaveBeenCalledWith(510)
+
+    // A half-typed time is not a new start time -- the whole agenda hangs off
+    // this one number, and 00:00 for a moment would move every block on it.
+    fireEvent.change(start, { target: { value: '' } })
+    expect(onRestart).toHaveBeenCalledTimes(1)
+  })
+
   it('move the day on screen without a pointer', async () => {
     moveDayAction.mockResolvedValue({ ok: true, data: { contentVersion: '2' } })
-    render(<DayTabs nav={nav()} activeTitle="Tag 1" activeDate={null} />)
+    render(<DayTabs nav={nav()} activeTitle="Tag 1" activeDate={null} activeStartMinute={540} />)
 
     expect(screen.getByRole('button', { name: 'Tag nach vorn' })).toBeDisabled()
     await userEvent.click(screen.getByRole('button', { name: 'Tag nach hinten' }))
@@ -128,7 +154,7 @@ describe('the day tabs', () => {
 
   it('put the order back and say why when a move is refused', async () => {
     moveDayAction.mockResolvedValue({ ok: false, message: 'Jemand anderes war schneller.' })
-    render(<DayTabs nav={nav()} activeTitle="Tag 1" activeDate={null} />)
+    render(<DayTabs nav={nav()} activeTitle="Tag 1" activeDate={null} activeStartMinute={540} />)
 
     await userEvent.click(screen.getByRole('button', { name: 'Tag nach hinten' }))
 
@@ -138,7 +164,7 @@ describe('the day tabs', () => {
 
   it('delete a day only once it has been said what goes with it', async () => {
     deleteDayAction.mockResolvedValue({ ok: true, data: { remainingDayId: 'd-2' } })
-    render(<DayTabs nav={nav()} activeTitle="Tag 1" activeDate={null} />)
+    render(<DayTabs nav={nav()} activeTitle="Tag 1" activeDate={null} activeStartMinute={540} />)
 
     await userEvent.click(screen.getByRole('button', { name: 'Workshoptag löschen' }))
     expect(deleteDayAction).not.toHaveBeenCalled()
@@ -155,6 +181,7 @@ describe('the day tabs', () => {
         nav={nav({ days: [{ id: 'd-1', title: 'Tag 1', date: null }] })}
         activeTitle="Tag 1"
         activeDate={null}
+        activeStartMinute={540}
       />,
     )
     expect(screen.getByRole('button', { name: 'Neuer Workshoptag' })).toBeVisible()
@@ -162,10 +189,18 @@ describe('the day tabs', () => {
   })
 
   it('offer a reader the days and nothing to change about them', () => {
-    render(<DayTabs nav={nav({ canManage: false })} activeTitle="Tag 1" activeDate={null} />)
+    render(
+      <DayTabs
+        nav={nav({ canManage: false })}
+        activeTitle="Tag 1"
+        activeDate={null}
+        activeStartMinute={540}
+      />,
+    )
 
     expect(tabNames()).toEqual(['Tag 1', 'Tag 2', 'Tag 3'])
     expect(screen.queryByRole('button')).not.toBeInTheDocument()
     expect(screen.queryByRole('textbox')).not.toBeInTheDocument()
+    expect(screen.queryByLabelText('Beginn des Tags')).not.toBeInTheDocument()
   })
 })

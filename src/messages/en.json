@@ -905,6 +905,7 @@
       "newTitle": "Day {number, number}",
       "title": "Name of the day",
       "date": "Date of the day",
+      "start": "Start of the day",
       "moveEarlier": "Move day earlier",
       "moveLater": "Move day later",
       "delete": "Delete workshop day",

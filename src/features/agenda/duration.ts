@@ -143,3 +143,21 @@ export function formatTime(minuteOfTimeline: number, locale: Locale): string {
 
   return dayOffset === 0 ? clock : `${clock} (${dayOffset > 0 ? '+' : ''}${dayOffset})`
 }
+
+/**
+ * The two halves of an `<input type="time">`, which speaks `HH:MM` and nothing
+ * else -- no language, no 12-hour clock, whatever the browser paints on top.
+ *
+ * Not `formatTime`'s job: that one writes a time for somebody to read, in their
+ * language and with a `(+1)` once the day runs past midnight. This one writes a
+ * time for an input element to parse back, and a day start has no `(+1)`.
+ */
+export const toTimeValue = (minute: number) =>
+  `${String(Math.floor((minute % MINUTES_PER_DAY) / 60)).padStart(2, '0')}:${String(minute % 60).padStart(2, '0')}`
+
+/** Null for anything that is not a whole `HH:MM` -- a half-typed time is not a time. */
+export function fromTimeValue(value: string): number | null {
+  const match = /^(\d{2}):(\d{2})$/.exec(value)
+  if (!match) return null
+  return Number(match[1]) * 60 + Number(match[2])
+}

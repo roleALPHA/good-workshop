@@ -3,7 +3,12 @@
 import { useLayoutEffect, useRef, useState } from 'react'
 import { Lock, LockOpen } from 'lucide-react'
 import { useTranslations } from 'next-intl'
-import { formatDuration, parseDuration } from '@/features/agenda/duration'
+import {
+  formatDuration,
+  fromTimeValue,
+  parseDuration,
+  toTimeValue,
+} from '@/features/agenda/duration'
 import { cn } from '@/lib/cn'
 import { markdownToRichText, richTextToMarkdown } from '@/lib/richtext/markdown'
 import type { RichTextValue } from '@/lib/richtext/schema'
@@ -294,13 +299,4 @@ export function PinControl({
       )}
     </span>
   )
-}
-
-const toTimeValue = (minute: number) =>
-  `${String(Math.floor((minute % 1440) / 60)).padStart(2, '0')}:${String(minute % 60).padStart(2, '0')}`
-
-function fromTimeValue(value: string): number | null {
-  const match = /^(\d{2}):(\d{2})$/.exec(value)
-  if (!match) return null
-  return Number(match[1]) * 60 + Number(match[2])
 }

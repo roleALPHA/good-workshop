@@ -89,7 +89,14 @@ export function AgendaSurface({
   if (!hydrated || !canEdit) {
     return (
       <>
-        {days && <DayTabs nav={days} activeTitle={doc.title} activeDate={doc.date} />}
+        {days && (
+          <DayTabs
+            nav={days}
+            activeTitle={doc.title}
+            activeDate={doc.date}
+            activeStartMinute={doc.startMinute}
+          />
+        )}
         <DayHeader doc={doc} schedule={reading.schedule} />
         <AgendaTable doc={doc} rows={reading.rows} schedule={reading.schedule} people={people} />
         <ParkingArea doc={doc} elsewhere={days?.parkedElsewhere} />
@@ -131,8 +138,10 @@ function EditorSurface({
           nav={days}
           activeTitle={agenda.doc.title}
           activeDate={agenda.doc.date}
+          activeStartMinute={agenda.doc.startMinute}
           onRetitle={(title) => agenda.patchDay({ title })}
           onRedate={(date) => agenda.patchDay({ date })}
+          onRestart={(startMinute) => agenda.patchDay({ startMinute })}
         />
       )}
       <AgendaEditor

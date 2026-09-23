@@ -18,6 +18,7 @@ import {
 import { restrictToHorizontalAxis } from '@dnd-kit/modifiers'
 import { SortableContext, horizontalListSortingStrategy, useSortable } from '@dnd-kit/sortable'
 import { CSS } from '@dnd-kit/utilities'
+import { fromTimeValue, toTimeValue } from '@/features/agenda/duration'
 import type { DayNav, DayNavItem } from '@/features/agenda/days'
 import { cn } from '@/lib/cn'
 import { createDayAction, deleteDayAction, moveDayAction } from '@/server/actions/days'
@@ -48,15 +49,20 @@ export function DayTabs({
   nav,
   activeTitle,
   activeDate,
+  activeStartMinute,
   onRetitle,
   onRedate,
+  onRestart,
 }: {
   nav: DayNav
   activeTitle: string
   activeDate: string | null
+  /** Minutes since midnight. Read from the shared document, like the name. */
+  activeStartMinute: number
   /** Absent where the day's document cannot be written -- readers, and the first paint. */
   onRetitle?: (title: string) => void
   onRedate?: (date: string | null) => void
+  onRestart?: (startMinute: number) => void
 }) {
   const t = useTranslations('workshop')
   const router = useRouter()
@@ -200,6 +206,22 @@ export function DayTabs({
                 if (next !== activeDate) onRedate(next)
               }}
               className="rounded-sm border border-transparent bg-transparent px-1 py-0.5 text-[14px] text-[var(--fg-muted)] hover:border-[var(--border)] focus:border-[var(--brand-ring)] focus:bg-[var(--surface)] focus:outline-none pointer-coarse:text-[16px]"
+            />
+          )}
+
+          {onRestart && (
+            <input
+              type="time"
+              aria-label={t('day.start')}
+              value={toTimeValue(activeStartMinute)}
+              onChange={(event) => {
+                const parsed = fromTimeValue(event.target.value)
+                // A half-typed time is not a new start time -- and this one is
+                // not one block's pin but the hour the whole day hangs off, so
+                // an empty box for a moment would move every row on it.
+                if (parsed !== null && parsed !== activeStartMinute) onRestart(parsed)
+              }}
+              className="tabular rounded-sm border border-transparent bg-transparent px-1 py-0.5 text-[14px] text-[var(--fg-muted)] hover:border-[var(--border)] focus:border-[var(--brand-ring)] focus:bg-[var(--surface)] focus:outline-none pointer-coarse:text-[16px]"
             />
           )}
 

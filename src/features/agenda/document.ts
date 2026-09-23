@@ -23,11 +23,16 @@ export type ModulePatch = {
   responsible?: Responsible[]
 }
 
-/** The day itself: its note, its name, its date. `date: null` clears it. */
+/**
+ * The day itself: its note, its name, its date, the hour it starts at.
+ * `date: null` clears it.
+ */
 export type DayPatch = {
   desc?: Record<string, unknown>
   title?: string
   date?: string | null
+  /** Minutes since midnight. Every start time on the day is derived from it. */
+  startMinute?: number
 }
 
 /** A section header. Only its start time is editable from the agenda today. */
