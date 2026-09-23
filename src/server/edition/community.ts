@@ -28,6 +28,9 @@ export const communityEdition: Edition = {
   workspaceNotice: async () => null,
   maintenanceWindow: async () => null,
   hasBilling: false,
+  // Discover is curated by the people who run the cloud. A self-hosted
+  // installation has nobody to curate it and nothing to curate from.
+  hasCatalog: false,
 }
 
 /** What `@gw/edition` resolves to in a community build. */

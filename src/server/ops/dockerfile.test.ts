@@ -1,16 +1,17 @@
 import { readFileSync } from 'node:fs'
 import { join } from 'node:path'
 import { describe, expect, it } from 'vitest'
-import { billingAdaptersPath } from '../../../scripts/edition-aliases.mjs'
+import { billingAdaptersPath, catalogPath } from '../../../scripts/edition-aliases.mjs'
 
 /**
  * The build arguments, asserted like code -- because the edition seam is only
  * as good as the way a build picks its side of it.
  *
- * Two of them decide what ends up in an image: GW_EDITION picks community or
- * cloud, GW_BILLING_ADAPTERS picks the accounting and payment adapters. The
- * private cloud build passes the second one; every public build leaves it
- * alone and gets adapters that refuse to bill.
+ * Three of them decide what ends up in an image: GW_EDITION picks community or
+ * cloud, GW_BILLING_ADAPTERS picks the accounting and payment adapters, and
+ * GW_CATALOG picks the Discover catalogue. The private cloud build passes the
+ * last two; every public build leaves them alone and gets adapters that refuse
+ * to bill and a catalogue with nothing in it.
  */
 
 const root = join(import.meta.dirname, '../../..')
@@ -28,11 +29,19 @@ describe('Dockerfile', () => {
     expect(stage('builder')).toMatch(/GW_BILLING_ADAPTERS=.*pnpm build|pnpm build/)
   })
 
-  it('keeps both build arguments out of the runner stage', () => {
+  it('lets a build choose the catalogue', () => {
+    // Without this the private cloud image builds with an empty Discover
+    // library -- which looks exactly like a working one, and is the reason
+    // this is asserted rather than noticed.
+    expect(stage('builder')).toMatch(/^ARG GW_CATALOG/m)
+    expect(stage('builder')).toMatch(/GW_CATALOG=\$\{GW_CATALOG\}/)
+  })
+
+  it('keeps every build argument out of the runner stage', () => {
     // The choice is baked in at build time. A container that could be pointed
-    // at other adapters -- or another edition -- by its environment would make
-    // the whole seam a runtime switch.
-    expect(stage('runner')).not.toMatch(/ARG GW_EDITION|ARG GW_BILLING_ADAPTERS/)
+    // at other adapters -- or another edition, or another catalogue -- by its
+    // environment would make the whole seam a runtime switch.
+    expect(stage('runner')).not.toMatch(/ARG GW_EDITION|ARG GW_BILLING_ADAPTERS|ARG GW_CATALOG/)
   })
 })
 
@@ -55,5 +64,23 @@ describe('billingAdaptersPath', () => {
     expect(
       billingAdaptersPath({ GW_BILLING_ADAPTERS: './private/adapters/index.ts' }, fallback),
     ).toBe('./private/adapters/index.ts')
+  })
+})
+
+describe('catalogPath', () => {
+  const fallback = './src/cloud/catalog/unavailable.ts'
+
+  it('falls back when the variable is absent or empty', () => {
+    // The same empty-string trap as above: a declared-but-unpassed ARG arrives
+    // as '', and an empty alias points the bundler at nothing.
+    expect(catalogPath({}, fallback)).toBe(fallback)
+    expect(catalogPath({ GW_CATALOG: '' }, fallback)).toBe(fallback)
+    expect(catalogPath({ GW_CATALOG: '  ' }, fallback)).toBe(fallback)
+  })
+
+  it('takes the path it is given', () => {
+    expect(catalogPath({ GW_CATALOG: './private/catalog/index.ts' }, fallback)).toBe(
+      './private/catalog/index.ts',
+    )
   })
 })

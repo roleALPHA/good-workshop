@@ -109,4 +109,17 @@ export type Edition = {
 
   /** Whether tenant admins have a billing page. */
   readonly hasBilling: boolean
+
+  /**
+   * Whether this installation has the Discover catalogue.
+   *
+   * A boolean rather than a way to read the catalogue, and that is the point:
+   * `hasBilling` set the precedent, and anything richer would force
+   * community.ts to implement a catalogue it does not have. What it is for is
+   * the navigation -- the header link and the "start from a design" choice ask
+   * this, so that nothing in the application shell has to import from
+   * src/cloud, which is what would pull the whole catalogue into a community
+   * bundle that CI asserts is free of it.
+   */
+  readonly hasCatalog: boolean
 }
