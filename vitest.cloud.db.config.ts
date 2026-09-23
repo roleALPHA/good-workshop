@@ -15,6 +15,9 @@ export default defineConfig({
       '@': fileURLToPath(new URL('./src', import.meta.url)),
       '@gw/edition': fileURLToPath(new URL('./src/server/edition/cloud.ts', import.meta.url)),
       '@gw/home': fileURLToPath(new URL('./src/cloud/site/home.tsx', import.meta.url)),
+      // The empty catalogue. A test that wants designs mocks this module;
+      // the private implementation is not in this repository at all.
+      '@gw/catalog': fileURLToPath(new URL('./src/cloud/catalog/unavailable.ts', import.meta.url)),
       '@gw/billing-adapters': fileURLToPath(
         new URL('./src/cloud/billing/adapters/unavailable.ts', import.meta.url),
       ),

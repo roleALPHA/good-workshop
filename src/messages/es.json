@@ -1414,6 +1414,17 @@
     "back": "Volver a Discover",
     "notFound": "Este diseño no existe.",
     "dayHeading": "Día {n, number}",
-    "parked": "Apartado"
+    "parked": "Apartado",
+    "adoptTitle": "Adoptar en tu espacio",
+    "adoptNew": "Como taller nuevo",
+    "adoptAppend": "Añadir a un taller existente",
+    "adoptChoose": "Elegir un taller",
+    "adoptSubmit": "Adoptar",
+    "adoptWorking": "Adoptando …",
+    "adoptOpen": "Abrir el taller",
+    "adoptDegraded": "{count, plural, one {# bloque llegó como nota, porque este espacio no tiene su tipo.} many {# bloques llegaron como notas, porque este espacio no tiene sus tipos.} other {# bloques llegaron como notas, porque este espacio no tiene sus tipos.}}",
+    "adoptDropped": "{count, plural, one {# bloque llegó sin su descripción.} many {# bloques llegaron sin su descripción.} other {# bloques llegaron sin su descripción.}}",
+    "adoptDaysFailed": "{count, plural, one {# día no se pudo escribir y queda vacío.} many {# días no se pudieron escribir y quedan vacíos.} other {# días no se pudieron escribir y quedan vacíos.}}",
+    "adoptNoWorkshops": "Todavía no tienes ningún taller al que añadir algo."
   }
 }

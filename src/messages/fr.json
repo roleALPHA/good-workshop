@@ -1414,6 +1414,17 @@
     "back": "Retour à Discover",
     "notFound": "Ce déroulé n'existe pas.",
     "dayHeading": "Jour {n, number}",
-    "parked": "Mis de côté"
+    "parked": "Mis de côté",
+    "adoptTitle": "Reprendre dans votre espace",
+    "adoptNew": "Comme nouvel atelier",
+    "adoptAppend": "Ajouter à un atelier existant",
+    "adoptChoose": "Choisir un atelier",
+    "adoptSubmit": "Reprendre",
+    "adoptWorking": "Reprise en cours …",
+    "adoptOpen": "Ouvrir l'atelier",
+    "adoptDegraded": "{count, plural, one {# bloc est arrivé comme note, car cet espace n'a pas son type.} many {# blocs sont arrivés comme notes, car cet espace n'a pas leurs types.} other {# blocs sont arrivés comme notes, car cet espace n'a pas leurs types.}}",
+    "adoptDropped": "{count, plural, one {# bloc est arrivé sans sa description.} many {# blocs sont arrivés sans leur description.} other {# blocs sont arrivés sans leur description.}}",
+    "adoptDaysFailed": "{count, plural, one {# jour n'a pas pu être écrit et reste vide.} many {# jours n'ont pas pu être écrits et restent vides.} other {# jours n'ont pas pu être écrits et restent vides.}}",
+    "adoptNoWorkshops": "Vous n'avez pas encore d'atelier auquel ajouter quelque chose."
   }
 }
