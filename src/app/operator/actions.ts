@@ -265,7 +265,12 @@ export async function maintenanceAction(
 /** What every action here answers with. Named once, since there are now eight. */
 export type OperatorResult = { ok: boolean; error?: 'input' | 'unauthenticated' | 'failed' }
 
-const Text = z.record(z.enum(LOCALES), z.record(z.string(), z.string()))
+/**
+ * Per language, and deliberately not keyed on the locale enum: Zod would then
+ * demand all four, and a method translated into two is the normal case. The
+ * database's own check constraint rejects a locale that is not one of ours.
+ */
+const Text = z.record(z.string(), z.record(z.string(), z.string()))
 
 const MethodForm = z.object({
   key: z.string().regex(/^[a-z][a-z0-9_]{1,48}$/u),

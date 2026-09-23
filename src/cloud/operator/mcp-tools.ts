@@ -1,7 +1,8 @@
 import { z } from 'zod'
 import { LOCALES } from '@/i18n/config'
 import type { McpServer } from '@modelcontextprotocol/sdk/server/mcp.js'
-import { fail, guarded, ok } from '@/server/mcp/respond'
+import { fail, ok } from '@/server/mcp/respond'
+import { opGuarded } from './mcp-respond'
 import { applyOperatorAction, listTenants, listMaintenance, tenantDetail } from './console'
 import {
   listCatalogDesigns,
@@ -60,7 +61,7 @@ export function registerOperatorTools(server: McpServer, actor: OperatorActor): 
       inputSchema: {},
     },
     async () =>
-      guarded(async () => {
+      opGuarded(async () => {
         requireOperatorScope(actor.scopes, 'ops:read')
         const tenants = await listTenants(db)
         return ok(
@@ -79,7 +80,7 @@ export function registerOperatorTools(server: McpServer, actor: OperatorActor): 
       inputSchema: { tenantId: Id },
     },
     async ({ tenantId }) =>
-      guarded(async () => {
+      opGuarded(async () => {
         requireOperatorScope(actor.scopes, 'ops:read')
         const detail = await tenantDetail(db, tenantId)
         if (!detail) return fail('No such workspace.')
@@ -97,7 +98,7 @@ export function registerOperatorTools(server: McpServer, actor: OperatorActor): 
       inputSchema: {},
     },
     async () =>
-      guarded(async () => {
+      opGuarded(async () => {
         requireOperatorScope(actor.scopes, 'ops:read')
         return ok('Maintenance windows.', { windows: await listMaintenance(db) })
       }),
@@ -127,7 +128,7 @@ export function registerOperatorTools(server: McpServer, actor: OperatorActor): 
       inputSchema: { tenantId: Id, reason: Reason },
     },
     async ({ tenantId, reason }) =>
-      guarded(() => lifecycle(tenantId, { kind: 'pause', reason }, 'Workspace paused.')),
+      opGuarded(() => lifecycle(tenantId, { kind: 'pause', reason }, 'Workspace paused.')),
   )
 
   server.registerTool(
@@ -138,7 +139,7 @@ export function registerOperatorTools(server: McpServer, actor: OperatorActor): 
       inputSchema: { tenantId: Id, reason: Reason },
     },
     async ({ tenantId, reason }) =>
-      guarded(() => lifecycle(tenantId, { kind: 'unpause', reason }, 'Pause lifted.')),
+      opGuarded(() => lifecycle(tenantId, { kind: 'unpause', reason }, 'Pause lifted.')),
   )
 
   server.registerTool(
@@ -149,7 +150,7 @@ export function registerOperatorTools(server: McpServer, actor: OperatorActor): 
       inputSchema: { tenantId: Id, reason: Reason },
     },
     async ({ tenantId, reason }) =>
-      guarded(() => lifecycle(tenantId, { kind: 'unblock', reason }, 'Block lifted.')),
+      opGuarded(() => lifecycle(tenantId, { kind: 'unblock', reason }, 'Block lifted.')),
   )
 
   server.registerTool(
@@ -160,7 +161,7 @@ export function registerOperatorTools(server: McpServer, actor: OperatorActor): 
       inputSchema: { tenantId: Id, days: Days },
     },
     async ({ tenantId, days }) =>
-      guarded(() => lifecycle(tenantId, { kind: 'extend_trial', days }, 'Trial extended.')),
+      opGuarded(() => lifecycle(tenantId, { kind: 'extend_trial', days }, 'Trial extended.')),
   )
 
   server.registerTool(
@@ -171,7 +172,7 @@ export function registerOperatorTools(server: McpServer, actor: OperatorActor): 
       inputSchema: { tenantId: Id, days: Days, reason: Reason },
     },
     async ({ tenantId, days, reason }) =>
-      guarded(() => lifecycle(tenantId, { kind: 'grant_grace', days, reason }, 'Grace granted.')),
+      opGuarded(() => lifecycle(tenantId, { kind: 'grant_grace', days, reason }, 'Grace granted.')),
   )
 
   server.registerTool(
@@ -182,7 +183,7 @@ export function registerOperatorTools(server: McpServer, actor: OperatorActor): 
       inputSchema: { tenantId: Id },
     },
     async ({ tenantId }) =>
-      guarded(() => lifecycle(tenantId, { kind: 'cancel_deletion' }, 'Deletion cancelled.')),
+      opGuarded(() => lifecycle(tenantId, { kind: 'cancel_deletion' }, 'Deletion cancelled.')),
   )
 
   server.registerTool(
@@ -195,7 +196,7 @@ export function registerOperatorTools(server: McpServer, actor: OperatorActor): 
       inputSchema: { tenantId: Id, periodId: Id },
     },
     async ({ tenantId, periodId }) =>
-      guarded(() =>
+      opGuarded(() =>
         lifecycle(
           tenantId,
           { kind: 'release_period', periodId, decision: 'bill' },
@@ -216,7 +217,7 @@ export function registerOperatorTools(server: McpServer, actor: OperatorActor): 
       },
     },
     async ({ startsAt, endsAt, note }) =>
-      guarded(async () => {
+      opGuarded(async () => {
         requireOperatorScope(actor.scopes, 'ops:maintenance')
         await applyOperatorAction(db, actor.operatorId, null, {
           kind: 'announce_maintenance',
@@ -236,7 +237,7 @@ export function registerOperatorTools(server: McpServer, actor: OperatorActor): 
       inputSchema: { windowId: Id },
     },
     async ({ windowId }) =>
-      guarded(async () => {
+      opGuarded(async () => {
         requireOperatorScope(actor.scopes, 'ops:maintenance')
         await applyOperatorAction(db, actor.operatorId, null, {
           kind: 'cancel_maintenance',
@@ -274,7 +275,7 @@ export function registerOperatorTools(server: McpServer, actor: OperatorActor): 
       inputSchema: { tenantId: Id, reason: Reason },
     },
     async ({ tenantId, reason }) =>
-      guarded(async () => {
+      opGuarded(async () => {
         const detail = await tenantDetail(db, tenantId)
         if (!detail) return fail('No such workspace.')
         return stage(
@@ -297,7 +298,7 @@ export function registerOperatorTools(server: McpServer, actor: OperatorActor): 
       inputSchema: { tenantId: Id, days: z.number().int().min(0).max(90), reason: Reason },
     },
     async ({ tenantId, days, reason }) =>
-      guarded(async () => {
+      opGuarded(async () => {
         const detail = await tenantDetail(db, tenantId)
         if (!detail) return fail('No such workspace.')
         return stage(
@@ -324,7 +325,7 @@ export function registerOperatorTools(server: McpServer, actor: OperatorActor): 
       },
     },
     async ({ document, version, effectiveFrom }) =>
-      guarded(async () =>
+      opGuarded(async () =>
         stage(
           'announce_terms',
           null,
@@ -345,7 +346,7 @@ export function registerOperatorTools(server: McpServer, actor: OperatorActor): 
       inputSchema: { tenantId: Id, periodId: Id },
     },
     async ({ tenantId, periodId }) =>
-      guarded(async () =>
+      opGuarded(async () =>
         stage('release_period_void', tenantId, { periodId }, 'This will write off the period.'),
       ),
   )
@@ -360,8 +361,12 @@ export function registerOperatorTools(server: McpServer, actor: OperatorActor): 
   // a model for bulk import should be able to fill the catalogue and unable to
   // make any of it live.
 
+  // Not `z.record(z.enum(LOCALES), ...)`: Zod reads an enum key as "every one
+  // of these", and a method translated into two languages is the normal case
+  // rather than an error. The locale itself is checked by catalog_text's own
+  // constraint, which is the one that cannot be forgotten.
   const Text = z
-    .record(z.enum(LOCALES), z.record(z.string(), z.string()))
+    .record(z.string(), z.record(z.string(), z.string()))
     .describe(
       'Per language. `name`, `summary`, `body`, and for a method `slug`, which is its public ' +
         'address. English is the source and is required: everything else falls back to it.',
@@ -377,7 +382,7 @@ export function registerOperatorTools(server: McpServer, actor: OperatorActor): 
       inputSchema: { methodId: Id.optional() },
     },
     async ({ methodId }) =>
-      guarded(async () => {
+      opGuarded(async () => {
         requireOperatorScope(actor.scopes, 'ops:read')
         return ok('Catalogue methods.', { methods: await listCatalogMethods(db, methodId) })
       }),
@@ -391,7 +396,7 @@ export function registerOperatorTools(server: McpServer, actor: OperatorActor): 
       inputSchema: { designId: Id.optional() },
     },
     async ({ designId }) =>
-      guarded(async () => {
+      opGuarded(async () => {
         requireOperatorScope(actor.scopes, 'ops:read')
         return ok('Catalogue designs.', { designs: await listCatalogDesigns(db, designId) })
       }),
@@ -407,7 +412,7 @@ export function registerOperatorTools(server: McpServer, actor: OperatorActor): 
       inputSchema: {},
     },
     async () =>
-      guarded(async () => {
+      opGuarded(async () => {
         requireOperatorScope(actor.scopes, 'ops:read')
         return ok('Catalogue filters.', { filters: await listCatalogFacets(db) })
       }),
@@ -437,7 +442,7 @@ export function registerOperatorTools(server: McpServer, actor: OperatorActor): 
       },
     },
     async (draft) =>
-      guarded(async () => {
+      opGuarded(async () => {
         requireOperatorScope(actor.scopes, 'catalog:author')
         const id = await saveCatalogMethod(db, actor.operatorId, draft)
         return ok(`Method "${draft.key}" saved.`, { id })
@@ -468,7 +473,7 @@ export function registerOperatorTools(server: McpServer, actor: OperatorActor): 
       },
     },
     async (draft) =>
-      guarded(async () => {
+      opGuarded(async () => {
         requireOperatorScope(actor.scopes, 'catalog:author')
         const id = await saveCatalogDesign(db, actor.operatorId, draft)
         return ok(`Design "${draft.key}" saved.`, { id })
@@ -509,7 +514,7 @@ export function registerOperatorTools(server: McpServer, actor: OperatorActor): 
       },
     },
     async ({ designId, days }) =>
-      guarded(async () => {
+      opGuarded(async () => {
         requireOperatorScope(actor.scopes, 'catalog:author')
         await setCatalogDays(db, actor.operatorId, designId, days)
         return ok(`${days.length} day(s) written.`)
@@ -531,7 +536,7 @@ export function registerOperatorTools(server: McpServer, actor: OperatorActor): 
       },
     },
     async (draft) =>
-      guarded(async () => {
+      opGuarded(async () => {
         requireOperatorScope(actor.scopes, 'catalog:author')
         const id = await saveCatalogFacet(db, actor.operatorId, draft)
         return ok(`Filter value "${draft.key}" saved.`, { id })
@@ -548,7 +553,7 @@ export function registerOperatorTools(server: McpServer, actor: OperatorActor): 
       inputSchema: { facetId: Id },
     },
     async ({ facetId }) =>
-      guarded(async () => {
+      opGuarded(async () => {
         requireOperatorScope(actor.scopes, 'catalog:author')
         await retireCatalogFacet(db, actor.operatorId, facetId)
         return ok('Filter value withdrawn.')
@@ -571,7 +576,7 @@ export function registerOperatorTools(server: McpServer, actor: OperatorActor): 
       },
     },
     async ({ kind, id, locales, published }) =>
-      guarded(async () => {
+      opGuarded(async () => {
         requireOperatorScope(actor.scopes, 'catalog:publish')
         await setCatalogStatus(db, actor.operatorId, kind, id, locales ?? [], published)
         return ok(published ? 'Published.' : 'Withdrawn.')
@@ -590,7 +595,7 @@ export function registerOperatorTools(server: McpServer, actor: OperatorActor): 
       inputSchema: { handle: Id, confirm: z.string().length(8) },
     },
     async ({ handle, confirm }) =>
-      guarded(async () => {
+      opGuarded(async () => {
         requireOperatorScope(actor.scopes, 'ops:danger')
         const staged = await takeAction(db, actor.operatorId, handle, confirm)
         // Wrong digits, somebody else's handle, already used, expired: one
