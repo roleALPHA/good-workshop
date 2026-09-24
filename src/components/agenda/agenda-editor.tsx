@@ -358,6 +358,10 @@ export function AgendaEditor({
                         editing={{
                           onPinChange: (pinnedStartMinute) =>
                             agenda.patchCluster(row.id, { pinnedStartMinute }),
+                          // The same op the MCP tool uses: it takes the blocks
+                          // inside with it, which is what removing a section
+                          // means.
+                          onRemove: () => agenda.removeModule(row.id),
                         }}
                       />
                     ) : (

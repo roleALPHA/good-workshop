@@ -264,7 +264,10 @@
     "unpark": "Remettre dans le déroulé",
     "unparkLabel": "Remettre {title} dans le déroulé",
     "blockTitle": "Titre",
-    "blockDuration": "Durée"
+    "blockDuration": "Durée",
+    "deleteCluster": "{count, plural, =0 {Supprimer la section} one {Supprimer avec # bloc} many {Supprimer avec # blocs} other {Supprimer avec # blocs}}",
+    "deleteClusterLabel": "{count, plural, =0 {Supprimer la section « {title} »} one {Supprimer la section « {title} » et le # bloc qu’elle contient} many {Supprimer la section « {title} » et les # blocs qu’elle contient} other {Supprimer la section « {title} » et les # blocs qu’elle contient}}",
+    "deleteClusterHint": "{count, plural, =0 {Supprime la section.} one {Supprime la section et le # bloc qu’elle contient.} many {Supprime la section et les # blocs qu’elle contient.} other {Supprime la section et les # blocs qu’elle contient.}}"
   },
   "auth": {
     "guest": {
