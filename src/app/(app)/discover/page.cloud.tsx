@@ -1,29 +1,25 @@
 import type { Metadata } from 'next'
-import Link from 'next/link'
-import type { Route } from 'next'
 import { getLocale, getTranslations } from 'next-intl/server'
 import { catalog } from '@gw/catalog'
-import { isFiltered, kindHref, queryFromParams, type SearchParams } from '@/cloud/catalog/query'
-import type { EntryKind } from '@/cloud/catalog/ports'
+import { isFiltered, queryFromParams, type SearchParams } from '@/cloud/catalog/query'
 import type { Locale } from '@/i18n/config'
 import { DiscoverFilters } from './filters'
 import { EntryList } from './entry-list'
 import { entryView } from './entry-view'
 
 /**
- * Discover: the curated designs and the methods they are built from, and the
- * way into either.
+ * Discover: the curated catalogue, and the way into an entry.
  *
  * Under `(app)`, so the session gate in its layout has already run -- a route
  * added here is protected because of where it sits. `.cloud.tsx`, so a
  * community build does not have it at all: the catalogue is curated by whoever
  * runs the cloud, and a self-hosted installation has nobody to curate it.
  *
- * ONE LIST, TAGGED, AND NOT TWO TABS. A method is not a lesser design; it is
- * what a design is made of, and somebody looking for "something for forty
- * minutes with a group of twelve" wants both answers ranked together. The kind
- * is therefore a way to narrow the one list, not a pair of separate screens --
- * and it travels in the address like every other filter.
+ * ONE LIST, AND NOT A SORT FILTER OVER IT. There used to be methods and
+ * designs, and briefly a pair of tabs between them. There is one sort of entry
+ * now, so the question "which sort" has no answer to give: somebody with ninety
+ * minutes filters by time and gets what fits, whether that is a building block
+ * or a short programme.
  *
  * Everything that decides what is in the list is rendered on the server. Only
  * the paging is an island; see ./entry-list.tsx.
@@ -62,15 +58,13 @@ export default async function DiscoverPage({
       <h1 className="text-2xl font-semibold tracking-tight">{t('title')}</h1>
       <p className="mt-2 max-w-2xl text-[16px] text-[var(--fg-muted)]">{t('lead')}</p>
 
-      <KindTabs params={params} chosen={query.kind ?? null} />
-
       {/* No filters to offer when the vocabulary is empty, which is what an
           unconfigured catalogue looks like. Rendering the heading and nothing
           under it would be a control that does nothing. */}
       {facets.length > 0 && <DiscoverFilters facets={facets} params={params} query={query} />}
 
       {page.items.length === 0 ? (
-        <Empty filtered={isFiltered(query)} kind={query.kind ?? null} params={params} />
+        <Empty filtered={isFiltered(query)} />
       ) : (
         <EntryList
           // The address is part of the identity: React would otherwise reuse
@@ -97,90 +91,18 @@ function addressOf(params: SearchParams): string {
 }
 
 /**
- * All / Designs / Methods, as three links.
- *
- * Above the filters rather than among them, and not counted by `isFiltered`:
- * this is a choice of what to look at, and if "clear the filters" reset it too,
- * dropping a facet would silently put the designs back.
- */
-async function KindTabs({ params, chosen }: { params: SearchParams; chosen: EntryKind | null }) {
-  const t = await getTranslations('discover')
-  const tabs: { kind: EntryKind | null; label: string }[] = [
-    { kind: null, label: t('kindAll') },
-    { kind: 'design', label: t('kindDesigns') },
-    { kind: 'method', label: t('kindMethods') },
-  ]
-
-  return (
-    <nav aria-label={t('kindLabel')} className="mt-6">
-      <ul className="flex flex-wrap gap-2">
-        {tabs.map((tab) => {
-          const on = tab.kind === chosen
-          return (
-            <li key={tab.kind ?? 'all'}>
-              <Link
-                href={kindHref(params, tab.kind) as Route}
-                aria-current={on ? 'page' : undefined}
-                className={`inline-flex min-h-11 items-center rounded-full border px-4 text-[15px] ${
-                  on
-                    ? 'border-[var(--brand)] bg-[var(--brand)] text-[var(--brand-fg)]'
-                    : 'border-[var(--border-strong)] hover:bg-[var(--surface-raised)]'
-                }`}
-              >
-                {tab.label}
-              </Link>
-            </li>
-          )
-        })}
-      </ul>
-    </nav>
-  )
-}
-
-/**
  * Why there is nothing, said precisely.
  *
- * Four different situations, and telling them apart is the whole value of this
- * box. "Nothing here yet" in front of a library that holds fifteen methods --
- * because the reader is looking at the designs, and there are none -- is how
+ * Two situations and not one. "Nothing here yet" in front of a library that
+ * holds fifteen entries -- because a filter excluded all of them -- is how
  * somebody concludes the feature is broken.
  */
-async function Empty({
-  filtered,
-  kind,
-  params,
-}: {
-  filtered: boolean
-  kind: EntryKind | null
-  params: SearchParams
-}) {
+async function Empty({ filtered }: { filtered: boolean }) {
   const t = await getTranslations('discover')
-
-  if (filtered) {
-    return (
-      <Card title={t('noMatchTitle')}>
-        <p className="mt-2 text-[15px] text-[var(--fg-muted)]">{t('noMatchBody')}</p>
-      </Card>
-    )
-  }
-
-  if (kind === 'design') {
-    return (
-      <Card title={t('emptyDesignsTitle')}>
-        <p className="mt-2 text-[15px] text-[var(--fg-muted)]">
-          {t('emptyDesignsBody')}{' '}
-          <Link href={kindHref(params, 'method') as Route} className="underline underline-offset-2">
-            {t('emptyDesignsLink')}
-          </Link>
-        </p>
-      </Card>
-    )
-  }
-
   return (
-    <Card title={kind === 'method' ? t('emptyMethodsTitle') : t('emptyTitle')}>
+    <Card title={filtered ? t('noMatchTitle') : t('emptyTitle')}>
       <p className="mt-2 text-[15px] text-[var(--fg-muted)]">
-        {kind === 'method' ? t('emptyMethodsBody') : t('emptyBody')}
+        {filtered ? t('noMatchBody') : t('emptyBody')}
       </p>
     </Card>
   )

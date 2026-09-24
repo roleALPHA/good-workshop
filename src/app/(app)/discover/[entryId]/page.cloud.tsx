@@ -7,13 +7,13 @@ import { catalog } from '@gw/catalog'
 import { loadLibrary } from '@/server/actions/workshop'
 import { formatDuration } from '@/features/agenda/duration'
 import { LegalMarkdown } from '@/cloud/legal/markdown'
-import type { DesignDay, DesignDetail } from '@/cloud/catalog/ports'
+import type { EntryDay, EntryDetail } from '@/cloud/catalog/ports'
 import type { Locale } from '@/i18n/config'
 import { People } from '../people'
 import { AdoptPanel } from '../adopt-panel'
 
 /**
- * One design, day by day, before anybody adopts it.
+ * One catalogue entry, day by day, before anybody adopts it.
  *
  * The whole point of the screen is that a person sees what they are getting:
  * how many days, what is in them, how long each block runs -- and only then
@@ -21,32 +21,35 @@ import { AdoptPanel } from '../adopt-panel'
  * control is the same one the MCP tool calls, so that a model never gains a
  * power the interface does not have.
  *
- * Addressed by id and not a slug: a design has no slug anywhere in this
- * feature, so there is no public address for one to leak. See ports.ts.
+ * ADDRESSED BY ID, never by the slug a public entry also has. A slug is unique
+ * per LANGUAGE (`catalog_text_slug_unique`), and the language here comes from
+ * the session rather than from the path -- so the same address would open a
+ * different entry for a colleague reading in another language, with a 200 and
+ * nothing to notice it by. The public pages under /workshop-methods are where
+ * slugs belong, because there the language IS the path.
  */
 export const dynamic = 'force-dynamic'
 
-type Props = { params: Promise<{ designId: string }> }
+type Props = { params: Promise<{ entryId: string }> }
 
-async function read({ params }: Props): Promise<DesignDetail> {
-  const [{ designId }, locale] = await Promise.all([params, getLocale() as Promise<Locale>])
-  const design = await catalog.getDesign(designId, locale)
-  // A design that was withdrawn while somebody had the list open is a 404, not
-  // an empty page: a soft 404 is how an index fills with addresses that were
-  // never real.
-  if (!design) notFound()
-  return design
+async function read({ params }: Props): Promise<EntryDetail> {
+  const [{ entryId }, locale] = await Promise.all([params, getLocale() as Promise<Locale>])
+  const entry = await catalog.getEntry(entryId, locale)
+  // Withdrawn while somebody had the list open is a 404, not an empty page: a
+  // soft 404 is how an index fills with addresses that were never real.
+  if (!entry) notFound()
+  return entry
 }
 
 export async function generateMetadata(props: Props): Promise<Metadata> {
   return { title: (await read(props)).name }
 }
 
-export default async function DesignPage(props: Props) {
-  const [design, t, library] = await Promise.all([
+export default async function EntryPage(props: Props) {
+  const [entry, t, library] = await Promise.all([
     read(props),
     getTranslations('discover'),
-    // The workshops this person could append to. One page of them: the choice
+    // The workshops this person could adopt into. One page of them: the choice
     // is "which of mine", and somebody with three hundred workshops picks the
     // one they just opened, not the two hundredth.
     loadLibrary(),
@@ -56,29 +59,29 @@ export default async function DesignPage(props: Props) {
     : []
 
   return (
-    <div className="max-w-3xl">
+    <div>
       <p className="text-[14px]">
         <Link href={'/discover' as Route} className="underline underline-offset-2">
           {t('back')}
         </Link>
       </p>
 
-      <h1 className="mt-3 text-2xl font-semibold tracking-tight">{design.name}</h1>
-      <p className="mt-2 text-[16px] text-[var(--fg-muted)]">{design.summary}</p>
+      <h1 className="mt-3 text-2xl font-semibold tracking-tight">{entry.name}</h1>
+      <p className="mt-2 text-[16px] text-[var(--fg-muted)]">{entry.summary}</p>
 
       <p className="mt-3 flex flex-wrap items-center gap-x-4 gap-y-1 text-[14px] text-[var(--fg-subtle)]">
-        <span className="tabular-nums">{t('days', { count: design.dayCount })}</span>
+        <span className="tabular-nums">{t('days', { count: entry.dayCount })}</span>
         <span className="tabular-nums">
-          {formatDuration(design.durationMinutes, { spaced: true })}
+          {formatDuration(entry.durationMinutes, { spaced: true })}
         </span>
         <span>
-          <People range={design} />
+          <People range={entry} />
         </span>
       </p>
 
-      {design.facets.length > 0 && (
+      {entry.facets.length > 0 && (
         <p className="mt-3 flex flex-wrap gap-2">
-          {design.facets.map((facet) => (
+          {entry.facets.map((facet) => (
             <span
               key={`${facet.key}-${facet.label}`}
               className="rounded-full border border-[var(--border)] px-2 py-0.5 text-[13px] text-[var(--fg-muted)]"
@@ -89,39 +92,46 @@ export default async function DesignPage(props: Props) {
         </p>
       )}
 
-      {!design.translated && (
+      {!entry.translated && (
         <p className="mt-3 text-[13px] text-[var(--fg-subtle)]">{t('untranslated')}</p>
       )}
 
       {/* The catalogue stores Markdown, and this is the one renderer in the
           tree that turns Markdown into a bounded set of elements. Reused
           rather than reached for a second parser: whatever is safe for a legal
-          text is safe for a design description. */}
-      {design.body && (
+          text is safe for an entry description. */}
+      {entry.body && (
         <div className="mt-6">
-          <LegalMarkdown source={design.body} />
+          <LegalMarkdown source={entry.body} />
         </div>
       )}
 
       <div className="mt-8">
         <AdoptPanel
-          designId={design.id}
+          entryId={entry.id}
+          // Only a one-day entry may drop into a day that exists. A three-day
+          // programme written into one day would lose its structure silently,
+          // so the target is not offered rather than refused after the click.
+          oneDay={entry.dayCount === 1}
           workshops={workshops}
           labels={{
             title: t('adoptTitle'),
             asNew: t('adoptNew'),
             append: t('adoptAppend'),
-            choose: t('adoptChoose'),
+            intoDay: t('adoptIntoDay'),
+            chooseWorkshop: t('adoptChoose'),
+            chooseDay: t('adoptChooseDay'),
             submit: t('adoptSubmit'),
             working: t('adoptWorking'),
             open: t('adoptOpen'),
             noWorkshops: t('adoptNoWorkshops'),
+            noDays: t('adoptNoDays'),
           }}
         />
       </div>
 
       <div className="mt-8">
-        {design.days.map((day, index) => (
+        {entry.days.map((day, index) => (
           <Day key={`${index}-${day.title}`} day={day} number={index + 1} />
         ))}
       </div>
@@ -129,7 +139,7 @@ export default async function DesignPage(props: Props) {
   )
 }
 
-async function Day({ day, number }: { day: DesignDay; number: number }) {
+async function Day({ day, number }: { day: EntryDay; number: number }) {
   const t = await getTranslations('discover')
 
   return (

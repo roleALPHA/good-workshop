@@ -3,12 +3,12 @@ import type { Route } from 'next'
 import { notFound, redirect } from 'next/navigation'
 import { getTranslations } from 'next-intl/server'
 import { operatorDb } from '@/cloud/operator/db'
-import { listCatalogMethods } from '@/cloud/operator/catalog'
+import { listCatalogEntries } from '@/cloud/operator/catalog'
 import { currentOperator } from '@/cloud/operator/session'
-import { MethodForm } from './method-form'
+import { EntryForm } from './entry-form'
 
 /**
- * One method, in four languages at once.
+ * One entry, in four languages at once.
  *
  * Side by side and not behind tabs: a translator needs the English and the
  * language they are writing in view together, and a tab puts a mode between
@@ -17,26 +17,13 @@ import { MethodForm } from './method-form'
  */
 export const dynamic = 'force-dynamic'
 
-type Method = {
-  id: string
-  key: string
-  moduleTypeKey: string
-  defaultDurationMinutes: number
-  groupSize: string
-  facets: string[]
-  text: Record<
-    string,
-    { slug?: string | null; published?: boolean; fields?: Record<string, string> }
-  >
-}
-
-export default async function MethodPage({ params }: { params: Promise<{ methodId: string }> }) {
+export default async function EntryPage({ params }: { params: Promise<{ entryId: string }> }) {
   const operator = await currentOperator()
   if (!operator) redirect('/operator/login' as never)
 
-  const [{ methodId }, t] = await Promise.all([params, getTranslations('operator.discover')])
-  const [method] = (await listCatalogMethods(operatorDb(), methodId)) as Method[]
-  if (!method) notFound()
+  const [{ entryId }, t] = await Promise.all([params, getTranslations('operator.discover')])
+  const [entry] = await listCatalogEntries(operatorDb(), entryId)
+  if (!entry) notFound()
 
   return (
     <div className="max-w-4xl">
@@ -45,8 +32,8 @@ export default async function MethodPage({ params }: { params: Promise<{ methodI
           {t('back')}
         </Link>
       </p>
-      <h1 className="mt-3 text-xl font-semibold tracking-tight">{method.key}</h1>
-      <MethodForm method={method} />
+      <h1 className="mt-3 text-xl font-semibold tracking-tight">{entry.key}</h1>
+      <EntryForm entry={entry} />
     </div>
   )
 }

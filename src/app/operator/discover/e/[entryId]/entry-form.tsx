@@ -1,27 +1,15 @@
 'use client'
 
 import { useState, useTransition } from 'react'
+import type { EntryRow } from '@/cloud/operator/catalog'
 import { useTranslations } from 'next-intl'
 import { LOCALES, type Locale } from '@/i18n/config'
-import { saveMethodAction, setCatalogStatusAction } from '../../../actions'
-
-type Method = {
-  id: string
-  key: string
-  moduleTypeKey: string
-  defaultDurationMinutes: number
-  groupSize: string
-  facets: string[]
-  text: Record<
-    string,
-    { slug?: string | null; published?: boolean; fields?: Record<string, string> }
-  >
-}
+import { saveEntryAction, setCatalogStatusAction } from '../../../actions'
 
 /**
- * The editor. One save for the whole method, four languages included.
+ * The editor. One save for the whole entry, four languages included.
  *
- * Not a save per field: the function behind it writes a method as one
+ * Not a save per field: the function behind it writes an entry as one
  * document, for the reason apply_agenda exists, and a form that saved on every
  * blur would be twenty calls where one belongs. What it does borrow from the
  * product's own rule is that nothing here is behind a dialog.
@@ -31,13 +19,13 @@ type Method = {
  * cannot be published, and the refusal comes from the database rather than
  * from a check here that could drift from it.
  */
-export function MethodForm({ method }: { method: Method }) {
+export function EntryForm({ entry }: { entry: EntryRow }) {
   const t = useTranslations('operator.discover')
   const [pending, start] = useTransition()
   const [saved, setSaved] = useState(false)
   const [failed, setFailed] = useState(false)
 
-  const field = (locale: Locale, name: string) => method.text[locale]?.fields?.[name] ?? ''
+  const field = (locale: Locale, name: string) => entry.text[locale]?.fields?.[name] ?? ''
 
   return (
     <form
@@ -46,10 +34,9 @@ export function MethodForm({ method }: { method: Method }) {
         start(async () => {
           setSaved(false)
           setFailed(false)
-          const result = await saveMethodAction({
-            key: method.key,
-            moduleTypeKey: String(data.get('moduleTypeKey') ?? ''),
-            defaultDurationMinutes: String(data.get('defaultDurationMinutes') ?? '0'),
+          const result = await saveEntryAction({
+            key: entry.key,
+            durationMinutes: String(data.get('durationMinutes') ?? '0'),
             text: Object.fromEntries(
               LOCALES.map((locale) => [
                 locale,
@@ -69,22 +56,14 @@ export function MethodForm({ method }: { method: Method }) {
     >
       <div className="flex flex-wrap gap-4">
         <label className="flex flex-col gap-1 text-[14px] text-[var(--fg-subtle)]">
-          {t('blockType')}
-          <input
-            name="moduleTypeKey"
-            defaultValue={method.moduleTypeKey}
-            className="min-h-11 w-52 rounded border border-[var(--border)] px-2 text-[16px]"
-          />
-        </label>
-        <label className="flex flex-col gap-1 text-[14px] text-[var(--fg-subtle)]">
           {t('duration')}
           <input
-            name="defaultDurationMinutes"
+            name="durationMinutes"
             type="number"
             min={0}
-            max={1440}
-            defaultValue={method.defaultDurationMinutes}
-            className="min-h-11 w-28 rounded border border-[var(--border)] px-2 text-[16px]"
+            max={43200}
+            defaultValue={entry.durationMinutes}
+            className="min-h-11 w-52 rounded border border-[var(--border)] px-2 text-[16px]"
           />
         </label>
       </div>
@@ -115,7 +94,7 @@ export function MethodForm({ method }: { method: Method }) {
               {t('slug')}
               <input
                 name={`${locale}.slug`}
-                defaultValue={method.text[locale]?.slug ?? ''}
+                defaultValue={entry.text[locale]?.slug ?? ''}
                 pattern="[a-z0-9][a-z0-9-]*"
                 className="min-h-11 rounded border border-[var(--border)] px-2 text-[16px]"
               />
@@ -151,9 +130,9 @@ export function MethodForm({ method }: { method: Method }) {
           </label>
 
           <Publish
-            methodId={method.id}
+            entryId={entry.id}
             locale={locale}
-            published={method.text[locale]?.published === true}
+            published={entry.text[locale]?.published === true}
           />
         </fieldset>
       ))}
@@ -174,11 +153,11 @@ export function MethodForm({ method }: { method: Method }) {
 }
 
 function Publish({
-  methodId,
+  entryId,
   locale,
   published,
 }: {
-  methodId: string
+  entryId: string
   locale: Locale
   published: boolean
 }) {
@@ -197,7 +176,7 @@ function Publish({
             setRefused(false)
             const result = await setCatalogStatusAction({
               kind: 'method',
-              id: methodId,
+              id: entryId,
               locales: [locale],
               published: !published,
             })

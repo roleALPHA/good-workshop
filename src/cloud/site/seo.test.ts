@@ -27,15 +27,19 @@ const ORIGIN = 'https://goodworkshop.example'
 vi.mock('@/server/edition', () => ({ edition: { name: 'cloud' } }))
 
 /**
- * Two methods, one of them published in only two languages.
+ * Two entries with a public address, one of them published in only two
+ * languages.
  *
  * The partial one is the point: the sitemap has to offer two addresses for it
  * and annotate exactly those two, not four. A fixture where everything is
  * translated would pass whatever the code did.
+ *
+ * Entries without a slug -- most of the catalogue -- never reach here: they
+ * have no public page, and `publishedEntrySlugs` filters on the address.
  */
 vi.mock('@gw/catalog', () => ({
   catalog: {
-    publishedMethodSlugs: async () => [
+    publishedEntrySlugs: async () => [
       { id: 'm1', locale: 'en', slug: 'dot-voting' },
       { id: 'm1', locale: 'de', slug: 'punktabfrage' },
       { id: 'm1', locale: 'fr', slug: 'vote-par-gommettes' },
@@ -46,7 +50,7 @@ vi.mock('@gw/catalog', () => ({
   },
 }))
 
-/** 4 addresses for the complete method, 2 for the partial one. */
+/** 4 addresses for the complete entry, 2 for the partial one. */
 const METHOD_ENTRIES = 6
 
 /** The other half of the switch, for the two tests that assert on it. */
@@ -89,7 +93,7 @@ describe('the sitemap', () => {
     }
   })
 
-  it('names all four languages for a page, and only the published ones for a method', async () => {
+  it('names all four languages for a page, and only the published ones for an entry', async () => {
     // The difference is the point. A page exists in four languages by
     // construction; a method is published per language, and offering four
     // addresses for one that has two would be two promises that answer 404.

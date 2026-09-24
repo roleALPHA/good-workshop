@@ -5,14 +5,12 @@ import { fail, ok } from '@/server/mcp/respond'
 import { opGuarded } from './mcp-respond'
 import { applyOperatorAction, listTenants, listMaintenance, tenantDetail } from './console'
 import {
-  listCatalogDesigns,
+  listCatalogEntries,
   listCatalogFacets,
-  listCatalogMethods,
   retireCatalogFacet,
-  saveCatalogDesign,
+  saveCatalogEntry,
   saveCatalogFacet,
-  saveCatalogMethod,
-  setCatalogDays,
+  setCatalogBlocks,
   setCatalogStatus,
 } from './catalog'
 import { disconnectOperatorClient, listOperatorConnections } from './oauth'
@@ -416,44 +414,33 @@ export function registerOperatorTools(server: McpServer, actor: OperatorActor): 
   const Text = z
     .record(z.string(), z.record(z.string(), z.string()))
     .describe(
-      'Per language. `name`, `summary`, `body`, and for a method `slug`, which is its public ' +
-        'address. English is the source and is required: everything else falls back to it.',
+      'Per language. `name`, `summary`, `body`, and `slug` where the entry should have a ' +
+        'public page -- leave the slug out and it is readable in Discover only. English is the ' +
+        'source and is required: everything else falls back to it.',
     )
 
   server.registerTool(
-    'list_catalog_methods',
+    'list_catalog_entries',
     {
-      title: 'List catalogue methods',
+      title: 'List the catalogue',
       description:
-        'Every method, published or not, with all four languages and which of them are live. ' +
-        'Pass an id to read one in full.',
-      inputSchema: { methodId: Id.optional() },
+        'Every entry, published or not, with its days, its blocks and all four languages. ' +
+        'Pass an id to read one in full. One sort of entry: a building block is one day, a ' +
+        'programme is several.',
+      inputSchema: { entryId: Id.optional() },
     },
-    async ({ methodId }) =>
+    async ({ entryId }) =>
       opGuarded(async () => {
         requireOperatorScope(actor.scopes, 'ops:read')
-        return ok('Catalogue methods.', { methods: await listCatalogMethods(db, methodId) })
-      }),
-  )
-
-  server.registerTool(
-    'list_catalog_designs',
-    {
-      title: 'List catalogue designs',
-      description: 'Every design with its days and blocks, in all four languages.',
-      inputSchema: { designId: Id.optional() },
-    },
-    async ({ designId }) =>
-      opGuarded(async () => {
-        requireOperatorScope(actor.scopes, 'ops:read')
-        return ok('Catalogue designs.', { designs: await listCatalogDesigns(db, designId) })
+        const entries = await listCatalogEntries(db, entryId)
+        return ok(`${entries.length} entry/entries.`, { entries })
       }),
   )
 
   server.registerTool(
     'list_catalog_filters',
     {
-      title: 'List the catalogue filters',
+      title: 'List the filter vocabulary',
       description:
         'The filter vocabulary with its values and their labels. Read this before tagging ' +
         'anything: the values are maintained here and change without a release.',
@@ -462,48 +449,19 @@ export function registerOperatorTools(server: McpServer, actor: OperatorActor): 
     async () =>
       opGuarded(async () => {
         requireOperatorScope(actor.scopes, 'ops:read')
-        return ok('Catalogue filters.', { filters: await listCatalogFacets(db) })
+        const filters = await listCatalogFacets(db)
+        return ok(`${filters.length} filter(s).`, { filters })
       }),
   )
 
   server.registerTool(
-    'save_catalog_method',
+    'save_catalog_entry',
     {
-      title: 'Write a catalogue method',
+      title: 'Write a catalogue entry',
       description:
-        'Creates or replaces one method, whole. Keyed on `key`, so saving again updates and the ' +
-        'id stays put -- which matters because a design block points at a method by id. Does ' +
-        'NOT publish it; that is a separate call.',
-      inputSchema: {
-        key: z.string().regex(/^[a-z][a-z0-9_]{1,48}$/u),
-        moduleTypeKey: z
-          .string()
-          .regex(/^[a-z][a-z0-9_]{1,48}$/u)
-          .describe('The block type this method becomes in an agenda, by key.'),
-        defaultDurationMinutes: z.number().int().min(0).max(1440),
-        groupSize: z
-          .string()
-          .optional()
-          .describe('A Postgres range like "[8,21)" -- 8 to 20 people. Leave out for any size.'),
-        facets: z.array(z.string()).optional(),
-        text: Text,
-      },
-    },
-    async (draft) =>
-      opGuarded(async () => {
-        requireOperatorScope(actor.scopes, 'catalog:author')
-        const id = await saveCatalogMethod(db, actor.operatorId, draft)
-        return ok(`Method "${draft.key}" saved.`, { id })
-      }),
-  )
-
-  server.registerTool(
-    'save_catalog_design',
-    {
-      title: 'Write a catalogue design',
-      description:
-        'Creates or replaces a design\u2019s own fields. Its days are set with ' +
-        'set_catalog_days. Does not publish it.',
+        'Creates or replaces one entry’s own fields, whole. Keyed on `key`, so saving again ' +
+        'updates and the id stays put. Its days and blocks are set with set_catalog_blocks, ' +
+        'and it is NOT published here -- that is a separate call with a separate scope.',
       inputSchema: {
         key: z.string().regex(/^[a-z][a-z0-9_]{1,48}$/u),
         durationMinutes: z
@@ -512,33 +470,43 @@ export function registerOperatorTools(server: McpServer, actor: OperatorActor): 
           .min(0)
           .max(43_200)
           .describe(
-            'What the design is advertised at, including arrival, breaks and buffer -- not the ' +
+            'What the entry is advertised at, including arrival, breaks and buffer -- not the ' +
               'sum of its blocks.',
           ),
-        groupSize: z.string().optional(),
-        facets: z.array(z.string()).optional(),
+        groupSize: z
+          .string()
+          .optional()
+          .describe('A Postgres range like "[8,21)" -- 8 to 20 people. Leave out for any size.'),
+        facets: z
+          .array(z.string())
+          .optional()
+          .describe('Leave it out to keep the tags an entry already has; give it to replace them.'),
         text: Text,
       },
     },
     async (draft) =>
       opGuarded(async () => {
         requireOperatorScope(actor.scopes, 'catalog:author')
-        const id = await saveCatalogDesign(db, actor.operatorId, draft)
-        return ok(`Design "${draft.key}" saved.`, { id })
+        const id = await saveCatalogEntry(db, actor.operatorId, draft)
+        return ok(`Entry "${draft.key}" saved.`, { id })
       }),
   )
 
   server.registerTool(
-    'set_catalog_days',
+    'set_catalog_blocks',
     {
-      title: 'Write a design\u2019s days',
+      title: 'Write an entry’s days and blocks',
       description:
-        'Every day of a design, with its blocks, in one call -- the catalogue\u2019s ' +
-        'apply_agenda. Replaces what is there. A module names its method BY KEY and the cluster ' +
-        'it sits in by that cluster\u2019s ordinal on the same day. An unknown method key ' +
-        'refuses the whole call and the design is left exactly as it was.',
+        'Every day of an entry, with its blocks, in one call -- the catalogue’s apply_agenda. ' +
+        'Replaces what is there. Every entry has at least one day: a building block is one day ' +
+        'holding one cluster with its steps inside, a programme is several. A module names its ' +
+        'BLOCK TYPE by key (from list_module_types on the tenant side: check_in, group_work, ' +
+        'break …) and the cluster it sits in by that cluster’s ordinal on the same day. ' +
+        '`fields` is what the adopted block starts with in that type’s own fields -- prompt, ' +
+        'materials, participation and the rest -- and it is the reason an adopted block is a ' +
+        'filled-in step rather than a wall of prose.',
       inputSchema: {
-        designId: Id,
+        entryId: Id,
         days: z.array(
           z.object({
             ordinal: z.number().int().min(1).max(60),
@@ -549,11 +517,12 @@ export function registerOperatorTools(server: McpServer, actor: OperatorActor): 
                 ordinal: z.number().int().min(1),
                 kind: z.enum(['cluster', 'module']),
                 parentOrdinal: z.number().int().min(1).optional(),
-                methodKey: z.string().optional(),
+                moduleTypeKey: z.string().optional(),
                 durationMinutes: z.number().int().min(0).max(1440).optional(),
                 pinnedStartMinute: z.number().int().min(0).max(1439).optional(),
                 parked: z.boolean().optional(),
                 color: z.string().optional(),
+                fields: z.record(z.string(), z.unknown()).optional(),
                 text: Text.optional(),
               }),
             ),
@@ -561,10 +530,10 @@ export function registerOperatorTools(server: McpServer, actor: OperatorActor): 
         ),
       },
     },
-    async ({ designId, days }) =>
+    async ({ entryId, days }) =>
       opGuarded(async () => {
         requireOperatorScope(actor.scopes, 'catalog:author')
-        await setCatalogDays(db, actor.operatorId, designId, days)
+        await setCatalogBlocks(db, actor.operatorId, entryId, days)
         return ok(`${days.length} day(s) written.`)
       }),
   )
@@ -613,20 +582,21 @@ export function registerOperatorTools(server: McpServer, actor: OperatorActor): 
     {
       title: 'Make a catalogue entry live',
       description:
-        'A method publishes PER LANGUAGE, because each language is its own public address, and ' +
-        'a language without a slug is refused -- that is what keeps a 404 out of the sitemap. A ' +
-        'design publishes once, because it has no public address at all.',
+        'Per language, because each language is its own public address. An entry that carries ' +
+        'a slug in any language needs one in every language it is published in -- that is what ' +
+        'keeps a 404 out of the sitemap. An entry with no slug at all publishes freely: it is ' +
+        'then visible in Discover and has no public page, which is what most of the catalogue ' +
+        'is.',
       inputSchema: {
-        kind: z.enum(['method', 'design']),
         id: Id,
         locales: z.array(z.enum(LOCALES)).optional(),
         published: z.boolean().default(true),
       },
     },
-    async ({ kind, id, locales, published }) =>
+    async ({ id, locales, published }) =>
       opGuarded(async () => {
         requireOperatorScope(actor.scopes, 'catalog:publish')
-        await setCatalogStatus(db, actor.operatorId, kind, id, locales ?? [], published)
+        await setCatalogStatus(db, actor.operatorId, id, locales ?? [], published)
         return ok(published ? 'Published.' : 'Withdrawn.')
       }),
   )

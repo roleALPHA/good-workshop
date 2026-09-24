@@ -1,5 +1,5 @@
 import type { getTranslations } from 'next-intl/server'
-import type { CatalogEntry } from '@/cloud/catalog/ports'
+import type { EntrySummary } from '@/cloud/catalog/ports'
 import { formatDuration } from '@/features/agenda/duration'
 import { peopleLabel } from './people'
 
@@ -22,11 +22,9 @@ import { peopleLabel } from './people'
  */
 export type EntryView = {
   id: string
-  kind: 'design' | 'method'
   href: string
   name: string
   summary: string
-  kindLabel: string
   /** Days, duration, people -- already said, in order, ready to lay out. */
   meta: string[]
   facets: { key: string; label: string }[]
@@ -43,19 +41,18 @@ export type EntryView = {
  */
 type Say = Awaited<ReturnType<typeof getTranslations<'discover'>>>
 
-export function entryView(entry: CatalogEntry, t: Say): EntryView {
+export function entryView(entry: EntrySummary, t: Say): EntryView {
   return {
     id: entry.id,
-    kind: entry.kind,
-    // A design has no slug on purpose (ports.ts); a method has one and is still
-    // addressed by id here, because a slug is unique per LANGUAGE and this
-    // page's language comes from the session rather than from the path.
-    href: entry.kind === 'design' ? `/discover/${entry.id}` : `/discover/m/${entry.id}`,
+    // By id, never by the slug a public entry also carries: a slug is unique
+    // per LANGUAGE, and this page's language comes from the session rather
+    // than from the path, so the same address would open a different entry for
+    // a colleague reading in another language.
+    href: `/discover/${entry.id}`,
     name: entry.name,
     summary: entry.summary,
-    kindLabel: entry.kind === 'design' ? t('kindDesign') : t('kindMethod'),
     meta: [
-      ...(entry.kind === 'design' ? [t('days', { count: entry.dayCount })] : []),
+      t('days', { count: entry.dayCount }),
       formatDuration(entry.durationMinutes, { spaced: true }),
       people(entry, t),
     ],
@@ -65,7 +62,7 @@ export function entryView(entry: CatalogEntry, t: Say): EntryView {
 }
 
 /** The four sentences `peopleLabel` chooses between, said. */
-function people(entry: CatalogEntry, t: Say): string {
+function people(entry: EntrySummary, t: Say): string {
   const label = peopleLabel(entry)
   switch (label.key) {
     case 'peopleRange':

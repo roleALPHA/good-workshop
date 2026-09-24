@@ -17,10 +17,13 @@ import { breadcrumb, JsonLd, methodArticle } from './structured-data'
  * and loses all of them. A page per method is what a search for "dot voting"
  * can actually land on.
  *
- * WHAT THIS PAGE NEVER SHOWS: a design. Not which designs use the method, not
- * a day structure, not an agenda. That is not discipline -- a design has no
- * slug anywhere in this feature, so there is no address to leak. The reader
- * here (`catalog.getMethod`) cannot reach a design at all.
+ * WHAT THIS PAGE SHOWS, now that there is one sort of entry: what the entry
+ * is, how long it runs and who it suits -- and its prose. Not its day-by-day
+ * agenda. The old rule said "never a design", and it was enforced by a schema
+ * in which a design had no address at all; the rule that replaces it is a
+ * judgement rather than a fact, and it is worth stating: the catalogue is the
+ * commercial asset, and a public page that prints every block of a three-day
+ * programme gives it away. Behind a session, /discover/:id shows everything.
  */
 export async function Method({ slug }: { slug: string }) {
   const [locale, t, nav] = await Promise.all([
@@ -32,24 +35,24 @@ export async function Method({ slug }: { slug: string }) {
   // Unpublished, withdrawn, or published in a language that is not this one:
   // all of them are "not here", and a soft 404 is how an index fills up with
   // addresses that were never real.
-  const method = await catalog.getMethod(slug, locale)
-  if (!method) notFound()
+  const entry = await catalog.getEntryBySlug(slug, locale)
+  if (!entry) notFound()
 
-  const path = methodPathFor(method.slug, locale)
+  const path = methodPathFor(entry.slug!, locale)
 
   return (
     <article className="max-w-3xl">
       <JsonLd
         data={methodArticle({
-          name: method.name,
-          description: method.summary,
+          name: entry.name,
+          description: entry.summary,
           locale,
           path,
         })}
       />
       <JsonLd
         data={breadcrumb('methods', locale, t('title'), nav('home'), {
-          name: method.name,
+          name: entry.name,
           path,
         })}
       />
@@ -60,16 +63,16 @@ export async function Method({ slug }: { slug: string }) {
         </Link>
       </p>
 
-      <h1 className="mt-3 text-3xl font-semibold tracking-tight sm:text-4xl">{method.name}</h1>
+      <h1 className="mt-3 text-3xl font-semibold tracking-tight sm:text-4xl">{entry.name}</h1>
 
       <dl className="mt-4 flex flex-wrap gap-x-6 gap-y-1 text-[14px] text-[var(--fg-subtle)]">
         <div className="flex gap-2">
           <dt>{t('durationLabel')}:</dt>
           <dd className="text-[var(--fg-muted)] tabular-nums">
-            {formatDuration(method.durationMinutes, { spaced: true })}
+            {formatDuration(entry.durationMinutes, { spaced: true })}
           </dd>
         </div>
-        {method.facets.map((facet) => (
+        {entry.facets.map((facet) => (
           <div key={facet.key} className="flex gap-2">
             <dt>{t('socialLabel')}:</dt>
             <dd className="text-[var(--fg-muted)]">{facet.label}</dd>
@@ -77,14 +80,14 @@ export async function Method({ slug }: { slug: string }) {
         ))}
       </dl>
 
-      <p className="mt-5 text-[17px] leading-relaxed text-[var(--fg-muted)]">{method.summary}</p>
+      <p className="mt-5 text-[17px] leading-relaxed text-[var(--fg-muted)]">{entry.summary}</p>
 
       {/* The catalogue stores Markdown, and this is the one renderer in the
           tree that turns it into a bounded set of elements. Reused rather than
           a second parser: what is safe for a legal text is safe here. */}
-      {method.body && (
+      {entry.body && (
         <div className="mt-6">
-          <LegalMarkdown source={method.body} />
+          <LegalMarkdown source={entry.body} />
         </div>
       )}
 

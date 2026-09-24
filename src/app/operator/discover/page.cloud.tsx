@@ -3,7 +3,7 @@ import type { Route } from 'next'
 import { redirect } from 'next/navigation'
 import { getTranslations } from 'next-intl/server'
 import { operatorDb } from '@/cloud/operator/db'
-import { listCatalogDesigns, listCatalogFacets, listCatalogMethods } from '@/cloud/operator/catalog'
+import { listCatalogEntries, listCatalogFacets } from '@/cloud/operator/catalog'
 import { currentOperator } from '@/cloud/operator/session'
 import { LOCALES } from '@/i18n/config'
 import { FacetForm } from './facet-form'
@@ -17,23 +17,6 @@ import { FacetForm } from './facet-form'
  */
 export const dynamic = 'force-dynamic'
 
-type Method = {
-  id: string
-  key: string
-  moduleTypeKey: string
-  text: Record<
-    string,
-    { published?: boolean; slug?: string | null; fields?: Record<string, string> }
-  >
-}
-type Design = {
-  id: string
-  key: string
-  published: boolean
-  days: unknown[]
-  text: Record<string, Record<string, string>>
-}
-
 /**
  * The English name, or the key when nobody has written one yet.
  *
@@ -41,28 +24,22 @@ type Design = {
  * IS -- a list of keys tells you how many entries exist and nothing about
  * what they are, which is the wrong half for somebody asking what is in the
  * library.
+ *
+ * One lookup, where there used to be two chained fallbacks: a method's text
+ * was nested one level deeper than a design's, and every reader carried the
+ * difference around. One sort of entry, one shape.
  */
-const nameOf = (
-  text: Record<string, { fields?: Record<string, string> } | Record<string, string>>,
-  key: string,
-) => {
-  const en = text['en'] as { fields?: Record<string, string> } & Record<string, string>
-  return en?.fields?.['name'] ?? en?.['name'] ?? key
-}
-type FacetGroup = {
-  key: string
-  values: { id: string; key: string; retired: boolean; text: Record<string, unknown> }[]
-}
+const nameOf = (text: Partial<Record<string, { fields?: Record<string, string> }>>, key: string) =>
+  text['en']?.fields?.['name'] ?? key
 
 export default async function OperatorDiscover() {
   const operator = await currentOperator()
   if (!operator) redirect('/operator/login' as never)
 
-  const [t, methods, designs, facets] = await Promise.all([
+  const [t, entries, facets] = await Promise.all([
     getTranslations('operator.discover'),
-    listCatalogMethods(operatorDb()) as Promise<Method[]>,
-    listCatalogDesigns(operatorDb()) as Promise<Design[]>,
-    listCatalogFacets(operatorDb()) as Promise<FacetGroup[]>,
+    listCatalogEntries(operatorDb()),
+    listCatalogFacets(operatorDb()),
   ])
 
   return (
@@ -75,56 +52,32 @@ export default async function OperatorDiscover() {
       </Link>
       <h1 className="mt-3 text-xl font-semibold tracking-tight">{t('title')}</h1>
 
-      <section className="mt-6" aria-labelledby="methods">
-        <h2 id="methods" className="text-[17px] font-medium">
-          {t('methods')}
+      <section className="mt-6" aria-labelledby="entries">
+        <h2 id="entries" className="text-[17px] font-medium">
+          {t('entries')}
         </h2>
-        {methods.length === 0 ? (
+        <p className="mt-1 max-w-2xl text-[14px] text-[var(--fg-subtle)]">{t('blocksViaMcp')}</p>
+        {entries.length === 0 ? (
           <p className="mt-2 text-[15px] text-[var(--fg-muted)]">{t('empty')}</p>
         ) : (
           <ul className="mt-3 divide-y divide-[var(--border)] rounded border border-[var(--border)]">
-            {methods.map((method) => (
-              <li key={method.id} className="flex flex-wrap items-center gap-x-4 gap-y-1 p-3">
+            {entries.map((entry) => (
+              <li key={entry.id} className="flex flex-wrap items-center gap-x-4 gap-y-1 p-3">
                 <Link
-                  href={`/operator/discover/m/${method.id}` as Route}
+                  href={`/operator/discover/e/${entry.id}` as Route}
                   className="min-h-11 flex-1 content-center text-[15px] underline-offset-2 hover:underline"
                 >
-                  {nameOf(method.text, method.key)}
-                  <span className="ml-2 text-[13px] text-[var(--fg-subtle)]">{method.key}</span>
+                  {nameOf(entry.text, entry.key)}
+                  <span className="ml-2 text-[13px] text-[var(--fg-subtle)]">{entry.key}</span>
                 </Link>
-                <span className="text-[14px] text-[var(--fg-subtle)]">{method.moduleTypeKey}</span>
+                <span className="text-[14px] text-[var(--fg-subtle)] tabular-nums">
+                  {t('dayCount', { count: entry.days.length })}
+                </span>
                 {/* Which languages are live, as letters rather than a count:
                     "en de" says what is missing, "2/4" only says how much. */}
                 <span className="text-[14px] tabular-nums">
-                  {LOCALES.filter((locale) => method.text[locale]?.published).join(' ') ||
+                  {LOCALES.filter((locale) => entry.text[locale]?.published).join(' ') ||
                     t('draft')}
-                </span>
-              </li>
-            ))}
-          </ul>
-        )}
-      </section>
-
-      <section className="mt-8" aria-labelledby="designs">
-        <h2 id="designs" className="text-[17px] font-medium">
-          {t('designs')}
-        </h2>
-        <p className="mt-1 max-w-2xl text-[14px] text-[var(--fg-subtle)]">{t('designsViaMcp')}</p>
-        {designs.length === 0 ? (
-          <p className="mt-2 text-[15px] text-[var(--fg-muted)]">{t('empty')}</p>
-        ) : (
-          <ul className="mt-3 divide-y divide-[var(--border)] rounded border border-[var(--border)]">
-            {designs.map((design) => (
-              <li key={design.id} className="flex flex-wrap items-center gap-x-4 p-3">
-                <span className="flex-1 text-[15px]">
-                  {nameOf(design.text, design.key)}
-                  <span className="ml-2 text-[13px] text-[var(--fg-subtle)]">{design.key}</span>
-                </span>
-                <span className="text-[14px] text-[var(--fg-subtle)] tabular-nums">
-                  {design.days.length}
-                </span>
-                <span className="text-[14px]">
-                  {design.published ? t('published') : t('draft')}
                 </span>
               </li>
             ))}

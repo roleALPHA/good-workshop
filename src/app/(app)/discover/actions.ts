@@ -4,12 +4,7 @@ import { headers } from 'next/headers'
 import { z } from 'zod'
 import { getLocale, getTranslations } from 'next-intl/server'
 import { catalog } from '@gw/catalog'
-import {
-  adoptDesign,
-  adoptMethod,
-  type AdoptMethodResult,
-  type AdoptResult,
-} from '@/cloud/catalog/adopt'
+import { adoptEntry, type AdoptResult } from '@/cloud/catalog/adopt'
 import { queryFromParams, type SearchParams } from '@/cloud/catalog/query'
 import { entryView, type EntryView } from './entry-view'
 import { listDays } from '@/domain/workshop/repo'
@@ -25,14 +20,14 @@ import {
 import type { Locale } from '@/i18n/config'
 
 /**
- * Taking a design out of Discover and into this workspace.
+ * Taking a catalogue entry out of Discover and into this workspace.
  *
  * DELIBERATELY NOT THROUGH `action()`. That helper runs its body inside
  * `withTenant`, which is right for every other server action and wrong here:
  * adopting opens a collaboration room, and materialising a room takes the
  * workshop row's lock -- the same lock the surrounding transaction would still
  * be holding. The result is not an error but a wait, on a page somebody is
- * looking at. `adoptDesign` therefore opens and closes its own short
+ * looking at. `adoptEntry` therefore opens and closes its own short
  * transaction and only then opens rooms, and this action must leave it room to.
  *
  * The rest of `action()`'s job is done here by hand: the actor, the schema,
@@ -42,22 +37,33 @@ import type { Locale } from '@/i18n/config'
  * The rooms are opened with the person's own Cookie header, the way
  * src/server/actions/days.ts already does: the collaboration server checks it
  * exactly as it checks their browser, and nothing here holds a key of its own.
+ *
+ * The block appears live in any tab that has the day open -- `editInRoom`
+ * joins the room the browser is in -- and it appears without a name against
+ * it, because no server action here sets a `presence`. That is the existing
+ * behaviour of every room write outside the editor.
  */
 const Adopt = z.union([
   z.object({
-    designId: z.string().uuid(),
+    entryId: z.string().uuid(),
     kind: z.literal('new'),
     title: z.string().trim().max(300).optional(),
     folderId: z.string().uuid().nullable().optional(),
   }),
   z.object({
-    designId: z.string().uuid(),
+    entryId: z.string().uuid(),
     kind: z.literal('append'),
     workshopId: z.string().uuid(),
   }),
+  z.object({
+    entryId: z.string().uuid(),
+    kind: z.literal('day'),
+    workshopId: z.string().uuid(),
+    dayId: z.string().uuid(),
+  }),
 ])
 
-export async function adoptDesignAction(
+export async function adoptEntryAction(
   raw: unknown,
 ): Promise<ActionResult<AdoptResult & { notes: string[] }>> {
   const actor = await currentActor()
@@ -73,8 +79,8 @@ export async function adoptDesignAction(
   const cookie = headerList.get('cookie') ?? ''
 
   try {
-    const result = await adoptDesign(actor, (workshopId) => roomEditor({ workshopId, cookie }), {
-      designId: parsed.data.designId,
+    const result = await adoptEntry(actor, (workshopId) => roomEditor({ workshopId, cookie }), {
+      entryId: parsed.data.entryId,
       locale: locale as Locale,
       target:
         parsed.data.kind === 'new'
@@ -83,7 +89,13 @@ export async function adoptDesignAction(
               title: parsed.data.title,
               folderId: parsed.data.folderId ?? null,
             }
-          : { kind: 'append', workshopId: parsed.data.workshopId },
+          : parsed.data.kind === 'append'
+            ? { kind: 'append', workshopId: parsed.data.workshopId }
+            : {
+                kind: 'day',
+                workshopId: parsed.data.workshopId,
+                dayId: parsed.data.dayId,
+              },
     })
     // Said here rather than in the panel: the counts decide which plural form
     // the sentence takes, and a client component cannot be handed the function
@@ -168,65 +180,5 @@ export async function loadWorkshopDays(
       id: day.id,
       label: day.title?.trim() || t('dayHeading', { n: index + 1 }),
     })),
-  }
-}
-
-/**
- * Taking one method out of Discover and into a day.
- *
- * The same two rules as `adoptDesignAction` above: no `action()`, because the
- * transaction would hold the lock the room needs, and the rooms opened with the
- * person's own Cookie header so that nothing here holds a key of its own.
- *
- * The block appears live in any tab that has the day open -- `editInRoom`
- * joins the room the browser is in -- and it appears without a name against
- * it, because no server action here sets a `presence`. That is the existing
- * behaviour of every room write outside the editor, and making this one the
- * exception would be a different change.
- */
-const AdoptMethod = z.union([
-  z.object({
-    methodId: z.string().uuid(),
-    kind: z.literal('day'),
-    workshopId: z.string().uuid(),
-    dayId: z.string().uuid(),
-  }),
-  z.object({
-    methodId: z.string().uuid(),
-    kind: z.literal('new'),
-    title: z.string().trim().max(300).optional(),
-    folderId: z.string().uuid().nullable().optional(),
-  }),
-])
-
-export async function adoptMethodAction(raw: unknown): Promise<ActionResult<AdoptMethodResult>> {
-  const actor = await currentActor()
-  if (!actor) return fail('unauthenticated', 'unauthenticated')
-
-  const parsed = AdoptMethod.safeParse(raw)
-  if (!parsed.success) {
-    const issue = firstIssue(parsed.error)
-    return fail('invalid_input', issue.key, issue.params)
-  }
-
-  const [locale, headerList] = await Promise.all([getLocale(), headers()])
-  const cookie = headerList.get('cookie') ?? ''
-
-  try {
-    const result = await adoptMethod(actor, (workshopId) => roomEditor({ workshopId, cookie }), {
-      methodId: parsed.data.methodId,
-      locale: locale as Locale,
-      target:
-        parsed.data.kind === 'day'
-          ? { kind: 'day', workshopId: parsed.data.workshopId, dayId: parsed.data.dayId }
-          : {
-              kind: 'new',
-              title: parsed.data.title,
-              folderId: parsed.data.folderId ?? null,
-            },
-    })
-    return { ok: true, data: result }
-  } catch (error) {
-    return toResult(error)
   }
 }

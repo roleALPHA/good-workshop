@@ -27,12 +27,9 @@ describe('an unconfigured catalogue', () => {
     return Promise.all([
       expect(catalog.listFacets(locale)).resolves.toEqual([]),
       expect(catalog.listEntries({ locale })).resolves.toEqual({ items: [], nextCursor: null }),
-      expect(catalog.listMethods({ locale })).resolves.toEqual({ items: [], nextCursor: null }),
-      expect(catalog.listDesigns({ locale })).resolves.toEqual({ items: [], nextCursor: null }),
-      expect(catalog.getMethod('anything', locale)).resolves.toBeNull(),
-      expect(catalog.getMethodById('anything', locale)).resolves.toBeNull(),
-      expect(catalog.getDesign('anything', locale)).resolves.toBeNull(),
-      expect(catalog.publishedMethodSlugs()).resolves.toEqual([]),
+      expect(catalog.getEntry('anything', locale)).resolves.toBeNull(),
+      expect(catalog.getEntryBySlug('anything', locale)).resolves.toBeNull(),
+      expect(catalog.publishedEntrySlugs()).resolves.toEqual([]),
     ])
   })
 
@@ -44,12 +41,9 @@ describe('an unconfigured catalogue', () => {
       'configured',
       'listFacets',
       'listEntries',
-      'listMethods',
-      'getMethod',
-      'getMethodById',
-      'listDesigns',
-      'getDesign',
-      'publishedMethodSlugs',
+      'getEntry',
+      'getEntryBySlug',
+      'publishedEntrySlugs',
     ]
     expect(Object.keys(catalog).sort()).toEqual([...required].sort())
   })

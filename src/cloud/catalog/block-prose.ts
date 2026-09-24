@@ -1,8 +1,8 @@
 /**
- * A method's prose, in the dialect a block description is stored in.
+ * A block's prose, in the dialect a block description is stored in.
  *
- * TWO DIALECTS THAT LOOK THE SAME AND ARE NOT. A method is written for the
- * public method page, which renders it with src/cloud/legal/markdown.tsx:
+ * TWO DIALECTS THAT LOOK THE SAME AND ARE NOT. Catalogue prose is written for
+ * the public entry page, which renders it with src/cloud/legal/markdown.tsx:
  * `#`, `##` and `###` are headings, and lines soft-wrapped inside a paragraph
  * are joined with a space. A block description is rich text, built by
  * `markdownToRichText`, which mirrors the rich-text allowlist: paragraphs,
@@ -14,14 +14,8 @@
  * paragraph reading "## How to run it" and validates against the block type's
  * schema, so it is not even counted as a dropped description; a paragraph
  * wrapped at eighty columns arrives as a ladder of short lines. The only
- * person who ever sees either is the one who adopted the method, in their own
+ * person who ever sees either is the one who adopted the entry, in their own
  * agenda, days later.
- *
- * WHY `summary` IS A FALLBACK AND NOT A MISTAKE. The fifteen methods the
- * library ships carry a name and a summary and no body: the seed writes the
- * prose it has into `summary`. Preferring `body` keeps faith with an author
- * who writes one later; falling back to `summary` is what makes adopting any
- * method in the library today carry its prose instead of nothing.
  */
 
 /** `#`, `##`, `###` at the start of a line -- the only headings the site renders. */
@@ -33,9 +27,8 @@ const LIST_ITEM = /^(\s*)([-*+]|\d+[.)])\s+/u
 /** Two trailing spaces: an explicit hard break, which both dialects honour. */
 const HARD_BREAK = /\s{2,}$/u
 
-export function descriptionMarkdown(method: { body: string; summary: string }): string {
-  const source = method.body.trim() ? method.body : method.summary
-  return normalise(source)
+export function blockMarkdown(markdown: string): string {
+  return normalise(markdown)
 }
 
 function normalise(markdown: string): string {
