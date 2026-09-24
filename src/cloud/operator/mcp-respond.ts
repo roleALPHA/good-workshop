@@ -1,5 +1,6 @@
 import { publicToolError } from '@/server/mcp/errors'
 import { fail } from '@/server/mcp/respond'
+import { BlockFieldError } from './block-types'
 import { OperatorScopeError } from './scopes'
 
 /**
@@ -19,6 +20,10 @@ export async function opGuarded<T>(run: () => Promise<T>): Promise<T | ReturnTyp
   } catch (error) {
     // Names the fix: issue a token that has the scope.
     if (error instanceof OperatorScopeError) return fail(error.message)
+    // Likewise, and for the same reason: it carries the built-in schema
+    // shipped in this repository -- field names and their allowed values --
+    // and nothing about any workspace. See block-types.ts.
+    if (error instanceof BlockFieldError) return fail(error.message)
     return fail(publicToolError(error).message)
   }
 }

@@ -1,6 +1,6 @@
 import { z } from 'zod'
 import { LOCALES } from '@/i18n/config'
-import { BUILTIN_MODULE_TYPES } from '@/domain/moduleType/builtins'
+import { blockTypeCatalogue, describeBlockTypes, normaliseDays } from './block-types'
 import type { McpServer } from '@modelcontextprotocol/sdk/server/mcp.js'
 import { fail, ok } from '@/server/mcp/respond'
 import { opGuarded } from './mcp-respond'
@@ -478,10 +478,17 @@ export function registerOperatorTools(server: McpServer, actor: OperatorActor): 
     {
       title: 'List the block types an entry is built from',
       description:
-        'The vocabulary a catalogue entry is written in, and the one thing the authoring ' +
-        'tools here could not tell you before: which `moduleTypeKey` values exist and which ' +
-        '`fields` each of them accepts. Read this BEFORE set_catalog_blocks -- an unknown key ' +
-        'is not refused on the way in, it arrives in somebody’s agenda as a plain note.\n\n' +
+        'The vocabulary a catalogue entry is written in: which `moduleTypeKey` values exist ' +
+        'and, for each, the name of every field, its TYPE and the values it allows. Read this ' +
+        'BEFORE set_catalog_blocks.\n\n' +
+        'READING THE FIELD LIST. `participation: plenary|small_groups|pairs|individual|none` ' +
+        'means those five words and no others. `materials: string[]` is a list -- ' +
+        '["Marker", "Tape"], not "Marker, Tape". `richtext` is a document, but WRITE IT AS ' +
+        'MARKDOWN: a plain string in a rich-text field is converted for you. ' +
+        '`timebox_per_person_seconds: integer` is a number, not "60". The `jsonSchema` in the ' +
+        'structured result is the full truth if the summary leaves you guessing.\n\n' +
+        'A wrong field is refused by set_catalog_blocks, naming the day, the block and what ' +
+        'that field takes -- so a rejected call is fixable rather than a mystery.\n\n' +
         'HOW A CATALOGUE ENTRY IS WRITTEN, in three calls:\n' +
         '1. save_catalog_entry -- the name, the summary, the prose, the advertised duration, ' +
         'the group size, the tags. This writes NO agenda.\n' +
@@ -497,23 +504,12 @@ export function registerOperatorTools(server: McpServer, actor: OperatorActor): 
     async () =>
       opGuarded(async () => {
         requireOperatorScope(actor.scopes, 'ops:read')
-        // The shipped built-ins, not a tenant's table. Every workspace is
-        // seeded with exactly these, and the catalogue resolves a key against
-        // the ADOPTING tenant -- so these are the keys that are safe to write.
-        // A workspace may have added its own; the catalogue cannot know them.
-        const types = BUILTIN_MODULE_TYPES.map((type) => ({
-          key: type.key,
-          name: type.name,
-          category: type.category,
-          defaultDurationMinutes: type.defaultDurationMinutes,
-          fields: Object.keys(
-            (type.jsonSchema as { properties?: Record<string, unknown> }).properties ?? {},
-          ),
-        }))
-        return ok(
-          types.map((type) => `${type.key} — ${type.name}: ${type.fields.join(', ')}`).join('\n'),
-          { blockTypes: types },
-        )
+        const types = blockTypeCatalogue()
+        // The summary names each field's type and, where it has one, the only
+        // values it takes; `jsonSchema` alongside it is the whole truth. It
+        // used to be `Object.keys(properties)` -- the names alone, which is
+        // how `prompt` gets written as a sentence and dropped on adoption.
+        return ok(describeBlockTypes(types), { blockTypes: types })
       }),
   )
 
@@ -606,7 +602,11 @@ export function registerOperatorTools(server: McpServer, actor: OperatorActor): 
                     'The block type’s OWN fields, from list_catalog_block_types -- `prompt`, ' +
                       '`materials`, `participation` and so on. Plain values, not per language: ' +
                       'they are carried into the adopted block as they are. The words a reader ' +
-                      'sees in Discover go in `text`, not here.',
+                      'sees in Discover go in `text`, not here.\n' +
+                      'TYPES MATTER and are checked: an enum takes one of its listed words, a ' +
+                      'list takes an array, a number takes a number. A rich-text field takes ' +
+                      'Markdown as a plain string and is converted. Anything else is refused ' +
+                      'with the field named -- nothing is silently dropped.',
                   ),
                 text: BlockText.optional(),
               }),
@@ -618,7 +618,11 @@ export function registerOperatorTools(server: McpServer, actor: OperatorActor): 
     async ({ entryId, days }) =>
       opGuarded(async () => {
         requireOperatorScope(actor.scopes, 'catalog:author')
-        await setCatalogBlocks(db, actor.operatorId, entryId, days)
+        // Before the write, not after: a field the block type does not have is
+        // refused here, where whoever wrote it can fix it. Accepted, it is
+        // stored and then dropped by `descFor` during somebody else's
+        // adoption -- the failure the author never sees.
+        await setCatalogBlocks(db, actor.operatorId, entryId, normaliseDays(days))
         return ok(`${days.length} day(s) written.`)
       }),
   )
