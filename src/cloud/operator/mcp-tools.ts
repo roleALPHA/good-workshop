@@ -1,5 +1,6 @@
 import { z } from 'zod'
 import { LOCALES } from '@/i18n/config'
+import { BUILTIN_MODULE_TYPES } from '@/domain/moduleType/builtins'
 import type { McpServer } from '@modelcontextprotocol/sdk/server/mcp.js'
 import { fail, ok } from '@/server/mcp/respond'
 import { opGuarded } from './mcp-respond'
@@ -455,6 +456,50 @@ export function registerOperatorTools(server: McpServer, actor: OperatorActor): 
   )
 
   server.registerTool(
+    'list_catalog_block_types',
+    {
+      title: 'List the block types an entry is built from',
+      description:
+        'The vocabulary a catalogue entry is written in, and the one thing the authoring ' +
+        'tools here could not tell you before: which `moduleTypeKey` values exist and which ' +
+        '`fields` each of them accepts. Read this BEFORE set_catalog_blocks -- an unknown key ' +
+        'is not refused on the way in, it arrives in somebody’s agenda as a plain note.\n\n' +
+        'HOW A CATALOGUE ENTRY IS WRITTEN, in three calls:\n' +
+        '1. save_catalog_entry -- the name, the summary, the prose, the advertised duration, ' +
+        'the group size, the tags. This writes NO agenda.\n' +
+        '2. set_catalog_blocks -- the days and the steps. A building block is ONE day holding ' +
+        'ONE cluster with its steps inside; a programme like an Open Space is several days. ' +
+        'Each step is a module naming a block type from this list, with its own duration and ' +
+        'its `fields` filled in -- that is what somebody gets when they adopt it.\n' +
+        '3. publish_catalog_entry -- per language, and refused while the entry has no days.\n\n' +
+        'The prose from step 1 and the steps from step 2 are different things and both belong: ' +
+        'the prose explains the method, the blocks ARE the agenda.',
+      inputSchema: {},
+    },
+    async () =>
+      opGuarded(async () => {
+        requireOperatorScope(actor.scopes, 'ops:read')
+        // The shipped built-ins, not a tenant's table. Every workspace is
+        // seeded with exactly these, and the catalogue resolves a key against
+        // the ADOPTING tenant -- so these are the keys that are safe to write.
+        // A workspace may have added its own; the catalogue cannot know them.
+        const types = BUILTIN_MODULE_TYPES.map((type) => ({
+          key: type.key,
+          name: type.name,
+          category: type.category,
+          defaultDurationMinutes: type.defaultDurationMinutes,
+          fields: Object.keys(
+            (type.jsonSchema as { properties?: Record<string, unknown> }).properties ?? {},
+          ),
+        }))
+        return ok(
+          types.map((type) => `${type.key} — ${type.name}: ${type.fields.join(', ')}`).join('\n'),
+          { blockTypes: types },
+        )
+      }),
+  )
+
+  server.registerTool(
     'save_catalog_entry',
     {
       title: 'Write a catalogue entry',
@@ -514,8 +559,8 @@ export function registerOperatorTools(server: McpServer, actor: OperatorActor): 
         'Every day of an entry, with its blocks, in one call -- the catalogue’s apply_agenda. ' +
         'Replaces what is there. Every entry has at least one day: a building block is one day ' +
         'holding one cluster with its steps inside, a programme is several. A module names its ' +
-        'BLOCK TYPE by key (from list_module_types on the tenant side: check_in, group_work, ' +
-        'break …) and the cluster it sits in by that cluster’s ordinal on the same day. ' +
+        'BLOCK TYPE by key -- read list_catalog_block_types for the keys and the fields each ' +
+        'one takes -- and the cluster it sits in by that cluster’s ordinal on the same day. ' +
         '`fields` is what the adopted block starts with in that type’s own fields -- prompt, ' +
         'materials, participation and the rest -- and it is the reason an adopted block is a ' +
         'filled-in step rather than a wall of prose.',
