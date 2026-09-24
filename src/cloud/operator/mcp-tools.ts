@@ -459,9 +459,12 @@ export function registerOperatorTools(server: McpServer, actor: OperatorActor): 
     {
       title: 'Write a catalogue entry',
       description:
-        'Creates or replaces one entry’s own fields, whole. Keyed on `key`, so saving again ' +
-        'updates and the id stays put. Its days and blocks are set with set_catalog_blocks, ' +
-        'and it is NOT published here -- that is a separate call with a separate scope.',
+        'Creates or replaces one entry’s own fields, whole: name, summary, prose, duration, ' +
+        'group size, tags. Keyed on `key`, so saving again updates and the id stays put. ' +
+        'THIS IS STEP ONE OF TWO. It writes no days and no blocks -- an entry saved and left ' +
+        'here has no agenda, cannot be adopted and cannot be published. Follow it with ' +
+        'set_catalog_blocks, which writes the steps somebody actually gets when they adopt it. ' +
+        'Publishing is a third call with a scope of its own.',
       inputSchema: {
         key: z.string().regex(/^[a-z][a-z0-9_]{1,48}$/u),
         durationMinutes: z
@@ -488,7 +491,18 @@ export function registerOperatorTools(server: McpServer, actor: OperatorActor): 
       opGuarded(async () => {
         requireOperatorScope(actor.scopes, 'catalog:author')
         const id = await saveCatalogEntry(db, actor.operatorId, draft)
-        return ok(`Entry "${draft.key}" saved.`, { id })
+        // Say what is still missing rather than leaving it to be remembered.
+        // Two entries went live with no agenda at all because the second call
+        // was easy to forget and nothing here mentioned it afterwards.
+        const [saved] = await listCatalogEntries(db, id)
+        const days = saved?.days.length ?? 0
+        return ok(
+          days === 0
+            ? `Entry "${draft.key}" saved. It has NO days yet: call set_catalog_blocks with its ` +
+                'steps, or it cannot be published or adopted.'
+            : `Entry "${draft.key}" saved, ${days} day(s) already written.`,
+          { id, days },
+        )
       }),
   )
 
@@ -586,7 +600,8 @@ export function registerOperatorTools(server: McpServer, actor: OperatorActor): 
         'a slug in any language needs one in every language it is published in -- that is what ' +
         'keeps a 404 out of the sitemap. An entry with no slug at all publishes freely: it is ' +
         'then visible in Discover and has no public page, which is what most of the catalogue ' +
-        'is.',
+        'is. An entry with no days at all is refused: what is live has to be something ' +
+        'somebody can adopt.',
       inputSchema: {
         id: Id,
         locales: z.array(z.enum(LOCALES)).optional(),
