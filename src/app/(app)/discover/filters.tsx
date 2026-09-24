@@ -2,7 +2,16 @@ import Link from 'next/link'
 import type { Route } from 'next'
 import { getTranslations } from 'next-intl/server'
 import type { CatalogQuery, Facet } from '@/cloud/catalog/ports'
-import { CLEARED, isFiltered, toggleFacet, type SearchParams } from '@/cloud/catalog/query'
+import {
+  CLEARED,
+  RESERVED,
+  isFiltered,
+  toggleFacet,
+  type SearchParams,
+} from '@/cloud/catalog/query'
+
+/** The reserved names this form renders a control for, so they are not doubled. */
+const FORM_FIELDS: readonly string[] = ['group', 'time', 'q']
 
 /**
  * The filters, as links and a plain form.
@@ -76,13 +85,27 @@ export async function DiscoverFilters({
       ))}
 
       {/* A GET form, so the two numbers and the search box end up in the
-          address exactly like the chips above. Submitting replaces the whole
-          query string, which is why the chips are repeated as hidden fields. */}
+          address exactly like the chips above. Submitting replaces the WHOLE
+          query string, which is why everything not inside the form is repeated
+          as a hidden field: the chips, and the reserved parameters this form
+          has no control for. Leaving `kind` out meant that typing a search term
+          while looking at the methods quietly put the designs back. The cursor
+          is the one thing deliberately dropped -- page three of the old filter
+          is not page three of the new one. */}
       <form method="get" className="mt-5 flex flex-wrap items-end gap-3">
         {Object.entries(params)
-          .filter(([key]) => facets.some((facet) => facet.kind === key))
+          .filter(
+            ([key]) =>
+              facets.some((facet) => facet.kind === key) ||
+              (RESERVED.includes(key) && !FORM_FIELDS.includes(key) && key !== 'after'),
+          )
           .map(([key, value]) => (
-            <input key={key} type="hidden" name={key} value={String(value ?? '')} />
+            <input
+              key={key}
+              type="hidden"
+              name={key}
+              value={Array.isArray(value) ? (value[0] ?? '') : (value ?? '')}
+            />
           ))}
 
         <label className="flex flex-col gap-1 text-[14px] text-[var(--fg-subtle)]">

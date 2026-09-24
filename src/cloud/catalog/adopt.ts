@@ -1,6 +1,7 @@
 import { uuidv7 } from 'uuidv7'
 import { catalog } from '@gw/catalog'
 import { NotFoundError, assertWorkshopAccess } from '@/domain/agenda/access'
+import { assertDayInWorkshop } from '@/domain/agenda/repo'
 import { addClusterBlock, addModuleBlock, patchBlock, setDayFields } from '@/domain/collab/ops'
 import { validateModuleDesc } from '@/domain/moduleType/validate'
 import { seedBuiltinModuleTypes } from '@/domain/moduleType/seed'
@@ -10,6 +11,7 @@ import { markdownToRichText } from '@/lib/richtext/markdown'
 import { withTenant, type Actor, type Tx } from '@/server/db'
 import { auditEvent, moduleType } from '@/server/db/schema'
 import type { RoomEditor } from '@/server/collab/across-days'
+import { descriptionMarkdown } from './method-body'
 import type { DesignBlock, DesignDetail } from './ports'
 import type { Locale } from '@/i18n/config'
 
@@ -48,7 +50,16 @@ import type { Locale } from '@/i18n/config'
  */
 
 export type AdoptTarget =
-  { kind: 'new'; title?: string; folderId?: string | null } | { kind: 'append'; workshopId: string }
+  | { kind: 'new'; title?: string; folderId?: string | null }
+  | { kind: 'append'; workshopId: string }
+  /**
+   * One block into a day that already exists -- only a method goes here.
+   *
+   * Unlike the other two, this names a day somebody is already using, which is
+   * why `adoptMethod` verifies the day belongs to the workshop and never
+   * touches the day's own fields. See its comment.
+   */
+  | { kind: 'day'; workshopId: string; dayId: string }
 
 export type AdoptResult = {
   workshopId: string
@@ -63,6 +74,17 @@ export type AdoptResult = {
   daysFailed: number
 }
 
+/** What one adopted method leaves behind. Not `AdoptResult` full of zeroes. */
+export type AdoptMethodResult = {
+  workshopId: string
+  dayId: string
+  blockId: string
+  /** 1 when this workspace has no such block type and the block became a note. */
+  degraded: number
+  /** 1 when the method's prose did not fit this workspace's block type. */
+  descDropped: number
+}
+
 /** What a block falls back to when its own type is nowhere to be found. */
 const FALLBACK_TYPE_KEY = 'note'
 
@@ -71,14 +93,14 @@ type ResolvedType = { id: string; schemaVersion: number; jsonSchema: unknown }
 export async function adoptDesign(
   actor: Actor,
   openRooms: (workshopId: string) => RoomEditor,
-  input: { designId: string; locale: Locale; target: AdoptTarget },
+  input: { designId: string; locale: Locale; target: Exclude<AdoptTarget, { kind: 'day' }> },
 ): Promise<AdoptResult> {
   const design = await catalog.getDesign(input.designId, input.locale)
   if (!design) throw new NotFoundError()
 
   // ── Phase 1: the container. One short transaction, and it ends here. ──────
   const { workshopId, dayIds, types } = await withTenant(actor, async (tx) => {
-    const types = await resolveTypes(tx, actor, design)
+    const types = await resolveTypes(tx, actor, typeKeysOf(design))
 
     const created =
       input.target.kind === 'new'
@@ -87,10 +109,6 @@ export async function adoptDesign(
             folderId: input.target.folderId ?? null,
           })
         : { workshopId: input.target.workshopId, dayId: null }
-
-    if (input.target.kind === 'append') {
-      await assertWorkshopAccess(tx, actor, input.target.workshopId, 'workshop.content.write')
-    }
 
     const access = await assertWorkshopAccess(
       tx,
@@ -162,6 +180,127 @@ export async function adoptDesign(
 }
 
 /**
+ * One method from the catalogue, written into a day somebody already has.
+ *
+ * FOUR THINGS IT DOES DIFFERENTLY FROM `adoptDesign`, and none of them are
+ * simplifications -- a design only ever writes into days it created seconds
+ * earlier, and this writes into one somebody is using.
+ *
+ * 1. IT NEVER TOUCHES THE DAY'S OWN FIELDS. `adoptDesign` calls `setDayFields`
+ *    with the catalogue's title and start minute, which is harmless for a day
+ *    it just made and destructive for a day with an agenda on it: pins resolve
+ *    against their own day's start (see ports.ts), so moving the start makes
+ *    every pinned block jump while the unpinned ones stand still -- and the
+ *    room would propagate that to everyone looking at the day.
+ *
+ * 2. THE DAY IS CHECKED AGAINST THE WORKSHOP, IN PHASE 1. `WorkshopAccess`
+ *    proves a permission, not that this day belongs to that workshop, and both
+ *    may sit in the same tenant, so RLS does not help. Without the check the
+ *    only gate left is the room's handshake, which refuses a foreign day as an
+ *    UNAVAILABLE SERVICE -- telling somebody the collaboration server is down
+ *    when they picked the wrong day.
+ *
+ * 3. A FAILURE IN THE ROOM IS RAISED, NOT TALLIED. A design counts a lost day
+ *    and carries on because the other days arrived; one block has no other
+ *    days, so swallowing it would return a success with nothing written and
+ *    the panel would offer to open a workshop where nothing happened.
+ *
+ * 4. It still obeys the two-phase rule: the transaction ENDS before the room
+ *    opens, because materialising takes the workshop row's lock that
+ *    `assertWorkshopAccess` is holding.
+ */
+export async function adoptMethod(
+  actor: Actor,
+  openRooms: (workshopId: string) => RoomEditor,
+  input: {
+    methodId: string
+    locale: Locale
+    target: Exclude<AdoptTarget, { kind: 'append' }>
+  },
+): Promise<AdoptMethodResult> {
+  const method = await catalog.getMethodById(input.methodId, input.locale)
+  if (!method) throw new NotFoundError()
+
+  // ── Phase 1: the day, the type and the trail. Ends here. ─────────────────
+  const { workshopId, dayId, types } = await withTenant(actor, async (tx) => {
+    const types = await resolveTypes(tx, actor, [method.moduleTypeKey])
+
+    const created =
+      input.target.kind === 'new'
+        ? await createWorkshop(tx, actor, {
+            title: input.target.title?.trim() || method.name,
+            folderId: input.target.folderId ?? null,
+          })
+        : { workshopId: input.target.workshopId, dayId: input.target.dayId }
+
+    const access = await assertWorkshopAccess(
+      tx,
+      actor,
+      created.workshopId,
+      'workshop.content.write',
+    )
+
+    // See 2. above. Only for a day this call did not create.
+    if (input.target.kind === 'day') {
+      await assertDayInWorkshop(tx, access, input.target.dayId)
+    }
+
+    await tx.insert(auditEvent).values({
+      actorMemberId: actor.memberId,
+      source: actor.source === 'mcp' ? 'mcp' : 'web',
+      entityType: 'workshop',
+      entityId: created.workshopId,
+      action: 'catalog.adopt',
+      data: { methodId: method.id, dayId: created.dayId },
+    })
+
+    return { workshopId: created.workshopId, dayId: created.dayId!, types }
+  })
+
+  // ── Phase 2: the block, outside any transaction. ─────────────────────────
+  const own = types.get(method.moduleTypeKey)
+  const type = own ?? types.get(FALLBACK_TYPE_KEY)
+  // Not even a note. `resolveTypes` seeds the built-ins, so reaching this means
+  // a workspace whose block types could not be created -- broken, not degraded.
+  if (!type) throw new Error('this workspace has no block types')
+
+  const markdown = descriptionMarkdown(method)
+  const desc = descFrom(markdown, type)
+  const blockId = uuidv7()
+
+  await openRooms(workshopId)(dayId, (doc) => {
+    addModuleBlock(doc, blockId, {
+      moduleTypeId: type.id,
+      title: method.name,
+      durationMinutes: method.durationMinutes,
+      pinnedStartMinute: null,
+      parked: false,
+      parentId: null,
+      ...(desc ? { desc } : {}),
+    })
+  })
+
+  return {
+    workshopId,
+    dayId,
+    blockId,
+    degraded: own ? 0 : 1,
+    descDropped: markdown.trim() && desc === undefined ? 1 : 0,
+  }
+}
+
+/** Every block type a design asks for, clusters flattened. */
+function typeKeysOf(design: DesignDetail): Set<string> {
+  return new Set(
+    design.days
+      .flatMap((day) =>
+        day.items.flatMap((item) => (item.kind === 'cluster' ? item.children : [item])),
+      )
+      .map((block) => block.moduleTypeKey),
+  )
+}
+
+/**
  * The block types this workspace has, by key, with the built-ins seeded first.
  *
  * Seeding is idempotent (`on conflict do nothing`) and costs nothing when they
@@ -172,7 +311,7 @@ export async function adoptDesign(
 async function resolveTypes(
   tx: Tx,
   actor: Actor,
-  design: DesignDetail,
+  wanted: Iterable<string>,
 ): Promise<Map<string, ResolvedType>> {
   const read = async () => {
     const rows = await tx
@@ -187,13 +326,6 @@ async function resolveTypes(
   }
 
   let types = await read()
-  const wanted = new Set(
-    design.days
-      .flatMap((day) =>
-        day.items.flatMap((item) => (item.kind === 'cluster' ? item.children : [item])),
-      )
-      .map((block) => block.moduleTypeKey),
-  )
   if ([...wanted].some((key) => !types.has(key))) {
     await seedBuiltinModuleTypes(tx, actor.tenantId)
     types = await read()
@@ -240,7 +372,11 @@ function write(
  * means "nothing to store", which is also what an empty description means.
  */
 function descFor(block: DesignBlock, type: ResolvedType): Record<string, unknown> | undefined {
-  if (!block.description.trim()) return undefined
-  const desc = { description: markdownToRichText(block.description) }
+  return descFrom(block.description, type)
+}
+
+function descFrom(markdown: string, type: ResolvedType): Record<string, unknown> | undefined {
+  if (!markdown.trim()) return undefined
+  const desc = { description: markdownToRichText(markdown) }
   return validateModuleDesc(type, desc).ok ? desc : undefined
 }

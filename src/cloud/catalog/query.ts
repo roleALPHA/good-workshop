@@ -1,5 +1,5 @@
 import type { Locale } from '@/i18n/config'
-import type { CatalogQuery, Facet } from './ports'
+import type { CatalogQuery, EntryKind, Facet } from './ports'
 
 /**
  * The filters, as they travel in the address bar.
@@ -25,7 +25,18 @@ const GROUP = 'group'
 const TIME = 'time'
 const SEARCH = 'q'
 const CURSOR = 'after'
-const RESERVED: readonly string[] = [GROUP, TIME, SEARCH, CURSOR]
+const KIND = 'kind'
+
+/**
+ * Parameter names this module owns, which a facet therefore cannot have.
+ *
+ * The vocabulary is authored at runtime, so a facet group keyed `kind` is a
+ * migration away from existing -- and it would be skipped in silence: its chips
+ * would render from the facet list, change the address, and narrow nothing.
+ * Exported so `filters.tsx` can carry these through its form, which is the
+ * other half of the same problem.
+ */
+export const RESERVED: readonly string[] = [GROUP, TIME, SEARCH, CURSOR, KIND]
 
 /** Several values of one facet travel comma-separated: `?inclusivity=seated,no_reading`. */
 const SEPARATOR = ','
@@ -61,6 +72,18 @@ function counted(param: string | string[] | undefined, max: number): number | un
   if (raw === undefined || !/^\d{1,6}$/u.test(raw.trim())) return undefined
   const parsed = Number.parseInt(raw, 10)
   return parsed >= 1 && parsed <= max ? parsed : undefined
+}
+
+/**
+ * Which sort of entry is asked for, or undefined for both.
+ *
+ * Undefined for anything else, by the argument `counted` makes: a value nobody
+ * can act on is the question unasked, and reading `?kind=banana` as "match
+ * nothing" would show an empty library to somebody with a stale bookmark.
+ */
+function kindOf(param: string | string[] | undefined): EntryKind | undefined {
+  const raw = one(param)?.trim()
+  return raw === 'design' || raw === 'method' ? raw : undefined
 }
 
 /** Wider than any workshop and narrow enough that nothing overflows downstream. */
@@ -104,11 +127,19 @@ export function queryFromParams(
       ? { maxMinutes: counted(params[TIME], MAX_MINUTES) }
       : {}),
     ...(search ? { search } : {}),
+    ...(kindOf(params[KIND]) ? { kind: kindOf(params[KIND]) } : {}),
     ...(one(params[CURSOR]) ? { cursor: one(params[CURSOR]) } : {}),
   }
 }
 
-/** Whether anything is narrowing the list, so the screen can offer to stop. */
+/**
+ * Whether anything is narrowing the list, so the screen can offer to stop.
+ *
+ * `kind` deliberately does not count. It is a choice of what to look at rather
+ * than a narrowing of it, and if it counted here the "clear the filters" link
+ * would appear the moment somebody picked Methods -- and would put the designs
+ * back when they used it to drop a facet.
+ */
 export function isFiltered(query: CatalogQuery): boolean {
   return Boolean(query.facets || query.groupSize || query.maxMinutes || query.search)
 }
@@ -130,6 +161,18 @@ export function toggleFacet(params: SearchParams, kind: string, value: string): 
     ? current.filter((v) => v !== value)
     : [...current, value].sort()
   return hrefFrom({ ...params, [kind]: next.join(SEPARATOR) })
+}
+
+/**
+ * The address showing one sort of entry, or both when `kind` is null.
+ *
+ * Not `toggleFacet`: that one treats a parameter as a comma-separated set and
+ * sorts it, so switching from designs to methods would ask for `design,method`
+ * -- which is neither what was clicked nor a value `queryFromParams` accepts.
+ * Three states, one of which is the absence of the parameter.
+ */
+export function kindHref(params: SearchParams, kind: EntryKind | null): string {
+  return hrefFrom({ ...params, [KIND]: kind ?? '' })
 }
 
 /** Everything off. */

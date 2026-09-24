@@ -56,6 +56,9 @@ export type Facet = {
   values: FacetValue[]
 }
 
+/** Which of the two things in the catalogue a row is. */
+export type EntryKind = 'design' | 'method'
+
 /** What both lists are narrowed by. Empty means "everything published". */
 export type CatalogQuery = {
   locale: Locale
@@ -74,6 +77,14 @@ export type CatalogQuery = {
   /** The time available, in minutes. Matches what fits inside it. */
   maxMinutes?: number
   search?: string
+  /**
+   * Narrow a mixed list to one sort of entry. Absent means both.
+   *
+   * Not a facet, because it is not a property of an entry that an operator
+   * authors -- it is which table the row came out of. A facet whose values
+   * were "design" and "method" would be retirable, which this is not.
+   */
+  kind?: EntryKind
   cursor?: string | null
   limit?: number
 }
@@ -117,6 +128,16 @@ export type DesignSummary = CatalogSummary & {
   durationMinutes: number
   dayCount: number
 }
+
+/**
+ * A row of the mixed list, carrying which sort it is.
+ *
+ * A discriminated union rather than an optional `dayCount`, so that the row
+ * component switches on `kind` and the compiler -- not a reviewer -- is what
+ * stops a design's day count being read off a method.
+ */
+export type CatalogEntry =
+  ({ kind: 'design' } & DesignSummary) | ({ kind: 'method' } & MethodSummary)
 
 /**
  * A block of a design, in the shape the adopter writes it.
@@ -177,8 +198,33 @@ export type CatalogPort = {
 
   listFacets(locale: Locale): Promise<Facet[]>
 
+  /**
+   * Designs and methods in one list, newest first.
+   *
+   * One query rather than two merged here, because the merge is a sort across
+   * two tables and the cursor has to survive it. Paging two lists separately
+   * and interleaving them in the reader would put page two's oldest row above
+   * page one's newest, and there is no way to mint a cursor for a row the
+   * caller decided not to show yet.
+   */
+  listEntries(query: CatalogQuery): Promise<Page<CatalogEntry>>
+
   listMethods(query: CatalogQuery): Promise<Page<MethodSummary>>
   getMethod(slug: string, locale: Locale): Promise<MethodDetail | null>
+
+  /**
+   * The same method, addressed the way the signed-in app addresses one.
+   *
+   * By id, and deliberately not by the slug `getMethod` takes. A slug is
+   * unique per LANGUAGE (`catalog_text_slug_unique`), so two methods may hold
+   * the same one in different languages -- on the public site that is safe,
+   * because the language is part of the path, and behind a session it is not:
+   * the language comes from the person, so the same address would resolve to
+   * a different method for a colleague. It also answers for a method this
+   * language has no translation of, falling back to English with
+   * `translated: false`, where `getMethod` can only answer 404.
+   */
+  getMethodById(id: string, locale: Locale): Promise<MethodDetail | null>
 
   listDesigns(query: CatalogQuery): Promise<Page<DesignSummary>>
   getDesign(id: string, locale: Locale): Promise<DesignDetail | null>
