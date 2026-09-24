@@ -19,7 +19,7 @@ export const OPERATOR_SCOPES = [
   'ops:danger',
   /** Announcing and cancelling maintenance windows. */
   'ops:maintenance',
-  /** Writing catalogue content: methods, designs, the filter vocabulary. */
+  /** Writing catalogue content: entries, their agendas, the filter vocabulary -- and deleting one. */
   'catalog:author',
   /**
    * Making catalogue content live.
@@ -79,6 +79,7 @@ export const OPERATOR_SCOPE_TEXT: Record<OperatorScope, string> = {
   'ops:lifecycle': 'Pause and unpause workspaces, extend trials, grant grace, open billing periods',
   'ops:danger': 'Block a workspace, schedule its deletion, announce terms, write off an invoice',
   'ops:maintenance': 'Announce and cancel maintenance windows shown to every customer',
-  'catalog:author': 'Write catalogue content: methods, designs and the filter vocabulary',
+  'catalog:author':
+    'Write catalogue entries and the filter vocabulary, and delete an entry that is not live',
   'catalog:publish': 'Make catalogue content live, and take it back down',
 }

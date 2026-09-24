@@ -6,6 +6,7 @@ import { fail, ok } from '@/server/mcp/respond'
 import { opGuarded } from './mcp-respond'
 import { applyOperatorAction, listTenants, listMaintenance, tenantDetail } from './console'
 import {
+  deleteCatalogEntry,
   listCatalogEntries,
   listCatalogFacets,
   retireCatalogFacet,
@@ -688,6 +689,39 @@ export function registerOperatorTools(server: McpServer, actor: OperatorActor): 
         requireOperatorScope(actor.scopes, 'catalog:publish')
         await setCatalogStatus(db, actor.operatorId, id, locales ?? [], published)
         return ok(published ? 'Published.' : 'Withdrawn.')
+      }),
+  )
+
+  server.registerTool(
+    'delete_catalog_entry',
+    {
+      title: 'Delete a catalogue entry',
+      description:
+        'Removes the entry and everything under it -- its days, its blocks, its tags and its ' +
+        'text in every language. There is no undo and no trash: what workshops somebody has ' +
+        'already adopted from it are untouched, because adoption is always a copy.\n\n' +
+        'TWO THINGS IT REFUSES, both on purpose. An entry that is still live in any language ' +
+        'is not deleted -- withdraw it first with publish_catalog_entry published=false. A ' +
+        'published entry with a slug holds a public address, and letting that vanish is not ' +
+        'something to do as a side effect of tidying up. And `key` has to be the key of the ' +
+        'entry that `id` names: naming both is how you say you meant this entry and not the ' +
+        'row above it. Read them together from list_catalog_entries.',
+      inputSchema: {
+        id: Id,
+        key: z
+          .string()
+          .describe('The entry’s own key, as list_catalog_entries shows it beside that id.'),
+      },
+    },
+    async ({ id, key }) =>
+      opGuarded(async () => {
+        // The same scope as writing. What guards this call is the database
+        // refusing to delete anything that is live -- a rule that cannot drift
+        // from the surface it protects -- rather than a second scope somebody
+        // would end up granting alongside the first anyway.
+        requireOperatorScope(actor.scopes, 'catalog:author')
+        await deleteCatalogEntry(db, actor.operatorId, id, key)
+        return ok(`Entry "${key}" deleted, with its days, blocks and text.`)
       }),
   )
 

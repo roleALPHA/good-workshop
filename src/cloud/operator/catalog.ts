@@ -169,6 +169,35 @@ export async function setCatalogStatus(
   ])
 }
 
+/**
+ * Einen Eintrag wieder loswerden -- mit allem, was an ihm hängt.
+ *
+ * Die Funktion refuses an entry that is still live in any language: a
+ * published entry with a slug holds a public address, and letting it vanish is
+ * not undoable. Withdrawing first makes that a deliberate second act. She also
+ * refuses an id that names nothing rather than reporting success, because
+ * "deleted" on a mistyped id is how somebody stops looking.
+ *
+ * `key` is not redundant with `id`. It is the same idea as the digits on a
+ * staged action in ./pending.ts: the caller has to echo back the identity it
+ * was shown. An id alone is what gets copied out of the wrong row of a long
+ * listing, and there is no undo behind this call.
+ *
+ * Why the database does the cascade and not this file: `catalog_text` is
+ * polymorphic, and the `catalog_forget_text` triggers are the only thing that
+ * clears the text of an entry, its days and its blocks. A row left behind
+ * still holds its slug and would collide with the next entry that wanted that
+ * address.
+ */
+export async function deleteCatalogEntry(
+  db: Db,
+  operatorId: string,
+  id: string,
+  key: string,
+): Promise<void> {
+  await db.query('select app.op_catalog_delete_entry($1, $2, $3)', [operatorId, id, key])
+}
+
 export async function saveCatalogFacet(
   db: Db,
   operatorId: string,
