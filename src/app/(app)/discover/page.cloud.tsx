@@ -58,10 +58,15 @@ export default async function DiscoverPage({
       <h1 className="text-2xl font-semibold tracking-tight">{t('title')}</h1>
       <p className="mt-2 max-w-2xl text-[16px] text-[var(--fg-muted)]">{t('lead')}</p>
 
-      {/* No filters to offer when the vocabulary is empty, which is what an
-          unconfigured catalogue looks like. Rendering the heading and nothing
-          under it would be a control that does nothing. */}
-      {facets.length > 0 && <DiscoverFilters facets={facets} params={params} query={query} />}
+      {/* Gated on the catalogue existing, NOT on the vocabulary having values.
+          It used to be `facets.length > 0`, on the reasoning that a filter
+          heading with nothing under it is a control that does nothing -- true
+          of the chips, and wrong about everything beside them. Group size,
+          time available and the search box live in the same component and have
+          nothing to do with the facet vocabulary, so a catalogue whose
+          vocabulary happened to be empty lost all three. The chips take care
+          of themselves: `facets.map` over an empty list renders nothing. */}
+      {catalog.configured && <DiscoverFilters facets={facets} params={params} query={query} />}
 
       {page.items.length === 0 ? (
         <Empty filtered={isFiltered(query)} />

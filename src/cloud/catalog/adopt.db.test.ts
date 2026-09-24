@@ -138,10 +138,27 @@ const ODD_ENTRY: EntryDetail = {
   ],
 }
 
+/**
+ * An entry somebody saved and never gave a structure to.
+ *
+ * It is what `save_catalog_entry` alone produces, and two of them stood live
+ * before the guard existed. Adopting it must refuse rather than hand somebody
+ * an empty workshop and call it a success.
+ */
+const HOLLOW_ENTRY: EntryDetail = {
+  ...BLOCK_ENTRY,
+  id: randomUUID(),
+  name: 'Nur Prosa',
+  slug: null,
+  dayCount: 0,
+  days: [],
+}
+
 const ENTRIES = new Map([
   [CATALOGUE.id, CATALOGUE],
   [BLOCK_ENTRY.id, BLOCK_ENTRY],
   [ODD_ENTRY.id, ODD_ENTRY],
+  [HOLLOW_ENTRY.id, HOLLOW_ENTRY],
 ])
 
 vi.mock('@gw/catalog', () => ({
@@ -513,6 +530,30 @@ describe('adopting a one-day entry into a day', () => {
         target: { kind: 'day', workshopId, dayId },
       }),
     ).rejects.toThrow()
+  })
+
+  it('refuses an entry that has no days, rather than making an empty workshop', async () => {
+    // The failure this test exists for: `save_catalog_entry` writes the prose
+    // and no structure, and before the guard the adoption created a workshop,
+    // wrote nothing into it and reported success. Somebody clicked through to
+    // an empty agenda.
+    const tenantId = TENANTS[0]!
+    const rooms = fakeRooms()
+
+    await expect(
+      adoptEntry(as(tenantId), rooms.editor, {
+        entryId: HOLLOW_ENTRY.id,
+        locale: 'de',
+        target: { kind: 'new' },
+      }),
+    ).rejects.toBeInstanceOf(NotFoundError)
+
+    const { rows } = await ops.query<{ n: number }>(
+      `select count(*)::int as n from workshop where tenant_id = $1 and title = 'Nur Prosa'`,
+      [tenantId],
+    )
+    // And nothing was left behind: the refusal happens before the container.
+    expect(rows[0]?.n).toBe(0)
   })
 
   it('can make a workshop of its own for somebody who has none', async () => {

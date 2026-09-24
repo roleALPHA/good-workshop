@@ -93,6 +93,15 @@ export async function adoptEntry(
   const entry = await catalog.getEntry(input.entryId, input.locale)
   if (!entry) throw new NotFoundError()
 
+  // An entry with no days at all is one somebody saved and never gave a
+  // structure to -- `save_catalog_entry` writes the prose, `set_catalog_blocks`
+  // writes the agenda, and the second call is easy to forget. Adopting one used
+  // to create a workshop, write nothing into it and report success; somebody
+  // then clicked through to an empty agenda. The database refuses to publish
+  // such an entry now (0028), and this is the other half: an entry that slipped
+  // through, or was published before the guard, is not adoptable either.
+  if (entry.days.length === 0) throw new NotFoundError()
+
   const intoOneDay = input.target.kind === 'day'
   if (intoOneDay && entry.days.length !== 1) {
     // See AdoptTarget: flattening is worse than refusing, and the screens only

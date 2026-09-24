@@ -1,5 +1,6 @@
 import { z } from 'zod'
 import { LOCALES } from '@/i18n/config'
+import { BUILTIN_MODULE_TYPES } from '@/domain/moduleType/builtins'
 import type { McpServer } from '@modelcontextprotocol/sdk/server/mcp.js'
 import { fail, ok } from '@/server/mcp/respond'
 import { opGuarded } from './mcp-respond'
@@ -455,13 +456,60 @@ export function registerOperatorTools(server: McpServer, actor: OperatorActor): 
   )
 
   server.registerTool(
+    'list_catalog_block_types',
+    {
+      title: 'List the block types an entry is built from',
+      description:
+        'The vocabulary a catalogue entry is written in, and the one thing the authoring ' +
+        'tools here could not tell you before: which `moduleTypeKey` values exist and which ' +
+        '`fields` each of them accepts. Read this BEFORE set_catalog_blocks -- an unknown key ' +
+        'is not refused on the way in, it arrives in somebody’s agenda as a plain note.\n\n' +
+        'HOW A CATALOGUE ENTRY IS WRITTEN, in three calls:\n' +
+        '1. save_catalog_entry -- the name, the summary, the prose, the advertised duration, ' +
+        'the group size, the tags. This writes NO agenda.\n' +
+        '2. set_catalog_blocks -- the days and the steps. A building block is ONE day holding ' +
+        'ONE cluster with its steps inside; a programme like an Open Space is several days. ' +
+        'Each step is a module naming a block type from this list, with its own duration and ' +
+        'its `fields` filled in -- that is what somebody gets when they adopt it.\n' +
+        '3. publish_catalog_entry -- per language, and refused while the entry has no days.\n\n' +
+        'The prose from step 1 and the steps from step 2 are different things and both belong: ' +
+        'the prose explains the method, the blocks ARE the agenda.',
+      inputSchema: {},
+    },
+    async () =>
+      opGuarded(async () => {
+        requireOperatorScope(actor.scopes, 'ops:read')
+        // The shipped built-ins, not a tenant's table. Every workspace is
+        // seeded with exactly these, and the catalogue resolves a key against
+        // the ADOPTING tenant -- so these are the keys that are safe to write.
+        // A workspace may have added its own; the catalogue cannot know them.
+        const types = BUILTIN_MODULE_TYPES.map((type) => ({
+          key: type.key,
+          name: type.name,
+          category: type.category,
+          defaultDurationMinutes: type.defaultDurationMinutes,
+          fields: Object.keys(
+            (type.jsonSchema as { properties?: Record<string, unknown> }).properties ?? {},
+          ),
+        }))
+        return ok(
+          types.map((type) => `${type.key} — ${type.name}: ${type.fields.join(', ')}`).join('\n'),
+          { blockTypes: types },
+        )
+      }),
+  )
+
+  server.registerTool(
     'save_catalog_entry',
     {
       title: 'Write a catalogue entry',
       description:
-        'Creates or replaces one entry’s own fields, whole. Keyed on `key`, so saving again ' +
-        'updates and the id stays put. Its days and blocks are set with set_catalog_blocks, ' +
-        'and it is NOT published here -- that is a separate call with a separate scope.',
+        'Creates or replaces one entry’s own fields, whole: name, summary, prose, duration, ' +
+        'group size, tags. Keyed on `key`, so saving again updates and the id stays put. ' +
+        'THIS IS STEP ONE OF TWO. It writes no days and no blocks -- an entry saved and left ' +
+        'here has no agenda, cannot be adopted and cannot be published. Follow it with ' +
+        'set_catalog_blocks, which writes the steps somebody actually gets when they adopt it. ' +
+        'Publishing is a third call with a scope of its own.',
       inputSchema: {
         key: z.string().regex(/^[a-z][a-z0-9_]{1,48}$/u),
         durationMinutes: z
@@ -488,7 +536,18 @@ export function registerOperatorTools(server: McpServer, actor: OperatorActor): 
       opGuarded(async () => {
         requireOperatorScope(actor.scopes, 'catalog:author')
         const id = await saveCatalogEntry(db, actor.operatorId, draft)
-        return ok(`Entry "${draft.key}" saved.`, { id })
+        // Say what is still missing rather than leaving it to be remembered.
+        // Two entries went live with no agenda at all because the second call
+        // was easy to forget and nothing here mentioned it afterwards.
+        const [saved] = await listCatalogEntries(db, id)
+        const days = saved?.days.length ?? 0
+        return ok(
+          days === 0
+            ? `Entry "${draft.key}" saved. It has NO days yet: call set_catalog_blocks with its ` +
+                'steps, or it cannot be published or adopted.'
+            : `Entry "${draft.key}" saved, ${days} day(s) already written.`,
+          { id, days },
+        )
       }),
   )
 
@@ -500,8 +559,8 @@ export function registerOperatorTools(server: McpServer, actor: OperatorActor): 
         'Every day of an entry, with its blocks, in one call -- the catalogue’s apply_agenda. ' +
         'Replaces what is there. Every entry has at least one day: a building block is one day ' +
         'holding one cluster with its steps inside, a programme is several. A module names its ' +
-        'BLOCK TYPE by key (from list_module_types on the tenant side: check_in, group_work, ' +
-        'break …) and the cluster it sits in by that cluster’s ordinal on the same day. ' +
+        'BLOCK TYPE by key -- read list_catalog_block_types for the keys and the fields each ' +
+        'one takes -- and the cluster it sits in by that cluster’s ordinal on the same day. ' +
         '`fields` is what the adopted block starts with in that type’s own fields -- prompt, ' +
         'materials, participation and the rest -- and it is the reason an adopted block is a ' +
         'filled-in step rather than a wall of prose.',
@@ -586,7 +645,8 @@ export function registerOperatorTools(server: McpServer, actor: OperatorActor): 
         'a slug in any language needs one in every language it is published in -- that is what ' +
         'keeps a 404 out of the sitemap. An entry with no slug at all publishes freely: it is ' +
         'then visible in Discover and has no public page, which is what most of the catalogue ' +
-        'is.',
+        'is. An entry with no days at all is refused: what is live has to be something ' +
+        'somebody can adopt.',
       inputSchema: {
         id: Id,
         locales: z.array(z.enum(LOCALES)).optional(),
