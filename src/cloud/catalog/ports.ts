@@ -3,7 +3,7 @@ import type { Locale } from '@/i18n/config'
 /**
  * What Discover needs from the catalogue, and nothing about where it is kept.
  *
- * The curated methods and designs, their four language versions and the
+ * The curated catalogue entries, their four language versions and the
  * vocabulary they are filtered by live in the private repository: they are the
  * commercial asset, and they are authored at runtime rather than released. This
  * repository holds the contract, everything that reads through it -- the
