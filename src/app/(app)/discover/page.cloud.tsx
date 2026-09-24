@@ -3,12 +3,7 @@ import Link from 'next/link'
 import type { Route } from 'next'
 import { getLocale, getTranslations } from 'next-intl/server'
 import { catalog } from '@gw/catalog'
-import {
-  isFiltered,
-  kindHref,
-  queryFromParams,
-  type SearchParams,
-} from '@/cloud/catalog/query'
+import { isFiltered, kindHref, queryFromParams, type SearchParams } from '@/cloud/catalog/query'
 import type { EntryKind } from '@/cloud/catalog/ports'
 import type { Locale } from '@/i18n/config'
 import { DiscoverFilters } from './filters'
@@ -174,10 +169,7 @@ async function Empty({
       <Card title={t('emptyDesignsTitle')}>
         <p className="mt-2 text-[15px] text-[var(--fg-muted)]">
           {t('emptyDesignsBody')}{' '}
-          <Link
-            href={kindHref(params, 'method') as Route}
-            className="underline underline-offset-2"
-          >
+          <Link href={kindHref(params, 'method') as Route} className="underline underline-offset-2">
             {t('emptyDesignsLink')}
           </Link>
         </p>

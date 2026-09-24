@@ -128,10 +128,7 @@ export async function loadEntriesAction(
 
   try {
     const locale = (await getLocale()) as Locale
-    const [facets, t] = await Promise.all([
-      catalog.listFacets(locale),
-      getTranslations('discover'),
-    ])
+    const [facets, t] = await Promise.all([catalog.listFacets(locale), getTranslations('discover')])
     const query = queryFromParams(params, locale, facets)
     const page = await catalog.listEntries({ ...query, cursor: parsed.data })
     // Worded here, not in the browser: a label function cannot cross into a
@@ -202,9 +199,7 @@ const AdoptMethod = z.union([
   }),
 ])
 
-export async function adoptMethodAction(
-  raw: unknown,
-): Promise<ActionResult<AdoptMethodResult>> {
+export async function adoptMethodAction(raw: unknown): Promise<ActionResult<AdoptMethodResult>> {
   const actor = await currentActor()
   if (!actor) return fail('unauthenticated', 'unauthenticated')
 

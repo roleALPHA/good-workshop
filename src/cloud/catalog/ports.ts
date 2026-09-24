@@ -137,8 +137,7 @@ export type DesignSummary = CatalogSummary & {
  * stops a design's day count being read off a method.
  */
 export type CatalogEntry =
-  | ({ kind: 'design' } & DesignSummary)
-  | ({ kind: 'method' } & MethodSummary)
+  ({ kind: 'design' } & DesignSummary) | ({ kind: 'method' } & MethodSummary)
 
 /**
  * A block of a design, in the shape the adopter writes it.

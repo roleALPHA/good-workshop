@@ -410,10 +410,9 @@ describe('adopting a method', () => {
     })
 
     expect(result.degraded).toBe(1)
-    const { rows } = await ops.query<{ key: string }>(
-      'select key from module_type where id = $1',
-      [rooms.blocksOf(dayId)[0]?.moduleTypeId],
-    )
+    const { rows } = await ops.query<{ key: string }>('select key from module_type where id = $1', [
+      rooms.blocksOf(dayId)[0]?.moduleTypeId,
+    ])
     expect(rows[0]?.key).toBe('note')
   })
 
