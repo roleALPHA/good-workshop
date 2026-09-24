@@ -13,7 +13,7 @@ import type { EntryView } from './entry-view'
  *
  * The only island on this screen, and it exists for one reason: the next page
  * has to arrive without a navigation. Everything that decides WHAT is in the
- * list -- the filters, the kind -- stays in the address and stays on the
+ * list -- the filters -- stays in the address and stays on the
  * server, so the first page, the filters and every link still work before this
  * component has hydrated.
  *
@@ -101,7 +101,7 @@ export function EntryList({
     <>
       <ul className="mt-8 divide-y divide-[var(--border)] rounded border border-[var(--border)]">
         {entries.map((entry) => (
-          <EntryRow key={`${entry.kind}-${entry.id}`} entry={entry} />
+          <EntryRow key={entry.id} entry={entry} />
         ))}
       </ul>
 
@@ -131,18 +131,13 @@ export function EntryList({
 function EntryRow({ entry }: { entry: EntryView }) {
   return (
     <li className="p-4">
-      <p className="flex flex-wrap items-baseline gap-x-3 gap-y-1">
+      <p>
         <Link
           href={entry.href as Route}
           className="text-[17px] font-medium underline-offset-2 hover:underline"
         >
           {entry.name}
         </Link>
-        {/* Which of the two this is, said in words inside the chip. Never a
-            colour on its own -- docs/ui-conventions.md. */}
-        <span className="rounded-full border border-[var(--border-strong)] px-2 py-0.5 text-[13px] text-[var(--fg-muted)]">
-          {entry.kindLabel}
-        </span>
       </p>
 
       <p className="mt-1 max-w-2xl text-[15px] text-[var(--fg-muted)]">{entry.summary}</p>

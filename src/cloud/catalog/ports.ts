@@ -56,9 +56,6 @@ export type Facet = {
   values: FacetValue[]
 }
 
-/** Which of the two things in the catalogue a row is. */
-export type EntryKind = 'design' | 'method'
-
 /** What both lists are narrowed by. Empty means "everything published". */
 export type CatalogQuery = {
   locale: Locale
@@ -77,20 +74,22 @@ export type CatalogQuery = {
   /** The time available, in minutes. Matches what fits inside it. */
   maxMinutes?: number
   search?: string
-  /**
-   * Narrow a mixed list to one sort of entry. Absent means both.
-   *
-   * Not a facet, because it is not a property of an entry that an operator
-   * authors -- it is which table the row came out of. A facet whose values
-   * were "design" and "method" would be retirable, which this is not.
-   */
-  kind?: EntryKind
   cursor?: string | null
   limit?: number
 }
 
-/** Shared by the two summaries: what a row in a list shows. */
-type CatalogSummary = {
+/**
+ * What a row in a list shows.
+ *
+ * One shape, because there is only one sort of entry. It used to be two --
+ * `MethodSummary` with a slug and `DesignSummary` with a day count -- on the
+ * belief that a method is a single block and a design a whole workshop. Open
+ * Space and an RTSC conference run for days and are methods by any reading, and
+ * once adopting became a copy rather than a reference, nothing structural was
+ * left between them. What remains is a property: an entry with a slug has a
+ * public page, an entry without one is seen only behind a session.
+ */
+export type EntrySummary = {
   id: string
   name: string
   summary: string
@@ -103,50 +102,32 @@ type CatalogSummary = {
   facets: FacetValue[]
   minParticipants: number | null
   maxParticipants: number | null
-}
-
-/**
- * A method has a slug; a design does not.
- *
- * That asymmetry is the rule "a public method page never shows design details"
- * turned into a fact of the types. A method is published to the open web and
- * needs a readable address. A design is only ever seen behind a session, so it
- * is addressed by id -- and there is therefore no design URL in existence to
- * leak into a page, a sitemap or a link, whatever anybody writes later.
- */
-export type MethodSummary = CatalogSummary & { slug: string; durationMinutes: number }
-
-export type MethodDetail = MethodSummary & {
-  /** The body, as Markdown. Rendered by the page; never trusted as HTML. */
-  body: string
-  /** The block type this method becomes in an agenda, BY KEY -- see adopt.ts. */
-  moduleTypeKey: string
-}
-
-export type DesignSummary = CatalogSummary & {
-  /** What the design is advertised at, not the sum of its blocks. See the plan. */
+  /** What the entry is advertised at, not the sum of its blocks. Authored. */
   durationMinutes: number
+  /** Always at least one. A single day is what a building block looks like. */
   dayCount: number
+  /**
+   * The public address in the reader's language, or null.
+   *
+   * Null is the ordinary case and not a gap: most of the catalogue is read
+   * behind a session, and only an entry somebody decided to publish to the
+   * open web carries one. A slug is unique per LANGUAGE
+   * (`catalog_text_slug_unique`), which is why the signed-in screens address an
+   * entry by id -- the language there comes from the person rather than from
+   * the path, so the same address would open a different entry for a colleague
+   * reading in another language.
+   */
+  slug: string | null
 }
 
 /**
- * A row of the mixed list, carrying which sort it is.
- *
- * A discriminated union rather than an optional `dayCount`, so that the row
- * component switches on `kind` and the compiler -- not a reviewer -- is what
- * stops a design's day count being read off a method.
- */
-export type CatalogEntry =
-  ({ kind: 'design' } & DesignSummary) | ({ kind: 'method' } & MethodSummary)
-
-/**
- * A block of a design, in the shape the adopter writes it.
+ * A block of an entry, in the shape the adopter writes it.
  *
  * Close to `BlockFields` in src/server/mcp/tools.ts on purpose: both describe
  * "a block somebody is about to create", and the adopter hands these to the
  * same `addModuleBlock` the MCP tools use.
  */
-export type DesignBlock = {
+export type EntryBlock = {
   kind: 'module'
   /** Resolved against the TARGET tenant's module_type by key, never by id. */
   moduleTypeKey: string
@@ -156,18 +137,29 @@ export type DesignBlock = {
   parked: boolean
   /** The block's type-specific description, as Markdown. Converted on the way in. */
   description: string
+  /**
+   * What the adopted block starts with in its type-specific fields.
+   *
+   * The reason this rebuild happened: a block type has `prompt`, `materials`,
+   * `participation`, `timebox_per_person_seconds` and the rest, and the
+   * catalogue had nowhere to put them. Validated against the ADOPTING tenant's
+   * `module_type.json_schema` and not here -- a workspace may have customised
+   * the type, and fields its schema refuses arrive empty and counted rather
+   * than failing the whole adoption.
+   */
+  fields: Record<string, unknown>
 }
 
-export type DesignCluster = {
+export type EntryCluster = {
   kind: 'cluster'
   title: string
   /** A token from the curated palette, never a hex value. */
   color: string | null
   pinnedStartMinute: number | null
-  children: DesignBlock[]
+  children: EntryBlock[]
 }
 
-export type DesignDay = {
+export type EntryDay = {
   title: string
   /**
    * The minute of day this day is written to start at.
@@ -177,12 +169,14 @@ export type DesignDay = {
    * day's start would shift every unpinned block while the pins stayed put.
    */
   startMinute: number
-  items: (DesignBlock | DesignCluster)[]
+  items: (EntryBlock | EntryCluster)[]
 }
 
-export type DesignDetail = DesignSummary & {
+export type EntryDetail = EntrySummary & {
+  /** The long prose of a public entry. Markdown; rendered, never trusted as HTML. */
   body: string
-  days: DesignDay[]
+  /** One or more. The day is the grouping; an entry without days has none. */
+  days: EntryDay[]
 }
 
 export type CatalogPort = {
@@ -191,7 +185,7 @@ export type CatalogPort = {
    *
    * The screens render an empty catalogue perfectly well, so this is not about
    * failing gracefully. It is about not offering a door into a room that does
-   * not exist: the header link and the "start from a design" choice are hidden
+   * not exist: the header link and the "start from an entry" choice are hidden
    * when it is false.
    */
   readonly configured: boolean
@@ -199,47 +193,48 @@ export type CatalogPort = {
   listFacets(locale: Locale): Promise<Facet[]>
 
   /**
-   * Designs and methods in one list, newest first.
+   * The catalogue, newest first.
    *
-   * One query rather than two merged here, because the merge is a sort across
-   * two tables and the cursor has to survive it. Paging two lists separately
-   * and interleaving them in the reader would put page two's oldest row above
-   * page one's newest, and there is no way to mint a cursor for a row the
-   * caller decided not to show yet.
+   * One list and one query. It was briefly a `union all` across two tables,
+   * back when a method and a design were different things -- and the cursor was
+   * the reason that could not simply be two queries merged in the reader: a
+   * cursor names a position in ONE ordering, so paging two lists separately
+   * would repeat a row or skip one at every page boundary.
    */
-  listEntries(query: CatalogQuery): Promise<Page<CatalogEntry>>
-
-  listMethods(query: CatalogQuery): Promise<Page<MethodSummary>>
-  getMethod(slug: string, locale: Locale): Promise<MethodDetail | null>
+  listEntries(query: CatalogQuery): Promise<Page<EntrySummary>>
 
   /**
-   * The same method, addressed the way the signed-in app addresses one.
+   * One entry by id, for the screens behind a session.
    *
-   * By id, and deliberately not by the slug `getMethod` takes. A slug is
-   * unique per LANGUAGE (`catalog_text_slug_unique`), so two methods may hold
-   * the same one in different languages -- on the public site that is safe,
-   * because the language is part of the path, and behind a session it is not:
-   * the language comes from the person, so the same address would resolve to
-   * a different method for a colleague. It also answers for a method this
-   * language has no translation of, falling back to English with
-   * `translated: false`, where `getMethod` can only answer 404.
+   * By id and never by slug, because a slug is unique per LANGUAGE: the same
+   * address would open a different entry for a colleague reading in another
+   * language, with a 200 and nothing to notice it by. It also answers for an
+   * entry this language has no translation of, falling back to English with
+   * `translated: false`.
    */
-  getMethodById(id: string, locale: Locale): Promise<MethodDetail | null>
-
-  listDesigns(query: CatalogQuery): Promise<Page<DesignSummary>>
-  getDesign(id: string, locale: Locale): Promise<DesignDetail | null>
+  getEntry(id: string, locale: Locale): Promise<EntryDetail | null>
 
   /**
-   * Every published method's address, by method and language.
+   * One entry by its public address, for the open web.
    *
-   * Per language and not one list, because publication is per language: a
-   * method that exists only in English has one address, not four. Naming a
+   * The language is part of the path there, so slug and language together are
+   * unambiguous. Unpublished, withdrawn, or published in another language are
+   * all "not here": a soft 404 is how an index fills with addresses that were
+   * never real.
+   */
+  getEntryBySlug(slug: string, locale: Locale): Promise<EntryDetail | null>
+
+  /**
+   * Every published address, by entry and language.
+   *
+   * Per language and not one list, because publication is per language: an
+   * entry that exists only in English has one address, not four. Naming a
    * French URL that answers 404 -- or worse, answers in English -- is the
    * duplicate the whole routing scheme exists to avoid.
    *
    * `id` is what makes this answer two questions with one query: the sitemap
-   * groups by it to emit one entry per address, and a method page groups by it
+   * groups by it to emit one entry per address, and an entry page groups by it
    * to name the languages it is actually published in.
    */
-  publishedMethodSlugs(): Promise<{ id: string; locale: Locale; slug: string }[]>
+  publishedEntrySlugs(): Promise<{ id: string; locale: Locale; slug: string }[]>
 }

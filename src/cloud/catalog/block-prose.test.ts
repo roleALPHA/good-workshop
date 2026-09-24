@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest'
-import { descriptionMarkdown } from './method-body'
+import { blockMarkdown } from './block-prose'
 
 /**
  * Two Markdown dialects that do not line up, as a table.
@@ -17,26 +17,7 @@ import { descriptionMarkdown } from './method-body'
  * agenda, which is the worst place to find out.
  */
 
-const prose = (body: string, summary = 'A summary.') => descriptionMarkdown({ body, summary })
-
-describe('choosing the prose', () => {
-  it('prefers the body', () => {
-    expect(prose('The long form.', 'A summary.')).toBe('The long form.')
-  })
-
-  it('falls back to the summary, which is all a seeded method has', () => {
-    // The fifteen methods in the library carry `name` and `summary` and no
-    // body at all -- the seed writes its prose into `summary`. Without this
-    // fallback, adopting any of them would produce an empty description and
-    // the feature would be a no-op for the entire library.
-    expect(prose('', 'A summary.')).toBe('A summary.')
-    expect(prose('   \n  ', 'A summary.')).toBe('A summary.')
-  })
-
-  it('is empty when there is no prose at all', () => {
-    expect(prose('', '')).toBe('')
-  })
-})
+const prose = (markdown: string) => blockMarkdown(markdown)
 
 describe('what the block description dialect can carry', () => {
   it('turns a heading into a bold line, because there are no headings', () => {

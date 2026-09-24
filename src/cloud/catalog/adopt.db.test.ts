@@ -4,7 +4,7 @@ import * as Y from 'yjs'
 import { afterAll, beforeAll, describe, expect, it, vi } from 'vitest'
 import { withTenant, type Actor } from '@/server/db'
 import { seedBuiltinModuleTypes } from '@/domain/moduleType/seed'
-import type { DesignDetail, MethodDetail } from './ports'
+import type { EntryDetail } from './ports'
 
 /**
  * Adopting a design, against a real database and two tenants.
@@ -18,14 +18,14 @@ import type { DesignDetail, MethodDetail } from './ports'
  * renders, the blocks look right, and the write fails only for whoever adopts
  * second.
  *
- * The room is faked. What `adoptDesign` does INSIDE a room -- and the fact
+ * The room is faked. What `adoptEntry` does INSIDE a room -- and the fact
  * that a relational write there would be erased at the next materialise -- is
  * covered by src/server/collab/mcp-write.db.test.ts against a real server.
  * What is faked here is the transport, not the decision: the edit runs against
  * a real Y.Doc and the blocks it wrote are read back out of it.
  */
 
-const CATALOGUE: DesignDetail = {
+const CATALOGUE: EntryDetail = {
   id: randomUUID(),
   name: 'Strategietag',
   summary: 'Ein Tag.',
@@ -36,6 +36,7 @@ const CATALOGUE: DesignDetail = {
   maxParticipants: null,
   durationMinutes: 240,
   dayCount: 1,
+  slug: null,
   days: [
     {
       title: 'Tag 1',
@@ -55,6 +56,7 @@ const CATALOGUE: DesignDetail = {
               pinnedStartMinute: null,
               parked: false,
               description: 'Alle kommen einmal zu Wort.',
+              fields: {},
             },
           ],
         },
@@ -66,6 +68,7 @@ const CATALOGUE: DesignDetail = {
           pinnedStartMinute: null,
           parked: false,
           description: '',
+          fields: {},
         },
       ],
     },
@@ -73,14 +76,12 @@ const CATALOGUE: DesignDetail = {
 }
 
 /**
- * Two methods: one whose block type every workspace has, one whose it does not.
- *
- * `body` is empty and the prose sits in `summary`, because that is the shape
- * every method in the shipped library actually has -- see method-body.ts.
+ * A one-day entry -- what a building block looks like: one day, one cluster,
+ * the steps inside it. Its block carries authored fields, which is the thing
+ * `catalog_entry_block.json_desc` exists for.
  */
-const METHOD: MethodDetail = {
+const BLOCK_ENTRY: EntryDetail = {
   id: randomUUID(),
-  slug: 'check-in',
   name: 'Check-in',
   summary: 'Alle kommen einmal zu Wort.',
   body: '',
@@ -89,31 +90,65 @@ const METHOD: MethodDetail = {
   minParticipants: null,
   maxParticipants: null,
   durationMinutes: 15,
-  moduleTypeKey: 'check_in',
+  dayCount: 1,
+  slug: 'check-in',
+  days: [
+    {
+      title: '',
+      startMinute: 540,
+      items: [
+        {
+          kind: 'module',
+          moduleTypeKey: 'check_in',
+          title: 'Check-in',
+          durationMinutes: 15,
+          pinnedStartMinute: null,
+          parked: false,
+          description: '',
+          fields: { participation: 'plenary' },
+        },
+      ],
+    },
+  ],
 }
 
-const ODD_METHOD: MethodDetail = {
-  ...METHOD,
+/** The same, for a block type no workspace has. */
+const ODD_ENTRY: EntryDetail = {
+  ...BLOCK_ENTRY,
   id: randomUUID(),
-  slug: 'erfunden',
   name: 'Etwas Erfundenes',
-  summary: '',
-  moduleTypeKey: 'nonesuch',
+  slug: null,
+  days: [
+    {
+      title: '',
+      startMinute: 540,
+      items: [
+        {
+          kind: 'module',
+          moduleTypeKey: 'nonesuch',
+          title: 'Etwas Erfundenes',
+          durationMinutes: 30,
+          pinnedStartMinute: null,
+          parked: false,
+          description: '',
+          fields: {},
+        },
+      ],
+    },
+  ],
 }
 
-const METHODS = new Map([
-  [METHOD.id, METHOD],
-  [ODD_METHOD.id, ODD_METHOD],
+const ENTRIES = new Map([
+  [CATALOGUE.id, CATALOGUE],
+  [BLOCK_ENTRY.id, BLOCK_ENTRY],
+  [ODD_ENTRY.id, ODD_ENTRY],
 ])
 
 vi.mock('@gw/catalog', () => ({
-  catalog: {
-    getDesign: async () => CATALOGUE,
-    getMethodById: async (id: string) => METHODS.get(id) ?? null,
-  },
+  catalog: { getEntry: async (id: string) => ENTRIES.get(id) ?? null },
 }))
 
-const { adoptDesign, adoptMethod } = await import('./adopt')
+const { adoptEntry } = await import('./adopt')
 const { NotFoundError } = await import('@/domain/agenda/access')
 
 const ops = new pg.Client({ connectionString: process.env.OPS_DATABASE_URL })
@@ -189,8 +224,8 @@ describe('adopting a design', () => {
   it('creates the workshop in the adopting tenant, and nowhere else', async () => {
     const [a, b] = TENANTS as [string, string]
     const rooms = fakeRooms()
-    const result = await adoptDesign(as(a), rooms.editor, {
-      designId: CATALOGUE.id,
+    const result = await adoptEntry(as(a), rooms.editor, {
+      entryId: CATALOGUE.id,
       locale: 'de',
       target: { kind: 'new' },
     })
@@ -208,10 +243,10 @@ describe('adopting a design', () => {
     expect((seenByB as unknown as { rows: unknown[] }).rows).toHaveLength(0)
   })
 
-  it('names the workshop after the design when nobody names it', async () => {
+  it('names the workshop after the entry when nobody names it', async () => {
     const rooms = fakeRooms()
-    const result = await adoptDesign(as(TENANTS[0]!), rooms.editor, {
-      designId: CATALOGUE.id,
+    const result = await adoptEntry(as(TENANTS[0]!), rooms.editor, {
+      entryId: CATALOGUE.id,
       locale: 'de',
       target: { kind: 'new' },
     })
@@ -228,8 +263,8 @@ describe('adopting a design', () => {
     const typeIds: Record<string, string[]> = {}
     for (const tenantId of TENANTS) {
       const rooms = fakeRooms()
-      await adoptDesign(as(tenantId), rooms.editor, {
-        designId: CATALOGUE.id,
+      await adoptEntry(as(tenantId), rooms.editor, {
+        entryId: CATALOGUE.id,
         locale: 'de',
         target: { kind: 'new' },
       })
@@ -254,12 +289,12 @@ describe('adopting a design', () => {
     expect(await keysOf(typeIds[a]!)).toEqual(await keysOf(typeIds[b]!))
   })
 
-  it('lets an unknown method arrive as a note rather than losing the design', async () => {
+  it('lets an unknown block type arrive as a note rather than losing the entry', async () => {
     // The opposite of apply_agenda, on purpose: there the caller can fix its
     // input, here the caller cannot fix the catalogue.
     const rooms = fakeRooms()
-    const result = await adoptDesign(as(TENANTS[0]!), rooms.editor, {
-      designId: CATALOGUE.id,
+    const result = await adoptEntry(as(TENANTS[0]!), rooms.editor, {
+      entryId: CATALOGUE.id,
       locale: 'de',
       target: { kind: 'new' },
     })
@@ -279,8 +314,8 @@ describe('adopting a design', () => {
 
   it('appends days to a workshop that already has some', async () => {
     const rooms = fakeRooms()
-    const first = await adoptDesign(as(TENANTS[0]!), rooms.editor, {
-      designId: CATALOGUE.id,
+    const first = await adoptEntry(as(TENANTS[0]!), rooms.editor, {
+      entryId: CATALOGUE.id,
       locale: 'de',
       target: { kind: 'new' },
     })
@@ -290,8 +325,8 @@ describe('adopting a design', () => {
     )
 
     const again = fakeRooms()
-    const second = await adoptDesign(as(TENANTS[0]!), again.editor, {
-      designId: CATALOGUE.id,
+    const second = await adoptEntry(as(TENANTS[0]!), again.editor, {
+      entryId: CATALOGUE.id,
       locale: 'de',
       target: { kind: 'append', workshopId: first.workshopId },
     })
@@ -314,12 +349,12 @@ describe('adopting a design', () => {
  * different set of hazards from a design, which only ever writes into days it
  * created moments earlier.
  */
-describe('adopting a method', () => {
+describe('adopting a one-day entry into a day', () => {
   /** A workshop with one day, made the way the app makes one. */
   async function aWorkshop(tenantId: string) {
     const rooms = fakeRooms()
-    const result = await adoptDesign(as(tenantId), rooms.editor, {
-      designId: CATALOGUE.id,
+    const result = await adoptEntry(as(tenantId), rooms.editor, {
+      entryId: CATALOGUE.id,
       locale: 'de',
       target: { kind: 'new' },
     })
@@ -331,19 +366,19 @@ describe('adopting a method', () => {
     const { workshopId, dayId } = await aWorkshop(tenantId)
     const rooms = fakeRooms()
 
-    const result = await adoptMethod(as(tenantId), rooms.editor, {
-      methodId: METHOD.id,
+    const result = await adoptEntry(as(tenantId), rooms.editor, {
+      entryId: BLOCK_ENTRY.id,
       locale: 'de',
       target: { kind: 'day', workshopId, dayId },
     })
 
-    expect(result).toMatchObject({ workshopId, dayId, degraded: 0, descDropped: 0 })
+    expect(result).toMatchObject({ workshopId, dayIds: [dayId], degraded: 0, descsDropped: 0 })
     const [block] = rooms.blocksOf(dayId)
     expect(block).toMatchObject({ title: 'Check-in', durationMinutes: 15, parentId: null })
   })
 
   it('leaves the day it was given exactly as it found it', async () => {
-    // THE assertion of this block. `adoptDesign` sets the day's title and
+    // THE assertion of this block. Adopting into a NEW day sets its title and
     // start minute, which is harmless for a day it created seconds ago and
     // destructive for one somebody is using: pins resolve against their own
     // day's start, so moving it makes every pinned block jump while the rest
@@ -352,8 +387,8 @@ describe('adopting a method', () => {
     const { workshopId, dayId } = await aWorkshop(tenantId)
     const rooms = fakeRooms()
 
-    await adoptMethod(as(tenantId), rooms.editor, {
-      methodId: METHOD.id,
+    await adoptEntry(as(tenantId), rooms.editor, {
+      entryId: BLOCK_ENTRY.id,
       locale: 'de',
       target: { kind: 'day', workshopId, dayId },
     })
@@ -361,20 +396,21 @@ describe('adopting a method', () => {
     expect(rooms.dayOf(dayId)).toEqual({})
   })
 
-  it('carries the prose a method actually has', async () => {
-    // The library's methods have an empty `body` and their prose in `summary`.
+  it('carries the authored fields into the block', async () => {
+    // The point of the rebuild: a block arrives with its type's own fields
+    // filled in, not with marketing prose in the one free-text field.
     const tenantId = TENANTS[0]!
     const { workshopId, dayId } = await aWorkshop(tenantId)
     const rooms = fakeRooms()
 
-    await adoptMethod(as(tenantId), rooms.editor, {
-      methodId: METHOD.id,
+    await adoptEntry(as(tenantId), rooms.editor, {
+      entryId: BLOCK_ENTRY.id,
       locale: 'de',
       target: { kind: 'day', workshopId, dayId },
     })
 
     const [block] = rooms.blocksOf(dayId)
-    expect(JSON.stringify(block)).toContain('Alle kommen einmal zu Wort.')
+    expect(JSON.stringify(block)).toContain('participation')
   })
 
   it('resolves the block type per tenant, by key and never by id', async () => {
@@ -382,8 +418,8 @@ describe('adopting a method', () => {
     for (const tenantId of TENANTS) {
       const { workshopId, dayId } = await aWorkshop(tenantId)
       const rooms = fakeRooms()
-      await adoptMethod(as(tenantId), rooms.editor, {
-        methodId: METHOD.id,
+      await adoptEntry(as(tenantId), rooms.editor, {
+        entryId: BLOCK_ENTRY.id,
         locale: 'de',
         target: { kind: 'day', workshopId, dayId },
       })
@@ -398,13 +434,13 @@ describe('adopting a method', () => {
     expect(rows.map((row) => row.key)).toEqual(['check_in'])
   })
 
-  it('lets a method whose block type is unknown here arrive as a note', async () => {
+  it('lets a block type unknown here arrive as a note', async () => {
     const tenantId = TENANTS[0]!
     const { workshopId, dayId } = await aWorkshop(tenantId)
     const rooms = fakeRooms()
 
-    const result = await adoptMethod(as(tenantId), rooms.editor, {
-      methodId: ODD_METHOD.id,
+    const result = await adoptEntry(as(tenantId), rooms.editor, {
+      entryId: ODD_ENTRY.id,
       locale: 'de',
       target: { kind: 'day', workshopId, dayId },
     })
@@ -426,8 +462,8 @@ describe('adopting a method', () => {
     const rooms = fakeRooms()
 
     await expect(
-      adoptMethod(as(tenantId), rooms.editor, {
-        methodId: METHOD.id,
+      adoptEntry(as(tenantId), rooms.editor, {
+        entryId: BLOCK_ENTRY.id,
         locale: 'de',
         target: { kind: 'day', workshopId: mine.workshopId, dayId: other.dayId },
       }),
@@ -439,22 +475,22 @@ describe('adopting a method', () => {
     const rooms = fakeRooms()
 
     await expect(
-      adoptMethod(as(TENANTS[0]!), rooms.editor, {
-        methodId: METHOD.id,
+      adoptEntry(as(TENANTS[0]!), rooms.editor, {
+        entryId: BLOCK_ENTRY.id,
         locale: 'de',
         target: { kind: 'day', workshopId: theirs.workshopId, dayId: theirs.dayId },
       }),
     ).rejects.toBeInstanceOf(NotFoundError)
   })
 
-  it('refuses a method that is not there', async () => {
+  it('refuses an entry that is not there', async () => {
     const tenantId = TENANTS[0]!
     const { workshopId, dayId } = await aWorkshop(tenantId)
     const rooms = fakeRooms()
 
     await expect(
-      adoptMethod(as(tenantId), rooms.editor, {
-        methodId: randomUUID(),
+      adoptEntry(as(tenantId), rooms.editor, {
+        entryId: randomUUID(),
         locale: 'de',
         target: { kind: 'day', workshopId, dayId },
       }),
@@ -471,8 +507,8 @@ describe('adopting a method', () => {
     const rooms = fakeRooms({ failing: () => true })
 
     await expect(
-      adoptMethod(as(tenantId), rooms.editor, {
-        methodId: METHOD.id,
+      adoptEntry(as(tenantId), rooms.editor, {
+        entryId: BLOCK_ENTRY.id,
         locale: 'de',
         target: { kind: 'day', workshopId, dayId },
       }),
@@ -483,8 +519,8 @@ describe('adopting a method', () => {
     const tenantId = TENANTS[0]!
     const rooms = fakeRooms()
 
-    const result = await adoptMethod(as(tenantId), rooms.editor, {
-      methodId: METHOD.id,
+    const result = await adoptEntry(as(tenantId), rooms.editor, {
+      entryId: BLOCK_ENTRY.id,
       locale: 'de',
       target: { kind: 'new' },
     })
@@ -494,6 +530,6 @@ describe('adopting a method', () => {
       [result.workshopId],
     )
     expect(rows[0]?.title).toBe('Check-in')
-    expect(rooms.blocksOf(result.dayId)).toHaveLength(1)
+    expect(rooms.blocksOf(result.dayIds[0]!)).toHaveLength(1)
   })
 })

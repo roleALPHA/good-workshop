@@ -32,9 +32,14 @@ export async function Methods() {
     getLocale() as Promise<Locale>,
   ])
 
-  // Everything published in this language. A directory that paged would hide
-  // half of a list somebody came here to scan.
-  const { items } = await catalog.listMethods({ locale, limit: 100 })
+  // Everything published in this language that has a public address. A
+  // directory that paged would hide half of a list somebody came here to scan.
+  //
+  // `slug` is the filter, and it is the whole rule: an entry the catalogue
+  // published without an address is readable behind a session and has no page
+  // out here. Most of the catalogue is that.
+  const page = await catalog.listEntries({ locale, limit: 100 })
+  const items = page.items.filter((entry) => entry.slug !== null)
 
   return (
     <div>
@@ -42,10 +47,10 @@ export async function Methods() {
         <JsonLd
           data={itemList(
             t('title'),
-            items.map((method) => ({
-              name: method.name,
-              description: method.summary,
-              url: methodPathFor(method.slug, locale),
+            items.map((entry) => ({
+              name: entry.name,
+              description: entry.summary,
+              url: methodPathFor(entry.slug!, locale),
             })),
           )}
         />
@@ -66,24 +71,24 @@ export async function Methods() {
         /* A list, not a grid: these are read one after another, and somebody
            arriving from a search for one of them lands on its heading. */
         <ul className="mt-10 max-w-3xl">
-          {items.map((method) => (
-            <li key={method.id} className="border-t border-[var(--border)] py-6">
+          {items.map((entry) => (
+            <li key={entry.id} className="border-t border-[var(--border)] py-6">
               <h2 className="text-xl font-semibold tracking-tight">
                 <Link
-                  href={methodPathFor(method.slug, locale) as Route}
+                  href={methodPathFor(entry.slug!, locale) as Route}
                   className="underline-offset-2 hover:underline"
                 >
-                  {method.name}
+                  {entry.name}
                 </Link>
               </h2>
               <dl className="mt-2 flex flex-wrap gap-x-6 gap-y-1 text-[14px] text-[var(--fg-subtle)]">
                 <div className="flex gap-2">
                   <dt>{t('durationLabel')}:</dt>
                   <dd className="text-[var(--fg-muted)] tabular-nums">
-                    {formatDuration(method.durationMinutes, { spaced: true })}
+                    {formatDuration(entry.durationMinutes, { spaced: true })}
                   </dd>
                 </div>
-                {method.facets.map((facet) => (
+                {entry.facets.map((facet) => (
                   <div key={facet.key} className="flex gap-2">
                     <dt className="sr-only">{t('socialLabel')}</dt>
                     <dd className="text-[var(--fg-muted)]">{facet.label}</dd>
@@ -91,7 +96,7 @@ export async function Methods() {
                 ))}
               </dl>
               <p className="mt-3 text-[16px] leading-relaxed text-[var(--fg-muted)]">
-                {method.summary}
+                {entry.summary}
               </p>
             </li>
           ))}

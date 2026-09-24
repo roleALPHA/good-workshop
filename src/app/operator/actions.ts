@@ -7,7 +7,7 @@ import { z } from 'zod'
 import {
   retireCatalogFacet,
   saveCatalogFacet,
-  saveCatalogMethod,
+  saveCatalogEntry,
   setCatalogStatus,
 } from '@/cloud/operator/catalog'
 import { issueOperatorToken, revokeOperatorToken } from '@/cloud/operator/tokens'
@@ -268,27 +268,26 @@ export type OperatorResult = { ok: boolean; error?: 'input' | 'unauthenticated' 
 
 /**
  * Per language, and deliberately not keyed on the locale enum: Zod would then
- * demand all four, and a method translated into two is the normal case. The
+ * demand all four, and an entry translated into two is the normal case. The
  * database's own check constraint rejects a locale that is not one of ours.
  */
 const Text = z.record(z.string(), z.record(z.string(), z.string()))
 
-const MethodForm = z.object({
+const EntryForm = z.object({
   key: z.string().regex(/^[a-z][a-z0-9_]{1,48}$/u),
-  moduleTypeKey: z.string().regex(/^[a-z][a-z0-9_]{1,48}$/u),
-  defaultDurationMinutes: z.coerce.number().int().min(0).max(1440),
+  durationMinutes: z.coerce.number().int().min(0).max(43_200),
   groupSize: z.string().trim().optional(),
   facets: z.array(z.string()).optional(),
   text: Text,
 })
 
-export async function saveMethodAction(raw: unknown): Promise<OperatorResult> {
+export async function saveEntryAction(raw: unknown): Promise<OperatorResult> {
   const operator = await currentOperator()
   if (!operator) return { ok: false, error: 'unauthenticated' }
-  const input = MethodForm.safeParse(raw)
+  const input = EntryForm.safeParse(raw)
   if (!input.success) return { ok: false, error: 'input' }
   try {
-    await saveCatalogMethod(operatorDb(), operator.id, input.data)
+    await saveCatalogEntry(operatorDb(), operator.id, input.data)
     revalidatePath('/operator/discover')
     return { ok: true }
   } catch {
@@ -301,7 +300,6 @@ export async function setCatalogStatusAction(raw: unknown): Promise<OperatorResu
   if (!operator) return { ok: false, error: 'unauthenticated' }
   const input = z
     .object({
-      kind: z.enum(['method', 'design']),
       id: z.string().uuid(),
       locales: z.array(z.enum(LOCALES)).default([]),
       published: z.boolean(),
@@ -312,7 +310,6 @@ export async function setCatalogStatusAction(raw: unknown): Promise<OperatorResu
     await setCatalogStatus(
       operatorDb(),
       operator.id,
-      input.data.kind,
       input.data.id,
       input.data.locales,
       input.data.published,

@@ -80,18 +80,18 @@ function pages(): MetadataRoute.Sitemap {
 }
 
 /**
- * One entry per method per language it is published in -- not per language.
+ * One URL per entry per language it is published in -- not per language.
  *
- * Publication is per language here, unlike every page above: a method written
+ * Publication is per language here, unlike every page above: an entry written
  * only in English has one address. Offering four would be four promises, three
  * of which answer 404, and a crawler that finds them stops believing the file.
  *
  * Below the directory's own priority, because a directory is what somebody
- * browsing wants and a method page is what somebody searching wants. Both are
+ * browsing wants and an entry page is what somebody searching wants. Both are
  * worth having; only one of them is the way in.
  */
 async function methods(): Promise<MetadataRoute.Sitemap> {
-  const published = await catalog.publishedMethodSlugs()
+  const published = await catalog.publishedEntrySlugs()
 
   const byMethod = new Map<string, Partial<Record<Locale, string>>>()
   for (const entry of published) {
