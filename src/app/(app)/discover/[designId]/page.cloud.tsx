@@ -116,9 +116,6 @@ export default async function DesignPage(props: Props) {
             working: t('adoptWorking'),
             open: t('adoptOpen'),
             noWorkshops: t('adoptNoWorkshops'),
-            degraded: (count) => t('adoptDegraded', { count }),
-            dropped: (count) => t('adoptDropped', { count }),
-            daysFailed: (count) => t('adoptDaysFailed', { count }),
           }}
         />
       </div>

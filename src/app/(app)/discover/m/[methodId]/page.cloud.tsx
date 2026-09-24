@@ -119,7 +119,6 @@ export default async function MethodPage(props: Props) {
             intoDay: t('adoptIntoDay'),
             chooseWorkshop: t('adoptChoose'),
             chooseDay: t('adoptChooseDay'),
-            dayHeading: (n) => t('dayHeading', { n }),
             submit: t('adoptSubmit'),
             working: t('adoptWorking'),
             open: t('adoptMethodOpen'),

@@ -28,7 +28,6 @@ export type AdoptMethodLabels = {
   intoDay: string
   chooseWorkshop: string
   chooseDay: string
-  dayHeading: (n: number) => string
   submit: string
   working: string
   open: string
@@ -38,7 +37,8 @@ export type AdoptMethodLabels = {
   dropped: string
 }
 
-type Day = { id: string; title: string | null }
+/** Already named by the server, unnamed days included -- see loadWorkshopDays. */
+type Day = { id: string; label: string }
 
 export function AdoptMethodPanel({
   methodId,
@@ -185,9 +185,9 @@ export function AdoptMethodPanel({
                 onChange={(event) => setDayId(event.target.value)}
                 className="min-h-11 w-56 rounded border border-[var(--border)] bg-[var(--surface)] px-2 text-[16px] disabled:opacity-60"
               >
-                {(rows ?? []).map((day, index) => (
+                {(rows ?? []).map((day) => (
                   <option key={day.id} value={day.id}>
-                    {day.title?.trim() || labels.dayHeading(index + 1)}
+                    {day.label}
                   </option>
                 ))}
               </select>

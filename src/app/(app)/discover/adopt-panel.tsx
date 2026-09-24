@@ -15,6 +15,12 @@ import { adoptDesignAction } from './actions'
  * No dialog. docs/ui-conventions.md reserves those for confirming the
  * irreversible, and adopting is neither irreversible nor a context switch: it
  * makes a workshop somebody can delete like any other.
+ *
+ * THE SHORTFALL LINES ARRIVE ALREADY WORDED, in `notes`. They used to be label
+ * functions taking a count, and React refuses a function across the boundary:
+ * the page threw at request time while the typecheck, the lint run and the
+ * unit suite stayed green. Nothing here takes an argument any more, which is a
+ * shape that cannot repeat it.
  */
 export type AdoptLabels = {
   title: string
@@ -25,9 +31,6 @@ export type AdoptLabels = {
   working: string
   open: string
   noWorkshops: string
-  degraded: (count: number) => string
-  dropped: (count: number) => string
-  daysFailed: (count: number) => string
 }
 
 export function AdoptPanel({
@@ -43,12 +46,7 @@ export function AdoptPanel({
   const [pending, start] = useTransition()
   const [target, setTarget] = useState<'new' | 'append'>('new')
   const [workshopId, setWorkshopId] = useState(workshops[0]?.id ?? '')
-  const [done, setDone] = useState<null | {
-    workshopId: string
-    degraded: number
-    descsDropped: number
-    daysFailed: number
-  }>(null)
+  const [done, setDone] = useState<null | { workshopId: string; notes: string[] }>(null)
   const [error, setError] = useState<string | null>(null)
 
   const adopt = () =>
@@ -73,15 +71,11 @@ export function AdoptPanel({
         {/* What did not arrive intact, said plainly. A silent success over a
             design that lost a third of its blocks is the failure the tallies
             in adopt.ts exist to prevent. */}
-        {done.degraded > 0 && <p className="text-[15px]">{labels.degraded(done.degraded)}</p>}
-        {done.descsDropped > 0 && (
-          <p className="mt-1 text-[15px]">{labels.dropped(done.descsDropped)}</p>
-        )}
-        {done.daysFailed > 0 && (
-          <p className="mt-1 text-[15px] text-[var(--danger-fg)]">
-            {labels.daysFailed(done.daysFailed)}
+        {done.notes.map((note) => (
+          <p key={note} className="text-[15px] first:mt-0 [&+&]:mt-1">
+            {note}
           </p>
-        )}
+        ))}
         <a
           href={`/w/${done.workshopId}`}
           className="mt-3 inline-flex min-h-11 items-center rounded bg-[var(--brand)] px-4 py-3 text-[16px] font-medium text-[var(--brand-fg)] hover:bg-[var(--brand-hover)]"

@@ -3,7 +3,6 @@ import Link from 'next/link'
 import type { Route } from 'next'
 import { getLocale, getTranslations } from 'next-intl/server'
 import { catalog } from '@gw/catalog'
-import { formatDuration } from '@/features/agenda/duration'
 import {
   isFiltered,
   kindHref,
@@ -13,8 +12,8 @@ import {
 import type { EntryKind } from '@/cloud/catalog/ports'
 import type { Locale } from '@/i18n/config'
 import { DiscoverFilters } from './filters'
-import { EntryList, type EntryLabels } from './entry-list'
-import { peopleLabel, type PeopleRange } from './people'
+import { EntryList } from './entry-list'
+import { entryView } from './entry-view'
 
 /**
  * Discover: the curated designs and the methods they are built from, and the
@@ -58,17 +57,10 @@ export default async function DiscoverPage({
   const query = queryFromParams(params, locale, facets)
   const page = await catalog.listEntries({ ...query, limit: PAGE_SIZE })
 
-  const labels: EntryLabels = {
-    design: t('kindDesign'),
-    method: t('kindMethod'),
-    days: (count) => t('days', { count }),
-    duration: (minutes) => formatDuration(minutes, { spaced: true }),
-    people: (range) => peopleSentence(range, t),
-    untranslated: t('untranslated'),
-    more: t('more'),
-    loading: t('loading'),
-    failed: t('loadFailed'),
-  }
+  // Every row is worded here, on the server. The island is handed strings and
+  // nothing else: a label FUNCTION cannot cross into a client component, and
+  // React only says so at request time -- see ./entry-view.ts.
+  const items = page.items.map((entry) => entryView(entry, t))
 
   return (
     <div>
@@ -90,10 +82,10 @@ export default async function DiscoverPage({
           // the island and keep the previous filter's rows in state while the
           // props change underneath it.
           key={addressOf(params)}
-          initial={page.items}
+          initial={items}
           initialCursor={page.nextCursor}
           params={params}
-          labels={labels}
+          labels={{ more: t('more'), loading: t('loading'), failed: t('loadFailed') }}
         />
       )}
     </div>
@@ -209,22 +201,4 @@ function Card({ title, children }: { title: string; children: React.ReactNode })
       {children}
     </section>
   )
-}
-
-/** The four sentences `peopleLabel` chooses between, rendered. */
-function peopleSentence(
-  range: PeopleRange,
-  t: Awaited<ReturnType<typeof getTranslations<'discover'>>>,
-): string {
-  const label = peopleLabel(range)
-  switch (label.key) {
-    case 'peopleRange':
-      return t('peopleRange', { min: label.min, max: label.max })
-    case 'peopleFrom':
-      return t('peopleFrom', { min: label.min })
-    case 'peopleTo':
-      return t('peopleTo', { max: label.max })
-    default:
-      return t('peopleAny')
-  }
 }

@@ -4,9 +4,9 @@ import Link from 'next/link'
 import type { Route } from 'next'
 import { useCallback, useEffect, useRef, useState } from 'react'
 import { useTransition } from 'react'
-import type { CatalogEntry } from '@/cloud/catalog/ports'
 import type { SearchParams } from '@/cloud/catalog/query'
 import { loadEntriesAction } from './actions'
+import type { EntryView } from './entry-view'
 
 /**
  * The mixed list, one page at a time.
@@ -22,17 +22,16 @@ import { loadEntriesAction } from './actions'
  * button is how a keyboard and a screen reader reach page two, and what is left
  * in a browser without IntersectionObserver.
  *
- * Its labels arrive as props. The `discover` namespace is deliberately not in
- * CLIENT_NAMESPACES -- see adopt-panel.tsx, which made the same decision for
- * the same reason.
+ * EVERY ROW ARRIVES ALREADY WORDED, as an `EntryView`. Handing this component
+ * an entry plus a set of label FUNCTIONS is what it did first, and React
+ * refuses a function across the boundary -- at request time, so the typecheck,
+ * the lint run and the unit suite all stay green while the page throws. The
+ * only props left are strings, which is a shape that cannot repeat the mistake.
+ *
+ * That also keeps every translation on the server, which is why `discover` can
+ * stay out of CLIENT_NAMESPACES -- see adopt-panel.tsx for the same decision.
  */
 export type EntryLabels = {
-  design: string
-  method: string
-  days: (count: number) => string
-  duration: (minutes: number) => string
-  people: (entry: { minParticipants: number | null; maxParticipants: number | null }) => string
-  untranslated: string
   more: string
   loading: string
   failed: string
@@ -44,7 +43,7 @@ export function EntryList({
   params,
   labels,
 }: {
-  initial: CatalogEntry[]
+  initial: EntryView[]
   initialCursor: string | null
   /** The address as it stands, re-parsed on the server for every later page. */
   params: SearchParams
@@ -102,7 +101,7 @@ export function EntryList({
     <>
       <ul className="mt-8 divide-y divide-[var(--border)] rounded border border-[var(--border)]">
         {entries.map((entry) => (
-          <EntryRow key={`${entry.kind}-${entry.id}`} entry={entry} labels={labels} />
+          <EntryRow key={`${entry.kind}-${entry.id}`} entry={entry} />
         ))}
       </ul>
 
@@ -129,17 +128,12 @@ export function EntryList({
   )
 }
 
-function EntryRow({ entry, labels }: { entry: CatalogEntry; labels: EntryLabels }) {
-  // A design has no slug on purpose (see ports.ts); a method is addressed by id
-  // here and not by its slug, because a slug is unique per LANGUAGE and this
-  // page's language comes from the session rather than from the path.
-  const href = (entry.kind === 'design' ? `/discover/${entry.id}` : `/discover/m/${entry.id}`) as Route
-
+function EntryRow({ entry }: { entry: EntryView }) {
   return (
     <li className="p-4">
       <p className="flex flex-wrap items-baseline gap-x-3 gap-y-1">
         <Link
-          href={href}
+          href={entry.href as Route}
           className="text-[17px] font-medium underline-offset-2 hover:underline"
         >
           {entry.name}
@@ -147,7 +141,7 @@ function EntryRow({ entry, labels }: { entry: CatalogEntry; labels: EntryLabels 
         {/* Which of the two this is, said in words inside the chip. Never a
             colour on its own -- docs/ui-conventions.md. */}
         <span className="rounded-full border border-[var(--border-strong)] px-2 py-0.5 text-[13px] text-[var(--fg-muted)]">
-          {entry.kind === 'design' ? labels.design : labels.method}
+          {entry.kindLabel}
         </span>
       </p>
 
@@ -155,11 +149,11 @@ function EntryRow({ entry, labels }: { entry: CatalogEntry; labels: EntryLabels 
 
       <p className="mt-2 flex flex-wrap items-center gap-x-4 gap-y-1 text-[14px] text-[var(--fg-subtle)]">
         {/* tabular-nums, so a column of durations lines up -- ui-conventions.md */}
-        {entry.kind === 'design' && (
-          <span className="tabular-nums">{labels.days(entry.dayCount)}</span>
-        )}
-        <span className="tabular-nums">{labels.duration(entry.durationMinutes)}</span>
-        <span>{labels.people(entry)}</span>
+        {entry.meta.map((said) => (
+          <span key={said} className="tabular-nums">
+            {said}
+          </span>
+        ))}
       </p>
 
       {entry.facets.length > 0 && (
@@ -177,8 +171,8 @@ function EntryRow({ entry, labels }: { entry: CatalogEntry; labels: EntryLabels 
 
       {/* Said rather than hidden: the same choice the legal pages make when a
           translation is missing. */}
-      {!entry.translated && (
-        <p className="mt-2 text-[13px] text-[var(--fg-subtle)]">{labels.untranslated}</p>
+      {entry.untranslated && (
+        <p className="mt-2 text-[13px] text-[var(--fg-subtle)]">{entry.untranslated}</p>
       )}
     </li>
   )
