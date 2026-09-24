@@ -267,7 +267,10 @@ declare const messages: {
     "unpark": "In den Ablauf",
     "unparkLabel": "{title} zurück in den Ablauf",
     "blockTitle": "Titel",
-    "blockDuration": "Dauer"
+    "blockDuration": "Dauer",
+    "deleteCluster": "{count, plural, =0 {Abschnitt löschen} one {Mit # Block löschen} other {Mit # Blöcken löschen}}",
+    "deleteClusterLabel": "{count, plural, =0 {Abschnitt „{title}“ löschen} one {Abschnitt „{title}“ und den # Block darin löschen} other {Abschnitt „{title}“ und die # Blöcke darin löschen}}",
+    "deleteClusterHint": "{count, plural, =0 {Entfernt den Abschnitt.} one {Entfernt den Abschnitt und den # Block darin.} other {Entfernt den Abschnitt und die # Blöcke darin.}}"
   },
   "auth": {
     "guest": {

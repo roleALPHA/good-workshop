@@ -264,7 +264,10 @@
     "unpark": "Volver al desarrollo",
     "unparkLabel": "Devolver {title} al desarrollo",
     "blockTitle": "Título",
-    "blockDuration": "Duración"
+    "blockDuration": "Duración",
+    "deleteCluster": "{count, plural, =0 {Eliminar la sección} one {Eliminar con # bloque} many {Eliminar con # bloques} other {Eliminar con # bloques}}",
+    "deleteClusterLabel": "{count, plural, =0 {Eliminar la sección «{title}»} one {Eliminar la sección «{title}» y el # bloque que contiene} many {Eliminar la sección «{title}» y los # bloques que contiene} other {Eliminar la sección «{title}» y los # bloques que contiene}}",
+    "deleteClusterHint": "{count, plural, =0 {Elimina la sección.} one {Elimina la sección y el # bloque que contiene.} many {Elimina la sección y los # bloques que contiene.} other {Elimina la sección y los # bloques que contiene.}}"
   },
   "auth": {
     "guest": {

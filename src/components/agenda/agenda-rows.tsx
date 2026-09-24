@@ -368,6 +368,15 @@ export function ModuleRow({
  */
 export type ClusterEditing = {
   onPinChange: (minute: number | null) => void
+  /**
+   * Removes the cluster AND the blocks inside it.
+   *
+   * That is what `removeBlock` does with a cluster, and it is the only sensible
+   * reading: a section with nothing in it is not a thing somebody wanted left
+   * behind. The label says the number out loud, because a delete that quietly
+   * takes six blocks with it is a surprise, and the editor has no undo.
+   */
+  onRemove?: () => void
 }
 
 export function ClusterRow({
@@ -439,6 +448,32 @@ export function ClusterRow({
           */}
           {entry.conflict?.kind === 'overlap' && (
             <OverlapWarning minutes={entry.conflict.minutes} />
+          )}
+
+          {/*
+            Inline, like the delete on a block, and not behind a dialog:
+            docs/ui-conventions.md reserves those for confirming the
+            irreversible, and this is the same sort of edit as removing a
+            block. What it does say out loud is the number going with it --
+            `deleteCluster` names the count, because a section that quietly
+            takes six blocks with it is a surprise.
+
+            Until now a cluster row offered a pin and nothing else. That was
+            survivable while clusters only arrived over MCP; adopting a
+            catalogue entry brings one every time, and there was no way to
+            take it out again.
+          */}
+          {editing?.onRemove && (
+            <button
+              type="button"
+              onClick={editing.onRemove}
+              aria-label={t('deleteClusterLabel', { title: cluster.title, count: childCount })}
+              title={t('deleteClusterHint', { count: childCount })}
+              className="ml-auto inline-flex min-h-11 items-center gap-1 rounded px-1 text-[13px] text-[var(--cat-fg)] opacity-0 group-focus-within:opacity-80 group-hover:opacity-80 hover:text-[var(--danger-fg)] focus-visible:opacity-100"
+            >
+              <Trash2 aria-hidden className="size-3.5" />
+              {t('deleteCluster', { count: childCount })}
+            </button>
           )}
         </div>
         <span className="hidden md:block" />

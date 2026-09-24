@@ -264,7 +264,10 @@
     "unpark": "Back into the schedule",
     "unparkLabel": "Put {title} back into the schedule",
     "blockTitle": "Title",
-    "blockDuration": "Duration"
+    "blockDuration": "Duration",
+    "deleteCluster": "{count, plural, =0 {Delete section} one {Delete with # block} other {Delete with # blocks}}",
+    "deleteClusterLabel": "{count, plural, =0 {Delete the section “{title}”} one {Delete the section “{title}” and the # block in it} other {Delete the section “{title}” and the # blocks in it}}",
+    "deleteClusterHint": "{count, plural, =0 {Removes the section.} one {Removes the section and the # block in it.} other {Removes the section and the # blocks in it.}}"
   },
   "auth": {
     "guest": {

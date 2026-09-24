@@ -412,13 +412,31 @@ export function registerOperatorTools(server: McpServer, actor: OperatorActor): 
   // of these", and a method translated into two languages is the normal case
   // rather than an error. The locale itself is checked by catalog_text's own
   // constraint, which is the one that cannot be forgotten.
-  const Text = z
-    .record(z.string(), z.record(z.string(), z.string()))
-    .describe(
-      'Per language. `name`, `summary`, `body`, and `slug` where the entry should have a ' +
-        'public page -- leave the slug out and it is readable in Discover only. English is the ' +
-        'source and is required: everything else falls back to it.',
-    )
+  // THREE LEVELS, THREE SETS OF FIELD NAMES, and one shared description used
+  // to claim otherwise. An author who wrote `name` on a block -- the habit the
+  // entry level teaches -- got a block that rendered as a bare duration with no
+  // word beside it, and nothing anywhere said why. The reader now takes either
+  // spelling; these descriptions say which one is meant.
+  const localised = (fields: string) =>
+    z
+      .record(z.string(), z.record(z.string(), z.string()))
+      .describe(
+        `Per language. ${fields} English is the source and is required: everything else ` +
+          'falls back to it, per field rather than per row.',
+      )
+
+  const Text = localised(
+    'For the ENTRY: `name`, `summary`, `body`, and `slug` where it should have a public page ' +
+      '-- leave the slug out and it is readable in Discover only.',
+  )
+
+  const DayText = localised('For a DAY: `title`. Leave it out and the day is shown as "Day 1".')
+
+  const BlockText = localised(
+    'For a BLOCK: `title` -- the line somebody reads in the agenda -- and `desc`, a sentence ' +
+      'about this step. NOT `name`/`summary`/`body`: those are the entry’s words. A block ' +
+      'without a title renders as a duration and nothing else.',
+  )
 
   server.registerTool(
     'list_catalog_entries',
@@ -570,7 +588,7 @@ export function registerOperatorTools(server: McpServer, actor: OperatorActor): 
           z.object({
             ordinal: z.number().int().min(1).max(60),
             startMinute: z.number().int().min(0).max(1439).optional(),
-            text: Text.optional(),
+            text: DayText.optional(),
             blocks: z.array(
               z.object({
                 ordinal: z.number().int().min(1),
@@ -581,8 +599,16 @@ export function registerOperatorTools(server: McpServer, actor: OperatorActor): 
                 pinnedStartMinute: z.number().int().min(0).max(1439).optional(),
                 parked: z.boolean().optional(),
                 color: z.string().optional(),
-                fields: z.record(z.string(), z.unknown()).optional(),
-                text: Text.optional(),
+                fields: z
+                  .record(z.string(), z.unknown())
+                  .optional()
+                  .describe(
+                    'The block type’s OWN fields, from list_catalog_block_types -- `prompt`, ' +
+                      '`materials`, `participation` and so on. Plain values, not per language: ' +
+                      'they are carried into the adopted block as they are. The words a reader ' +
+                      'sees in Discover go in `text`, not here.',
+                  ),
+                text: BlockText.optional(),
               }),
             ),
           }),
