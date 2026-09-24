@@ -4,22 +4,35 @@ import type { Route } from 'next'
 import { getLocale, getTranslations } from 'next-intl/server'
 import { catalog } from '@gw/catalog'
 import { formatDuration } from '@/features/agenda/duration'
-import { isFiltered, queryFromParams, type SearchParams } from '@/cloud/catalog/query'
-import type { DesignSummary } from '@/cloud/catalog/ports'
+import {
+  isFiltered,
+  kindHref,
+  queryFromParams,
+  type SearchParams,
+} from '@/cloud/catalog/query'
+import type { EntryKind } from '@/cloud/catalog/ports'
 import type { Locale } from '@/i18n/config'
 import { DiscoverFilters } from './filters'
-import { People } from './people'
+import { EntryList, type EntryLabels } from './entry-list'
+import { peopleLabel, type PeopleRange } from './people'
 
 /**
- * Discover: the curated designs, and the way into one.
+ * Discover: the curated designs and the methods they are built from, and the
+ * way into either.
  *
  * Under `(app)`, so the session gate in its layout has already run -- a route
  * added here is protected because of where it sits. `.cloud.tsx`, so a
  * community build does not have it at all: the catalogue is curated by whoever
  * runs the cloud, and a self-hosted installation has nobody to curate it.
  *
- * Everything is rendered on the server and every filter is an address; see
- * ./filters.tsx for why that is worth the plainness.
+ * ONE LIST, TAGGED, AND NOT TWO TABS. A method is not a lesser design; it is
+ * what a design is made of, and somebody looking for "something for forty
+ * minutes with a group of twelve" wants both answers ranked together. The kind
+ * is therefore a way to narrow the one list, not a pair of separate screens --
+ * and it travels in the address like every other filter.
+ *
+ * Everything that decides what is in the list is rendered on the server. Only
+ * the paging is an island; see ./entry-list.tsx.
  */
 export const dynamic = 'force-dynamic'
 
@@ -43,12 +56,26 @@ export default async function DiscoverPage({
 
   const facets = await catalog.listFacets(locale)
   const query = queryFromParams(params, locale, facets)
-  const page = await catalog.listDesigns({ ...query, limit: PAGE_SIZE })
+  const page = await catalog.listEntries({ ...query, limit: PAGE_SIZE })
+
+  const labels: EntryLabels = {
+    design: t('kindDesign'),
+    method: t('kindMethod'),
+    days: (count) => t('days', { count }),
+    duration: (minutes) => formatDuration(minutes, { spaced: true }),
+    people: (range) => peopleSentence(range, t),
+    untranslated: t('untranslated'),
+    more: t('more'),
+    loading: t('loading'),
+    failed: t('loadFailed'),
+  }
 
   return (
     <div>
       <h1 className="text-2xl font-semibold tracking-tight">{t('title')}</h1>
       <p className="mt-2 max-w-2xl text-[16px] text-[var(--fg-muted)]">{t('lead')}</p>
+
+      <KindTabs params={params} chosen={query.kind ?? null} />
 
       {/* No filters to offer when the vocabulary is empty, which is what an
           unconfigured catalogue looks like. Rendering the heading and nothing
@@ -56,96 +83,148 @@ export default async function DiscoverPage({
       {facets.length > 0 && <DiscoverFilters facets={facets} params={params} query={query} />}
 
       {page.items.length === 0 ? (
-        <section className="mt-10 max-w-xl rounded border border-[var(--border)] bg-[var(--surface)] p-5">
-          <h2 className="text-[17px] font-medium">
-            {isFiltered(query) ? t('noMatchTitle') : t('emptyTitle')}
-          </h2>
-          <p className="mt-2 text-[15px] text-[var(--fg-muted)]">
-            {isFiltered(query) ? t('noMatchBody') : t('emptyBody')}
-          </p>
-        </section>
+        <Empty filtered={isFiltered(query)} kind={query.kind ?? null} params={params} />
       ) : (
-        <ul className="mt-8 divide-y divide-[var(--border)] rounded border border-[var(--border)]">
-          {page.items.map((design) => (
-            <DesignRow key={design.id} design={design} untranslated={t('untranslated')} />
-          ))}
-        </ul>
-      )}
-
-      {page.nextCursor && (
-        <p className="mt-6">
-          <Link
-            href={
-              `?${new URLSearchParams({ ...asStrings(params), after: page.nextCursor })}` as Route
-            }
-            className="inline-flex min-h-11 items-center rounded border border-[var(--border-strong)] px-4 text-[15px] hover:bg-[var(--surface-raised)]"
-          >
-            {t('more')}
-          </Link>
-        </p>
+        <EntryList
+          // The address is part of the identity: React would otherwise reuse
+          // the island and keep the previous filter's rows in state while the
+          // props change underneath it.
+          key={addressOf(params)}
+          initial={page.items}
+          initialCursor={page.nextCursor}
+          params={params}
+          labels={labels}
+        />
       )}
     </div>
   )
 }
 
-/** `searchParams` may hand back arrays; the "load more" link carries the first of each. */
-function asStrings(params: SearchParams): Record<string, string> {
-  return Object.fromEntries(
-    Object.entries(params)
-      .map(([key, value]) => [key, Array.isArray(value) ? (value[0] ?? '') : (value ?? '')])
-      .filter(([, value]) => value !== ''),
+/** Everything that changes what is in the list, as one string. */
+function addressOf(params: SearchParams): string {
+  return Object.entries(params)
+    .filter(([key]) => key !== 'after')
+    .map(([key, value]) => `${key}=${Array.isArray(value) ? value.join(',') : (value ?? '')}`)
+    .sort()
+    .join('&')
+}
+
+/**
+ * All / Designs / Methods, as three links.
+ *
+ * Above the filters rather than among them, and not counted by `isFiltered`:
+ * this is a choice of what to look at, and if "clear the filters" reset it too,
+ * dropping a facet would silently put the designs back.
+ */
+async function KindTabs({ params, chosen }: { params: SearchParams; chosen: EntryKind | null }) {
+  const t = await getTranslations('discover')
+  const tabs: { kind: EntryKind | null; label: string }[] = [
+    { kind: null, label: t('kindAll') },
+    { kind: 'design', label: t('kindDesigns') },
+    { kind: 'method', label: t('kindMethods') },
+  ]
+
+  return (
+    <nav aria-label={t('kindLabel')} className="mt-6">
+      <ul className="flex flex-wrap gap-2">
+        {tabs.map((tab) => {
+          const on = tab.kind === chosen
+          return (
+            <li key={tab.kind ?? 'all'}>
+              <Link
+                href={kindHref(params, tab.kind) as Route}
+                aria-current={on ? 'page' : undefined}
+                className={`inline-flex min-h-11 items-center rounded-full border px-4 text-[15px] ${
+                  on
+                    ? 'border-[var(--brand)] bg-[var(--brand)] text-[var(--brand-fg)]'
+                    : 'border-[var(--border-strong)] hover:bg-[var(--surface-raised)]'
+                }`}
+              >
+                {tab.label}
+              </Link>
+            </li>
+          )
+        })}
+      </ul>
+    </nav>
   )
 }
 
-async function DesignRow({
-  design,
-  untranslated,
+/**
+ * Why there is nothing, said precisely.
+ *
+ * Four different situations, and telling them apart is the whole value of this
+ * box. "Nothing here yet" in front of a library that holds fifteen methods --
+ * because the reader is looking at the designs, and there are none -- is how
+ * somebody concludes the feature is broken.
+ */
+async function Empty({
+  filtered,
+  kind,
+  params,
 }: {
-  design: DesignSummary
-  untranslated: string
+  filtered: boolean
+  kind: EntryKind | null
+  params: SearchParams
 }) {
   const t = await getTranslations('discover')
 
-  return (
-    <li className="p-4">
-      {/* Addressed by id: a design has no slug, on purpose -- see ports.ts. */}
-      <Link
-        href={`/discover/${design.id}` as Route}
-        className="text-[17px] font-medium underline-offset-2 hover:underline"
-      >
-        {design.name}
-      </Link>
-      <p className="mt-1 max-w-2xl text-[15px] text-[var(--fg-muted)]">{design.summary}</p>
+  if (filtered) {
+    return (
+      <Card title={t('noMatchTitle')}>
+        <p className="mt-2 text-[15px] text-[var(--fg-muted)]">{t('noMatchBody')}</p>
+      </Card>
+    )
+  }
 
-      <p className="mt-2 flex flex-wrap items-center gap-x-4 gap-y-1 text-[14px] text-[var(--fg-subtle)]">
-        {/* tabular-nums, so a column of durations lines up -- ui-conventions.md */}
-        <span className="tabular-nums">{t('days', { count: design.dayCount })}</span>
-        <span className="tabular-nums">
-          {formatDuration(design.durationMinutes, { spaced: true })}
-        </span>
-        <span>
-          <People range={design} />
-        </span>
-      </p>
-
-      {design.facets.length > 0 && (
-        <p className="mt-2 flex flex-wrap gap-2">
-          {design.facets.map((facet) => (
-            <span
-              key={`${facet.key}-${facet.label}`}
-              className="rounded-full border border-[var(--border)] px-2 py-0.5 text-[13px] text-[var(--fg-muted)]"
-            >
-              {facet.label}
-            </span>
-          ))}
+  if (kind === 'design') {
+    return (
+      <Card title={t('emptyDesignsTitle')}>
+        <p className="mt-2 text-[15px] text-[var(--fg-muted)]">
+          {t('emptyDesignsBody')}{' '}
+          <Link
+            href={kindHref(params, 'method') as Route}
+            className="underline underline-offset-2"
+          >
+            {t('emptyDesignsLink')}
+          </Link>
         </p>
-      )}
+      </Card>
+    )
+  }
 
-      {/* Said rather than hidden: the same choice the legal pages make when a
-          translation is missing. */}
-      {!design.translated && (
-        <p className="mt-2 text-[13px] text-[var(--fg-subtle)]">{untranslated}</p>
-      )}
-    </li>
+  return (
+    <Card title={kind === 'method' ? t('emptyMethodsTitle') : t('emptyTitle')}>
+      <p className="mt-2 text-[15px] text-[var(--fg-muted)]">
+        {kind === 'method' ? t('emptyMethodsBody') : t('emptyBody')}
+      </p>
+    </Card>
   )
+}
+
+function Card({ title, children }: { title: string; children: React.ReactNode }) {
+  return (
+    <section className="mt-10 max-w-xl rounded border border-[var(--border)] bg-[var(--surface)] p-5">
+      <h2 className="text-[17px] font-medium">{title}</h2>
+      {children}
+    </section>
+  )
+}
+
+/** The four sentences `peopleLabel` chooses between, rendered. */
+function peopleSentence(
+  range: PeopleRange,
+  t: Awaited<ReturnType<typeof getTranslations<'discover'>>>,
+): string {
+  const label = peopleLabel(range)
+  switch (label.key) {
+    case 'peopleRange':
+      return t('peopleRange', { min: label.min, max: label.max })
+    case 'peopleFrom':
+      return t('peopleFrom', { min: label.min })
+    case 'peopleTo':
+      return t('peopleTo', { max: label.max })
+    default:
+      return t('peopleAny')
+  }
 }

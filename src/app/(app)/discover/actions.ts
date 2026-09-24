@@ -3,13 +3,23 @@
 import { headers } from 'next/headers'
 import { z } from 'zod'
 import { getLocale } from 'next-intl/server'
-import { adoptDesign, type AdoptResult } from '@/cloud/catalog/adopt'
+import { catalog } from '@gw/catalog'
+import {
+  adoptDesign,
+  adoptMethod,
+  type AdoptMethodResult,
+  type AdoptResult,
+} from '@/cloud/catalog/adopt'
+import { queryFromParams, type SearchParams } from '@/cloud/catalog/query'
+import type { CatalogEntry, Page } from '@/cloud/catalog/ports'
+import { listDays } from '@/domain/workshop/repo'
 import { roomEditor } from '@/server/collab/across-days'
 import {
   currentActor,
   fail,
   firstIssue,
   toResult,
+  workshopAction,
   type ActionResult,
 } from '@/server/actions/context'
 import type { Locale } from '@/i18n/config'
@@ -72,6 +82,116 @@ export async function adoptDesignAction(raw: unknown): Promise<ActionResult<Adop
               folderId: parsed.data.folderId ?? null,
             }
           : { kind: 'append', workshopId: parsed.data.workshopId },
+    })
+    return { ok: true, data: result }
+  } catch (error) {
+    return toResult(error)
+  }
+}
+
+/**
+ * One more page of the mixed list, for the island that scrolls.
+ *
+ * It takes the RAW address parameters and parses them here rather than taking
+ * a parsed query from the browser. `queryFromParams` drops a facet value the
+ * catalogue no longer offers, and that rule is the difference between a stale
+ * bookmark answering the rest of the question and answering nothing at all --
+ * it has to live in one place, on the server, where the live vocabulary is.
+ *
+ * No `action()` and no `withTenant`: the catalogue has no tenant_id, and one
+ * library serves everybody. The session is still required -- Discover sits
+ * behind the `(app)` gate -- which is what `currentActor` checks.
+ */
+export async function loadEntriesAction(
+  params: SearchParams,
+  cursor: string,
+): Promise<ActionResult<Page<CatalogEntry>>> {
+  const actor = await currentActor()
+  if (!actor) return fail('unauthenticated', 'unauthenticated')
+
+  const parsed = Cursor.safeParse(cursor)
+  if (!parsed.success) {
+    const issue = firstIssue(parsed.error)
+    return fail('invalid_input', issue.key, issue.params)
+  }
+
+  try {
+    const locale = (await getLocale()) as Locale
+    const facets = await catalog.listFacets(locale)
+    const query = queryFromParams(params, locale, facets)
+    return { ok: true, data: await catalog.listEntries({ ...query, cursor: parsed.data }) }
+  } catch (error) {
+    return toResult(error)
+  }
+}
+
+const Cursor = z.string().trim().min(1).max(400)
+
+/** The days of one workshop, for the picker that says where a method lands. */
+export async function loadWorkshopDays(workshopId: string) {
+  return workshopAction(
+    z.object({ workshopId: z.string().uuid() }),
+    { workshopId },
+    'workshop.read',
+    (tx, _access, input) => listDays(tx, input.workshopId),
+  )
+}
+
+/**
+ * Taking one method out of Discover and into a day.
+ *
+ * The same two rules as `adoptDesignAction` above: no `action()`, because the
+ * transaction would hold the lock the room needs, and the rooms opened with the
+ * person's own Cookie header so that nothing here holds a key of its own.
+ *
+ * The block appears live in any tab that has the day open -- `editInRoom`
+ * joins the room the browser is in -- and it appears without a name against
+ * it, because no server action here sets a `presence`. That is the existing
+ * behaviour of every room write outside the editor, and making this one the
+ * exception would be a different change.
+ */
+const AdoptMethod = z.union([
+  z.object({
+    methodId: z.string().uuid(),
+    kind: z.literal('day'),
+    workshopId: z.string().uuid(),
+    dayId: z.string().uuid(),
+  }),
+  z.object({
+    methodId: z.string().uuid(),
+    kind: z.literal('new'),
+    title: z.string().trim().max(300).optional(),
+    folderId: z.string().uuid().nullable().optional(),
+  }),
+])
+
+export async function adoptMethodAction(
+  raw: unknown,
+): Promise<ActionResult<AdoptMethodResult>> {
+  const actor = await currentActor()
+  if (!actor) return fail('unauthenticated', 'unauthenticated')
+
+  const parsed = AdoptMethod.safeParse(raw)
+  if (!parsed.success) {
+    const issue = firstIssue(parsed.error)
+    return fail('invalid_input', issue.key, issue.params)
+  }
+
+  const [locale, headerList] = await Promise.all([getLocale(), headers()])
+  const cookie = headerList.get('cookie') ?? ''
+
+  try {
+    const result = await adoptMethod(actor, (workshopId) => roomEditor({ workshopId, cookie }), {
+      methodId: parsed.data.methodId,
+      locale: locale as Locale,
+      target:
+        parsed.data.kind === 'day'
+          ? { kind: 'day', workshopId: parsed.data.workshopId, dayId: parsed.data.dayId }
+          : {
+              kind: 'new',
+              title: parsed.data.title,
+              folderId: parsed.data.folderId ?? null,
+            },
     })
     return { ok: true, data: result }
   } catch (error) {

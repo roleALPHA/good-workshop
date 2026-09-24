@@ -4,7 +4,7 @@ import * as Y from 'yjs'
 import { afterAll, beforeAll, describe, expect, it, vi } from 'vitest'
 import { withTenant, type Actor } from '@/server/db'
 import { seedBuiltinModuleTypes } from '@/domain/moduleType/seed'
-import type { DesignDetail } from './ports'
+import type { DesignDetail, MethodDetail } from './ports'
 
 /**
  * Adopting a design, against a real database and two tenants.
@@ -72,11 +72,49 @@ const CATALOGUE: DesignDetail = {
   ],
 }
 
+/**
+ * Two methods: one whose block type every workspace has, one whose it does not.
+ *
+ * `body` is empty and the prose sits in `summary`, because that is the shape
+ * every method in the shipped library actually has -- see method-body.ts.
+ */
+const METHOD: MethodDetail = {
+  id: randomUUID(),
+  slug: 'check-in',
+  name: 'Check-in',
+  summary: 'Alle kommen einmal zu Wort.',
+  body: '',
+  translated: true,
+  facets: [],
+  minParticipants: null,
+  maxParticipants: null,
+  durationMinutes: 15,
+  moduleTypeKey: 'check_in',
+}
+
+const ODD_METHOD: MethodDetail = {
+  ...METHOD,
+  id: randomUUID(),
+  slug: 'erfunden',
+  name: 'Etwas Erfundenes',
+  summary: '',
+  moduleTypeKey: 'nonesuch',
+}
+
+const METHODS = new Map([
+  [METHOD.id, METHOD],
+  [ODD_METHOD.id, ODD_METHOD],
+])
+
 vi.mock('@gw/catalog', () => ({
-  catalog: { getDesign: async () => CATALOGUE },
+  catalog: {
+    getDesign: async () => CATALOGUE,
+    getMethodById: async (id: string) => METHODS.get(id) ?? null,
+  },
 }))
 
-const { adoptDesign } = await import('./adopt')
+const { adoptDesign, adoptMethod } = await import('./adopt')
+const { NotFoundError } = await import('@/domain/agenda/access')
 
 const ops = new pg.Client({ connectionString: process.env.OPS_DATABASE_URL })
 const TENANTS = [randomUUID(), randomUUID()]
@@ -91,9 +129,10 @@ const as = (tenantId: string): Actor => ({
 })
 
 /** Applies the edit to a real document and hands back what it wrote. */
-function fakeRooms() {
+function fakeRooms({ failing }: { failing?: () => boolean } = {}) {
   const docs = new Map<string, Y.Doc>()
   const editor = () => async (dayId: string, edit: (doc: Y.Doc) => unknown) => {
+    if (failing?.()) throw new Error('the collaboration service is unavailable')
     const doc = docs.get(dayId) ?? new Y.Doc()
     docs.set(dayId, doc)
     edit(doc)
@@ -104,7 +143,9 @@ function fakeRooms() {
     if (!blocks) return []
     return [...blocks.values()].map((block) => (block as Y.Map<unknown>).toJSON())
   }
-  return { editor, blocksOf, dayIds: () => [...docs.keys()] }
+  /** What `setDayFields` would have written, so a test can assert it did not. */
+  const dayOf = (dayId: string) => docs.get(dayId)?.getMap('day').toJSON() ?? {}
+  return { editor, blocksOf, dayOf, dayIds: () => [...docs.keys()] }
 }
 
 beforeAll(async () => {
@@ -265,5 +306,195 @@ describe('adopting a design', () => {
       before.rows.map((r) => r.id),
     )
     expect(after.rows).toHaveLength(before.rows.length + CATALOGUE.days.length)
+  })
+})
+
+/**
+ * A method is one block going into a day somebody already owns, and that is a
+ * different set of hazards from a design, which only ever writes into days it
+ * created moments earlier.
+ */
+describe('adopting a method', () => {
+  /** A workshop with one day, made the way the app makes one. */
+  async function aWorkshop(tenantId: string) {
+    const rooms = fakeRooms()
+    const result = await adoptDesign(as(tenantId), rooms.editor, {
+      designId: CATALOGUE.id,
+      locale: 'de',
+      target: { kind: 'new' },
+    })
+    return { workshopId: result.workshopId, dayId: result.dayIds[0]! }
+  }
+
+  it('puts the block at the end of the day it was given', async () => {
+    const tenantId = TENANTS[0]!
+    const { workshopId, dayId } = await aWorkshop(tenantId)
+    const rooms = fakeRooms()
+
+    const result = await adoptMethod(as(tenantId), rooms.editor, {
+      methodId: METHOD.id,
+      locale: 'de',
+      target: { kind: 'day', workshopId, dayId },
+    })
+
+    expect(result).toMatchObject({ workshopId, dayId, degraded: 0, descDropped: 0 })
+    const [block] = rooms.blocksOf(dayId)
+    expect(block).toMatchObject({ title: 'Check-in', durationMinutes: 15, parentId: null })
+  })
+
+  it('leaves the day it was given exactly as it found it', async () => {
+    // THE assertion of this block. `adoptDesign` sets the day's title and
+    // start minute, which is harmless for a day it created seconds ago and
+    // destructive for one somebody is using: pins resolve against their own
+    // day's start, so moving it makes every pinned block jump while the rest
+    // stand still.
+    const tenantId = TENANTS[0]!
+    const { workshopId, dayId } = await aWorkshop(tenantId)
+    const rooms = fakeRooms()
+
+    await adoptMethod(as(tenantId), rooms.editor, {
+      methodId: METHOD.id,
+      locale: 'de',
+      target: { kind: 'day', workshopId, dayId },
+    })
+
+    expect(rooms.dayOf(dayId)).toEqual({})
+  })
+
+  it('carries the prose a method actually has', async () => {
+    // The library's methods have an empty `body` and their prose in `summary`.
+    const tenantId = TENANTS[0]!
+    const { workshopId, dayId } = await aWorkshop(tenantId)
+    const rooms = fakeRooms()
+
+    await adoptMethod(as(tenantId), rooms.editor, {
+      methodId: METHOD.id,
+      locale: 'de',
+      target: { kind: 'day', workshopId, dayId },
+    })
+
+    const [block] = rooms.blocksOf(dayId)
+    expect(JSON.stringify(block)).toContain('Alle kommen einmal zu Wort.')
+  })
+
+  it('resolves the block type per tenant, by key and never by id', async () => {
+    const written: Record<string, string> = {}
+    for (const tenantId of TENANTS) {
+      const { workshopId, dayId } = await aWorkshop(tenantId)
+      const rooms = fakeRooms()
+      await adoptMethod(as(tenantId), rooms.editor, {
+        methodId: METHOD.id,
+        locale: 'de',
+        target: { kind: 'day', workshopId, dayId },
+      })
+      written[tenantId] = String(rooms.blocksOf(dayId)[0]?.moduleTypeId)
+    }
+
+    expect(written[TENANTS[0]!]).not.toBe(written[TENANTS[1]!])
+    const { rows } = await ops.query<{ key: string }>(
+      'select distinct key from module_type where id = any($1)',
+      [Object.values(written)],
+    )
+    expect(rows.map((row) => row.key)).toEqual(['check_in'])
+  })
+
+  it('lets a method whose block type is unknown here arrive as a note', async () => {
+    const tenantId = TENANTS[0]!
+    const { workshopId, dayId } = await aWorkshop(tenantId)
+    const rooms = fakeRooms()
+
+    const result = await adoptMethod(as(tenantId), rooms.editor, {
+      methodId: ODD_METHOD.id,
+      locale: 'de',
+      target: { kind: 'day', workshopId, dayId },
+    })
+
+    expect(result.degraded).toBe(1)
+    const { rows } = await ops.query<{ key: string }>(
+      'select key from module_type where id = $1',
+      [rooms.blocksOf(dayId)[0]?.moduleTypeId],
+    )
+    expect(rows[0]?.key).toBe('note')
+  })
+
+  it('refuses a day belonging to another workshop, as a missing day', async () => {
+    // Without the check the room is the only gate left, and it refuses a
+    // foreign day as an UNAVAILABLE SERVICE -- so the person is told the
+    // collaboration server is down when they picked the wrong day.
+    const tenantId = TENANTS[0]!
+    const mine = await aWorkshop(tenantId)
+    const other = await aWorkshop(tenantId)
+    const rooms = fakeRooms()
+
+    await expect(
+      adoptMethod(as(tenantId), rooms.editor, {
+        methodId: METHOD.id,
+        locale: 'de',
+        target: { kind: 'day', workshopId: mine.workshopId, dayId: other.dayId },
+      }),
+    ).rejects.toBeInstanceOf(NotFoundError)
+  })
+
+  it('refuses a workshop in another tenant', async () => {
+    const theirs = await aWorkshop(TENANTS[1]!)
+    const rooms = fakeRooms()
+
+    await expect(
+      adoptMethod(as(TENANTS[0]!), rooms.editor, {
+        methodId: METHOD.id,
+        locale: 'de',
+        target: { kind: 'day', workshopId: theirs.workshopId, dayId: theirs.dayId },
+      }),
+    ).rejects.toBeInstanceOf(NotFoundError)
+  })
+
+  it('refuses a method that is not there', async () => {
+    const tenantId = TENANTS[0]!
+    const { workshopId, dayId } = await aWorkshop(tenantId)
+    const rooms = fakeRooms()
+
+    await expect(
+      adoptMethod(as(tenantId), rooms.editor, {
+        methodId: randomUUID(),
+        locale: 'de',
+        target: { kind: 'day', workshopId, dayId },
+      }),
+    ).rejects.toBeInstanceOf(NotFoundError)
+  })
+
+  it('lets a failure in the room through instead of reporting success', async () => {
+    // A design counts a failed day and carries on, because the other days did
+    // arrive. One block has no other days: swallowing it would hand back a
+    // success with nothing written, and the panel would offer to open a
+    // workshop where nothing happened.
+    const tenantId = TENANTS[0]!
+    const { workshopId, dayId } = await aWorkshop(tenantId)
+    const rooms = fakeRooms({ failing: () => true })
+
+    await expect(
+      adoptMethod(as(tenantId), rooms.editor, {
+        methodId: METHOD.id,
+        locale: 'de',
+        target: { kind: 'day', workshopId, dayId },
+      }),
+    ).rejects.toThrow()
+  })
+
+  it('can make a workshop of its own for somebody who has none', async () => {
+    const tenantId = TENANTS[0]!
+    const rooms = fakeRooms()
+
+    const result = await adoptMethod(as(tenantId), rooms.editor, {
+      methodId: METHOD.id,
+      locale: 'de',
+      target: { kind: 'new' },
+    })
+
+    const { rows } = await ops.query<{ title: string }>(
+      'select title from workshop where id = $1',
+      [result.workshopId],
+    )
+    expect(rows[0]?.title).toBe('Check-in')
+    expect(rooms.blocksOf(result.dayId)).toHaveLength(1)
   })
 })

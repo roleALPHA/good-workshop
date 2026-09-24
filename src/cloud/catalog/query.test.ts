@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest'
 import type { Facet } from './ports'
-import { CLEARED, isFiltered, queryFromParams, toggleFacet } from './query'
+import { CLEARED, isFiltered, kindHref, queryFromParams, toggleFacet } from './query'
 
 /**
  * What an address means, as a table.
@@ -112,6 +112,9 @@ describe('isFiltered', () => {
     // A cursor is paging, not filtering: page two of everything is still
     // everything, and offering to "clear the filters" there would be a lie.
     expect(isFiltered(query({ after: 'abc' }))).toBe(false)
+    // Nor is the kind. If it counted, "clear the filters" would appear as soon
+    // as somebody picked Methods and would silently put the designs back.
+    expect(isFiltered(query({ kind: 'method' }))).toBe(false)
   })
 
   it.each([{ purpose: 'alignment' }, { group: '12' }, { time: '240' }, { q: 'x' }])(
@@ -159,5 +162,50 @@ describe('building the next address', () => {
     // '' would mean "this page" to a browser and skip the navigation entirely,
     // so turning off the last chip would leave the filter on.
     expect(toggleFacet({ purpose: 'alignment' }, 'purpose', 'alignment')).toBe(CLEARED)
+  })
+})
+
+describe('which sort of entry', () => {
+  it.each(['design', 'method'] as const)('reads %s', (kind) => {
+    expect(query({ kind }).kind).toBe(kind)
+  })
+
+  it.each(['banana', '', 'DESIGN', 'design,method', ' '])(
+    'treats an unusable kind (%p) as both, not as neither',
+    (raw) => {
+      // The same rule the group size follows: an answer nobody can act on is
+      // the question unasked. Reading `?kind=banana` as "match nothing" would
+      // show an empty library to somebody with a mistyped bookmark.
+      expect(query({ kind: raw }).kind).toBeUndefined()
+    },
+  )
+
+  it('is not a facet, even when the catalogue grows one by that name', () => {
+    // `kind` is reserved, so a facet group authored under that key is skipped
+    // rather than quietly fighting the toggle for the same parameter.
+    const withKindFacet: Facet[] = [
+      ...FACETS,
+      { kind: 'kind', label: 'Art', single: true, values: [{ key: 'loud', label: 'Laut' }] },
+    ]
+    expect(queryFromParams({ kind: 'loud' }, 'de', withKindFacet).facets).toBeUndefined()
+  })
+
+  it('switches, and clears back to both', () => {
+    expect(kindHref({}, 'method')).toBe('?kind=method')
+    expect(kindHref({ kind: 'method' }, 'design')).toBe('?kind=design')
+    expect(kindHref({ kind: 'method' }, null)).toBe(CLEARED)
+  })
+
+  it('keeps the filters and drops the cursor', () => {
+    // Page three of the methods is not page three of the designs.
+    const href = kindHref({ purpose: 'alignment', group: '12', after: 'abc' }, 'method')
+    expect(href).toContain('purpose=alignment')
+    expect(href).toContain('group=12')
+    expect(href).not.toContain('after')
+  })
+
+  it('survives a click on a filter chip', () => {
+    // Otherwise choosing Methods and then a facet would put the designs back.
+    expect(toggleFacet({ kind: 'method' }, 'purpose', 'alignment')).toContain('kind=method')
   })
 })

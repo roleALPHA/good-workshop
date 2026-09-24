@@ -26,9 +26,11 @@ describe('an unconfigured catalogue', () => {
     const locale = 'en' as const
     return Promise.all([
       expect(catalog.listFacets(locale)).resolves.toEqual([]),
+      expect(catalog.listEntries({ locale })).resolves.toEqual({ items: [], nextCursor: null }),
       expect(catalog.listMethods({ locale })).resolves.toEqual({ items: [], nextCursor: null }),
       expect(catalog.listDesigns({ locale })).resolves.toEqual({ items: [], nextCursor: null }),
       expect(catalog.getMethod('anything', locale)).resolves.toBeNull(),
+      expect(catalog.getMethodById('anything', locale)).resolves.toBeNull(),
       expect(catalog.getDesign('anything', locale)).resolves.toBeNull(),
       expect(catalog.publishedMethodSlugs()).resolves.toEqual([]),
     ])
@@ -41,8 +43,10 @@ describe('an unconfigured catalogue', () => {
     const required: (keyof CatalogPort)[] = [
       'configured',
       'listFacets',
+      'listEntries',
       'listMethods',
       'getMethod',
+      'getMethodById',
       'listDesigns',
       'getDesign',
       'publishedMethodSlugs',

@@ -21,8 +21,10 @@ const empty = async () => ({ items: [], nextCursor: null })
 export const catalog: CatalogPort = {
   configured: false,
   listFacets: async () => [],
+  listEntries: empty,
   listMethods: empty,
   getMethod: async () => null,
+  getMethodById: async () => null,
   listDesigns: empty,
   getDesign: async () => null,
   publishedMethodSlugs: async () => [],

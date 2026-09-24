@@ -1,7 +1,7 @@
 import { z } from 'zod'
 import type { McpServer } from '@modelcontextprotocol/sdk/server/mcp.js'
 import { catalog } from '@gw/catalog'
-import { adoptDesign } from '@/cloud/catalog/adopt'
+import { adoptDesign, adoptMethod } from '@/cloud/catalog/adopt'
 import { roomEditor } from '@/server/collab/across-days'
 import { LOCALES, type Locale } from '@/i18n/config'
 import type { PatActor } from './auth'
@@ -24,10 +24,12 @@ import { fail, guarded, ok } from './respond'
  * is. What protects those tables is a SELECT-only policy -- see the private
  * migration.
  *
- * `adopt_discover_design` calls the SAME function as the server action behind
- * the button. docs/architecture.md makes that a rule -- "a model can do what
- * the library and the day editor let a person do" -- and one function is the
- * only way to keep it true.
+ * `adopt_discover_design` and `adopt_discover_method` call the SAME functions
+ * as the server actions behind the buttons. docs/architecture.md makes that a
+ * rule -- "a model can do what the library and the day editor let a person do"
+ * -- and one function is the only way to keep it true. It is also why adding
+ * the method side of Discover to the screens meant adding it here in the same
+ * change, rather than leaving a model able to see designs only.
  */
 
 const Id = z.string().uuid()
@@ -70,6 +72,48 @@ export function registerCatalogTools(
             .map((f) => `${f.kind}: ${f.values.map((v) => `${v.key} (${v.label})`).join(', ')}`)
             .join('\n'),
           { facets },
+        )
+      }),
+  )
+
+  server.registerTool(
+    'list_discover_entries',
+    {
+      title: 'List Discover',
+      description:
+        'Everything in the Discover library, newest first: ready-made DESIGNS of one or more ' +
+        'days, and the METHODS single blocks are made from. Each row says which it is. This ' +
+        'is the tool to reach for when somebody describes what they need rather than naming ' +
+        'a kind -- "something for forty minutes with twelve people" has answers of both ' +
+        'sorts. Narrow with `kind` when they asked for one. Filter with the values from ' +
+        'list_discover_filters.',
+      inputSchema: {
+        facets: Facets,
+        groupSize: z.number().int().min(1).max(10_000).optional(),
+        maxMinutes: z.number().int().min(1).optional(),
+        search: z.string().trim().max(200).optional(),
+        cursor: z.string().max(400).optional(),
+        kind: z
+          .enum(['design', 'method'])
+          .optional()
+          .describe('Only designs, or only methods. Leave it out for both.'),
+        locale: LocaleInput,
+      },
+    },
+    async ({ locale: asked, ...query }) =>
+      guarded(async () => {
+        requireScope(actor, 'workshops:read')
+        const page = await catalog.listEntries({ ...query, locale: locale(asked) })
+        if (page.items.length === 0) return ok('Nothing in Discover matches.')
+        return ok(
+          page.items
+            .map((entry) =>
+              entry.kind === 'design'
+                ? `${entry.id}  [design] ${entry.name} — ${entry.dayCount} day(s), ${entry.durationMinutes} min`
+                : `${entry.id}  [method] ${entry.name} — ${entry.durationMinutes} min`,
+            )
+            .join('\n'),
+          { entries: page.items, nextCursor: page.nextCursor },
         )
       }),
   )
@@ -179,6 +223,91 @@ export function registerCatalogTools(
         return ok(
           [
             `Adopted into workshop ${result.workshopId}, ${result.dayIds.length} day(s).`,
+            ...notes,
+          ].join(' '),
+          result,
+        )
+      }),
+  )
+
+  server.registerTool(
+    'get_discover_method',
+    {
+      title: 'Read a Discover method',
+      description:
+        'One method in full: what it is for, how long it runs, how many people it suits, and ' +
+        'its prose. Read this and show it to the person before adopting it. Addressed by the ' +
+        'id list_discover_entries gives, never by the address its public page has.',
+      inputSchema: { methodId: Id, locale: LocaleInput },
+    },
+    async ({ methodId, locale: asked }) =>
+      guarded(async () => {
+        requireScope(actor, 'workshops:read')
+        const method = await catalog.getMethodById(methodId, locale(asked))
+        if (!method) return fail('No such method, or it is not published.')
+        return ok(`${method.name} — ${method.durationMinutes} min.`, { method })
+      }),
+  )
+
+  server.registerTool(
+    'adopt_discover_method',
+    {
+      title: 'Adopt a Discover method',
+      description:
+        'Puts one method into this workspace as a single block at the END of the day you ' +
+        'name. With `dayId` it goes into that day of that workshop; without either it makes ' +
+        'a new workshop for it. Use list_days to find the day and let the person choose it ' +
+        '-- a method is a block, and putting it on the wrong day is the one mistake this ' +
+        'cannot undo for them. It never changes the day itself: the title and the start ' +
+        'time it already has are left alone. A method whose block type this workspace does ' +
+        'not have arrives as a note, and the answer says so.',
+      inputSchema: {
+        methodId: Id,
+        workshopId: Id.optional().describe('The workshop the day belongs to. With dayId.'),
+        dayId: Id.optional().describe(
+          'The day it goes into. Leave both out to create a new workshop for it.',
+        ),
+        title: z
+          .string()
+          .trim()
+          .max(300)
+          .optional()
+          .describe('Title of the new workshop. Only without dayId; defaults to the method.'),
+        folderId: Id.nullable()
+          .optional()
+          .describe('Files the new workshop in a folder. Only without dayId.'),
+        locale: LocaleInput,
+      },
+    },
+    async ({ methodId, workshopId, dayId, title, folderId, locale: asked }) =>
+      guarded(async () => {
+        requireScope(actor, 'workshops:write')
+        if (Boolean(workshopId) !== Boolean(dayId)) {
+          return fail('Give workshopId and dayId together, or neither to create a workshop.')
+        }
+
+        const result = await adoptMethod(
+          actor,
+          (id) => roomEditor({ workshopId: id, authorization, presence: MODEL }),
+          {
+            methodId,
+            locale: locale(asked),
+            target:
+              workshopId && dayId
+                ? { kind: 'day', workshopId, dayId }
+                : { kind: 'new', title, folderId: folderId ?? null },
+          },
+        )
+
+        const notes = [
+          result.degraded > 0 && 'It arrived as a note: no such block type here.',
+          result.descDropped > 0 &&
+            'Its description did not fit this workspace\u2019s block type and was dropped.',
+        ].filter((note): note is string => typeof note === 'string')
+
+        return ok(
+          [
+            `Added to day ${result.dayId} of workshop ${result.workshopId}, block ${result.blockId}.`,
             ...notes,
           ].join(' '),
           result,
