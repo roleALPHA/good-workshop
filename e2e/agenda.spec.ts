@@ -1,4 +1,4 @@
-import { expect, test, type Page } from '@playwright/test'
+import { expect, test, type Locator, type Page } from '@playwright/test'
 import { seedReferenceDay } from './fixtures/seed-day'
 
 /**
@@ -20,9 +20,24 @@ const block = (page: Page, name: string) => page.getByRole('article', { name })
 const section_ = (page: Page, name: string) => page.getByRole('group', { name })
 const agenda = (page: Page) => page.getByRole('region', { name: /^Agenda/ })
 
-/** The block titles in document order, read from the fields that hold them. */
+/**
+ * The block titles in document order, read from the fields that hold them.
+ *
+ * `exact`, because getByLabel matches substrings: a section's name field is
+ * labelled separately for that reason, and this helper used to encode the
+ * assumption that only blocks have a name at all.
+ */
 const titlesInOrder = (page: Page) =>
-  page.getByLabel('Titel').evaluateAll((els) => els.map((el) => (el as HTMLInputElement).value))
+  page
+    .getByLabel('Titel', { exact: true })
+    .evaluateAll((els) => els.map((el) => (el as HTMLInputElement).value))
+
+/**
+ * The section's colour as the browser resolved it. OKLCH is the one thing a
+ * component test cannot answer, which is why the colour is asserted here.
+ */
+const bar = (row: Locator) =>
+  row.evaluate((el) => getComputedStyle(el).getPropertyValue('--cat-bar').trim())
 
 test.beforeEach(async ({ page, request }) => {
   await seedReferenceDay(page, request)
@@ -383,5 +398,65 @@ test.describe('inline editing in the day view', () => {
 
     await page.reload()
     await expect(block(page, 'Spannungsfelder sammeln')).toContainText('Moderationskoffer rot')
+  })
+
+  test('adds a section, names it and colours it in place, and keeps both', async ({ page }) => {
+    await agenda(page).getByRole('button', { name: 'Abschnitt hinzufügen' }).click()
+
+    await expect(section_(page, 'Neuer Abschnitt')).toBeVisible()
+
+    // Reached as the last section rather than through the row's name: that
+    // name is computed from this very field, so a locator naming the row stops
+    // matching the moment the first character is typed.
+    const name = agenda(page).getByLabel('Name des Abschnitts').last()
+    await expect(name).toBeFocused()
+    await name.fill('Nachmittag')
+    await name.press('Enter')
+    await expect(section_(page, 'Nachmittag')).toBeVisible()
+
+    const row = section_(page, 'Nachmittag')
+    const colour = row.getByLabel('Farbe des Abschnitts')
+    await row.hover()
+    // Not toBeVisible: Playwright counts an opacity-0 element as visible.
+    await expect(colour).toHaveCSS('opacity', '1')
+
+    const before = await bar(row)
+    await colour.selectOption('amber')
+    await expect.poll(() => bar(row)).not.toBe(before)
+
+    // Naming a section is not worth a dialog either.
+    await expect(page.getByRole('dialog')).toHaveCount(0)
+
+    await page.reload()
+    const after = section_(page, 'Nachmittag')
+    await expect(after).toBeVisible()
+    // Polled, not read once: the page first renders from the database and then
+    // takes what the room still holds, so the colour can arrive a beat later.
+    await expect.poll(() => bar(after)).not.toBe(before)
+  })
+
+  test('fills a freshly created section from the keyboard', async ({ page }) => {
+    // The section arrives empty on purpose -- nothing is swept into it. This
+    // is the answer to "and how do blocks get in", without a pointer.
+    await agenda(page).getByRole('button', { name: 'Abschnitt hinzufügen' }).click()
+    const name = agenda(page).getByLabel('Name des Abschnitts').last()
+    await name.fill('Nachmittag')
+    await name.press('Enter')
+
+    await agenda(page).getByRole('button', { name: 'Block hinzufügen' }).click()
+    await page.getByLabel('Blocktyp suchen').fill('Puffer')
+    await page
+      .getByRole('button', { name: /Puffer/ })
+      .first()
+      .click()
+    await expect(block(page, 'Puffer')).toBeVisible()
+
+    await page.getByRole('button', { name: 'Puffer verschieben' }).focus()
+    await page.keyboard.press('Space')
+    await page.keyboard.press('ArrowRight')
+    await expect(agenda(page).getByRole('status')).toContainText('in Abschnitt Nachmittag')
+    await page.keyboard.press('Space')
+
+    await expect(section_(page, 'Nachmittag')).toContainText('1 Block')
   })
 })

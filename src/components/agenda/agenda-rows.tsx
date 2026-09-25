@@ -1,6 +1,7 @@
 import type { CSSProperties, ReactNode } from 'react'
 import { ChevronDown, Inbox, NotebookPen, Trash2 } from 'lucide-react'
 import type { ClusterDto, ModuleDto, ModuleTypeDto } from '@/domain/agenda/types'
+import type { CategoryColor } from '@/lib/category-colors'
 import type { Peer } from '@/features/agenda/document'
 import type { Schedule, ScheduleEntry } from '@/domain/schedule/types'
 import { setDescField, stringList } from '@/domain/moduleType/desc'
@@ -13,6 +14,7 @@ import { isRichTextValue } from '@/lib/richtext/schema'
 import { toPlainText } from '@/lib/richtext/plain'
 import { RichText } from '@/lib/richtext/render'
 import { ChipsInput } from './chips-input'
+import { ColorSelect } from './color-select'
 import {
   resolveResponsible,
   type AssignablePerson,
@@ -364,12 +366,20 @@ export function ModuleRow({
 /**
  * What an editor may change about a section header.
  *
- * The pin, and nothing else. A section's title and colour are a separate
- * feature with their own questions; bundling them here is how "the minimal
- * shape" stops being minimal.
+ * The three things a section is: when it starts, what it is called, what colour
+ * it carries. It used to be the pin alone, which was survivable while sections
+ * could only arrive over MCP -- a name that could not be changed meant deleting
+ * the section and building it again.
  */
 export type ClusterEditing = {
   onPinChange: (minute: number | null) => void
+  onTitleChange: (title: string) => void
+  onColorChange: (color: CategoryColor | null) => void
+  /**
+   * The section was created a moment ago by the person looking at it, so the
+   * cursor belongs in its name. Spent on arrival -- see AgendaEditor.
+   */
+  autoFocusTitle?: boolean
   /**
    * Removes the cluster AND the blocks inside it.
    *
@@ -437,9 +447,24 @@ export function ClusterRow({
         </div>
         <span className="hidden md:block" />
         <div className="flex items-baseline gap-2 border-l-4 border-[var(--cat-bar)] py-2 pl-3 md:px-3">
-          <h2 id={titleId} className="text-[15px] font-semibold text-[var(--cat-fg)]">
-            {cluster.title}
-          </h2>
+          {editing ? (
+            // Inside the heading, not beside it: the row's accessible name is
+            // computed from the heading, and an embedded field still answers
+            // for it -- which is what the e2e suite looks a section up by.
+            <h2 id={titleId} className="min-w-0 flex-1">
+              <TitleInput
+                value={cluster.title}
+                onCommit={editing.onTitleChange}
+                label={t('section.title')}
+                className="text-[15px] text-[var(--cat-fg)]"
+                autoFocus={editing.autoFocusTitle}
+              />
+            </h2>
+          ) : (
+            <h2 id={titleId} className="text-[15px] font-semibold text-[var(--cat-fg)]">
+              {cluster.title}
+            </h2>
+          )}
           <span className="tabular text-[13px] text-[var(--cat-fg)] opacity-80">
             {t('blockCount', { count: childCount })} ·{' '}
             {formatDuration(entry.durationMinutes, { spaced: true })}
@@ -465,13 +490,28 @@ export function ClusterRow({
             catalogue entry brings one every time, and there was no way to
             take it out again.
           */}
+          {editing && (
+            <ColorSelect
+              value={cluster.color}
+              onChange={editing.onColorChange}
+              label={t('section.color')}
+              // Quiet until the row is touched, like the delete beside it --
+              // but never invisible-yet-tappable: on a touch screen there is
+              // no hover to reveal it with.
+              className="ml-auto opacity-0 group-focus-within:opacity-100 group-hover:opacity-100 focus-within:opacity-100 pointer-coarse:opacity-100"
+            />
+          )}
+
           {editing?.onRemove && (
             <button
               type="button"
               onClick={editing.onRemove}
               aria-label={t('deleteClusterLabel', { title: cluster.title, count: childCount })}
               title={t('deleteClusterHint', { count: childCount })}
-              className="ml-auto inline-flex min-h-11 items-center gap-1 rounded px-1 text-[13px] text-[var(--cat-fg)] opacity-0 group-focus-within:opacity-80 group-hover:opacity-80 hover:text-[var(--danger-fg)] focus-visible:opacity-100"
+              // pointer-coarse, which was missing: hidden by opacity but still
+              // hit-testable is the worst of both on a touch screen. The
+              // colour select beside it carries the ml-auto for the pair.
+              className="inline-flex min-h-11 items-center gap-1 rounded px-1 text-[13px] text-[var(--cat-fg)] opacity-0 group-focus-within:opacity-80 group-hover:opacity-80 hover:text-[var(--danger-fg)] focus-visible:opacity-100 pointer-coarse:opacity-100"
             >
               <Trash2 aria-hidden className="size-3.5" />
               {t('deleteCluster', { count: childCount })}

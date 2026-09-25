@@ -1,6 +1,6 @@
 'use client'
 
-import { useLayoutEffect, useRef, useState } from 'react'
+import { useEffect, useLayoutEffect, useRef, useState } from 'react'
 import { Lock, LockOpen } from 'lucide-react'
 import { useTranslations } from 'next-intl'
 import {
@@ -29,10 +29,22 @@ export function TitleInput({
   value,
   onCommit,
   placeholder = 'Titel',
+  label,
+  className,
+  autoFocus,
 }: {
   value: string
   onCommit: (value: string) => void
   placeholder?: string
+  /** Defaults to a block's title. A section says what it is instead. */
+  label?: string
+  /**
+   * Replaces the colour, not appended to it: Tailwind's arbitrary values do
+   * not resolve by class order, so a second text-[…] would be a coin toss.
+   */
+  className?: string
+  /** For a row that was just created: the cursor belongs in its name. */
+  autoFocus?: boolean
 }) {
   const t = useTranslations('agenda')
   const [draft, setDraft] = useState(value)
@@ -43,15 +55,34 @@ export function TitleInput({
     setDraft(value)
   }
 
+  const field = useRef<HTMLInputElement>(null)
+  // On arrival only, and selected rather than merely focused: a section comes
+  // with a placeholder name, and typing should replace it, not append to it.
+  // jsdom's select() does not focus on its own, hence both.
+  useEffect(() => {
+    if (!autoFocus) return
+    field.current?.focus()
+    field.current?.select()
+  }, [autoFocus])
+
   return (
     <input
       type="text"
-      aria-label={t('blockTitle')}
+      aria-label={label ?? t('blockTitle')}
       placeholder={placeholder}
-      className={cn(bare, '-ml-1 font-semibold text-[var(--fg)]')}
+      className={cn(bare, '-ml-1 font-semibold', className ?? 'text-[var(--fg)]')}
+      ref={field}
       value={draft}
       onChange={(e) => setDraft(e.target.value)}
-      onBlur={() => draft !== value && onCommit(draft.trim())}
+      // An emptied name returns rather than being stored: a row with no name
+      // cannot be told apart from its neighbours, and a section with no name
+      // leaves its own group and its delete button without one either. Same
+      // rule as a duration that cannot be read.
+      onBlur={() => {
+        const next = draft.trim()
+        if (next === '') return setDraft(value)
+        if (next !== value) onCommit(next)
+      }}
       onKeyDown={(e) => {
         if (e.key === 'Enter') e.currentTarget.blur()
         if (e.key === 'Escape') {

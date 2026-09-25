@@ -261,6 +261,13 @@
       "memberHint": "Miembro"
     },
     "saving": "Guardando …",
+    "section": {
+      "add": "Añadir sección",
+      "newTitle": "Nueva sección",
+      "title": "Nombre de la sección",
+      "color": "Color de la sección",
+      "colorUnset": "Sin color"
+    },
     "searchType": "Buscar tipo de bloque",
     "tagPlaceholder": "+ etiqueta",
     "unpark": "Volver al desarrollo",
@@ -333,6 +340,18 @@
     "copied": "Copiado"
   },
   "enums": {
+    "categoryColor": {
+      "rose": "Rosa",
+      "red": "Rojo",
+      "orange": "Naranja",
+      "amber": "Ámbar",
+      "emerald": "Esmeralda",
+      "teal": "Verde azulado",
+      "cyan": "Cian",
+      "blue": "Azul",
+      "violet": "Violeta",
+      "slate": "Gris"
+    },
     "memberRole": {
       "member": "Miembro",
       "admin": "Admin"

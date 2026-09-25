@@ -141,6 +141,9 @@ export function AgendaEditor({
   // Which row has its type-specific fields open. One at a time: several
   // expanded rows turn the agenda back into a wall of forms.
   const [expandedId, setExpandedId] = useState<string | null>(null)
+  // The section added a moment ago, so its name can take the cursor. Only ever
+  // set by the button that creates one, and cleared as soon as focus lands.
+  const [newSectionId, setNewSectionId] = useState<string | null>(null)
 
   const liveMessage = activeId
     ? describeProjection(doc, rows, activeId, projection, t, locale)
@@ -279,7 +282,11 @@ export function AgendaEditor({
    */
   const reportFocus = (event: React.FocusEvent<HTMLElement>) => {
     const row = (event.target as HTMLElement).closest('[data-block-id]')
-    agenda.setFocus(row?.getAttribute('data-block-id') ?? null)
+    const id = row?.getAttribute('data-block-id') ?? null
+    agenda.setFocus(id)
+    // Spent the moment the cursor arrives. Left standing, a remount during a
+    // later drag would yank the focus back into a name nobody is editing.
+    if (id !== null && id === newSectionId) setNewSectionId(null)
   }
 
   const clearFocus = (event: React.FocusEvent<HTMLElement>) => {
@@ -358,6 +365,9 @@ export function AgendaEditor({
                         editing={{
                           onPinChange: (pinnedStartMinute) =>
                             agenda.patchCluster(row.id, { pinnedStartMinute }),
+                          onTitleChange: (title) => agenda.patchCluster(row.id, { title }),
+                          onColorChange: (color) => agenda.patchCluster(row.id, { color }),
+                          autoFocusTitle: row.id === newSectionId,
                           // The same op the MCP tool uses: it takes the blocks
                           // inside with it, which is what removing a section
                           // means.
@@ -405,6 +415,7 @@ export function AgendaEditor({
 
         <BlockPicker
           types={Object.values(doc.moduleTypes)}
+          onAddSection={() => setNewSectionId(agenda.addCluster({ title: t('section.newTitle') }))}
           onAdd={(typeKey) => {
             const type = Object.values(doc.moduleTypes).find((t) => t.key === typeKey)
             if (!type) return
