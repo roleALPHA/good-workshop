@@ -111,21 +111,44 @@ async function call(
   request: APIRequestContext,
   name: string,
   args: Record<string, unknown>,
+  address: string,
 ): Promise<Record<string, unknown>> {
-  const first = await callOnce(request, name, args)
+  const first = await callOnce(request, name, args, address)
   if (first.body !== '') return first.structured
-  return (await callOnce(request, name, args)).structured
+  return (await callOnce(request, name, args, address)).structured
+}
+
+/**
+ * A client address of this seed's own, in a header the app already reads.
+ *
+ * /api/mcp allows 60 calls a minute per address, and with no proxy in the
+ * harness `clientAddress` falls back to one shared bucket for the whole suite
+ * -- the "blunt" case its own comment names. Every test seeds three calls
+ * through it, so the suite ends up rate-limiting itself, and the limit is the
+ * one thing here that must not be softened: it is what keeps a stranger from
+ * driving a database write per request.
+ *
+ * Not a dodge. Each seeded workshop stands for a different client; the header
+ * is how a real deployment says so, and the harness has no proxy to say it.
+ */
+let seeded = 0
+const nextAddress = () => {
+  const worker = Number(process.env.TEST_PARALLEL_INDEX ?? 0)
+  seeded += 1
+  return `10.${worker}.${Math.floor(seeded / 256) % 256}.${seeded % 256}`
 }
 
 async function callOnce(
   request: APIRequestContext,
   name: string,
   args: Record<string, unknown>,
+  address: string,
 ): Promise<{ body: string; structured: Record<string, unknown> }> {
   const response = await request.post('/api/mcp', {
     headers: {
       authorization: `Bearer ${tokenForMcp()}`,
       accept: 'application/json, text/event-stream',
+      'x-forwarded-for': address,
     },
     data: { jsonrpc: '2.0', id: 1, method: 'tools/call', params: { name, arguments: args } },
   })
@@ -161,24 +184,30 @@ export async function seedReferenceDay(
 ): Promise<string> {
   const doc = createDemoDay()
   const title = name ?? `Referenz ${Date.now()}-${Math.random().toString(36).slice(2, 7)}`
+  const address = nextAddress()
 
-  const created = await call(request, 'create_workshop', { title, date: doc.date ?? undefined })
+  const created = await call(
+    request,
+    'create_workshop',
+    { title, date: doc.date ?? undefined },
+    address,
+  )
   const workshopId = String(created.workshopId ?? '')
   const dayId = String(created.dayId ?? '')
   // The one call whose answer is load-bearing: everything below addresses the
   // workshop by id, so an empty stream here has to fail loudly.
   expect(workshopId && dayId, `create_workshop ohne Ids: ${JSON.stringify(created)}`).toBeTruthy()
 
-  await call(request, 'apply_agenda', {
-    workshopId,
-    dayId,
-    mode: 'replace',
-    items: agendaItems(),
-  })
+  await call(
+    request,
+    'apply_agenda',
+    { workshopId, dayId, mode: 'replace', items: agendaItems() },
+    address,
+  )
 
   // The day starts at 13:00 in the fixture, and every derived time below
   // depends on it. apply_agenda writes blocks, not the day itself.
-  await call(request, 'set_day_start', { workshopId, dayId, startMinute: doc.startMinute })
+  await call(request, 'set_day_start', { workshopId, dayId, startMinute: doc.startMinute }, address)
 
   const url = `/w/${workshopId}/d/${dayId}`
   await page.goto(url)

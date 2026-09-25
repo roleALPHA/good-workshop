@@ -366,4 +366,22 @@ test.describe('inline editing in the day view', () => {
     await page.reload()
     await expect(block(page, 'Spannungsfelder sammeln')).toContainText('Moderationskoffer')
   })
+
+  test('changes a material that is already there, in place, and keeps it', async ({ page }) => {
+    const row = block(page, 'Spannungsfelder sammeln')
+
+    await row.getByLabel('Material hinzufügen').fill('Moderationskoffer')
+    await row.getByLabel('Material hinzufügen').press('Enter')
+
+    await row.getByRole('button', { name: 'Material Moderationskoffer bearbeiten' }).click()
+    await row.getByLabel('Neuer Name für Material Moderationskoffer').fill('Moderationskoffer rot')
+    await row.getByLabel('Neuer Name für Material Moderationskoffer').press('Enter')
+
+    // Fixing a typo is not worth a dialog, here as everywhere else.
+    await expect(page.getByRole('dialog')).toHaveCount(0)
+    await expect(row).toContainText('Moderationskoffer rot')
+
+    await page.reload()
+    await expect(block(page, 'Spannungsfelder sammeln')).toContainText('Moderationskoffer rot')
+  })
 })
