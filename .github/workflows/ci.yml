@@ -290,6 +290,7 @@ jobs:
             throw new BillingUnavailableError()
           }
           export const configured = false
+          export const paymentsConfigured = false
           export const adapters: BillingAdapters = {
             invoicing: {
               planPrice: refuse,

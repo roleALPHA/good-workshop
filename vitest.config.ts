@@ -35,6 +35,14 @@ export default defineConfig({
        * exist outside a request. That is the same boundary production has.
        */
       'next-intl/config': fileURLToPath(new URL('./src/i18n/request.ts', import.meta.url)),
+      /**
+       * What Next resolves this to in a Server Component: the `react-server`
+       * export condition, which is an empty module. Vitest resolves the
+       * `default` one, and that is a bare `throw` -- so without this alias no
+       * test can import anything marked server-only, and a marker meant to
+       * catch a wrong import would decide what is testable.
+       */
+      'server-only': fileURLToPath(new URL('./node_modules/server-only/empty.js', import.meta.url)),
     },
   },
   test: {

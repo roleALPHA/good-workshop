@@ -1,7 +1,7 @@
 'use server'
 
 import { revalidatePath } from 'next/cache'
-import { adapters, configured } from '@gw/billing-adapters'
+import { adapters, paymentsConfigured } from '@gw/billing-adapters'
 import { authConfig } from '@/server/auth/config'
 import { currentActor, fail, toResult, type ActionResult } from '@/server/actions/context'
 import { checkVatId } from '@/cloud/tax/vies'
@@ -52,7 +52,11 @@ export async function updateBillingDetailsAction(
 }
 
 export async function startPaymentSetupAction(): Promise<ActionResult<{ url: string } | null>> {
-  if (!configured) return { ok: true, data: null }
+  // Payments alone, not `configured`: storing a card needs the payment provider
+  // and nothing else. The web container deliberately has no accounting key, and
+  // asking the wider flag here turned that into "payments are not set up" on a
+  // page whose payment key was right there.
+  if (!paymentsConfigured) return { ok: true, data: null }
   return run(async (actor) => ({
     url: await startPaymentSetup(
       actor,
