@@ -261,6 +261,13 @@
       "memberHint": "Membre"
     },
     "saving": "Enregistrement …",
+    "section": {
+      "add": "Ajouter une section",
+      "newTitle": "Nouvelle section",
+      "title": "Nom de la section",
+      "color": "Couleur de la section",
+      "colorUnset": "Sans couleur"
+    },
     "searchType": "Rechercher un type de bloc",
     "tagPlaceholder": "+ tag",
     "unpark": "Remettre dans le déroulé",
@@ -333,6 +340,18 @@
     "copied": "Copié"
   },
   "enums": {
+    "categoryColor": {
+      "rose": "Rose",
+      "red": "Rouge",
+      "orange": "Orange",
+      "amber": "Ambre",
+      "emerald": "Émeraude",
+      "teal": "Sarcelle",
+      "cyan": "Cyan",
+      "blue": "Bleu",
+      "violet": "Violet",
+      "slate": "Gris"
+    },
     "memberRole": {
       "member": "Membre",
       "admin": "Admin"

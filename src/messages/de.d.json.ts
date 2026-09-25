@@ -264,6 +264,13 @@ declare const messages: {
       "memberHint": "Mitglied"
     },
     "saving": "Wird gespeichert …",
+    "section": {
+      "add": "Abschnitt hinzufügen",
+      "newTitle": "Neuer Abschnitt",
+      "title": "Name des Abschnitts",
+      "color": "Farbe des Abschnitts",
+      "colorUnset": "Ohne Farbe"
+    },
     "searchType": "Blocktyp suchen",
     "tagPlaceholder": "+ Tag",
     "unpark": "In den Ablauf",
@@ -336,6 +343,18 @@ declare const messages: {
     "copied": "Kopiert"
   },
   "enums": {
+    "categoryColor": {
+      "rose": "Rosé",
+      "red": "Rot",
+      "orange": "Orange",
+      "amber": "Bernstein",
+      "emerald": "Smaragd",
+      "teal": "Petrol",
+      "cyan": "Türkis",
+      "blue": "Blau",
+      "violet": "Violett",
+      "slate": "Grau"
+    },
     "memberRole": {
       "member": "Mitglied",
       "admin": "Admin"

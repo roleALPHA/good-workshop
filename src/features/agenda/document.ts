@@ -1,5 +1,6 @@
 import type { Responsible } from '@/domain/agenda/responsible'
 import type { DayDoc } from '@/domain/agenda/types'
+import type { CategoryColor } from '@/lib/category-colors'
 import type { Projection } from './projection'
 
 /**
@@ -35,15 +36,27 @@ export type DayPatch = {
   startMinute?: number
 }
 
-/** A section header. Only its start time is editable from the agenda today. */
+/** A section header: what it is called, what colour it carries, when it starts. */
 export type ClusterPatch = {
   pinnedStartMinute?: number | null
+  title?: string
+  color?: CategoryColor | null
 }
 
 export type NewBlock = {
   moduleTypeId: string
   title: string
   durationMinutes: number
+}
+
+/**
+ * A new section. The title comes from the caller rather than from a default in
+ * here: the placeholder name is interface text, and interface text is written
+ * in the catalog, not in a hook that has no language.
+ */
+export type NewSection = {
+  title: string
+  color?: CategoryColor | null
 }
 
 /**
@@ -76,6 +89,11 @@ export type AgendaDocument = {
   /** Applies a finished drag. */
   move: (blockId: string, projection: Projection) => void
   addModule: (block: NewBlock) => void
+  /**
+   * Returns the new section's id. The row it creates is the row the cursor goes
+   * to, and nothing else on the way back can name it.
+   */
+  addCluster: (section: NewSection) => string
   removeModule: (moduleId: string) => void
   /** How the change is being shared, for the UI to report honestly. */
   status: DocumentStatus

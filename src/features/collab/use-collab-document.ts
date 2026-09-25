@@ -21,10 +21,18 @@ import type {
   DocumentStatus,
   ModulePatch,
   NewBlock,
+  NewSection,
 } from '@/features/agenda/document'
 import type { Projection } from '@/features/agenda/projection'
 import { CollabProvider, type ConnectionState, type PeerPresence } from './provider'
-import { addModule, applyProjection, patchCluster, patchModule, removeModule } from './y-ops'
+import {
+  addCluster,
+  addModule,
+  applyProjection,
+  patchCluster,
+  patchModule,
+  removeModule,
+} from './y-ops'
 import { setDayFields } from '@/domain/collab/ops'
 
 /**
@@ -145,6 +153,11 @@ export function useCollabDocument(initial: DayDoc, target: CollabTarget): Agenda
       move: (blockId: string, projection: Projection) =>
         withDoc((d) => applyProjection(d, blockId, projection)),
       addModule: (block: NewBlock) => withDoc((d) => addModule(d, uuidv7(), block)),
+      addCluster: (section: NewSection) => {
+        const id = uuidv7()
+        withDoc((d) => addCluster(d, id, section))
+        return id
+      },
       removeModule: (moduleId: string) => withDoc((d) => removeModule(d, moduleId)),
     }),
     [doc, status, peers, withDoc],

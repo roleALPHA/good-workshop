@@ -204,6 +204,45 @@ describe('the agenda as a whole', () => {
     ).toBeInTheDocument()
   })
 
+  it('adds a section at the end of the day and puts the cursor in its name', async () => {
+    renderEditor()
+    await userEvent.click(screen.getByRole('button', { name: 'Abschnitt hinzufügen' }))
+
+    const section = screen.getByRole('group', { name: 'Neuer Abschnitt' })
+    const field = within(section).getByRole('textbox', { name: 'Name des Abschnitts' })
+    expect(field).toHaveFocus()
+    // Selected, so the first keystroke replaces the placeholder name.
+    expect((field as HTMLInputElement).selectionEnd).toBe('Neuer Abschnitt'.length)
+
+    expect(
+      block('Druckpunkte').compareDocumentPosition(section) & Node.DOCUMENT_POSITION_FOLLOWING,
+      'der neue Abschnitt steht hinter dem letzten Block',
+    ).toBeTruthy()
+  })
+
+  it('renames the section it just added', async () => {
+    renderEditor()
+    await userEvent.click(screen.getByRole('button', { name: 'Abschnitt hinzufügen' }))
+
+    const section = screen.getByRole('group', { name: 'Neuer Abschnitt' })
+    const field = within(section).getByRole('textbox', { name: 'Name des Abschnitts' })
+    await userEvent.clear(field)
+    await userEvent.type(field, 'Nachmittag')
+    await userEvent.tab()
+
+    expect(screen.getByRole('group', { name: 'Nachmittag' })).toBeInTheDocument()
+  })
+
+  it('takes a section out again, and the demo document with it', async () => {
+    renderEditor()
+    await userEvent.click(screen.getByRole('button', { name: 'Abschnitt hinzufügen' }))
+    await userEvent.click(
+      screen.getByRole('button', { name: 'Abschnitt „Neuer Abschnitt“ löschen' }),
+    )
+
+    expect(screen.queryByRole('group', { name: 'Neuer Abschnitt' })).not.toBeInTheDocument()
+  })
+
   it('offers the description directly below the title instead of in the detail panel', () => {
     renderEditor()
     const row = within(block('Check-in & Start'))
@@ -254,6 +293,10 @@ describe('the agenda as a whole', () => {
         within(block('Agenda & Spielregeln')).queryByRole('button', { name: 'Startzeit fixieren' }),
       ).not.toBeInTheDocument()
       expect(screen.queryByRole('button', { name: 'Block hinzufügen' })).not.toBeInTheDocument()
+      expect(screen.queryByRole('button', { name: 'Abschnitt hinzufügen' })).not.toBeInTheDocument()
+      expect(
+        within(screen.getByRole('group', { name: 'Ankommen & Rahmen' })).queryAllByRole('combobox'),
+      ).toHaveLength(0)
     })
 
     it('offers no text input at all', () => {

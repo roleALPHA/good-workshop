@@ -54,6 +54,18 @@ describe('the inline description field', () => {
 })
 
 describe('the fields a screen reader announces', () => {
+  it('returns an emptied name rather than storing a row without one', async () => {
+    const onCommit = vi.fn()
+    render(<TitleInput value="Check-in" onCommit={onCommit} />)
+
+    const field = screen.getByRole('textbox', { name: 'Titel' })
+    await userEvent.clear(field)
+    await userEvent.tab()
+
+    expect(onCommit).not.toHaveBeenCalled()
+    expect(field).toHaveValue('Check-in')
+  })
+
   it('names the title in the language of the page', () => {
     // These two carried a hard-coded German aria-label in every language: an
     // English reader heard "Titel", a French one "Dauer". The visible text was

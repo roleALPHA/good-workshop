@@ -128,7 +128,9 @@ the rule above forbids.
 Block type colours are **semantics** ("check-in is rose"), not decoration. Whether they can be
 told apart depends on the OKLCH calibration. A tenant painting their corporate blue across
 every block type makes the agenda unreadable. Individual block type colours are changed in
-`/admin/module-types` — that is where they belong.
+`/admin/module-types` — that is where they belong. A section carries a colour of its own from
+the same palette, picked in its row; `ColorSelect` is the shared control and is meant to serve
+the module types too.
 
 ## Language
 
@@ -209,6 +211,16 @@ Concretely:
   entry being fixed would be gone for good, and a committed fix would arrive at the end of the
   list rather than where it was read. Escape abandons the change and leaves the chip; an emptied
   field does not delete — the button next to it is what deletes.
+- **A section is named and coloured in its own row.** The heading holds the name field, which
+  is what keeps the row's accessible name resolving while somebody types into it; the colour is
+  a native `<select>` of colour _names_ with a swatch beside it, so nothing is told by colour
+  alone. Adding one is a second button beside "Block hinzufügen", not an entry in the type list:
+  a section is not a module type, and a pretend one would take the filter's first match with it.
+  A new section arrives empty and at the end of the day — blocks are dragged in, by pointer or
+  with the arrow keys.
+- **An emptied name returns rather than being stored.** A row with no name cannot be told apart
+  from its neighbours, and a section with no name leaves its own group and its delete button
+  without one. Same rule as a duration that cannot be read.
 - **What a closed row carries is a decision, not a default.** A field earns its place there by
   being consulted mid-workshop, and the list is named in `e2e/agenda.spec.ts` so that adding to
   it has to be deliberate. The schema decides which extras become chips; the table does not keep

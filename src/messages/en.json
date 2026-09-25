@@ -261,6 +261,13 @@
       "memberHint": "Member"
     },
     "saving": "Saving …",
+    "section": {
+      "add": "Add section",
+      "newTitle": "New section",
+      "title": "Name of the section",
+      "color": "Colour of the section",
+      "colorUnset": "No colour"
+    },
     "searchType": "Search block types",
     "tagPlaceholder": "+ tag",
     "unpark": "Back into the schedule",
@@ -333,6 +340,18 @@
     "copied": "Copied"
   },
   "enums": {
+    "categoryColor": {
+      "rose": "Rose",
+      "red": "Red",
+      "orange": "Orange",
+      "amber": "Amber",
+      "emerald": "Emerald",
+      "teal": "Teal",
+      "cyan": "Cyan",
+      "blue": "Blue",
+      "violet": "Violet",
+      "slate": "Grey"
+    },
     "memberRole": {
       "member": "Member",
       "admin": "Admin"

@@ -8,6 +8,7 @@ import type {
   DayPatch,
   ModulePatch,
   NewBlock,
+  NewSection,
   Peer,
 } from './document'
 import { applyMove } from './move'
@@ -63,6 +64,18 @@ export function useLocalDocument(initial: DayDoc): AgendaDocument {
     setDoc((current) => applyMove(current, blockId, projection))
   }, [])
 
+  /**
+   * The next free sort key at day level, where clusters and loose blocks share
+   * one space. MAX_SAFE_INTEGER would do for a single addition and then tie on
+   * the second, leaving flattenDay to decide the order by comparing ids.
+   */
+  const nextOrder = (current: DayDoc) =>
+    Math.max(
+      0,
+      ...current.clusters.map((c) => c.order),
+      ...current.modules.filter((m) => m.clusterId === null).map((m) => m.order),
+    ) + 1
+
   const addModule = useCallback((block: NewBlock) => {
     setDoc((current) => ({
       ...current,
@@ -84,11 +97,42 @@ export function useLocalDocument(initial: DayDoc): AgendaDocument {
     }))
   }, [])
 
-  const removeModule = useCallback((moduleId: string) => {
+  const addCluster = useCallback((section: NewSection) => {
+    const id = `local-${crypto.randomUUID()}`
     setDoc((current) => ({
       ...current,
-      modules: current.modules.filter((m) => m.id !== moduleId),
+      clusters: [
+        ...current.clusters,
+        {
+          id,
+          title: section.title,
+          color: section.color ?? null,
+          pinnedStartMinute: null,
+          collapsed: false,
+          targetDurationMinutes: null,
+          order: nextOrder(current),
+        },
+      ],
     }))
+    return id
+  }, [])
+
+  /**
+   * Takes a section's blocks with it, like removeBlock does in the shared ops.
+   * Until a section could be created here this only ever saw module ids, and a
+   * cluster passed to it quietly did nothing.
+   */
+  const removeModule = useCallback((moduleId: string) => {
+    setDoc((current) => {
+      if (current.clusters.some((c) => c.id === moduleId)) {
+        return {
+          ...current,
+          clusters: current.clusters.filter((c) => c.id !== moduleId),
+          modules: current.modules.filter((m) => m.clusterId !== moduleId),
+        }
+      }
+      return { ...current, modules: current.modules.filter((m) => m.id !== moduleId) }
+    })
   }, [])
 
   return useMemo(
@@ -99,13 +143,14 @@ export function useLocalDocument(initial: DayDoc): AgendaDocument {
       patchDay,
       move,
       addModule,
+      addCluster,
       removeModule,
       status: { kind: 'local' as const },
       // Nothing is shared, so nobody is here and there is nothing to announce.
       peers: NOBODY,
       setFocus: () => {},
     }),
-    [doc, patchModule, patchCluster, patchDay, move, addModule, removeModule],
+    [doc, patchModule, patchCluster, patchDay, move, addModule, addCluster, removeModule],
   )
 }
 

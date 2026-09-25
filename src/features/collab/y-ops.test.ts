@@ -4,7 +4,7 @@ import { blocksOf, dayOf } from '@/domain/collab/doc'
 import { addClusterBlock, addModuleBlock } from '@/domain/collab/ops'
 import { sortByPosition } from '@/domain/agenda/ordering'
 import type { Projection } from '@/features/agenda/projection'
-import { applyProjection } from './y-ops'
+import { addCluster, applyProjection } from './y-ops'
 
 /**
  * Turning a finished drag into two field writes.
@@ -105,5 +105,19 @@ describe('applyProjection', () => {
     add(doc, 'a')
     applyProjection(doc, 'a', projection({ depth: 0, parentId: 'k', afterId: 'k' }))
     expect(blocksOf(doc).get('a')!.get('parentId')).toBeNull()
+  })
+})
+
+describe('addCluster', () => {
+  it('appends a section at day level', () => {
+    // Small, but this file is the only place the editor's vocabulary is laid
+    // over the shared ops, and a mistyped alias compiles.
+    const doc = day()
+    add(doc, 'a')
+    addCluster(doc, 'c1', { title: 'Nachmittag' })
+
+    expect(at(doc, null)).toEqual(['a', 'c1'])
+    expect(blocksOf(doc).get('c1')!.get('kind')).toBe('cluster')
+    expect(blocksOf(doc).get('c1')!.get('title')).toBe('Nachmittag')
   })
 })
