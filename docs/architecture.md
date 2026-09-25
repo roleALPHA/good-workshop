@@ -128,7 +128,12 @@ worker then only closes months and moves trials. The private build names its ada
 left empty, as every public build leaves it, the alias falls back to the adapters that refuse.
 CI builds the cloud edition against a stub outside `src/` and checks that the stub is what ends
 up in the bundle, because a build that ignored the argument would silently ship adapters that
-cannot bill. What the adapters have to _do_ is stated once, as a suite
+cannot bill. The module answers two questions, not one: `configured` means invoicing and
+collection both work and is what the worker asks, while `paymentsConfigured` means only that a
+payment provider can open a hosted page for a payment method, which is what the billing page asks.
+The web container is deliberately the second without the first -- it holds a restricted payment key
+and no accounting key at all -- and while one flag answered both, a correctly configured production
+container told its customers that payments were not set up. What the adapters have to _do_ is stated once, as a suite
 (`src/cloud/billing/conformance/`) that runs against any implementation: here against the fake
 in the ordinary unit suite, and in the private build against Odoo and Stripe staging. So the
 first check of the promise is not the first invoice a customer receives. `GW_BILLING_MODE` is a dry run unless it is

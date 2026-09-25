@@ -125,6 +125,28 @@ export type PaymentPort = {
 
 export type BillingAdapters = { invoicing: InvoicingPort; payments: PaymentPort }
 
+/**
+ * What `@gw/billing-adapters` is, as a type -- the module, not the adapters.
+ *
+ * Two flags, and the difference between them is the whole point: issuing an
+ * invoice needs the accounting system and a key that can collect, while storing
+ * a payment method needs nothing but the payment provider. The web container is
+ * deliberately the second without the first, and while one flag answered both
+ * questions it reported itself unable to do anything -- so a workspace with a
+ * perfectly good Stripe key was told that payments were not set up.
+ *
+ * The private build's module is bound to this, which is what makes a flag added
+ * here a type error over there rather than a missing export discovered by an
+ * image build.
+ */
+export type BillingAdaptersModule = {
+  /** Invoicing and collection both work: what the billing worker asks. */
+  readonly configured: boolean
+  /** A payment provider that can open a hosted setup page. Says nothing about accounting. */
+  readonly paymentsConfigured: boolean
+  readonly adapters: BillingAdapters
+}
+
 export class BillingUnavailableError extends Error {
   constructor() {
     super(
