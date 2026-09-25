@@ -225,6 +225,8 @@ declare const messages: {
     "materials": {
       "add": "Material hinzufügen",
       "remove": "Material {name} entfernen",
+      "edit": "Material {name} bearbeiten",
+      "editField": "Neuer Name für Material {name}",
       "placeholder": "+ Material"
     },
     "moreFields": "Mehr Felder",

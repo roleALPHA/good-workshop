@@ -222,6 +222,8 @@
     "materials": {
       "add": "Añadir material",
       "remove": "Quitar el material {name}",
+      "edit": "Editar el material {name}",
+      "editField": "Nuevo nombre para el material {name}",
       "placeholder": "+ material"
     },
     "moreFields": "Más campos",

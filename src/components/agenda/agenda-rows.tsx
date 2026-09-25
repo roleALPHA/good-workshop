@@ -328,6 +328,8 @@ export function ModuleRow({
             onChange={(next) => writeDesc('materials', next.length > 0 ? next : undefined)}
             addLabel={t('materials.add')}
             removeLabel={(name) => t('materials.remove', { name })}
+            editLabel={(name) => t('materials.edit', { name })}
+            editFieldLabel={(name) => t('materials.editField', { name })}
             placeholder={t('materials.placeholder')}
           />
         )}

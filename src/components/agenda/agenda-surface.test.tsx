@@ -1,5 +1,6 @@
 import { screen, within } from '@testing-library/react'
 import { renderWithIntl as render } from '@/test/intl'
+import userEvent from '@testing-library/user-event'
 import { describe, expect, it, vi } from 'vitest'
 
 // The surface can bring a block over from another day, which is a server
@@ -185,6 +186,21 @@ describe('the agenda as a whole', () => {
     renderEditor()
     expect(
       within(block('Agenda & Spielregeln')).getByLabelText('Material hinzufügen'),
+    ).toBeInTheDocument()
+  })
+
+  it('lets a material already on the block be changed where it stands', async () => {
+    renderEditor()
+    const row = block('Druckpunkte')
+    await userEvent.click(
+      within(row).getByRole('button', { name: 'Material Klebepunkte bearbeiten' }),
+    )
+    const field = within(row).getByRole('textbox', { name: 'Neuer Name für Material Klebepunkte' })
+    await userEvent.clear(field)
+    await userEvent.type(field, 'Klebepunkte (rot){Enter}')
+
+    expect(
+      within(row).getByRole('button', { name: 'Material Klebepunkte (rot) bearbeiten' }),
     ).toBeInTheDocument()
   })
 

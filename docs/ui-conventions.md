@@ -203,6 +203,12 @@ Concretely:
   responsible sits directly under the title, as named chips with initials; somebody from outside
   the workspace says "extern" in words. Everything else appears
   on request and folds away again.
+- **A chip is changed by its own name.** Pressing the name of a material already in the list
+  turns that one chip into a field, where it stands; the remove button stays beside it. Not by
+  putting the text back into the box at the end of the row: Escape empties that box, so the
+  entry being fixed would be gone for good, and a committed fix would arrive at the end of the
+  list rather than where it was read. Escape abandons the change and leaves the chip; an emptied
+  field does not delete — the button next to it is what deletes.
 - **What a closed row carries is a decision, not a default.** A field earns its place there by
   being consulted mid-workshop, and the list is named in `e2e/agenda.spec.ts` so that adding to
   it has to be deliberate. The schema decides which extras become chips; the table does not keep

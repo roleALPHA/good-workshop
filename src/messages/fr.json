@@ -222,6 +222,8 @@
     "materials": {
       "add": "Ajouter du matériel",
       "remove": "Retirer le matériel {name}",
+      "edit": "Modifier le matériel {name}",
+      "editField": "Nouveau nom pour le matériel {name}",
       "placeholder": "+ matériel"
     },
     "moreFields": "Plus de champs",
