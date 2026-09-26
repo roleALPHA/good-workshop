@@ -2,7 +2,9 @@ import type { AssignablePerson } from '@/domain/agenda/responsible'
 import type { DayDoc } from '@/domain/agenda/types'
 import type { Schedule } from '@/domain/schedule/types'
 import type { FlatRow } from '@/features/agenda/flatten'
-import { ClusterRow, EndOfDay, GapRow, HeaderRow, ModuleRow } from './agenda-rows'
+import { EndOfDay, GapRow, HeaderRow } from './agenda-rows'
+import { ClusterRow } from './cluster-row'
+import { ModuleRow } from './module-row'
 
 /**
  * The agenda without interaction: server-rendered, no client JS.
