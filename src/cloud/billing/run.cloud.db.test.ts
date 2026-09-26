@@ -772,6 +772,35 @@ describe('the trial', () => {
       evidence: ['billing_address', 'payment_method'],
     })
   })
+
+  it('counts as a payment method while the webhook is still being stored', async () => {
+    // That there is a payment method is not a decision the run makes -- it is
+    // what the provider just said. While only the run wrote it down, somebody
+    // who had just paid came back to a page saying they had no payment method,
+    // for as long as ten minutes, and tried again. Which is what happened.
+    const id = await tenant({ state: 'trial', trialEndsAt: '2026-05-01T00:00:00Z' })
+    const eventId = `evt-${randomUUID()}`
+    await ops.query(`select app.cloud_record_payment_event($1, 'payment_method_ready', $2)`, [
+      eventId,
+      { id: eventId, type: 'payment_method_ready', tenantId: id, customerRef: 'cus-at-once' },
+    ])
+
+    // Deliberately without processPaymentEvents: this is what the web
+    // container's page reads in the seconds after the browser comes back.
+    const { rows } = await ops.query(
+      `select b.payment_method_ready, b.payment_customer_ref,
+              (select processed_at is null from payment_event where id = $2) as still_the_run_s
+         from billing_account b where b.tenant_id = $1`,
+      [id, eventId],
+    )
+    expect(rows[0]).toEqual({
+      payment_method_ready: true,
+      payment_customer_ref: 'cus-at-once',
+      // The rest of the event -- the country as evidence, unlocking a workspace
+      // that was locked for want of one -- stays with the run.
+      still_the_run_s: true,
+    })
+  })
 })
 
 describe('VAT numbers VIES could not answer for', () => {

@@ -58,15 +58,42 @@ create trigger cloud_track_workshop_created
   after insert on workshop
   for each row execute function app.cloud_track_workshop_created();
 
--- The web container stores a verified webhook and does nothing else with it.
+-- The web container stores a verified webhook. It acts on exactly one thing in
+-- it: that a payment method now exists. That is not a decision -- it is what
+-- the provider just said, and the page the customer returns to has to be able
+-- to say it. While the billing run alone wrote it down, somebody who had just
+-- paid came back to "no payment method yet" for as long as the run's interval,
+-- and tried again.
+--
+-- Everything that *is* a decision stays with the run, which is why the event is
+-- left unprocessed here: the country as tax evidence, and unlocking a workspace
+-- that was locked for want of a payment method -- one locked over failed
+-- payments must stay locked, and settleBlocked is the single judge of that.
+--
+-- The tenant is taken from the payload, which is sound because the signature
+-- was verified and the id is the one we ourselves put on the session.
 create or replace function app.cloud_record_payment_event(p_id text, p_type text, p_payload jsonb)
 returns void
-language sql
+language plpgsql
 security definer
 set search_path = pg_catalog, public
 as $$
+declare stored boolean;
+begin
   insert into payment_event (id, type, payload) values (p_id, p_type, p_payload)
   on conflict (id) do nothing;
+  stored := found;
+
+  -- Only on the first storing: a repeated delivery must not undo what the run
+  -- has since made of it.
+  if stored and p_type = 'payment_method_ready' then
+    update billing_account
+       set payment_method_ready = true,
+           payment_customer_ref = p_payload ->> 'customerRef',
+           updated_at = now()
+     where tenant_id = (p_payload ->> 'tenantId')::uuid;
+  end if;
+end;
 $$;
 
 alter function app.cloud_track_member_activity() owner to gw_ops;
