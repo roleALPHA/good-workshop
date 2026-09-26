@@ -6,7 +6,7 @@ import { afterAll, beforeAll, describe, expect, it } from 'vitest'
 import { withTenant, type Actor } from '@/server/db'
 import { assertWorkshopAccess, ForbiddenError } from '@/domain/agenda/access'
 import { findClient, registerClient } from '@/domain/oauth/repo'
-import { setOwnName } from '@/domain/tenant/members'
+import { setOwnName } from '@/domain/tenant/membership'
 import { edition } from '@/server/edition'
 import { CLIENT_REGISTRY_TENANT } from './cloud'
 

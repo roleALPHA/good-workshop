@@ -1,7 +1,6 @@
 import { sql } from 'drizzle-orm'
 import { withTenant, type Actor } from '@/server/db'
 import { assertTenantAdmin } from '@/domain/tenant/members'
-
 /**
  * A workspace's own invoice, as it was sent.
  *

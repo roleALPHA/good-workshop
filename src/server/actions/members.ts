@@ -2,16 +2,15 @@
 
 import { revalidatePath } from 'next/cache'
 import { z } from 'zod'
+import { listMembers, type MemberRow } from '@/domain/tenant/members'
 import {
   inviteMember,
-  listMembers,
   removeMember,
+  type RemoveMemberResult,
   setMemberName,
   setMemberRole,
   setMemberStatus,
-  type MemberRow,
-  type RemoveMemberResult,
-} from '@/domain/tenant/members'
+} from '@/domain/tenant/membership'
 import { inviteDisclosure } from '@/domain/tenant/invite'
 import { issueMagicLink } from '@/server/auth/magic-link'
 import { deliversToRecipient, mailConfigFor, sendMail, magicLinkMail } from '@/server/auth/mail'
