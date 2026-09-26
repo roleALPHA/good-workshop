@@ -2,12 +2,10 @@ import { z } from 'zod'
 import type { McpServer } from '@modelcontextprotocol/sdk/server/mcp.js'
 import { assertWorkshopAccess, NotFoundError } from '@/domain/agenda/access'
 import { assertTenantAdmin } from '@/domain/tenant/members'
-import { createDay, moveDay } from '@/domain/workshop/days'
 import {
   createFolder,
   createWorkshop,
   deleteFolder,
-  listDays,
   LIBRARY_PAGE_SIZE,
   listFolders,
   listTags,
@@ -21,7 +19,6 @@ import {
   trashWorkshop,
 } from '@/domain/workshop/repo'
 import { pruneUnusedTags, setWorkshopTags } from '@/domain/workshop/tags'
-import { deleteDayKeepingParked, roomEditor } from '@/server/collab/across-days'
 import { renderWorkshopExport } from '@/server/export/workshop'
 import { withTenant, type Tx } from '@/server/db'
 import { auditEvent } from '@/server/db/schema'
@@ -30,8 +27,7 @@ import { requireScope, type PatActor } from './auth'
 import { guarded, ok } from './respond'
 
 /**
- * The library over MCP: folders, workshops, tags, the bin, and the days of a
- * workshop.
+ * The library over MCP: folders, workshops, tags and the bin.
  *
  * The rule for what belongs here is the library screen and the workshop page.
  * Whatever a person can do there, a model can do here -- under the same checks,
@@ -43,11 +39,11 @@ import { guarded, ok } from './respond'
  * members. A token acts as its person, and handing out access on that person's
  * behalf is a step a model must not be able to take. See docs/architecture.md.
  *
- * None of these touch a day's CONTENT, so they do not go through the
- * collaboration room -- with one exception. Creating a day writes a row nobody
- * can have open yet, and moving one only changes the order. Deleting one takes
- * its room state with it, but not its parked blocks: those belong to the whole
- * workshop and move to a day that stays, which is a write into that day's room.
+ * None of these touch a day's CONTENT, so none of them goes through the
+ * collaboration room and none takes an `expectedVersion` -- which is why this
+ * surface needs no Authorization header of its own, only the actor. The days of a
+ * workshop are next door in ./day-tools.ts; they used to stand here, and they are
+ * what made this file look like it needed both.
  */
 
 type Ctx = { actor: PatActor; authorization: string }
@@ -56,15 +52,7 @@ const Id = z.string().uuid()
 const Title = z.string().trim().min(1).max(300)
 const FolderName = z.string().trim().min(1).max(120)
 const IsoDate = z.string().regex(/^\d{4}-\d{2}-\d{2}$/, 'YYYY-MM-DD')
-const Version = z
-  .string()
-  .regex(/^\d+$/)
-  .optional()
-  .describe('The contentVersion you last read. A stale one is refused instead of overwriting.')
-
-const asVersion = (value?: string) => (value === undefined ? undefined : BigInt(value))
-
-export function registerLibraryTools(server: McpServer, { actor, authorization }: Ctx): void {
+export function registerLibraryTools(server: McpServer, { actor }: Ctx): void {
   /** Written in the same transaction as the change it describes. */
   const audit = (
     tx: Tx,
@@ -435,38 +423,6 @@ export function registerLibraryTools(server: McpServer, { actor, authorization }
       }),
   )
 
-  // ── Days ────────────────────────────────────────────────────────────────
-
-  server.registerTool(
-    'list_days',
-    {
-      title: 'List days',
-      description: 'The days of a workshop, in order.',
-      inputSchema: { workshopId: Id },
-    },
-    async ({ workshopId }) =>
-      guarded(async () => {
-        requireScope(actor, 'workshops:read')
-        return withTenant(actor, async (tx) => {
-          await assertWorkshopAccess(tx, actor, workshopId, 'workshop.read')
-          const days = (await listDays(tx, workshopId)).map((d) => ({
-            id: d.id,
-            title: d.title,
-            date: d.date,
-          }))
-          return ok(
-            days
-              .map(
-                (d, i) =>
-                  `${i}. ${d.title || '(untitled)'}${d.date ? ` · ${d.date}` : ''} — id=${d.id}`,
-              )
-              .join('\n'),
-            { days },
-          )
-        })
-      }),
-  )
-
   server.registerTool(
     'export_workshop',
     {
@@ -506,109 +462,6 @@ export function registerLibraryTools(server: McpServer, { actor, authorization }
           )
           return ok(markdown, { title })
         })
-      }),
-  )
-
-  server.registerTool(
-    'create_day',
-    {
-      title: 'Add a day',
-      description:
-        'Adds a day behind the last one. Fill it with apply_agenda; change it later with update_day.',
-      inputSchema: {
-        workshopId: Id,
-        title: Title,
-        date: IsoDate.optional(),
-        startMinute: z
-          .number()
-          .int()
-          .min(0)
-          .max(1439)
-          .optional()
-          .describe(
-            'Minutes since midnight, e.g. 540 = 09:00. Defaults to the start time of the last day, and to 09:00 for the first day of a workshop.',
-          ),
-        expectedVersion: Version,
-      },
-    },
-    async ({ workshopId, title, date, startMinute, expectedVersion }) =>
-      guarded(async () => {
-        requireScope(actor, 'workshops:write')
-        return withTenant(actor, async (tx) => {
-          const access = await assertWorkshopAccess(tx, actor, workshopId, 'workshop.content.write')
-          const created = await createDay(
-            tx,
-            access,
-            { title, date: date ?? null, startMinute },
-            asVersion(expectedVersion),
-          )
-          await audit(tx, 'workshop', 'day.create', workshopId, { dayId: created.dayId, title })
-          return ok(`Day added: ${title}\ndayId=${created.dayId}`, {
-            dayId: created.dayId,
-            contentVersion: created.contentVersion.toString(),
-          })
-        })
-      }),
-  )
-
-  server.registerTool(
-    'move_day',
-    {
-      title: 'Move a day',
-      description:
-        'Changes the order of the days. `afterId` is the day it should come after, or null to make it the first day.',
-      inputSchema: { workshopId: Id, dayId: Id, afterId: Id.nullable(), expectedVersion: Version },
-    },
-    async ({ workshopId, dayId, afterId, expectedVersion }) =>
-      guarded(async () => {
-        requireScope(actor, 'workshops:write')
-        return withTenant(actor, async (tx) => {
-          const access = await assertWorkshopAccess(tx, actor, workshopId, 'workshop.content.write')
-          const contentVersion = await moveDay(
-            tx,
-            access,
-            dayId,
-            afterId,
-            asVersion(expectedVersion),
-          )
-          await audit(tx, 'workshop', 'day.move', workshopId, { dayId, afterId })
-          return ok('Day moved.', { contentVersion: contentVersion.toString() })
-        })
-      }),
-  )
-
-  server.registerTool(
-    'delete_day',
-    {
-      title: 'Delete a day',
-      description:
-        'Deletes a day with its agenda, for good. Its parked blocks are kept: they move to the day before it ' +
-        '(or after it, for the first day). The last remaining day of a workshop cannot be deleted.',
-      inputSchema: { workshopId: Id, dayId: Id, expectedVersion: Version },
-    },
-    async ({ workshopId, dayId, expectedVersion }) =>
-      guarded(async () => {
-        requireScope(actor, 'workshops:write')
-        const presence = { name: 'KI-Assistent', hue: 292, kind: 'model' as const }
-        const result = await deleteDayKeepingParked(
-          actor,
-          roomEditor({ workshopId, authorization, presence }),
-          { workshopId, dayId, expectedVersion: asVersion(expectedVersion) },
-        )
-
-        await withTenant(actor, (tx) =>
-          audit(tx, 'workshop', 'day.delete', workshopId, { dayId, rescued: result.rescued }),
-        )
-        return ok(
-          result.rescued > 0
-            ? `Day deleted. ${result.rescued} parked ${result.rescued === 1 ? 'block' : 'blocks'} moved to day ${result.remainingDayId}.`
-            : 'Day deleted.',
-          {
-            contentVersion: result.contentVersion.toString(),
-            remainingDayId: result.remainingDayId,
-            rescued: result.rescued,
-          },
-        )
       }),
   )
 }
