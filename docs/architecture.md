@@ -139,8 +139,10 @@ in the ordinary unit suite, and in the private build against Odoo and Stripe sta
 first check of the promise is not the first invoice a customer receives. `GW_BILLING_MODE` is a dry run unless it is
 exactly `live`. Anything the run cannot decide -- a VAT number still pending, contradicting
 evidence, an invoice whose tax is not what was billed, an amount above the limit -- is held for an
-operator rather than guessed. The payment provider's webhook only verifies and stores; the worker
-acts on stored events, once.
+operator rather than guessed. The payment provider's webhook verifies and stores; the worker acts on stored events, once.
+Storing a payment method also marks the account as having one, in the same function, because
+that is not a decision but what the provider just said -- and a customer coming back from the
+hosted form to "no payment method yet" tries again.
 
 **A workspace's state in the cloud** is `tenant_lifecycle`: `trial`, `active`, `read_only` (trial
 over without a payment method, or payment failed), `payment_blocked` (a reminder that went
