@@ -1,7 +1,7 @@
 import { describe, expect, it } from 'vitest'
 import { readFileSync } from 'node:fs'
 import { join } from 'node:path'
-import { RETENTION_DAYS } from './run'
+import { RETENTION_DAYS } from './retention'
 
 /**
  * The periods the privacy policy names, and the ones the sweep actually uses.

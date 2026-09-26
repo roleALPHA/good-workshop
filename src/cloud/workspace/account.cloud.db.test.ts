@@ -5,12 +5,9 @@ import { afterAll, beforeAll, describe, expect, it } from 'vitest'
 import { withTenant, type Actor } from '@/server/db'
 import { edition } from '@/server/edition'
 import { fakeAdapters } from '@/cloud/billing/adapters/fake'
-import {
-  closeMonth,
-  contractTransitions,
-  purgeDeletedTenants,
-  type RunOptions,
-} from '@/cloud/billing/run'
+import { closeMonth } from '@/cloud/billing/periods'
+import { contractTransitions, purgeDeletedTenants } from '@/cloud/billing/lifecycle'
+import type { RunOptions } from '@/cloud/billing/context'
 import { previousMonth } from '@/cloud/billing/usage'
 import { DELETION_GRACE_DAYS } from '@/cloud/billing/plans'
 import {

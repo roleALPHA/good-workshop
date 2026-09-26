@@ -1,7 +1,7 @@
 import { describe, expect, it, vi } from 'vitest'
 import { LOCALES } from '@/i18n/config'
 import { noticeMail } from './notices'
-import type { Notice } from './run'
+import type { Notice } from './context'
 
 const sendPlatformMail = vi.fn()
 const sendMail = vi.fn()

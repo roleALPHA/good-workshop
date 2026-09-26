@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest'
 import { PLAN_KEYS, type PlanKey } from '../plans'
-import { implausible } from '../run'
+import { implausible } from '../invoicing'
 import { netCents } from '../usage'
 import { AUSTRIAN_VAT_RATE, type TaxTreatment } from '../../tax/treatment'
 import type {

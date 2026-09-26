@@ -4,7 +4,8 @@ import { adapters, configured } from '@gw/billing-adapters'
 // password file a container mounts instead of a password in the URL.
 import { dbOptions } from '../../../scripts/db-connect.mjs'
 import { checkVatId } from '@/cloud/tax/vies'
-import { runBilling, type RunOptions } from './run'
+import { runBilling } from './run'
+import type { RunOptions } from './context'
 import { sendNotice } from './notices'
 
 /**

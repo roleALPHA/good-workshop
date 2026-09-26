@@ -5,23 +5,15 @@ import { afterAll, beforeAll, beforeEach, describe, expect, it } from 'vitest'
 import { fakeAdapters } from './adapters/fake'
 import { billingFixture, type BillingSetup } from './fixture'
 import { DUNNING_GRACE_DAYS } from './usage'
-import {
-  chargeDue,
-  closeMonth,
-  storeInvoiceDocuments,
-  invoicePeriods,
-  processPaymentEvents,
-  announceTermsChange,
-  pendingAnnouncements,
-  recheckPendingVat,
-  dunningTransitions,
-  runBilling,
-  sweepExpired,
-  syncPlanPrices,
-  trialTransitions,
-  type Notice,
-  type RunOptions,
-} from './run'
+import { runBilling } from './run'
+import type { Notice, RunOptions } from './context'
+import { syncPlanPrices } from './plan-prices'
+import { announceTermsChange, pendingAnnouncements } from './announcements'
+import { sweepExpired } from './retention'
+import { closeMonth } from './periods'
+import { invoicePeriods, storeInvoiceDocuments } from './invoicing'
+import { chargeDue, dunningTransitions, processPaymentEvents } from './collecting'
+import { recheckPendingVat, trialTransitions } from './lifecycle'
 import type { BillingAdapters } from './ports'
 
 /**
