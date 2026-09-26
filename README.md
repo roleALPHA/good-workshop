@@ -1,13 +1,75 @@
 # GoodWorkshop
 
-**The workshop planner for people who run workshops.** Plan the day, not the spreadsheet.
+<p align="center"><b>The workshop planner for people who run workshops.</b><br>
+Plan the day, not the spreadsheet.</p>
+
+<p align="center">
+  <a href="https://goodworkshop.org"><b>goodworkshop.org</b></a> &nbsp;·&nbsp;
+  <a href="#installation-on-premise">Self-hosting</a> &nbsp;·&nbsp;
+  <a href="docs/architecture.md">Documentation</a> &nbsp;·&nbsp;
+  <a href="https://github.com/roleALPHA/good-workshop/releases">Releases</a> &nbsp;·&nbsp;
+  <a href="LICENSE">Licence</a>
+</p>
+
+<p align="center">
+  <a href="https://github.com/roleALPHA/good-workshop/releases"><img
+    alt="Latest release"
+    src="https://img.shields.io/github/v/release/roleALPHA/good-workshop?label=release&color=7c3aed"></a>
+  <a href="LICENSE"><img
+    alt="Licence: Apache-2.0 + Commons Clause"
+    src="https://img.shields.io/badge/licence-Apache--2.0%20%2B%20Commons%20Clause-7c3aed"></a>
+  <a href="https://github.com/roleALPHA/good-workshop/pkgs/container/good-workshop"><img
+    alt="Container image on ghcr.io"
+    src="https://img.shields.io/badge/ghcr.io-good--workshop-7c3aed?logo=docker&logoColor=white"></a>
+</p>
+
+<p align="center">
+  <a href="https://goodworkshop.org"><img
+    src="docs/screenshots/agenda.png"
+    alt="A workshop day in GoodWorkshop: blocks with times, durations, responsible people and material"></a>
+</p>
 
 You know the moment: the client moves lunch, one exercise runs long, and suddenly every time on
 your agenda is wrong. GoodWorkshop takes that off your plate. Drag a block, and the day
 recalculates itself. Pin what must not move, park what you might still need, and walk into the
 room with an agenda that is always right, on your laptop and on your phone.
 
-![A workshop day in GoodWorkshop: blocks with times, durations, responsible people and material](docs/screenshots/agenda.png)
+## 🚀 Getting started
+
+Two ways in, and the same product behind both — one codebase, one image.
+
+<table>
+<tr>
+<td width="50%" valign="top">
+
+### ☁️ GoodWorkshop Cloud
+
+**[goodworkshop.org](https://goodworkshop.org)** — we run it, you plan.
+
+Nothing to install, nothing to keep up to date, backups and certificates taken care of. The cloud
+runs in the EU, operated by an Austrian company, with a data processing agreement under Art. 28
+GDPR. Offered to businesses only.
+
+**[Start at goodworkshop.org →](https://goodworkshop.org)**
+
+</td>
+<td width="50%" valign="top">
+
+### 🏠 Self-hosted
+
+**Free, commercial use included** — on your own server.
+
+One container image and one Postgres, up in minutes with Docker Compose. No licence cost for
+planning and running the workshops you earn your money with. Your data never leaves your house.
+
+**[Installation guide ↓](#installation-on-premise)**
+
+</td>
+</tr>
+</table>
+
+Whichever you pick, every agenda comes back out as Markdown whenever you want, and the MCP server
+is built into both.
 
 ## At a glance
 
@@ -17,8 +79,10 @@ room with an agenda that is always right, on your laptop and on your phone.
   heavyweight setup. Up in minutes with Docker Compose.
 - **Free when you host it yourself.** Commercial use included: plan and run the workshops you
   earn your money with, at no licence cost.
-- **Your data stays with you.** It runs on your server, and every agenda is exported as
-  Markdown whenever you want.
+- **Or let us run it.** [goodworkshop.org](https://goodworkshop.org) is the same product, hosted
+  in the EU, for businesses that would rather not operate anything.
+- **Your data stays with you.** Your server or ours, and every agenda is exported as Markdown
+  whenever you want.
 - **Built for the room.** Works on a phone, survives bad wifi, and lets your co-facilitator edit
   the same day live.
 
@@ -139,6 +203,10 @@ How GoodWorkshop is built on the inside, and why, is in
 [docs/architecture.md](docs/architecture.md).
 
 ## Installation (on-premise)
+
+Everything from here on is about running GoodWorkshop yourself. If you would rather not operate a
+server, [goodworkshop.org](https://goodworkshop.org) is the same product, hosted — and you can
+stop reading here.
 
 ### Requirements
 
@@ -633,6 +701,10 @@ text differ, the licence text is what counts.
 - **That includes paid hosting and paid support for the software.** The Commons Clause names
   "fees for hosting or consulting/support services related to the Software" in so many words.
   Charging somebody to install, run or support GoodWorkshop for them counts.
+- **Which is why [goodworkshop.org](https://goodworkshop.org) is ours to run and not yours.** A
+  licence binds whoever receives the software, not the copyright holder: roleALPHA GmbH may offer
+  a hosted GoodWorkshop because the terms above are the ones it grants. If you want to offer it
+  to your own customers, that needs a separate agreement — ask.
 
 This is **source-available, not open source** in the OSI sense: the Commons Clause restricts a
 use that an open-source licence has to allow. GitHub accordingly shows the licence as "Other".

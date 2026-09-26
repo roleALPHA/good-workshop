@@ -1,4 +1,4 @@
-import { LICENSE, LICENSE_URL, ROLEALPHA_URL } from '@/lib/attribution'
+import { GOODWORKSHOP_URL, LICENSE, LICENSE_URL, ROLEALPHA_URL } from '@/lib/attribution'
 import { displayVersion } from '@/lib/version'
 
 /**
@@ -9,7 +9,7 @@ import { displayVersion } from '@/lib/version'
  * from tenant data, so no locale file or branding setting can quietly replace
  * it. Tenant branding customises --brand-* and the logo; it does not touch this.
  *
- * The two links leave the application, so they open in a tab of their own: a
+ * All three links leave the application, so they open in a tab of their own: a
  * facilitator who taps the licence in the middle of a workshop should come back
  * to the agenda, not have to find their way back to it.
  *
@@ -33,7 +33,15 @@ export function AppFooter({ className }: { className?: string }) {
       }}
     >
       <p className="px-4 py-3 text-center text-[13px] text-[var(--fg-subtle)]">
-        GoodWorkshop · powered by{' '}
+        <a
+          href={GOODWORKSHOP_URL}
+          target="_blank"
+          rel="noreferrer"
+          className="underline underline-offset-2 hover:text-[var(--fg-muted)]"
+        >
+          GoodWorkshop
+        </a>{' '}
+        · powered by{' '}
         <a
           href={ROLEALPHA_URL}
           target="_blank"

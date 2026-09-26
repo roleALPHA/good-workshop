@@ -46,6 +46,12 @@ test.beforeEach(async ({ page, request }) => {
 test('carries the attribution footer on every view', async ({ page }) => {
   const footer = page.getByRole('contentinfo')
   await expect(footer).toContainText('GoodWorkshop · powered by roleALPHA')
+  // The product name is the way back to the product, for whoever is handed a
+  // print-out or an export and has never seen the software.
+  await expect(footer.getByRole('link', { name: 'GoodWorkshop' })).toHaveAttribute(
+    'href',
+    'https://goodworkshop.org',
+  )
   await expect(footer.getByRole('link', { name: 'roleALPHA' })).toHaveAttribute(
     'href',
     'https://rolealpha.com',
