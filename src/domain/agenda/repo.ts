@@ -1,32 +1,28 @@
-import { uuidv7 } from 'uuidv7'
-import { and, asc, eq, sql } from 'drizzle-orm'
+import { and, asc, eq } from 'drizzle-orm'
 import type { Tx } from '@/server/db'
 import { cluster, moduleType, workshopDay, workshopModule } from '@/server/db/schema'
 import type { CategoryColor } from '@/lib/category-colors'
 import type { ClusterDto, DayDoc, ModuleDto, ModuleTypeDto } from './types'
-import {
-  bumpContentVersion,
-  NotFoundError,
-  UnknownModuleTypeError,
-  type WorkshopAccess,
-} from './access'
-import { keyAtEnd, placeAfter, sortByPosition } from './ordering'
+import { NotFoundError, type WorkshopAccess } from './access'
+import { sortByPosition } from './ordering'
 import { normalizeResponsible } from './responsible'
 import type { Locale } from '@/i18n/config'
 import { localiseModuleType } from '@/domain/moduleType/localise'
 
 /**
- * Every structural mutation to an agenda goes through here.
+ * Reads a day out of the tables.
  *
+ * This module used to write them too, and no longer does: the collaboration
+ * room owns every mutation, and the materialiser is the one writer left. The
+ * mutations that stood here were a second write path that nothing called any
+ * more -- see `../../server/collab/write-path.test.ts`, which now keeps it that
+ * way.
+ *
+ * What remains is the read the room, the pages, the export and MCP all share.
  * The two tables `cluster` and `module` are deliberately separate -- that is
- * the stated domain model -- which means every reorder, move, duplicate and
- * export has to merge them. Routing all of it through one module is what keeps
- * that merge in one place, and what would make a later collapse into a single
+ * the stated domain model -- which means the read has to merge them, and doing
+ * that in one place is what would make a later collapse into a single
  * `agenda_item` table a migration plus one file rather than a rewrite.
- *
- * Note the signatures: each mutation demands a WorkshopAccess. That token is
- * only constructible by assertWorkshopAccess, so forgetting the permission
- * check is a compile error rather than a security incident.
  */
 
 export type DayDocResult = { doc: DayDoc; contentVersion: bigint }
@@ -35,10 +31,10 @@ export type DayDocResult = { doc: DayDoc; contentVersion: bigint }
  * The other half of the access check.
  *
  * `WorkshopAccess` proves that a permission was verified. It does not prove
- * that the row about to be written belongs to the workshop it was verified for
- * -- and every mutation below used to address its row by primary key alone.
- * RLS does not help here: both workshops sit in the same tenant, which is the
- * normal case and the entire point of a tenant.
+ * that the day about to be read or written belongs to the workshop it was
+ * verified for -- and a caller addressing its row by primary key alone has no
+ * way to tell. RLS does not help here: both workshops sit in the same tenant,
+ * which is the normal case and the entire point of a tenant.
  *
  * Ids are not a secret to ration. A viewer reads them out of the page, an
  * export carries them, MCP hands them out. Treating them as unguessable is the
@@ -55,15 +51,9 @@ export async function assertDayInWorkshop(
     .where(and(eq(workshopDay.id, dayId), eq(workshopDay.workshopId, access.workshopId)))
     .limit(1)
 
+  // Not-found rather than forbidden, deliberately: telling a caller that an id
+  // exists but belongs to somebody else is itself an answer they had no right to.
   if (!rows[0]) throw new NotFoundError()
-}
-
-/**
- * Not-found rather than forbidden, deliberately: telling a caller that an id
- * exists but belongs to somebody else is itself an answer they had no right to.
- */
-function assertTouched(rowCount: number | undefined): void {
-  if (!rowCount) throw new NotFoundError()
 }
 
 /**
@@ -178,255 +168,6 @@ export async function loadDay(
       ),
     },
   }
-}
-
-export type MoveTarget = { dayId: string; clusterId: string | null }
-
-/**
- * Moves a module or a cluster.
- *
- * Anchor-based (`afterId`) rather than index-based: if a sibling moved
- * concurrently you still land after the right neighbour instead of at a stale
- * index. The write itself is a single row -- that is the whole reason for
- * fractional keys.
- *
- * Two composite FKs back this up in the database, so a bug here is caught
- * rather than written: (tenant_id, cluster_id, day_id) keeps a module's cluster
- * on the module's own day, and (tenant_id, workshop_id, day_id) keeps the day
- * inside the workshop. The second one was missing for a long time while this
- * comment claimed both -- which is why the checks below are explicit anyway.
- */
-export async function moveModule(
-  tx: Tx,
-  access: WorkshopAccess,
-  moduleId: string,
-  target: MoveTarget,
-  afterId: string | null,
-  expectedVersion?: bigint,
-): Promise<bigint> {
-  await assertDayInWorkshop(tx, access, target.dayId)
-
-  const siblings = await siblingsOf(tx, target)
-  const placement = placeAfter(
-    siblings.filter((s) => s.id !== moduleId),
-    afterId,
-  )
-
-  let position = placement.position
-  if (placement.rebalance) {
-    position = await applyRebalance(tx, placement.rebalance)
-  }
-
-  const moved = await tx
-    .update(workshopModule)
-    .set({
-      dayId: target.dayId,
-      clusterId: target.clusterId,
-      position,
-      updatedAt: sql`now()`,
-      updatedBy: access.actor.memberId,
-    })
-    .where(and(eq(workshopModule.id, moduleId), eq(workshopModule.workshopId, access.workshopId)))
-    .returning({ id: workshopModule.id })
-
-  assertTouched(moved.length)
-  return bumpContentVersion(tx, access, expectedVersion)
-}
-
-export async function moveCluster(
-  tx: Tx,
-  access: WorkshopAccess,
-  clusterId: string,
-  dayId: string,
-  afterId: string | null,
-  expectedVersion?: bigint,
-): Promise<bigint> {
-  await assertDayInWorkshop(tx, access, dayId)
-
-  const siblings = await siblingsOf(tx, { dayId, clusterId: null })
-  const placement = placeAfter(
-    siblings.filter((s) => s.id !== clusterId),
-    afterId,
-  )
-
-  let position = placement.position
-  if (placement.rebalance) {
-    position = await applyRebalance(tx, placement.rebalance)
-  }
-
-  const moved = await tx
-    .update(cluster)
-    .set({ dayId, position, updatedAt: sql`now()` })
-    .where(and(eq(cluster.id, clusterId), eq(cluster.workshopId, access.workshopId)))
-    .returning({ id: cluster.id })
-
-  assertTouched(moved.length)
-  return bumpContentVersion(tx, access, expectedVersion)
-}
-
-export type NewModule = {
-  dayId: string
-  clusterId: string | null
-  moduleTypeId: string
-  title: string
-  durationMinutes?: number
-  desc?: Record<string, unknown>
-  afterId?: string | null
-}
-
-export async function addModule(
-  tx: Tx,
-  access: WorkshopAccess,
-  input: NewModule,
-  expectedVersion?: bigint,
-): Promise<{ id: string; contentVersion: bigint }> {
-  await assertDayInWorkshop(tx, access, input.dayId)
-
-  const siblings = await siblingsOf(tx, { dayId: input.dayId, clusterId: input.clusterId })
-  const placement =
-    input.afterId === undefined
-      ? { position: keyAtEnd(siblings), rebalance: null }
-      : placeAfter(siblings, input.afterId)
-
-  let position = placement.position
-  if (placement.rebalance) {
-    position = await applyRebalance(tx, placement.rebalance)
-  }
-
-  const types = await tx
-    .select({ defaultDuration: moduleType.defaultDurationMinutes })
-    .from(moduleType)
-    .where(eq(moduleType.id, input.moduleTypeId))
-    .limit(1)
-  if (!types[0]) throw new UnknownModuleTypeError()
-
-  // UUIDv7 so ids sort by creation time -- index locality, and the client can
-  // generate one before the round trip for an optimistic row.
-  const id = uuidv7()
-
-  await tx.insert(workshopModule).values({
-    id,
-    workshopId: access.workshopId,
-    dayId: input.dayId,
-    clusterId: input.clusterId,
-    moduleTypeId: input.moduleTypeId,
-    title: input.title,
-    durationMinutes: input.durationMinutes ?? types[0].defaultDuration,
-    jsonDesc: input.desc ?? {},
-    position,
-    createdBy: access.actor.memberId,
-    updatedBy: access.actor.memberId,
-  })
-
-  return { id, contentVersion: await bumpContentVersion(tx, access, expectedVersion) }
-}
-
-export type NewCluster = {
-  dayId: string
-  title: string
-  color?: string | null
-  afterId?: string | null
-}
-
-export async function addCluster(
-  tx: Tx,
-  access: WorkshopAccess,
-  input: NewCluster,
-  expectedVersion?: bigint,
-): Promise<{ id: string; contentVersion: bigint }> {
-  await assertDayInWorkshop(tx, access, input.dayId)
-
-  const siblings = await siblingsOf(tx, { dayId: input.dayId, clusterId: null })
-  const placement =
-    input.afterId === undefined
-      ? { position: keyAtEnd(siblings), rebalance: null }
-      : placeAfter(siblings, input.afterId)
-
-  const position = placement.rebalance
-    ? await applyRebalance(tx, placement.rebalance)
-    : placement.position
-
-  const id = uuidv7()
-  await tx.insert(cluster).values({
-    id,
-    workshopId: access.workshopId,
-    dayId: input.dayId,
-    title: input.title,
-    color: input.color ?? null,
-    position,
-  })
-
-  return { id, contentVersion: await bumpContentVersion(tx, access, expectedVersion) }
-}
-
-export async function deleteModule(
-  tx: Tx,
-  access: WorkshopAccess,
-  moduleId: string,
-  expectedVersion?: bigint,
-): Promise<bigint> {
-  const deleted = await tx
-    .delete(workshopModule)
-    .where(and(eq(workshopModule.id, moduleId), eq(workshopModule.workshopId, access.workshopId)))
-    .returning({ id: workshopModule.id })
-
-  assertTouched(deleted.length)
-  return bumpContentVersion(tx, access, expectedVersion)
-}
-
-// ── helpers ────────────────────────────────────────────────────────────────
-
-/**
- * Siblings share one key space per parent. At day level that spans two tables
- * -- clusters and day-level modules interleave -- which is precisely why
- * integer positions would need a sequence shared across tables.
- */
-async function siblingsOf(tx: Tx, target: MoveTarget) {
-  if (target.clusterId !== null) {
-    const rows = await tx
-      .select({ id: workshopModule.id, position: workshopModule.position })
-      .from(workshopModule)
-      .where(eq(workshopModule.clusterId, target.clusterId))
-    return rows
-  }
-
-  const [clusters, modules] = await Promise.all([
-    tx
-      .select({ id: cluster.id, position: cluster.position })
-      .from(cluster)
-      .where(eq(cluster.dayId, target.dayId)),
-    tx
-      .select({ id: workshopModule.id, position: workshopModule.position })
-      .from(workshopModule)
-      .where(and(eq(workshopModule.dayId, target.dayId), sql`${workshopModule.clusterId} is null`)),
-  ])
-  return [...clusters, ...modules]
-}
-
-/**
- * Rewrites a whole sibling list with evenly spaced keys and returns the slot
- * reserved for the moving row.
- *
- * Rare, cheap and invisible: the workshop lock is already held, and sibling
- * lists are tens of rows.
- */
-async function applyRebalance(
-  tx: Tx,
-  rebalance: { id: string; position: string }[],
-): Promise<string> {
-  let reserved = ''
-  for (const row of rebalance) {
-    if (row.id === '') {
-      reserved = row.position
-      continue
-    }
-    await tx.update(cluster).set({ position: row.position }).where(eq(cluster.id, row.id))
-    await tx
-      .update(workshopModule)
-      .set({ position: row.position })
-      .where(eq(workshopModule.id, row.id))
-  }
-  return reserved
 }
 
 /** `09:00:00` -> 540. The scheduler works in integer minutes throughout. */
