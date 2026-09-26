@@ -19,6 +19,21 @@
  * "Apache-2.0" on its own would describe rights this project does not grant.
  */
 
+/**
+ * The product's own page, and the reason the name is a link at all.
+ *
+ * This line travels further than the application does: an agenda exported as
+ * Markdown, a print-out handed round a room, a mail signature. Each of those
+ * reaches somebody who has never seen the software, and the only address on the
+ * line used to be the agency's -- so whoever liked what they were reading had
+ * nowhere to go.
+ *
+ * The same in both editions, on purpose. A self-hosted installation is running
+ * this product, and saying where it comes from is not an advert; the page it
+ * points at is also where the documentation and the source link live.
+ */
+export const GOODWORKSHOP_URL = 'https://goodworkshop.org'
+
 export const ROLEALPHA_URL = 'https://rolealpha.com'
 /** Where the source is, for anybody who would rather run it themselves. */
 export const SOURCE_URL = 'https://github.com/roleALPHA/good-workshop'
@@ -30,9 +45,10 @@ const bare = (url: string) => url.replace(/^https:\/\//, '')
 
 /** Plain text: the mail signatures and the print view, where a link is dead. */
 export const ATTRIBUTION_TEXT =
-  `GoodWorkshop · powered by roleALPHA (${bare(ROLEALPHA_URL)})` +
+  `GoodWorkshop (${bare(GOODWORKSHOP_URL)}) · powered by roleALPHA (${bare(ROLEALPHA_URL)})` +
   ` · ${LICENSE} (${bare(LICENSE_URL)})`
 
 /** Markdown: the export, which is a document somebody pastes somewhere. */
 export const ATTRIBUTION_MARKDOWN =
-  `GoodWorkshop · powered by [roleALPHA](${ROLEALPHA_URL})` + ` · [${LICENSE}](${LICENSE_URL})`
+  `[GoodWorkshop](${GOODWORKSHOP_URL}) · powered by [roleALPHA](${ROLEALPHA_URL})` +
+  ` · [${LICENSE}](${LICENSE_URL})`

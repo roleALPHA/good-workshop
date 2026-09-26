@@ -2,6 +2,7 @@ import { describe, expect, it } from 'vitest'
 import {
   ATTRIBUTION_MARKDOWN,
   ATTRIBUTION_TEXT,
+  GOODWORKSHOP_URL,
   LICENSE_URL,
   ROLEALPHA_URL,
   SOURCE_URL,
@@ -33,7 +34,22 @@ describe('the attribution line', () => {
     }
   })
 
+  /**
+   * The product name is the way back to the product.
+   *
+   * An agenda exported as Markdown, a print-out handed round a room, a mail
+   * signature: each of them travels to somebody who has never seen this
+   * software, and until now the only address on the line belonged to the
+   * agency. Somebody who liked what they were reading had nowhere to go.
+   */
+  it('points the product name at the product', () => {
+    expect(GOODWORKSHOP_URL).toBe('https://goodworkshop.org')
+    expect(ATTRIBUTION_TEXT).toContain('goodworkshop.org')
+    expect(ATTRIBUTION_MARKDOWN).toContain(`[GoodWorkshop](${GOODWORKSHOP_URL})`)
+  })
+
   it('gives the plain-text form addresses somebody can type, and no markup', () => {
+    expect(ATTRIBUTION_TEXT).toContain('goodworkshop.org')
     expect(ATTRIBUTION_TEXT).toContain('rolealpha.com')
     expect(ATTRIBUTION_TEXT).toContain('github.com/roleALPHA/good-workshop/blob/main/LICENSE')
     // A mail client shows `[roleALPHA](https://…)` exactly as written.

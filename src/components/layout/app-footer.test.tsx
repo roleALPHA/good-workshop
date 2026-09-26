@@ -1,6 +1,6 @@
 import { render, screen } from '@testing-library/react'
 import { afterEach, describe, expect, it, vi } from 'vitest'
-import { LICENSE_URL, ROLEALPHA_URL } from '@/lib/attribution'
+import { GOODWORKSHOP_URL, LICENSE_URL, ROLEALPHA_URL } from '@/lib/attribution'
 import pkg from '../../../package.json'
 import { AppFooter } from './app-footer'
 
@@ -17,8 +17,11 @@ afterEach(() => {
 })
 
 describe('the footer', () => {
-  it('links the maker and the licence, each leaving the application', () => {
+  it('links the product, the maker and the licence, each leaving the application', () => {
     render(<AppFooter />)
+
+    const product = screen.getByRole('link', { name: 'GoodWorkshop' })
+    expect(product).toHaveAttribute('href', GOODWORKSHOP_URL)
 
     const maker = screen.getByRole('link', { name: 'roleALPHA' })
     expect(maker).toHaveAttribute('href', ROLEALPHA_URL)
@@ -26,7 +29,7 @@ describe('the footer', () => {
     const licence = screen.getByRole('link', { name: 'Apache-2.0 + Commons Clause' })
     expect(licence).toHaveAttribute('href', LICENSE_URL)
 
-    for (const link of [maker, licence]) {
+    for (const link of [product, maker, licence]) {
       expect(link).toHaveAttribute('target', '_blank')
       expect(link).toHaveAttribute('rel', 'noreferrer')
     }
