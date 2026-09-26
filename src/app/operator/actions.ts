@@ -4,12 +4,7 @@ import { revalidatePath } from 'next/cache'
 import type { AuthenticationResponseJSON, RegistrationResponseJSON } from '@simplewebauthn/server'
 import { headers } from 'next/headers'
 import { z } from 'zod'
-import {
-  retireCatalogFacet,
-  saveCatalogFacet,
-  saveCatalogEntry,
-  setCatalogStatus,
-} from '@/cloud/operator/catalog'
+import { saveCatalogFacet, saveCatalogEntry, setCatalogStatus } from '@/cloud/operator/catalog'
 import { issueOperatorToken, revokeOperatorToken } from '@/cloud/operator/tokens'
 import { disconnectOperatorClient } from '@/cloud/operator/oauth'
 import { isOperatorScope } from '@/cloud/operator/scopes'
@@ -337,20 +332,6 @@ export async function saveFacetAction(raw: unknown): Promise<OperatorResult> {
   if (!input.success) return { ok: false, error: 'input' }
   try {
     await saveCatalogFacet(operatorDb(), operator.id, input.data)
-    revalidatePath('/operator/discover')
-    return { ok: true }
-  } catch {
-    return { ok: false, error: 'failed' }
-  }
-}
-
-export async function retireFacetAction(raw: unknown): Promise<OperatorResult> {
-  const operator = await currentOperator()
-  if (!operator) return { ok: false, error: 'unauthenticated' }
-  const input = z.object({ facetId: z.string().uuid() }).safeParse(raw)
-  if (!input.success) return { ok: false, error: 'input' }
-  try {
-    await retireCatalogFacet(operatorDb(), operator.id, input.data.facetId)
     revalidatePath('/operator/discover')
     return { ok: true }
   } catch {

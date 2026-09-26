@@ -112,6 +112,28 @@ It also walks `DOMAIN_ERROR_KEYS`, `FIELD_ERROR_KEYS`, `SCOPES` and `WORKSHOP_ST
 all four catalogs. Those are `as const` arrays rather than bare TypeScript unions for exactly
 that reason: a union cannot be iterated, and a check nobody can run is not a check.
 
+### Some tests read the source, because the rule is about the source
+
+Three tests assert nothing about behaviour. They parse the files instead, because what they
+check cannot be expressed as a type, cannot be caught by a build, and has each already shipped
+once as a bug:
+
+| Test                                   | The rule                                                                                                                                                                         |
+| -------------------------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `src/app/use-server-exports.test.ts`   | a `'use server'` file exports only `async` functions -- one constant makes every button on a page answer 500 while the page itself still answers 200                             |
+| `src/server/collab/write-path.test.ts` | `module` and `cluster` are written by the materialiser and by nothing else -- a second writer has its rows deleted again seconds later, and only when somebody has that day open |
+| `src/module-size.test.ts`              | no source module is longer than 500 lines, unless it is listed as an exception with a reason                                                                                     |
+
+The budget in the last one is descriptive, not aspirational: it is roughly where this codebase's
+modules already sit. Its point is the moment, not the number -- a module grows past its subject
+one honest addition at a time, every one of them too small to be the commit where somebody stops
+and splits the file, and the test is what says so while the split is still an afternoon.
+
+**When one of them fails, the repair is never to loosen the rule.** For the budget that means
+splitting the module along its subjects. The exception list takes a written reason per entry, so
+that an exemption is something somebody thought about; an entry for a file that has since been
+split is itself a failure, because a note about the past must not pass for a rule.
+
 ### E2E runs against the standalone artifact, not `next dev`
 
 `pnpm test:e2e` builds and starts `scripts/start-standalone.mjs` — byte for byte what the
