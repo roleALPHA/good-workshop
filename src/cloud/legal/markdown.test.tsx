@@ -31,6 +31,70 @@ describe('parseLegalMarkdown', () => {
   })
 })
 
+/**
+ * The catalogue writes tables, and this renderer swallowed them.
+ *
+ * `| Attribute | Detail |` fell through to the paragraph branch, where every
+ * line of the table was joined with a space -- so a method page on
+ * goodworkshop.org showed one long run of pipes and dashes instead of the
+ * table. It is the second reader of this parser (src/cloud/site/method.tsx),
+ * and the legal texts it was written for happen not to use tables.
+ */
+describe('tables', () => {
+  const table = [
+    '| Attribute | Detail |',
+    '|---|---|',
+    '| Group size | 5–15 per circle |',
+    '| Duration | 45 min |',
+  ].join('\n')
+
+  it('reads a table as a table, not as a paragraph', () => {
+    expect(parseLegalMarkdown(table)).toEqual([
+      {
+        kind: 'table',
+        header: ['Attribute', 'Detail'],
+        rows: [
+          ['Group size', '5–15 per circle'],
+          ['Duration', '45 min'],
+        ],
+      },
+    ])
+  })
+
+  it('takes the alignment row in the shapes people write it', () => {
+    for (const rule of ['|---|---|', '| --- | --- |', '|:---|---:|', '| :-: | --- |']) {
+      const parsed = parseLegalMarkdown(['| A | B |', rule, '| 1 | 2 |'].join('\n'))
+      expect(parsed, rule).toEqual([{ kind: 'table', header: ['A', 'B'], rows: [['1', '2']] }])
+    }
+  })
+
+  it('leaves a pipe that is not a table alone', () => {
+    // A sentence may contain a pipe. Without the alignment row underneath it,
+    // a line starting with one is still just a line.
+    expect(parseLegalMarkdown('Nutze a | b, um zu trennen.')).toEqual([
+      { kind: 'paragraph', text: 'Nutze a | b, um zu trennen.' },
+    ])
+  })
+
+  it('renders it as a real table, with the header in header cells', () => {
+    render(<LegalMarkdown source={table} />)
+    expect(screen.getByRole('table')).toBeInTheDocument()
+    expect(screen.getByRole('columnheader', { name: 'Attribute' })).toBeInTheDocument()
+    expect(screen.getByRole('cell', { name: '5–15 per circle' })).toBeInTheDocument()
+    expect(screen.getAllByRole('row')).toHaveLength(3)
+  })
+
+  it('renders inline markup inside a cell, and no markup from one', () => {
+    render(
+      <LegalMarkdown
+        source={['| A | B |', '|---|---|', '| **fett** | <b>nein</b> |'].join('\n')}
+      />,
+    )
+    expect(screen.getByText('fett').tagName).toBe('STRONG')
+    expect(screen.getByRole('cell', { name: '<b>nein</b>' })).toBeInTheDocument()
+  })
+})
+
 describe('LegalMarkdown', () => {
   it('renders bold and safe links', () => {
     render(
