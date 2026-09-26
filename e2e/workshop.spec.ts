@@ -1,5 +1,5 @@
-import { execFileSync } from 'node:child_process'
 import { expect, test, type Page } from '@playwright/test'
+import { callMcpTool } from './fixtures/mcp'
 
 /** Waits for the shared document to be connected before touching it. */
 const connected = (page: Page) =>
@@ -408,27 +408,6 @@ test('renders a printable day without any editor JavaScript', async ({ page }) =
  * There is no UI for this yet, and inventing a test-only endpoint would prove
  * that endpoint works rather than that the real path does.
  */
-let mcpToken: string | undefined
-function tokenForMcp(): string {
-  mcpToken ??= /gwp_[A-Za-z0-9_-]+/.exec(
-    execFileSync(
-      'node',
-      [
-        'scripts/cli.mjs',
-        'token',
-        'create',
-        '--email',
-        process.env.E2E_EMAIL ?? 'e2e@example.test',
-        '--name',
-        'e2e',
-        '--scopes',
-        'workshops:read,workshops:write',
-      ],
-      { encoding: 'utf8' },
-    ),
-  )![0]
-  return mcpToken
-}
 
 function idsFrom(page: Page): { workshopId: string; dayId: string } {
   const match = /\/w\/([0-9a-f-]+)\/d\/([0-9a-f-]+)/.exec(page.url())
@@ -444,27 +423,16 @@ test('lets an LLM write into a day somebody has open', async ({ page, request })
   await addBlock(page, 'Gruppenarbeit')
   const { workshopId, dayId } = idsFrom(page)
 
-  const response = await request.post('/api/mcp', {
-    headers: {
-      authorization: `Bearer ${tokenForMcp()}`,
-      accept: 'application/json, text/event-stream',
-    },
-    data: {
-      jsonrpc: '2.0',
-      id: 1,
-      method: 'tools/call',
-      params: {
-        name: 'add_module',
-        arguments: { workshopId, dayId, typeKey: 'break', title: 'Vom Modell' },
-      },
-    },
+  // The body is carried into the message: when this fails it is almost always
+  // the collaboration server being unreachable, and the tool says so in words.
+  // Asserting on the text alone would report "expected to contain" and leave the
+  // actual reason in a log nobody opens.
+  const { body } = await callMcpTool(request, 'add_module', {
+    workshopId,
+    dayId,
+    typeKey: 'break',
+    title: 'Vom Modell',
   })
-  // The body is carried into both messages: when this fails it is almost
-  // always the collaboration server being unreachable, and the tool says so in
-  // words. Asserting on the text alone would report "expected to contain" and
-  // leave the actual reason in a log nobody opens.
-  const body = await response.text()
-  expect(response.ok(), body).toBeTruthy()
   expect(body, body).toContain('Block created')
 
   // In the open editor, with no reload: the model joined the same room.
@@ -493,22 +461,13 @@ test('lets an LLM write into a day nobody has open', async ({ page, request }) =
   await page.goto('/library')
 
   await expect(async () => {
-    const response = await request.post('/api/mcp', {
-      headers: {
-        authorization: `Bearer ${tokenForMcp()}`,
-        accept: 'application/json, text/event-stream',
-      },
-      data: {
-        jsonrpc: '2.0',
-        id: 1,
-        method: 'tools/call',
-        params: {
-          name: 'add_module',
-          arguments: { workshopId, dayId, typeKey: 'break', title: 'Später ergänzt' },
-        },
-      },
+    const { body } = await callMcpTool(request, 'add_module', {
+      workshopId,
+      dayId,
+      typeKey: 'break',
+      title: 'Später ergänzt',
     })
-    expect(await response.text()).toContain('Block created')
+    expect(body, body).toContain('Block created')
   }).toPass({ timeout: 20_000 })
 
   await page.goto(`/w/${workshopId}/d/${dayId}`)
@@ -549,31 +508,15 @@ test('applies a whole agenda from an LLM into an open day', async ({ page, reque
   // calls loses ids and drifts. The presence LABEL is asserted in the
   // component tests -- the model is only in the room for a few hundred
   // milliseconds, and racing that window is how a suite becomes flaky.
-  const writing = request.post('/api/mcp', {
-    headers: {
-      authorization: `Bearer ${tokenForMcp()}`,
-      accept: 'application/json, text/event-stream',
-    },
-    data: {
-      jsonrpc: '2.0',
-      id: 1,
-      method: 'tools/call',
-      params: {
-        name: 'apply_agenda',
-        arguments: {
-          workshopId,
-          dayId,
-          mode: 'append',
-          items: [
-            { kind: 'cluster', title: 'Aufwärmen', children: [{ typeKey: 'check_in' }] },
-            { kind: 'module', typeKey: 'break', title: 'Kaffee' },
-          ],
-        },
-      },
-    },
+  const { body: written } = await callMcpTool(request, 'apply_agenda', {
+    workshopId,
+    dayId,
+    mode: 'append',
+    items: [
+      { kind: 'cluster', title: 'Aufwärmen', children: [{ typeKey: 'check_in' }] },
+      { kind: 'module', typeKey: 'break', title: 'Kaffee' },
+    ],
   })
-
-  const written = await (await writing).text()
   // English, like everything MCP says: the audience is a model, not a reader.
   // See the note in src/server/mcp/errors.ts.
   expect(written, written).toContain('3 entries written')

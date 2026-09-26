@@ -7,7 +7,7 @@ import { catalog } from '@gw/catalog'
 import { adoptEntry, type AdoptResult } from '@/cloud/catalog/adopt'
 import { queryFromParams, type SearchParams } from '@/cloud/catalog/query'
 import { entryView, type EntryView } from './entry-view'
-import { listDays } from '@/domain/workshop/repo'
+import { listDays } from '@/domain/workshop/days'
 import { roomEditor } from '@/server/collab/across-days'
 import {
   currentActor,

@@ -4,7 +4,7 @@ import { uuidv7 } from 'uuidv7'
 import { afterAll, beforeAll, beforeEach, describe, expect, it } from 'vitest'
 import { withTenant, type Actor } from '@/server/db'
 import { NotFoundError, assertWorkshopAccess } from '@/domain/agenda/access'
-import { listWorkshops } from './repo'
+import { listWorkshops } from './library'
 import {
   FolderSharingError,
   assertFolderAccess,

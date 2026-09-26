@@ -1,7 +1,7 @@
 import { screen } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
 import { afterEach, describe, expect, it, vi } from 'vitest'
-import type { FolderNode } from '@/domain/workshop/repo'
+import type { FolderNode } from '@/domain/workshop/folders'
 import { renderWithIntl } from '@/test/intl'
 
 vi.mock('@/server/actions/workshop', () => ({

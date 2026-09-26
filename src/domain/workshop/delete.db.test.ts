@@ -4,19 +4,9 @@ import { uuidv7 } from 'uuidv7'
 import { afterAll, beforeAll, describe, expect, it } from 'vitest'
 import { withTenant, type Actor } from '@/server/db'
 import { assertWorkshopAccess } from '@/domain/agenda/access'
-import {
-  createFolder,
-  deleteFolder,
-  FolderMoveError,
-  moveFolder,
-  listFolders,
-  listTrashedWorkshops,
-  listWorkshops,
-  purgeWorkshop,
-  restoreWorkshop,
-  trashWorkshop,
-} from './repo'
-
+import { createFolder, deleteFolder, FolderMoveError, listFolders, moveFolder } from './folders'
+import { listTrashedWorkshops, listWorkshops } from './library'
+import { purgeWorkshop, restoreWorkshop, trashWorkshop } from './repo'
 /**
  * Throwing things away, and getting them back.
  *

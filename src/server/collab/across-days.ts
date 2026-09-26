@@ -11,7 +11,7 @@ import {
   snapshotModule,
 } from '@/domain/collab/ops'
 import { DayError, deleteDay } from '@/domain/workshop/days'
-import { listDays } from '@/domain/workshop/repo'
+import { listDays } from '@/domain/workshop/days'
 import { withTenant, type Actor, type Tx } from '@/server/db'
 import { workshopModule } from '@/server/db/schema'
 import { editInRoom, type RoomTarget } from './client'

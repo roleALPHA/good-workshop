@@ -1,3 +1,4 @@
+import { asc } from 'drizzle-orm'
 import { uuidv7 } from 'uuidv7'
 import { and, count, eq } from 'drizzle-orm'
 import type { Tx } from '@/server/db'
@@ -162,3 +163,26 @@ export async function setDayDate(
 
 const toTime = (minute: number) =>
   `${String(Math.floor(minute / 60)).padStart(2, '0')}:${String(minute % 60).padStart(2, '0')}:00`
+
+export async function firstDayOf(tx: Tx, workshopId: string): Promise<string | null> {
+  const rows = await tx
+    .select({ id: workshopDay.id })
+    .from(workshopDay)
+    .where(eq(workshopDay.workshopId, workshopId))
+    .orderBy(asc(workshopDay.position))
+    .limit(1)
+  return rows[0]?.id ?? null
+}
+
+export async function listDays(tx: Tx, workshopId: string) {
+  return tx
+    .select({
+      id: workshopDay.id,
+      title: workshopDay.title,
+      date: workshopDay.date,
+      position: workshopDay.position,
+    })
+    .from(workshopDay)
+    .where(eq(workshopDay.workshopId, workshopId))
+    .orderBy(asc(workshopDay.position))
+}

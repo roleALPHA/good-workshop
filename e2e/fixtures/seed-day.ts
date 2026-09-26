@@ -1,5 +1,5 @@
-import { execFileSync } from 'node:child_process'
 import { expect, type APIRequestContext, type Page } from '@playwright/test'
+import { callMcpTool, mcpAddress } from './mcp'
 import { createDemoDay } from '@/features/agenda/fixtures/day-fixture'
 import { MODULE_TYPES_BY_ID } from '@/features/agenda/fixtures/module-types'
 
@@ -21,30 +21,6 @@ import { MODULE_TYPES_BY_ID } from '@/features/agenda/fixtures/module-types'
  * exactly one writer -- the collaboration room. A seed that wrote SQL directly
  * would be deleted by the materialiser a few seconds later, and only sometimes.
  */
-
-let mcpToken: string | undefined
-
-function tokenForMcp(): string {
-  mcpToken ??= /gwp_[A-Za-z0-9_-]+/.exec(
-    execFileSync(
-      'node',
-      [
-        'scripts/cli.mjs',
-        'token',
-        'create',
-        '--email',
-        process.env.E2E_EMAIL ?? 'e2e@example.test',
-        '--name',
-        'e2e-seed',
-        '--scopes',
-        'workshops:read,workshops:write',
-      ],
-      { encoding: 'utf8' },
-    ),
-  )?.[0]
-  if (!mcpToken) throw new Error('Kein MCP-Token aus der CLI')
-  return mcpToken
-}
 
 /** The fixture, as apply_agenda understands it. */
 function agendaItems() {
@@ -97,82 +73,6 @@ function agendaItems() {
  * it on the reading-view suite, whose whole point is the phone.
  */
 /**
- * One tool call, retried once if the stream came back empty.
- *
- * Under parallel workers the server-sent-events response is sometimes closed
- * before anything was flushed into it. The call itself may well have happened,
- * so a retry can duplicate work -- which is harmless here: these are seeds, and
- * both create_workshop and apply_agenda produce a usable state either way.
- *
- * Retried rather than tolerated because the one answer that matters,
- * create_workshop's pair of ids, has nothing to fall back on.
- */
-async function call(
-  request: APIRequestContext,
-  name: string,
-  args: Record<string, unknown>,
-  address: string,
-): Promise<Record<string, unknown>> {
-  const first = await callOnce(request, name, args, address)
-  if (first.body !== '') return first.structured
-  return (await callOnce(request, name, args, address)).structured
-}
-
-/**
- * A client address of this seed's own, in a header the app already reads.
- *
- * /api/mcp allows 60 calls a minute per address, and with no proxy in the
- * harness `clientAddress` falls back to one shared bucket for the whole suite
- * -- the "blunt" case its own comment names. Every test seeds three calls
- * through it, so the suite ends up rate-limiting itself, and the limit is the
- * one thing here that must not be softened: it is what keeps a stranger from
- * driving a database write per request.
- *
- * Not a dodge. Each seeded workshop stands for a different client; the header
- * is how a real deployment says so, and the harness has no proxy to say it.
- */
-let seeded = 0
-const nextAddress = () => {
-  const worker = Number(process.env.TEST_PARALLEL_INDEX ?? 0)
-  seeded += 1
-  return `10.${worker}.${Math.floor(seeded / 256) % 256}.${seeded % 256}`
-}
-
-async function callOnce(
-  request: APIRequestContext,
-  name: string,
-  args: Record<string, unknown>,
-  address: string,
-): Promise<{ body: string; structured: Record<string, unknown> }> {
-  const response = await request.post('/api/mcp', {
-    headers: {
-      authorization: `Bearer ${tokenForMcp()}`,
-      accept: 'application/json, text/event-stream',
-      'x-forwarded-for': address,
-    },
-    data: { jsonrpc: '2.0', id: 1, method: 'tools/call', params: { name, arguments: args } },
-  })
-  const body = await response.text()
-  expect(response.ok(), `${name}: HTTP ${response.status()} ${body}`).toBeTruthy()
-
-  // The transport is server-sent events, so the JSON sits behind a `data:` line.
-  const payload = /^data: (.+)$/m.exec(body)
-  if (!payload) return { body: '', structured: {} }
-
-  // Read from structuredContent rather than from the human-readable text: the
-  // ids are in both, but the prose carries them across an escaped newline, and
-  // a regex over that is a trap somebody falls into twice.
-  const parsed = JSON.parse(payload[1]!) as {
-    result?: { structuredContent?: Record<string, unknown>; isError?: boolean }
-  }
-  // A tool that reports a problem still says so in words -- most often that the
-  // collaboration server is unreachable, which is worth reading rather than
-  // discovering as "the block never showed up".
-  expect(parsed.result?.isError, `${name}: ${body}`).toBeFalsy()
-  return { body, structured: parsed.result?.structuredContent ?? {} }
-}
-
-/**
  * Creates a workshop, fills its first day with the reference agenda and leaves
  * the browser on that day.
  */
@@ -184,9 +84,12 @@ export async function seedReferenceDay(
 ): Promise<string> {
   const doc = createDemoDay()
   const title = name ?? `Referenz ${Date.now()}-${Math.random().toString(36).slice(2, 7)}`
-  const address = nextAddress()
+  // One address for the whole seed: three calls out of a budget of sixty is a
+  // client behaving normally, and giving each its own would only hide a real
+  // limit being hit.
+  const address = mcpAddress()
 
-  const created = await call(
+  const { structured: created } = await callMcpTool(
     request,
     'create_workshop',
     { title, date: doc.date ?? undefined },
@@ -198,7 +101,7 @@ export async function seedReferenceDay(
   // workshop by id, so an empty stream here has to fail loudly.
   expect(workshopId && dayId, `create_workshop ohne Ids: ${JSON.stringify(created)}`).toBeTruthy()
 
-  await call(
+  await callMcpTool(
     request,
     'apply_agenda',
     { workshopId, dayId, mode: 'replace', items: agendaItems() },
@@ -207,7 +110,12 @@ export async function seedReferenceDay(
 
   // The day starts at 13:00 in the fixture, and every derived time below
   // depends on it. apply_agenda writes blocks, not the day itself.
-  await call(request, 'set_day_start', { workshopId, dayId, startMinute: doc.startMinute }, address)
+  await callMcpTool(
+    request,
+    'set_day_start',
+    { workshopId, dayId, startMinute: doc.startMinute },
+    address,
+  )
 
   const url = `/w/${workshopId}/d/${dayId}`
   await page.goto(url)

@@ -1,6 +1,6 @@
 import { randomUUID } from 'node:crypto'
 import type { PlanKey } from './plans'
-import type { Db } from './run'
+import type { Db } from './context'
 
 /**
  * A billing account in the tables, for tests and for the runs that put invoices

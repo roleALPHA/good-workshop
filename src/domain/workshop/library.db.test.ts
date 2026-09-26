@@ -4,7 +4,7 @@ import { uuidv7 } from 'uuidv7'
 import { afterAll, beforeAll, describe, expect, it } from 'vitest'
 import { withTenant, type Actor } from '@/server/db'
 import { NotFoundError, assertWorkshopAccess } from '@/domain/agenda/access'
-import { listTags, listWorkshops } from './repo'
+import { listTags, listWorkshops } from './library'
 import { pruneUnusedTags, setWorkshopTags, tagsOf } from './tags'
 
 /**

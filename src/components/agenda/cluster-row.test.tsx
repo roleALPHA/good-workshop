@@ -4,7 +4,7 @@ import userEvent from '@testing-library/user-event'
 import { describe, expect, it, vi } from 'vitest'
 import type { ScheduleEntry } from '@/domain/schedule/types'
 import type { ClusterDto } from '@/domain/agenda/types'
-import { ClusterRow, type ClusterEditing } from './agenda-rows'
+import { ClusterRow, type ClusterEditing } from './cluster-row'
 
 /**
  * A section can be named, coloured and taken out again.

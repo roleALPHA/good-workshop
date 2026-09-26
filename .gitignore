@@ -25,6 +25,15 @@ e2e/.auth/
 .claude/
 CLAUDE.md
 **/CLAUDE.md
+
+# Die Skills unter .agents/ sind absichtlich versioniert -- CI, Tests und UI
+# sind Konventionen, die fuer jeden Beitrag gelten. Der Deploy-Skill ist es
+# nicht: er nennt den Server, den Datenbankcontainer, den selbst gehosteten
+# Runner und das private Repo. Das ist genau das Betriebswissen, das laut
+# "Cloud-Betrieb bleibt draussen" nicht in dieses oeffentliche Repo gehoert.
+# Er lebt neben den anderen unter .claude/skills/deploy/, das ohnehin ignoriert
+# ist; diese Zeile verhindert, dass eine Kopie hier versehentlich mitgeht.
+.agents/skills/deploy/
 # Written by `next build` alongside CLAUDE.md, same reason.
 AGENTS.md
 dist/

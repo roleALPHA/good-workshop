@@ -2,7 +2,7 @@
 
 import { revalidatePath } from 'next/cache'
 import { z } from 'zod'
-import { deleteOwnAccount, setOwnName } from '@/domain/tenant/members'
+import { deleteOwnAccount, setOwnName } from '@/domain/tenant/membership'
 import { destroySession } from '@/server/auth/session'
 import { currentActor, fail, toResult, type ActionResult } from './context'
 

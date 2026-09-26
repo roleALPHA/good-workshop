@@ -5,7 +5,7 @@ import { clientAddress } from '@/server/auth/client-address'
 import { rateLimiter } from '@/server/auth/ratelimit'
 import { redeemShareToken } from '@/server/auth/share-invite'
 import { hashSecret } from '@/server/auth/tokens'
-import { firstDayOf } from '@/domain/workshop/repo'
+import { firstDayOf } from '@/domain/workshop/days'
 import { withTenantOnly } from '@/server/db'
 
 /**

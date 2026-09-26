@@ -2,22 +2,22 @@
 
 import { revalidatePath } from 'next/cache'
 import { z } from 'zod'
+import { listDays } from '@/domain/workshop/days'
 import {
   createFolder,
-  createWorkshop,
-  listDays,
-  listFolders,
-  listTags,
-  listWorkshops,
-  renameWorkshop,
-  trashWorkshop,
-  restoreWorkshop,
-  purgeWorkshop,
-  listTrashedWorkshops,
   deleteFolder,
+  listFolders,
   moveFolder,
   renameFolder,
+} from '@/domain/workshop/folders'
+import { listTags, listTrashedWorkshops, listWorkshops } from '@/domain/workshop/library'
+import {
+  createWorkshop,
   moveWorkshopToFolder,
+  purgeWorkshop,
+  renameWorkshop,
+  restoreWorkshop,
+  trashWorkshop,
 } from '@/domain/workshop/repo'
 import { pruneUnusedTags, setWorkshopTags } from '@/domain/workshop/tags'
 import { assertTenantAdmin } from '@/domain/tenant/members'

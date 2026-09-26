@@ -3,7 +3,7 @@ import { authConfig } from '@/server/auth/config'
 import { translator } from '@/i18n/translator'
 import type { Locale } from '@/i18n/config'
 import { ATTRIBUTION_TEXT } from '@/lib/attribution'
-import type { Notice } from './run'
+import type { Notice } from './context'
 
 /**
  * The mails the billing worker sends, in the language the billing account

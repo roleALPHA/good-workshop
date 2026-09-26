@@ -12,7 +12,6 @@ import {
   redeemRefreshToken,
   registerClient,
 } from './repo'
-
 /**
  * The OAuth flow against a real database.
  *

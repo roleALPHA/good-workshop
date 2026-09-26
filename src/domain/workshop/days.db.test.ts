@@ -5,8 +5,7 @@ import { afterAll, beforeAll, beforeEach, describe, expect, it } from 'vitest'
 import { assertWorkshopAccess, NotFoundError } from '@/domain/agenda/access'
 import { withTenant, type Actor } from '@/server/db'
 import { createDay, moveDay } from './days'
-import { listDays } from './repo'
-
+import { listDays } from './days'
 /**
  * The order of the days.
  *
