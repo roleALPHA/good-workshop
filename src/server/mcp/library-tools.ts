@@ -2,16 +2,15 @@ import { z } from 'zod'
 import type { McpServer } from '@modelcontextprotocol/sdk/server/mcp.js'
 import { assertWorkshopAccess, NotFoundError } from '@/domain/agenda/access'
 import { assertTenantAdmin } from '@/domain/tenant/members'
+import { createFolder, deleteFolder, listFolders, moveFolder } from '@/domain/workshop/folders'
 import {
-  createFolder,
-  createWorkshop,
-  deleteFolder,
   LIBRARY_PAGE_SIZE,
-  listFolders,
   listTags,
   listTrashedWorkshops,
   listWorkshops,
-  moveFolder,
+} from '@/domain/workshop/library'
+import {
+  createWorkshop,
   moveWorkshopToFolder,
   purgeWorkshop,
   renameWorkshop,

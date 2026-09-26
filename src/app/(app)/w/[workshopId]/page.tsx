@@ -1,5 +1,5 @@
 import { notFound, redirect } from 'next/navigation'
-import { firstDayOf } from '@/domain/workshop/repo'
+import { firstDayOf } from '@/domain/workshop/days'
 import { assertWorkshopAccess } from '@/domain/agenda/access'
 import { withTenant } from '@/server/db'
 import { currentActor } from '@/server/actions/context'

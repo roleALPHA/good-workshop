@@ -29,7 +29,7 @@ import {
 import { restrictToWindowEdges } from '@dnd-kit/modifiers'
 import { Folder as FolderIcon, FileText } from 'lucide-react'
 import { useTranslations } from 'next-intl'
-import type { FolderNode } from '@/domain/workshop/repo'
+import type { FolderNode } from '@/domain/workshop/folders'
 import {
   resolveFolderDrop,
   resolveWorkshopDrop,

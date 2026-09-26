@@ -2,7 +2,7 @@
 
 import Link from 'next/link'
 import { useCallback, useEffect, useRef, useState, useTransition } from 'react'
-import type { WorkshopSummary } from '@/domain/workshop/repo'
+import type { WorkshopSummary } from '@/domain/workshop/library'
 import { Download, FolderInput, Trash2 } from 'lucide-react'
 import { ReadOnlyBadge } from '@/components/read-only-badge'
 import { loadLibrary, moveWorkshopAction, trashWorkshopAction } from '@/server/actions/workshop'

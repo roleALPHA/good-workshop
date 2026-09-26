@@ -4,17 +4,9 @@ import { uuidv7 } from 'uuidv7'
 import { afterAll, beforeAll, describe, expect, it } from 'vitest'
 import { withTenant, type Actor } from '@/server/db'
 import { assertWorkshopAccess } from '@/domain/agenda/access'
-import {
-  createFolder,
-  FolderMoveError,
-  renameFolder,
-  listFolders,
-  listWorkshops,
-  moveFolder,
-  moveWorkshopToFolder,
-  WorkshopFolderError,
-} from './repo'
-
+import { createFolder, FolderMoveError, listFolders, moveFolder, renameFolder } from './folders'
+import { listWorkshops } from './library'
+import { moveWorkshopToFolder, WorkshopFolderError } from './repo'
 /**
  * Filing: putting a workshop in a folder, and putting folders in order.
  *
