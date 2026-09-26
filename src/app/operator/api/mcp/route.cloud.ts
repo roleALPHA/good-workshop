@@ -6,7 +6,8 @@ import { rateLimiter } from '@/server/auth/ratelimit'
 import { clientAddress } from '@/server/auth/client-address'
 import { displayVersion } from '@/lib/version'
 import { operatorConsoleEnabled, operatorDb } from '@/cloud/operator/db'
-import { registerOperatorTools } from '@/cloud/operator/mcp-tools'
+import { registerOperatorCatalogTools } from '@/cloud/operator/mcp-catalog-tools'
+import { registerOperatorTenantTools } from '@/cloud/operator/mcp-tenant-tools'
 import { resolveOperatorBearer } from '@/cloud/operator/tokens'
 import { operatorProfile, unauthorizedChallenge } from '@/server/oauth/metadata'
 
@@ -87,7 +88,8 @@ export async function POST(request: NextRequest) {
   const transport = new StreamableHTTPServerTransport({ sessionIdGenerator: undefined })
 
   try {
-    registerOperatorTools(server, actor)
+    registerOperatorTenantTools(server, actor)
+    registerOperatorCatalogTools(server, actor)
     await server.connect(transport)
     return await handleThroughNode(request, body, transport)
   } finally {
