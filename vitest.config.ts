@@ -73,6 +73,12 @@ export default defineConfig({
         'src/domain/agenda/access.ts',
         'src/domain/agenda/repo.ts',
         'src/domain/workshop/repo.ts',
+        // The library read and the folder tree: the same subject, split out of
+        // repo.ts when it outgrew it. Every question they answer is "which rows
+        // may this actor see", which is RLS plus a recursive path query -- there
+        // is nothing here a unit test could be wrong about on its own.
+        'src/domain/workshop/library.ts',
+        'src/domain/workshop/folders.ts',
         'src/domain/workshop/collaborators.ts',
         // Folder-level collaboration: the same shape one level up. Its pure
         // half -- who holds what, who may hand on what -- is in
@@ -95,13 +101,22 @@ export default defineConfig({
         // separation is the thing worth asserting, and it does not exist
         // without a database.
         'src/domain/tenant/members.ts',
+        'src/domain/tenant/membership.ts',
         'src/domain/tenant/tokens.ts',
         // Type declarations: nothing to execute.
         '**/types.ts',
-        // Browser glue, covered by Playwright: a dnd-kit coordinate getter and
-        // a hook that calls server actions have no meaningful unit surface.
+        // Browser glue, covered by Playwright: a dnd-kit coordinate getter and a
+        // hook wiring dnd-kit's events to a document have no meaningful unit
+        // surface. What use-agenda-drag actually has to get right -- the first
+        // delta is a position, the first collision is measured from the handle,
+        // `over` is one event behind -- is only observable in a real browser, and
+        // the five drag tests in e2e/agenda.spec.ts are where it is observed.
+        //
+        // The sentence the hook has read aloud is NOT here: describeProjection is
+        // pure, a wrong answer is silent to everybody who can see the screen, and
+        // it has its own test.
         'src/features/agenda/keyboard.ts',
-        'src/features/agenda/use-persistence.ts',
+        'src/features/agenda/use-agenda-drag.ts',
         // The same category, and it only appears on this list because Vitest 4
         // started counting files no test imports -- under 3 it was never
         // measured at all, so this restores the intended scope rather than
