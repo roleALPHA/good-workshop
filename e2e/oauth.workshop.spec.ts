@@ -1,5 +1,6 @@
 import { createHash, randomBytes } from 'node:crypto'
 import { expect, test } from '@playwright/test'
+import { mcpAddress } from './fixtures/mcp'
 
 /**
  * The OAuth flow, end to end, the way a client walks it.
@@ -22,7 +23,10 @@ test('a client discovers, registers, is consented to, and then reads', async ({
 }) => {
   // ── 1. The 401 that starts everything ──────────────────────────────────
   const denied = await request.post('/api/mcp', {
-    headers: { accept: 'application/json, text/event-stream' },
+    // Its own address: sixty calls a minute are shared across the whole suite
+    // otherwise, and a 429 here would read as "the 401 is gone". See
+    // ./fixtures/mcp.ts.
+    headers: { accept: 'application/json, text/event-stream', 'x-forwarded-for': mcpAddress() },
     data: { jsonrpc: '2.0', id: 1, method: 'tools/list', params: {} },
   })
   expect(denied.status()).toBe(401)
@@ -117,6 +121,7 @@ test('a client discovers, registers, is consented to, and then reads', async ({
     headers: {
       authorization: `Bearer ${tokens.access_token}`,
       accept: 'application/json, text/event-stream',
+      'x-forwarded-for': mcpAddress(),
     },
     data: {
       jsonrpc: '2.0',

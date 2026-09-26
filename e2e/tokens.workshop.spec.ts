@@ -1,4 +1,5 @@
 import { expect, test } from '@playwright/test'
+import { mcpAddress } from './fixtures/mcp'
 
 /**
  * Connecting an LLM client, without a shell on the server.
@@ -47,11 +48,16 @@ test('makes a token that works, and can take it back', async ({ page, request })
   await withoutToken.getByText('Claude Code (OAuth)', { exact: true }).click()
   await expect(withoutToken.getByText(/^claude mcp add /)).not.toContainText('Authorization')
 
+  // A fixed address of this test's own rather than one per call: what is under
+  // test here is a token's scopes, and sixty calls a minute shared across the
+  // suite would fail that as a 429. See ./fixtures/mcp.ts.
+  const address = mcpAddress()
   const call = (body: unknown) =>
     request.post('/api/mcp', {
       headers: {
         authorization: `Bearer ${token}`,
         accept: 'application/json, text/event-stream',
+        'x-forwarded-for': address,
       },
       data: body,
     })
