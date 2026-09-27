@@ -1,0 +1,26 @@
+{
+  "$schema": "https://static.modelcontextprotocol.io/schemas/2025-12-11/server.schema.json",
+  "name": "io.github.roleALPHA/good-workshop",
+  "title": "GoodWorkshop",
+  "description": "Plan workshop agendas: days, blocks, pinned times, parking. Start times recalculate automatically.",
+  "version": "0.8.11",
+  "websiteUrl": "https://goodworkshop.org",
+  "repository": {
+    "url": "https://github.com/roleALPHA/good-workshop",
+    "source": "github"
+  },
+  "remotes": [
+    {
+      "type": "streamable-http",
+      "url": "https://goodworkshop.org/api/mcp",
+      "headers": [
+        {
+          "name": "Authorization",
+          "description": "Optional: 'Bearer <token>' from AI Connection in your profile. Omit to sign in with OAuth.",
+          "isRequired": false,
+          "isSecret": true
+        }
+      ]
+    }
+  ]
+}
