@@ -301,7 +301,9 @@
       "emptyTrack": "Aucun bloc pour l’instant.",
       "addBlockToTrack": "Ajouter un bloc à {title}",
       "addTrackTo": "Ajouter un volet à {title}"
-    }
+    },
+    "presenceModel": "Assistant IA",
+    "presenceEditing": "modifie ce bloc en ce moment"
   },
   "auth": {
     "guest": {

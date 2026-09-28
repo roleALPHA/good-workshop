@@ -31,7 +31,7 @@ describe('PresenceBar', () => {
     // The point of the label: an LLM writing through MCP joins this room like a
     // person, and must not be able to pass for a colleague.
     render(<PresenceBar peers={[peer({ kind: 'model', name: 'KI-Assistent' })]} />)
-    expect(screen.getByText('KI-Assistent (KI)')).toBeInTheDocument()
+    expect(screen.getByText('KI-Assistent')).toBeInTheDocument()
   })
 })
 
@@ -62,6 +62,49 @@ describe('PeerMarks', () => {
 
   it('labels a model here too', () => {
     render(<PeerMarks peers={[peer({ kind: 'model', name: 'KI-Assistent' })]} />)
-    expect(screen.getByText(/KI-Assistent \(KI\)/)).toBeInTheDocument()
+    expect(screen.getByText(/KI-Assistent/)).toBeInTheDocument()
+  })
+})
+
+/**
+ * The room names participants on the SERVER, where there is no request
+ * language -- the collaboration bundle has no next-intl in it on purpose. So
+ * the name arrives in German whatever the reader speaks, and for a model the
+ * client has to say it itself.
+ *
+ * Asserted in English because that is where the bug was visible: an English
+ * screen telling its reader that "KI-Assistent (KI)" is in their document.
+ */
+describe('a participant that is not a person', () => {
+  const model = {
+    clientId: 1,
+    name: 'KI-Assistent',
+    hue: 292,
+    kind: 'model' as const,
+    focusedBlockId: null,
+  }
+
+  it('is named in the reader’s language, not the one the server sent', () => {
+    render(<PresenceBar peers={[model]} />, { locale: 'en' })
+    expect(screen.getByText('AI assistant')).toBeInTheDocument()
+    expect(screen.queryByText(/KI-Assistent/)).toBeNull()
+    expect(screen.queryByText(/\(KI\)/)).toBeNull()
+  })
+
+  it('is named the same way on the row it is editing', () => {
+    render(<PeerMarks peers={[model]} />, { locale: 'en' })
+    expect(screen.getByText('AI assistant')).toBeInTheDocument()
+    expect(screen.queryByText(/KI-Assistent/)).toBeNull()
+  })
+
+  it('tells a screen reader what is happening, also in their language', () => {
+    render(<PeerMarks peers={[model]} />, { locale: 'en' })
+    expect(screen.getByText('is editing this block')).toBeInTheDocument()
+  })
+
+  it('still shows a person under the name they gave', () => {
+    const person = { ...model, kind: 'person' as const, name: 'Linh' }
+    render(<PresenceBar peers={[person]} />, { locale: 'en' })
+    expect(screen.getByText('Linh')).toBeInTheDocument()
   })
 })
