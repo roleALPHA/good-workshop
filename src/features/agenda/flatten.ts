@@ -1,4 +1,4 @@
-import type { ClusterDto, DayDoc, ModuleDto } from '@/domain/agenda/types'
+import type { ClusterDto, ClusterMode, DayDoc, ModuleDto } from '@/domain/agenda/types'
 import type { Schedule, ScheduleItem } from '@/domain/schedule/types'
 
 /**
@@ -11,37 +11,52 @@ import type { Schedule, ScheduleItem } from '@/domain/schedule/types'
  * it, which is what keeps intermediate drag states derivable instead of stateful.
  */
 
-export type FlatRow =
-  | {
-      kind: 'cluster'
-      id: string
-      depth: 0
-      parentId: null
-      cluster: ClusterDto
-      childCount: number
-    }
-  | {
-      kind: 'module'
-      id: string
-      depth: 0 | 1
-      parentId: string | null
-      module: ModuleDto
-    }
-  | {
-      /** Derived from the schedule, never persisted, never draggable. */
-      kind: 'gap'
-      id: string
-      depth: 0
-      parentId: null
-      minutes: number
-      beforeRowId: string
-    }
+export type Depth = 0 | 1 | 2
+
+export type FlatClusterRow = {
+  kind: 'cluster'
+  id: string
+  /** 0 for a section on the day, 1 for a strand inside a breakout. */
+  depth: 0 | 1
+  parentId: string | null
+  cluster: ClusterDto
+  /** Strands for a breakout, blocks for an ordinary section. */
+  childCount: number
+  /** Copied off the DTO so the projection only ever has to narrow a FlatRow. */
+  mode: ClusterMode
+}
+
+export type FlatModuleRow = {
+  kind: 'module'
+  id: string
+  /** 1 inside a section, 2 inside a strand. */
+  depth: Depth
+  parentId: string | null
+  module: ModuleDto
+}
+
+export type FlatGapRow = {
+  /** Derived from the schedule, never persisted, never draggable. */
+  kind: 'gap'
+  id: string
+  /**
+   * Taken from the row the gap stands in front of. Writing 0 here would throw a
+   * gap inside a strand out of its column -- it belongs to the run it
+   * interrupts, not to the day.
+   */
+  depth: Depth
+  parentId: string | null
+  minutes: number
+  beforeRowId: string
+}
+
+export type FlatRow = FlatClusterRow | FlatModuleRow | FlatGapRow
 
 export type FlattenUiState = {
   collapsed?: ReadonlySet<string>
 }
 
-type DayLevelEntry =
+type Entry =
   | { kind: 'cluster'; order: number; cluster: ClusterDto }
   | { kind: 'module'; order: number; module: ModuleDto }
 
@@ -49,12 +64,18 @@ type DayLevelEntry =
  * Clusters and day-level modules live in two tables but one ordered list, so
  * they are merged here by `order` and tie-broken by id -- exactly the
  * `ORDER BY position, id` the server uses, so client and server agree.
+ *
+ * The walk is recursive because the shape is: a breakout holds strands, a
+ * strand holds blocks. It is not recursive WITHOUT limit -- the database makes
+ * a third level of clusters unrepresentable -- but writing the walk generically
+ * is shorter than writing two levels out, and it cannot disagree with itself.
  */
 export function flattenDay(doc: DayDoc, ui: FlattenUiState = {}): FlatRow[] {
   const collapsed = ui.collapsed ?? new Set<string>()
 
-  const childrenByCluster = new Map<string, ModuleDto[]>()
-  const dayLevel: DayLevelEntry[] = []
+  const childModules = new Map<string, ModuleDto[]>()
+  const childClusters = new Map<string, ClusterDto[]>()
+  const dayLevel: Entry[] = []
 
   for (const mod of doc.modules) {
     // Parked blocks are in the day but not in its schedule: they keep their
@@ -68,62 +89,76 @@ export function flattenDay(doc: DayDoc, ui: FlattenUiState = {}): FlatRow[] {
     if (mod.clusterId === null) {
       dayLevel.push({ kind: 'module', order: mod.order, module: mod })
     } else {
-      const bucket = childrenByCluster.get(mod.clusterId)
-      if (bucket) bucket.push(mod)
-      else childrenByCluster.set(mod.clusterId, [mod])
+      push(childModules, mod.clusterId, mod)
     }
   }
 
+  const byId = new Map(doc.clusters.map((c) => [c.id, c]))
   for (const cluster of doc.clusters) {
-    dayLevel.push({ kind: 'cluster', order: cluster.order, cluster })
+    if (cluster.parentClusterId === null) {
+      dayLevel.push({ kind: 'cluster', order: cluster.order, cluster })
+    } else if (byId.has(cluster.parentClusterId)) {
+      push(childClusters, cluster.parentClusterId, cluster)
+    }
+    // A strand whose breakout is not on this day drops out with its blocks --
+    // the same answer an orphaned module has always got.
   }
-
-  dayLevel.sort((a, b) => a.order - b.order || idOf(a).localeCompare(idOf(b)))
 
   const rows: FlatRow[] = []
 
-  for (const entry of dayLevel) {
+  const emit = (entry: Entry, depth: Depth, parentId: string | null): void => {
     if (entry.kind === 'module') {
-      rows.push({
-        kind: 'module',
-        id: entry.module.id,
-        depth: 0,
-        parentId: null,
-        module: entry.module,
-      })
-      continue
+      rows.push({ kind: 'module', id: entry.module.id, depth, parentId, module: entry.module })
+      return
     }
 
-    const children = (childrenByCluster.get(entry.cluster.id) ?? [])
-      .slice()
-      .sort((a, b) => a.order - b.order || a.id.localeCompare(b.id))
+    const cluster = entry.cluster
+    // A breakout holds strands; anything else holds blocks. Asking the mode
+    // rather than the depth keeps the two questions apart: one is about the
+    // shape of the document, the other about where we are in it.
+    const children: Entry[] =
+      cluster.mode === 'parallel'
+        ? (childClusters.get(cluster.id) ?? []).map((c) => ({
+            kind: 'cluster' as const,
+            order: c.order,
+            cluster: c,
+          }))
+        : (childModules.get(cluster.id) ?? []).map((m) => ({
+            kind: 'module' as const,
+            order: m.order,
+            module: m,
+          }))
 
     rows.push({
       kind: 'cluster',
-      id: entry.cluster.id,
-      depth: 0,
-      parentId: null,
-      cluster: entry.cluster,
+      id: cluster.id,
+      depth: depth === 0 ? 0 : 1,
+      parentId,
+      cluster,
       childCount: children.length,
+      mode: cluster.mode,
     })
 
-    if (collapsed.has(entry.cluster.id)) continue
-
-    for (const mod of children) {
-      rows.push({
-        kind: 'module',
-        id: mod.id,
-        depth: 1,
-        parentId: entry.cluster.id,
-        module: mod,
-      })
-    }
+    if (collapsed.has(cluster.id)) return
+    for (const child of sortEntries(children)) emit(child, (depth + 1) as Depth, cluster.id)
   }
+
+  for (const entry of sortEntries(dayLevel)) emit(entry, 0, null)
 
   return rows
 }
 
-function idOf(entry: DayLevelEntry): string {
+function push<T>(map: Map<string, T[]>, key: string, value: T): void {
+  const bucket = map.get(key)
+  if (bucket) bucket.push(value)
+  else map.set(key, [value])
+}
+
+function sortEntries(entries: Entry[]): Entry[] {
+  return entries.slice().sort((a, b) => a.order - b.order || idOf(a).localeCompare(idOf(b)))
+}
+
+function idOf(entry: Entry): string {
   return entry.kind === 'cluster' ? entry.cluster.id : entry.module.id
 }
 
@@ -140,9 +175,12 @@ export function toScheduleItems(rows: FlatRow[]): ScheduleItem[] {
       items.push({
         id: row.id,
         kind: 'cluster',
-        clusterId: null,
+        // A strand names the breakout it runs in -- without that the scheduler
+        // cannot know the two belong together and would lay them end to end.
+        clusterId: row.parentId,
         durationMinutes: 0,
         pinnedStartMinute: row.cluster.pinnedStartMinute,
+        mode: row.mode,
       })
     } else if (row.kind === 'module') {
       items.push({
@@ -171,8 +209,8 @@ export function withGapRows(rows: FlatRow[], schedule: Schedule): FlatRow[] {
       out.push({
         kind: 'gap',
         id: `gap-before-${row.id}`,
-        depth: 0,
-        parentId: null,
+        depth: row.depth,
+        parentId: row.parentId,
         minutes: conflict.minutes,
         beforeRowId: row.id,
       })

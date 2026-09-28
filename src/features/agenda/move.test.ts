@@ -18,6 +18,8 @@ function doc(clusters: [string, number][], modules: [string, number, string | nu
     desc: {},
     clusters: clusters.map(([id, order]) => ({
       id,
+      parentClusterId: null,
+      mode: 'sequential' as const,
       title: id,
       color: null,
       pinnedStartMinute: null,

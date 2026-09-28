@@ -106,6 +106,8 @@ export function useLocalDocument(initial: DayDoc): AgendaDocument {
         {
           id,
           title: section.title,
+          parentClusterId: null,
+          mode: 'sequential',
           color: section.color ?? null,
           pinnedStartMinute: null,
           collapsed: false,

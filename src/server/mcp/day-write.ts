@@ -16,7 +16,7 @@ import {
 } from '@/domain/agenda/responsible'
 import { listAssignable } from '@/domain/tenant/members'
 import type { BlockPatch, NewModuleBlock } from '@/domain/collab/ops'
-import { blocksOf } from '@/domain/collab/doc'
+import { blocksOf, modeOf } from '@/domain/collab/doc'
 import { editInRoom } from '@/server/collab/client'
 import { withTenant, type Tx } from '@/server/db'
 import { moduleType } from '@/server/db/schema'
@@ -210,11 +210,30 @@ export const MODULE_FIELDS: readonly string[] = [
   'responsible',
 ]
 export const CLUSTER_FIELDS: readonly string[] = ['title', 'color', 'pinnedStartMinute']
+export const BREAKOUT_FIELDS: readonly string[] = ['title', 'color', 'pinnedStartMinute']
+/** No pin: every strand starts when its breakout starts. Pinning one would say otherwise. */
+export const STRAND_FIELDS: readonly string[] = ['title', 'color']
+
+export type BlockKindLabel = 'block' | 'section' | 'breakout' | 'strand'
+
+const FIELDS_BY_KIND: Record<BlockKindLabel, readonly string[]> = {
+  block: MODULE_FIELDS,
+  section: CLUSTER_FIELDS,
+  breakout: BREAKOUT_FIELDS,
+  strand: STRAND_FIELDS,
+}
+
+/** What the block calls itself, in the words the error messages use. */
+function kindOf(block: Y.Map<unknown>): BlockKindLabel {
+  if (block.get('kind') !== 'cluster') return 'block'
+  if (modeOf(block) === 'parallel') return 'breakout'
+  return block.get('parentId') == null ? 'section' : 'strand'
+}
 
 export type UpdateOutcome =
   | { kind: 'ok'; patch: BlockPatch }
   | { kind: 'missing' }
-  | { kind: 'wrongKind'; isCluster: boolean; fields: string[] }
+  | { kind: 'wrongKind'; blockKind: BlockKindLabel; fields: string[] }
   | { kind: 'invalid'; error: ModuleDescError }
 
 export function givenFields(fields: UpdateInput | PlannedInput): string[] {
@@ -238,10 +257,10 @@ export function planUpdate(
   const block = blocksOf(doc).get(moduleId)
   if (!block) return { kind: 'missing' }
 
-  const isCluster = block.get('kind') === 'cluster'
-  const allowed = isCluster ? CLUSTER_FIELDS : MODULE_FIELDS
+  const blockKind = kindOf(block)
+  const allowed = FIELDS_BY_KIND[blockKind]
   const wrong = givenFields(fields).filter((key) => !allowed.includes(key))
-  if (wrong.length > 0) return { kind: 'wrongKind', isCluster, fields: wrong }
+  if (wrong.length > 0) return { kind: 'wrongKind', blockKind, fields: wrong }
 
   const patch: BlockPatch = { ...fields }
   if (fields.desc !== undefined) {
@@ -260,10 +279,14 @@ export function problemText(
   moduleId: string,
 ): string {
   if (outcome.kind === 'missing') return `Block ${moduleId} is not on this day.`
-  const kind = outcome.isCluster ? 'cluster' : 'block'
+  const kind = outcome.blockKind
   return (
     `${outcome.fields.join(', ')} cannot be set on a ${kind}. ` +
-    `A ${kind} takes: ${(outcome.isCluster ? CLUSTER_FIELDS : MODULE_FIELDS).join(', ')}.`
+    `A ${kind} takes: ${FIELDS_BY_KIND[kind].join(', ')}.` +
+    // The difference between a refusal and an instruction.
+    (kind === 'strand' && outcome.fields.includes('pinnedStartMinute')
+      ? ' Every strand starts when its breakout starts; pin the breakout instead.'
+      : '')
   )
 }
 

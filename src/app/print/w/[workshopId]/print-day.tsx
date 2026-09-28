@@ -100,7 +100,7 @@ export async function PrintDay({
             <article
               key={row.id}
               data-print-row
-              className={`${catClass(type?.color)} mb-3 grid grid-cols-[5rem_minmax(0,1fr)_12rem] gap-3 border-l-4 border-[var(--cat-bar)] pl-3 ${row.depth === 1 ? 'ml-6' : ''}`}
+              className={`${catClass(type?.color)} mb-3 grid grid-cols-[5rem_minmax(0,1fr)_12rem] gap-3 border-l-4 border-[var(--cat-bar)] pl-3 ${row.depth === 1 ? 'ml-6' : row.depth === 2 ? 'ml-12' : ''}`}
             >
               <div className="tabular">
                 <div className="font-medium">

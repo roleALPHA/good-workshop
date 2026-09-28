@@ -83,6 +83,39 @@ const CHECKS = [
     ],
     inspect: `select * from workshop_share_link;`,
   },
+  {
+    id: 'cluster.parent_cluster_id verletzt die Zwei-Ebenen-Regel',
+    migration: '0011_breakouts',
+    // Both halves matter. Before the migration the COLUMN is missing too, and
+    // there is nothing to look at; the rows this asks about can only exist when
+    // an upgrade stopped between the columns and the constraints and the
+    // application wrote in between.
+    relevant: async (c) =>
+      !(await missingColumn(c, 'cluster', 'parent_cluster_id')) &&
+      (await missingConstraint(c, 'cluster', 'cluster_nesting')),
+    find: `select k.id as cluster_id, k.mode, k.parent_cluster_id,
+                  p.mode as parent_mode, p.day_id as parent_day
+             from cluster k left join cluster p on p.id = k.parent_cluster_id
+            where k.parent_cluster_id is not null
+              and (k.mode <> 'sequential' or p.id is null
+                   or p.mode <> 'parallel' or p.day_id <> k.day_id
+                   or p.tenant_id <> k.tenant_id)
+            limit ${SAMPLE_LIMIT}`,
+    explain: [
+      'A breakout has strands, a strand has blocks -- there are no more levels, and the',
+      'migration writes exactly that down as a constraint. On an installation that has never',
+      'seen this migration such rows cannot exist: the column did not.',
+      'If something does show up here, an upgrade ran half way through and the application has',
+      'written since. The decision: does the strand belong under a breakout (then set',
+      'parent_cluster_id to its id, on the same day) or has it become a section of its own',
+      '(then set parent_cluster_id to null)?',
+    ],
+    inspect: `select k.id, k.title, k.mode, k.day_id, k.parent_cluster_id,
+       p.title as parent_title, p.mode as parent_mode, p.day_id as parent_day
+  from cluster k left join cluster p on p.id = k.parent_cluster_id
+ where k.parent_cluster_id is not null
+   and (k.mode <> 'sequential' or p.id is null or p.mode <> 'parallel' or p.day_id <> k.day_id);`,
+  },
 ]
 
 /**
@@ -211,6 +244,18 @@ async function missingColumn(client, table, column) {
        from information_schema.columns
       where table_schema = 'public' and table_name = $1 and column_name = $2`,
     [table, column],
+  )
+  return rows.length === 0
+}
+
+/** True while the named constraint is not on the table yet. */
+async function missingConstraint(client, table, name) {
+  const { rows } = await client.query(
+    `select 1
+       from pg_constraint c
+       join pg_class t on t.oid = c.conrelid
+      where t.relname = $1 and c.conname = $2`,
+    [table, name],
   )
   return rows.length === 0
 }

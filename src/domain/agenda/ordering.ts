@@ -20,6 +20,37 @@ const MAX_KEY_LENGTH = 48
 
 export type Ordered = { id: string; position: string }
 
+export type Nested = Ordered & { parentId: string | null }
+
+/** Sibling lists, one per parent. Day level lives under `null`. */
+export function groupByParent<T extends Nested>(rows: T[]): Map<string | null, T[]> {
+  const out = new Map<string | null, T[]>()
+  for (const row of rows) {
+    const bucket = out.get(row.parentId)
+    if (bucket) bucket.push(row)
+    else out.set(row.parentId, [row])
+  }
+  return out
+}
+
+/**
+ * 0-based ordinals, counted per sibling list.
+ *
+ * One function for all three lists -- the day, the strands of a breakout, the
+ * blocks of a section -- because three near-copies are exactly the place where
+ * one of them later drifts. "My place among my siblings, from 0" is the same
+ * sentence at every depth, and it is the sentence `afterId` is answered with:
+ * a strand whose blocks were numbered out of the day's key space would make
+ * that parameter unreadable for a model.
+ */
+export function ordinalsByParent(rows: Nested[]): Map<string, number> {
+  const out = new Map<string, number>()
+  for (const bucket of groupByParent(rows).values()) {
+    sortByPosition(bucket).forEach((row, index) => out.set(row.id, index))
+  }
+  return out
+}
+
 /** Deterministic order, matching `ORDER BY position, id` on the server. */
 export function sortByPosition<T extends Ordered>(items: T[]): T[] {
   return items

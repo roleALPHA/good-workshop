@@ -490,6 +490,19 @@ full name, first and last;
 there is still no tool that lists the members, so a name that matches nobody is taken to be
 somebody from outside.
 
+**A breakout is a third item shape, not a recursion.** `items` is a union of `module`, `cluster`
+and `breakout`; a breakout's `children` are strands, and a strand's `children` are blocks. That
+is two levels, spelled out, rather than a cluster that may contain a cluster: the SDK converts
+the schema for the model to read, and a self-referential schema comes out as
+`$ref: "#/definitions/__schema0"` — a name that says nothing, with every description the strand
+level carries collapsed into the level above it. The explicit shape inlines all three variants
+with their own wording, and the depth the domain actually has is the depth the schema
+advertises. The paths grow with it: `items[1].children[0].children[2].desc.room`. A strand is
+itself a cluster, so a model reads the structure back off `mode` and `parentId` in
+`get_workshop`, and the rules it can run into — a breakout inside a breakout, a block hanging on
+a breakout rather than on one of its strands, a pin on a strand — are refused with the next move
+named in the message.
+
 Its counterpart for an agenda that already exists is `update_modules`: the fields of many blocks
 and clusters of one day in one call, ids unchanged. It follows the same rule — every entry is
 checked against the day before any is written, and the error names each one (`updates[2]`).
@@ -500,7 +513,8 @@ workshop".
 
 **A model can do what the library and the day editor let a person do** — create, move and
 delete folders; create, rename, file, tag, bin, restore and purge workshops; add, change, order
-and delete days; add, change, park, move and delete blocks and clusters, and move a block from
+and delete days; add, change, park, move and delete blocks and clusters, group clusters into a
+breakout whose strands run in parallel, and move a block from
 one day to another. Every tool calls the same
 repository function behind the same capability check as the corresponding server action, so a
 token never reaches further than its person: moving and deleting folders stays with tenant

@@ -18,6 +18,8 @@ import { ClusterRow, type ClusterEditing } from './cluster-row'
 
 const cluster: ClusterDto = {
   id: 'c1',
+  parentClusterId: null,
+  mode: 'sequential',
   title: 'Ankommen',
   color: 'slate',
   pinnedStartMinute: null,
@@ -32,6 +34,7 @@ const entry: ScheduleEntry = {
   durationMinutes: 45,
   pinned: false,
   conflict: null,
+  countsTowardsTotals: true,
 }
 
 describe('ClusterRow', () => {

@@ -1,5 +1,5 @@
 import type * as Y from 'yjs'
-import { and, eq, inArray, notInArray, sql } from 'drizzle-orm'
+import { and, eq, inArray, isNotNull, isNull, notInArray, sql } from 'drizzle-orm'
 import { readBlocks, readDayFields, type RawBlock } from '@/domain/collab/doc'
 import type { Tx } from '@/server/db'
 import {
@@ -11,6 +11,7 @@ import {
   workshopModule,
 } from '@/server/db/schema'
 import { validateModuleDesc } from '@/domain/moduleType/validate'
+import { planBlocks, type BlockPlan } from './block-plan'
 import { loadDoc, readState, writeState } from './store'
 
 /**
@@ -90,6 +91,7 @@ export async function materializeDay(
 
   await writeState(tx, dayId, upTo)
   await recordRejections(tx, workshopId, dayId, written.rejected)
+  await recordRescues(tx, workshopId, dayId, written.rescued)
 
   return {
     status: 'written',
@@ -105,13 +107,26 @@ async function writeBlocks(
   workshopId: string,
   dayId: string,
   blocks: RawBlock[],
-): Promise<{ upserted: number; removed: number; rejected: Rejection[] }> {
-  const clusters = blocks.filter((b) => b.kind === 'cluster')
-  const modules = blocks.filter((b) => b.kind === 'module' && b.moduleTypeId !== null)
+): Promise<{
+  upserted: number
+  removed: number
+  rejected: Rejection[]
+  rescued: BlockPlan['rescued']
+}> {
+  // Which block belongs where, and what to do with one that says something the
+  // tables have no meaning for. Pure, and tested as a table in block-plan.ts.
+  const plan = planBlocks(blocks)
+  const modules = plan.modules
 
-  // Clusters first: a module's composite FK points at a cluster on the same
-  // day, so the cluster has to exist before the module referencing it.
-  for (const block of clusters) {
+  // Roots, then strands, then blocks: every foreign key points to the left in
+  // that list.
+  //
+  // It is the right order for an UPDATE too, not just an INSERT. A strand that
+  // becomes a section of its own in this pass is in `roots` and loses its
+  // parent BEFORE the old parent is deleted below; a section that becomes a
+  // strand is in `strands` and gets its parent AFTER that parent exists.
+  for (const block of [...plan.roots, ...plan.strands]) {
+    const parentClusterId = plan.strands.includes(block) ? block.parentId : null
     await tx
       .insert(cluster)
       .values({
@@ -120,6 +135,8 @@ async function writeBlocks(
         dayId,
         title: block.title,
         color: block.color,
+        mode: block.mode,
+        parentClusterId,
         position: block.position,
         pinnedStartTime: block.pinnedStartMinute === null ? null : toTime(block.pinnedStartMinute),
       })
@@ -128,6 +145,10 @@ async function writeBlocks(
         set: {
           title: block.title,
           color: block.color,
+          // In the update too, not only in the insert: without these two a
+          // re-hang in the document would never reach the row.
+          mode: block.mode,
+          parentClusterId,
           position: block.position,
           pinnedStartTime:
             block.pinnedStartMinute === null ? null : toTime(block.pinnedStartMinute),
@@ -136,16 +157,14 @@ async function writeBlocks(
       })
   }
 
-  const clusterIds = new Set(clusters.map((c) => c.id))
   const { valid: descs, rejected } = await validatedDescs(tx, modules)
 
   for (const block of modules) {
-    // A parent that no longer exists means the cluster was deleted while this
-    // module was being moved into it. Landing it on the day is the
-    // recoverable outcome; the composite FK would otherwise reject the write
-    // and the whole materialisation would fail for one orphan.
-    const parentId =
-      block.parentId !== null && clusterIds.has(block.parentId) ? block.parentId : null
+    // Already clamped by planBlocks: a parent that no longer exists, or that is
+    // a breakout rather than something holding blocks, has been turned into
+    // "on the day". The composite FK would otherwise reject the write and the
+    // whole materialisation would fail for one orphan.
+    const parentId = block.clusterId
 
     await tx
       .insert(workshopModule)
@@ -194,20 +213,44 @@ async function writeBlocks(
     )
     .returning({ id: workshopModule.id })
 
-  const clusterIdList = [...clusterIds]
-  const removedClusters = await tx
+  // Strands before sections. The self FK is ON DELETE CASCADE, so removing a
+  // section first would WORK -- and take strands with it that the document
+  // still holds, and return a count that is not true. Holding the order by
+  // hand costs one statement and says what happens.
+  //
+  // The predicates read the STORED parent, which the upsert pass above has
+  // already brought up to date: a strand that became a root in this pass is in
+  // the third statement and in rootIds, so it is not deleted. That is why
+  // writing has to come before deleting.
+  const strandIds = plan.strands.map((s) => s.id)
+  const removedStrands = await tx
     .delete(cluster)
     .where(
-      clusterIdList.length > 0
-        ? and(eq(cluster.dayId, dayId), notInArray(cluster.id, clusterIdList))
-        : eq(cluster.dayId, dayId),
+      and(
+        eq(cluster.dayId, dayId),
+        isNotNull(cluster.parentClusterId),
+        strandIds.length > 0 ? notInArray(cluster.id, strandIds) : undefined,
+      ),
+    )
+    .returning({ id: cluster.id })
+
+  const rootIds = plan.roots.map((r) => r.id)
+  const removedRoots = await tx
+    .delete(cluster)
+    .where(
+      and(
+        eq(cluster.dayId, dayId),
+        isNull(cluster.parentClusterId),
+        rootIds.length > 0 ? notInArray(cluster.id, rootIds) : undefined,
+      ),
     )
     .returning({ id: cluster.id })
 
   return {
-    upserted: clusters.length + modules.length,
-    removed: removedModules.length + removedClusters.length,
+    upserted: plan.roots.length + plan.strands.length + modules.length,
+    removed: removedModules.length + removedStrands.length + removedRoots.length,
     rejected,
+    rescued: plan.rescued,
   }
 }
 
@@ -330,5 +373,31 @@ async function recordRejections(
     entityId: workshopId,
     action: 'day.desc_rejected',
     data: { dayId, blocks: rejected },
+  })
+}
+
+/**
+ * Nesting the tables have no meaning for, taken down rather than thrown.
+ *
+ * Same bargain as the rejected descriptions above: doing the next best thing
+ * quietly is right, doing it SILENTLY is not. A strand that became a section of
+ * its own, or a block that fell out of a breakout onto the day, is a change
+ * somebody will notice later and have no explanation for -- unless it is
+ * written here.
+ */
+async function recordRescues(
+  tx: Tx,
+  workshopId: string,
+  dayId: string,
+  rescued: BlockPlan['rescued'],
+): Promise<void> {
+  if (rescued.length === 0) return
+
+  await tx.insert(auditEvent).values({
+    source: 'system',
+    entityType: 'workshop',
+    entityId: workshopId,
+    action: 'day.nesting_rescued',
+    data: { dayId, blocks: rescued },
   })
 }

@@ -38,8 +38,20 @@ export type ModuleTypeDto = {
   schemaVersion?: number
 }
 
+/** How a container lays its children onto the clock. */
+export type ClusterMode = 'sequential' | 'parallel'
+
 export type ClusterDto = {
   id: string
+  /**
+   * The breakout this is a strand of. Null for a section on the day.
+   *
+   * parentClusterId rather than clusterId: on a ModuleDto, `clusterId` reads as
+   * "the cluster I sit in"; here it would read as "my own id".
+   */
+  parentClusterId: string | null
+  /** 'parallel' makes it a breakout: its children are strands, not blocks. */
+  mode: ClusterMode
   title: string
   /** Optional override; falls back to a neutral band when null. */
   color: CategoryColor | null

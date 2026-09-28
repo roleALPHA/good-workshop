@@ -1,6 +1,11 @@
 import * as Y from 'yjs'
-import type { ClusterDto, DayDoc, ModuleDto } from '@/domain/agenda/types'
-import { keyBetween, sortByPosition } from '@/domain/agenda/ordering'
+import type { ClusterDto, ClusterMode, DayDoc, ModuleDto } from '@/domain/agenda/types'
+import {
+  groupByParent,
+  keyBetween,
+  ordinalsByParent,
+  sortByPosition,
+} from '@/domain/agenda/ordering'
 import { normalizeResponsible, type Responsible } from '@/domain/agenda/responsible'
 
 /**
@@ -43,6 +48,11 @@ export type BlockFields = {
   pinnedStartMinute?: number | null
   /** Clusters only. */
   color?: string | null
+  /**
+   * Clusters only. Absent means 'sequential' -- which is every document written
+   * before breakouts existed, and the reason none of them needs migrating.
+   */
+  mode?: ClusterMode
   /** Type-specific attributes that are not rich text. */
   desc?: Record<string, unknown>
   /** Set aside: in the day, out of the schedule. */
@@ -60,6 +70,18 @@ export function blocksOf(doc: Y.Doc): Y.Map<Y.Map<unknown>> {
 
 export function dayOf(doc: Y.Doc): Y.Map<unknown> {
   return doc.getMap(DAY_MAP)
+}
+
+/**
+ * 'parallel' only when it says so.
+ *
+ * Read through one function rather than compared at each site, because the
+ * default has to be the same everywhere: a cluster from before breakouts has no
+ * field at all, and reading that as anything but 'sequential' would silently
+ * turn an old section into a breakout.
+ */
+export function modeOf(block: Y.Map<unknown>): ClusterMode {
+  return block.get('mode') === 'parallel' ? 'parallel' : 'sequential'
 }
 
 /**
@@ -93,21 +115,25 @@ export function seedFromDayDoc(doc: Y.Doc, source: DayDoc): void {
     // is not a valid fractional key, so the first append to a seeded day threw
     // instead of adding a block -- the seed has to hand back keys the ordering
     // helpers can keep building on.
-    const dayLevel = sortByPosition([
-      ...source.clusters.map((c) => ({ id: c.id, position: pad(c.order) })),
-      ...source.modules
-        .filter((m) => m.clusterId === null)
-        .map((m) => ({ id: m.id, position: pad(m.order) })),
-    ])
-    const dayPositions = keysFor(dayLevel.map((row) => row.id))
-    const childPositions = new Map<string, string>()
-    for (const cluster of source.clusters) {
-      const children = sortByPosition(
-        source.modules
-          .filter((m) => m.clusterId === cluster.id)
-          .map((m) => ({ id: m.id, position: pad(m.order) })),
-      ).map((row) => row.id)
-      for (const [id, key] of keysFor(children)) childPositions.set(id, key)
+    // One list per parent -- day level, a section, a breakout -- and in each the
+    // ids in the order the DTO brought them. Written generically rather than as
+    // "day and children", because a strand is a third list with the same rule.
+    const positions = new Map<string, string>()
+    for (const bucket of groupByParent([
+      ...source.clusters.map((c) => ({
+        id: c.id,
+        position: pad(c.order),
+        parentId: c.parentClusterId,
+      })),
+      ...source.modules.map((m) => ({
+        id: m.id,
+        position: pad(m.order),
+        parentId: m.clusterId,
+      })),
+    ]).values()) {
+      for (const [id, key] of keysFor(sortByPosition(bucket).map((row) => row.id))) {
+        positions.set(id, key)
+      }
     }
 
     for (const cluster of source.clusters) {
@@ -115,8 +141,9 @@ export function seedFromDayDoc(doc: Y.Doc, source: DayDoc): void {
         cluster.id,
         newBlock({
           kind: 'cluster',
-          position: dayPositions.get(cluster.id) ?? keyBetween(null, null),
-          parentId: null,
+          position: positions.get(cluster.id) ?? keyBetween(null, null),
+          parentId: cluster.parentClusterId,
+          mode: cluster.mode,
           title: cluster.title,
           color: cluster.color,
           pinnedStartMinute: cluster.pinnedStartMinute,
@@ -129,9 +156,7 @@ export function seedFromDayDoc(doc: Y.Doc, source: DayDoc): void {
         mod.id,
         newBlock({
           kind: 'module',
-          position:
-            (mod.clusterId === null ? dayPositions.get(mod.id) : childPositions.get(mod.id)) ??
-            keyBetween(null, null),
+          position: positions.get(mod.id) ?? keyBetween(null, null),
           parentId: mod.clusterId,
           title: mod.title,
           moduleTypeId: mod.moduleTypeId,
@@ -170,25 +195,18 @@ export function toDayDoc(doc: Y.Doc, moduleTypes: DayDoc['moduleTypes']): DayDoc
   const clusters: ClusterDto[] = []
   const modules: ModuleDto[] = []
 
-  const dayLevel: { id: string; position: string }[] = []
-  const childrenByParent = new Map<string, { id: string; position: string }[]>()
-
+  // One ordinal space per sibling list, at every depth: the day, the strands of
+  // a breakout, the blocks of a section. Grouping by parentId already did the
+  // work -- which is why a strand costs nothing extra here.
+  const rows: { id: string; position: string; parentId: string | null }[] = []
   blocks.forEach((block, blockId) => {
-    const position = String(block.get('position') ?? '')
-    const parentId = (block.get('parentId') as string | null) ?? null
-    if (parentId === null) dayLevel.push({ id: blockId, position })
-    else {
-      const bucket = childrenByParent.get(parentId)
-      if (bucket) bucket.push({ id: blockId, position })
-      else childrenByParent.set(parentId, [{ id: blockId, position }])
-    }
+    rows.push({
+      id: blockId,
+      position: String(block.get('position') ?? ''),
+      parentId: (block.get('parentId') as string | null) ?? null,
+    })
   })
-
-  const dayOrder = new Map(sortByPosition(dayLevel).map((row, index) => [row.id, index]))
-  const childOrder = new Map<string, number>()
-  for (const children of childrenByParent.values()) {
-    sortByPosition(children).forEach((child, index) => childOrder.set(child.id, index))
-  }
+  const order = ordinalsByParent(rows)
 
   blocks.forEach((block, blockId) => {
     const kind = block.get('kind')
@@ -197,12 +215,14 @@ export function toDayDoc(doc: Y.Doc, moduleTypes: DayDoc['moduleTypes']): DayDoc
     if (kind === 'cluster') {
       clusters.push({
         id: blockId,
+        parentClusterId: parentId,
+        mode: modeOf(block),
         title: String(block.get('title') ?? ''),
         color: (block.get('color') as ClusterDto['color']) ?? null,
         pinnedStartMinute: (block.get('pinnedStartMinute') as number | null) ?? null,
         collapsed: false,
         targetDurationMinutes: null,
-        order: dayOrder.get(blockId) ?? 0,
+        order: order.get(blockId) ?? 0,
       })
       return
     }
@@ -217,7 +237,7 @@ export function toDayDoc(doc: Y.Doc, moduleTypes: DayDoc['moduleTypes']): DayDoc
       desc: (block.get('desc') as Record<string, unknown>) ?? {},
       parked: block.get('parked') === true,
       responsible: normalizeResponsible(block.get('responsible')),
-      order: (parentId === null ? dayOrder.get(blockId) : childOrder.get(blockId)) ?? 0,
+      order: order.get(blockId) ?? 0,
     })
   })
 
@@ -245,6 +265,8 @@ export type RawBlock = {
   durationMinutes: number
   pinnedStartMinute: number | null
   color: string | null
+  /** Clusters only; a module is always 'sequential' and never asked. */
+  mode: ClusterMode
   desc: Record<string, unknown>
   parked: boolean
   responsible: Responsible[]
@@ -293,6 +315,7 @@ export function readBlocks(doc: Y.Doc): RawBlock[] {
       durationMinutes: clampDuration(block.get('durationMinutes')),
       pinnedStartMinute: (block.get('pinnedStartMinute') as number | null) ?? null,
       color: (block.get('color') as string | null) ?? null,
+      mode: kind === 'cluster' ? modeOf(block) : 'sequential',
       desc: (block.get('desc') as Record<string, unknown>) ?? {},
       parked: block.get('parked') === true,
       // Normalised here rather than trusted: the table has a CHECK on the

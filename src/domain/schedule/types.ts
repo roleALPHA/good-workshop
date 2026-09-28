@@ -12,15 +12,30 @@ export const MINUTES_PER_DAY = 1440
 
 export type ScheduleItemKind = 'cluster' | 'module'
 
+/** How a container lays its children onto the clock. */
+export type ScheduleMode = 'sequential' | 'parallel'
+
 export type ScheduleItem = {
   id: string
   kind: ScheduleItemKind
-  /** For modules inside a cluster: that cluster's id. Null at day level. */
+  /**
+   * The container this sits in: for a block its cluster, for a strand the
+   * breakout it runs in. Null at day level.
+   *
+   * Still called clusterId, because the parent of everything here is always a
+   * cluster row -- and because the eighteen tests of this function spell it
+   * that way. One word is not worth a broken contract.
+   */
   clusterId: string | null
   /** Clusters carry no duration of their own -- theirs is derived. */
   durationMinutes: number
   /** Minute-of-day 0..1439 when the block is pinned ("lock" icon), else null. */
   pinnedStartMinute: number | null
+  /**
+   * Clusters only. Absent means 'sequential' -- every cluster that existed
+   * before breakouts, and the reason no caller had to be touched.
+   */
+  mode?: ScheduleMode
 }
 
 export type ScheduleConflict =
@@ -37,12 +52,27 @@ export type ScheduleEntry = {
    * block destroys trust in the tool.
    */
   conflict: ScheduleConflict | null
+  /**
+   * Whether this block's minutes count towards the day's totals.
+   *
+   * False for every block in a breakout strand except the one strand that sets
+   * the section's wall clock -- otherwise "09:00 to 17:00" would say eight
+   * hours while "content plus breaks" said fourteen, and that line is the one
+   * facilitators check before sending the agenda out.
+   *
+   * Meant for blocks; on a container it is always false, because a container
+   * never has minutes of its own.
+   */
+  countsTowardsTotals: boolean
 }
 
 export type Schedule = {
   entries: Map<string, ScheduleEntry>
   dayStartMinute: number
   dayEndMinute: number
-  /** Sum of module durations, excluding gaps. */
+  /**
+   * Sum of the block durations that count towards the day -- no gaps, no
+   * parked blocks, and out of a breakout only the strand that sets the clock.
+   */
   totalDurationMinutes: number
 }

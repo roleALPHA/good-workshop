@@ -802,6 +802,30 @@ export const cluster = pgTable(
     /** A budget for a "planned 45m, actual 60m" warning. Never affects the schedule. */
     targetDurationMinutes: integer('target_duration_minutes'),
     collapsed: boolean('collapsed').notNull().default(false),
+    /**
+     * 'sequential' -- the run goes through the blocks, one after another.
+     * 'parallel'   -- a breakout: the children are strands that run at the
+     *                 same time, each in its own room.
+     *
+     * Not a boolean `is_breakout`, because the FK below carries the statement
+     * "the parent is a breakout": a value you can point at says more than a
+     * flag you can only read.
+     */
+    mode: text('mode').notNull().default('sequential'),
+    /** The breakout this is a strand of. Null for a section on the day. */
+    parentClusterId: uuid('parent_cluster_id'),
+    /**
+     * The constant a foreign key can point with.
+     *
+     * An FK cannot say "the row you point at must have mode='parallel'" -- it
+     * can only compare columns. So the demand becomes a column: set means
+     * 'parallel', unset means NULL, and under MATCH SIMPLE the whole check
+     * then falls away. The same grip that turns module.parent_id from a case
+     * distinction into an indexable column.
+     */
+    parentMode: text('parent_mode').generatedAlwaysAs(
+      sql`case when parent_cluster_id is null then null else 'parallel' end`,
+    ),
     ...timestamps,
   },
   (t) => [
@@ -809,6 +833,29 @@ export const cluster = pgTable(
     unique('cluster_tenant_id_uq').on(t.tenantId, t.id),
     // The target of module's day-consistency FK below.
     unique('cluster_tenant_id_day_uq').on(t.tenantId, t.id, t.dayId),
+    // The target of the self FK below.
+    unique('cluster_tenant_id_day_mode_uq').on(t.tenantId, t.id, t.dayId, t.mode),
+    /**
+     * "Exactly two levels", as a database statement rather than a convention.
+     *
+     * Together with cluster_nesting: a cluster with a parent is sequential,
+     * its parent is parallel, so a parallel cluster never has a parent -- and
+     * the chain is over after two links. As a CHECK this is not sayable (it
+     * would need a subquery on the parent row); as a trigger it would be a
+     * fourth writer beside the materialiser, invisible to write-path.test.ts.
+     *
+     * day_id and tenant_id are members for the same reason as everywhere else
+     * here: a strand of a breakout on a different day -- or in a different
+     * tenant -- would otherwise be a perfectly valid row.
+     *
+     * The name is set rather than generated: the generated one would be 90
+     * characters and Postgres would silently cut it to 63.
+     */
+    foreignKey({
+      name: 'cluster_parent_fk',
+      columns: [t.tenantId, t.parentClusterId, t.dayId, t.parentMode],
+      foreignColumns: [t.tenantId, t.id, t.dayId, t.mode],
+    }).onDelete('cascade'),
     foreignKey({
       columns: [t.tenantId, t.workshopId],
       foreignColumns: [workshop.tenantId, workshop.id],
@@ -822,11 +869,14 @@ export const cluster = pgTable(
       foreignColumns: [workshopDay.tenantId, workshopDay.workshopId, workshopDay.id],
     }).onDelete('cascade'),
     check('cluster_position_format', sql`${t.position} ~ '^[0-9A-Za-z]{1,64}$'`),
+    check('cluster_mode', sql`${t.mode} in ('sequential','parallel')`),
+    check('cluster_nesting', sql`${t.parentClusterId} is null or ${t.mode} = 'sequential'`),
     check(
       'cluster_target_duration',
       sql`${t.targetDurationMinutes} is null or ${t.targetDurationMinutes} between 0 and 1440`,
     ),
     index('cluster_day_order_idx').on(t.tenantId, t.dayId, t.position),
+    index('cluster_parent_order_idx').on(t.tenantId, t.parentClusterId, t.position),
     index('cluster_workshop_idx').on(t.tenantId, t.workshopId),
     pgPolicy('cluster_tenant_isolation', {
       for: 'all',

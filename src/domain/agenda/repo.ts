@@ -4,7 +4,7 @@ import { cluster, moduleType, workshopDay, workshopModule } from '@/server/db/sc
 import type { CategoryColor } from '@/lib/category-colors'
 import type { ClusterDto, DayDoc, ModuleDto, ModuleTypeDto } from './types'
 import { NotFoundError, type WorkshopAccess } from './access'
-import { sortByPosition } from './ordering'
+import { ordinalsByParent } from './ordering'
 import { normalizeResponsible } from './responsible'
 import type { Locale } from '@/i18n/config'
 import { localiseModuleType } from '@/domain/moduleType/localise'
@@ -89,19 +89,14 @@ export async function loadDay(
 
   // Ordinals are projected here and the fractional keys stay behind. Clients --
   // and especially LLM clients -- get 0, 1, 2.
-  const dayLevel = sortByPosition([
-    ...clusters.map((c) => ({ id: c.id, position: c.position })),
-    ...modules.filter((m) => m.clusterId === null).map((m) => ({ id: m.id, position: m.position })),
+  //
+  // One call for every sibling list at once: day level (clusters and day-level
+  // blocks share it), the strands inside a breakout, and the blocks inside a
+  // section. Each is numbered from 0 among its own siblings.
+  const order = ordinalsByParent([
+    ...clusters.map((c) => ({ id: c.id, position: c.position, parentId: c.parentClusterId })),
+    ...modules.map((m) => ({ id: m.id, position: m.position, parentId: m.clusterId })),
   ])
-  const dayOrder = new Map(dayLevel.map((row, index) => [row.id, index]))
-
-  const childOrder = new Map<string, number>()
-  for (const c of clusters) {
-    const children = sortByPosition(
-      modules.filter((m) => m.clusterId === c.id).map((m) => ({ id: m.id, position: m.position })),
-    )
-    children.forEach((child, index) => childOrder.set(child.id, index))
-  }
 
   return {
     contentVersion: access.contentVersion,
@@ -115,12 +110,14 @@ export async function loadDay(
       desc: (day.jsonDesc as Record<string, unknown>) ?? {},
       clusters: clusters.map((c): ClusterDto => ({
         id: c.id,
+        parentClusterId: c.parentClusterId,
+        mode: c.mode === 'parallel' ? 'parallel' : 'sequential',
         title: c.title,
         color: (c.color as CategoryColor | null) ?? null,
         pinnedStartMinute: c.pinnedStartTime ? timeToMinutes(c.pinnedStartTime) : null,
         collapsed: c.collapsed,
         targetDurationMinutes: c.targetDurationMinutes,
-        order: dayOrder.get(c.id) ?? 0,
+        order: order.get(c.id) ?? 0,
       })),
       modules: modules.map((m): ModuleDto => ({
         id: m.id,
@@ -132,7 +129,7 @@ export async function loadDay(
         desc: m.jsonDesc as Record<string, unknown>,
         parked: m.parked,
         responsible: normalizeResponsible(m.responsible),
-        order: (m.clusterId === null ? dayOrder.get(m.id) : childOrder.get(m.id)) ?? 0,
+        order: order.get(m.id) ?? 0,
       })),
       /**
        * The one place a stored block type becomes something a person reads.

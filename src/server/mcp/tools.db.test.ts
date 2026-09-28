@@ -174,6 +174,33 @@ describe('the tool list', () => {
       [],
     )
   })
+
+  it('shows the model the three shapes an agenda item can have', async () => {
+    // No new tool comes with breakouts -- what is new is that the STRUCTURE
+    // has to be readable in the schema. This is the test that catches "the
+    // conversion swallowed the discriminator" and "the strand level came out
+    // as a $ref nobody can follow".
+    const { client } = await connect(me)
+    const tools = (await client.listTools()).tools
+
+    const addCluster = tools.find((t) => t.name === 'add_cluster')!
+    const clusterProps = addCluster.inputSchema.properties as Record<string, { enum?: string[] }>
+    expect(clusterProps.mode?.enum).toEqual(['sequential', 'parallel'])
+    expect(clusterProps).toHaveProperty('parentClusterId')
+
+    const applyProps = tools.find((t) => t.name === 'apply_agenda')!.inputSchema
+      .properties as Record<string, { items?: { anyOf?: unknown[]; oneOf?: unknown[] } }>
+    const variants = (applyProps.items?.items?.oneOf ?? applyProps.items?.items?.anyOf ?? []) as {
+      properties: { kind: { const: string } }
+    }[]
+    expect(variants.map((v) => v.properties.kind.const).sort()).toEqual([
+      'breakout',
+      'cluster',
+      'module',
+    ])
+    // What the model reads has to be readable without resolving anything.
+    expect(JSON.stringify(applyProps.items)).not.toContain('$ref')
+  })
 })
 
 describe('list_workshops', () => {
@@ -659,6 +686,245 @@ describe('update_modules', () => {
   })
 })
 
+describe('breakouts', () => {
+  /** A breakout with three strands of two blocks each, written in one call. */
+  const threeRooms = {
+    kind: 'breakout',
+    title: 'Drei Räume',
+    children: [
+      {
+        title: 'A · Datenmodell',
+        children: [
+          { typeKey: 'group_work', title: 'Bestandsaufnahme', durationMinutes: 45 },
+          { typeKey: 'group_work', title: 'Zielbild', durationMinutes: 45 },
+        ],
+      },
+      {
+        title: 'B · Prozesse',
+        children: [
+          { typeKey: 'group_work', title: 'Prozesslandkarte', durationMinutes: 50 },
+          { typeKey: 'group_work', title: 'Engpässe', durationMinutes: 30 },
+        ],
+      },
+      {
+        title: 'C · Rollen',
+        children: [
+          { typeKey: 'group_work', title: 'Rollen sammeln', durationMinutes: 30 },
+          { typeKey: 'group_work', title: 'RACI bauen', durationMinutes: 60 },
+        ],
+      },
+    ],
+  }
+
+  it('writes a whole breakout in one apply_agenda', async () => {
+    const { must } = await connect(me)
+    const { data } = await must('create_workshop', { title: unique('Breakout') })
+    const workshopId = data.workshopId as string
+    const dayId = data.dayId as string
+
+    const applied = await must('apply_agenda', {
+      workshopId,
+      dayId,
+      mode: 'replace',
+      items: [threeRooms],
+    })
+    // 1 breakout + 3 strands + 6 blocks. Strands are things that arrived too.
+    expect(applied.text).toContain('10 entries written')
+
+    // Against the tables, not the answer: this is what proves the materialiser
+    // put the room's write on the record.
+    const clusters = await ops.query(
+      `select id, title, mode, parent_cluster_id from cluster where day_id = $1 order by position`,
+      [dayId],
+    )
+    const breakout = clusters.rows.find((c) => c.mode === 'parallel')
+    expect(breakout?.title).toBe('Drei Räume')
+    expect(breakout?.parent_cluster_id).toBeNull()
+
+    const strands = clusters.rows.filter((c) => c.parent_cluster_id === breakout!.id)
+    expect(strands.map((s) => s.title)).toEqual(['A · Datenmodell', 'B · Prozesse', 'C · Rollen'])
+
+    const modules = await ops.query(
+      `select cluster_id, count(*)::int as n from module where day_id = $1 group by cluster_id`,
+      [dayId],
+    )
+    expect(modules.rows).toHaveLength(3)
+    expect(modules.rows.every((r) => r.n === 2)).toBe(true)
+  })
+
+  it('builds the same thing by hand, one call at a time', async () => {
+    const { must } = await connect(me)
+    const { data } = await must('create_workshop', { title: unique('Breakout Hand') })
+    const workshopId = data.workshopId as string
+    const dayId = data.dayId as string
+
+    const breakout = await must('add_cluster', {
+      workshopId,
+      dayId,
+      title: 'Vertiefung',
+      mode: 'parallel',
+    })
+    expect(breakout.text).toContain('Breakout created')
+
+    const strand = await must('add_cluster', {
+      workshopId,
+      dayId,
+      title: 'Strang 1',
+      parentClusterId: breakout.data.id,
+    })
+    const block = await must('add_module', {
+      workshopId,
+      dayId,
+      typeKey: 'break',
+      clusterId: strand.data.id,
+    })
+
+    const row = await ops.query('select cluster_id from module where id = $1', [block.data.id])
+    expect(row.rows[0].cluster_id).toBe(strand.data.id)
+    const strandRow = await ops.query('select mode, parent_cluster_id from cluster where id = $1', [
+      strand.data.id,
+    ])
+    expect(strandRow.rows[0]).toEqual({ mode: 'sequential', parent_cluster_id: breakout.data.id })
+  })
+
+  it('returns the shape in structuredContent, numbered per parent', async () => {
+    const { must } = await connect(me)
+    const { data } = await must('create_workshop', { title: unique('Breakout lesen') })
+    const workshopId = data.workshopId as string
+    const dayId = data.dayId as string
+    await must('apply_agenda', { workshopId, dayId, mode: 'replace', items: [threeRooms] })
+
+    const read = await must('get_workshop', { workshopId, dayId })
+    const blocks = read.data.blocks as {
+      id: string
+      kind: string
+      mode?: string
+      parentId: string | null
+      order: number
+      title: string
+    }[]
+
+    const breakout = blocks.find((b) => b.mode === 'parallel')!
+    expect(breakout.parentId).toBeNull()
+    const strands = blocks.filter((b) => b.parentId === breakout.id)
+    expect(strands.map((s) => s.order)).toEqual([0, 1, 2])
+    // Each strand's blocks start counting at 0 again -- that is what afterId
+    // is answered with, and a shared day-wide numbering would make it unusable.
+    for (const strand of strands) {
+      expect(blocks.filter((b) => b.parentId === strand.id).map((b) => b.order)).toEqual([0, 1])
+    }
+    expect(read.text).toContain('· breakout · parallel ·')
+    expect(read.text).toContain('· strand ·')
+  })
+
+  it('refuses the four shapes that have no meaning, and says what to do instead', async () => {
+    const { must, call } = await connect(me)
+    const { data } = await must('create_workshop', { title: unique('Breakout nein') })
+    const workshopId = data.workshopId as string
+    const dayId = data.dayId as string
+    const breakout = await must('add_cluster', { workshopId, dayId, title: 'BO', mode: 'parallel' })
+    const strand = await must('add_cluster', {
+      workshopId,
+      dayId,
+      title: 'S',
+      parentClusterId: breakout.data.id,
+    })
+
+    const nested = await call('add_cluster', {
+      workshopId,
+      dayId,
+      title: 'Innen',
+      mode: 'parallel',
+      parentClusterId: breakout.data.id,
+    })
+    expect(nested.isError).toBe(true)
+    expect(nested.text).toContain('cannot sit inside another breakout')
+
+    const onBreakout = await call('add_module', {
+      workshopId,
+      dayId,
+      typeKey: 'break',
+      clusterId: breakout.data.id,
+    })
+    expect(onBreakout.isError).toBe(true)
+    expect(onBreakout.text).toContain('strands')
+
+    const pinned = await call('update_module', {
+      workshopId,
+      dayId,
+      moduleId: strand.data.id,
+      pinnedStartMinute: 600,
+    })
+    expect(pinned.isError).toBe(true)
+    expect(pinned.text).toContain('pin the breakout instead')
+
+    const otherDay = await must('create_day', { workshopId, title: 'Tag 2' })
+    const movedDay = await call('move_module', {
+      workshopId,
+      dayId,
+      moduleId: breakout.data.id,
+      toDayId: otherDay.data.dayId,
+    })
+    expect(movedDay.isError, movedDay.text).toBe(true)
+    expect(movedDay.text).toContain('cannot change day')
+  })
+
+  it('deletes a breakout with its strands and everything in them', async () => {
+    const { must } = await connect(me)
+    const { data } = await must('create_workshop', { title: unique('Breakout weg') })
+    const workshopId = data.workshopId as string
+    const dayId = data.dayId as string
+    await must('apply_agenda', { workshopId, dayId, mode: 'replace', items: [threeRooms] })
+
+    const read = await must('get_workshop', { workshopId, dayId })
+    const blocks = read.data.blocks as { id: string; mode?: string }[]
+    const breakoutId = blocks.find((b) => b.mode === 'parallel')!.id
+
+    await must('delete_module', { workshopId, dayId, moduleId: breakoutId })
+
+    const clusters = await ops.query('select id from cluster where day_id = $1', [dayId])
+    const modules = await ops.query('select id from module where day_id = $1', [dayId])
+    expect(clusters.rows).toHaveLength(0)
+    expect(modules.rows).toHaveLength(0)
+  })
+
+  it('moves a strand to another breakout, and its blocks go with it', async () => {
+    const { must } = await connect(me)
+    const { data } = await must('create_workshop', { title: unique('Strang ziehen') })
+    const workshopId = data.workshopId as string
+    const dayId = data.dayId as string
+
+    const first = await must('add_cluster', { workshopId, dayId, title: 'BO1', mode: 'parallel' })
+    const second = await must('add_cluster', { workshopId, dayId, title: 'BO2', mode: 'parallel' })
+    const strand = await must('add_cluster', {
+      workshopId,
+      dayId,
+      title: 'S',
+      parentClusterId: first.data.id,
+    })
+    const block = await must('add_module', {
+      workshopId,
+      dayId,
+      typeKey: 'break',
+      clusterId: strand.data.id,
+    })
+
+    await must('move_module', {
+      workshopId,
+      dayId,
+      moduleId: strand.data.id,
+      clusterId: second.data.id,
+    })
+
+    const strandRow = await ops.query('select parent_cluster_id from cluster where id = $1', [
+      strand.data.id,
+    ])
+    expect(strandRow.rows[0].parent_cluster_id).toBe(second.data.id)
+    const blockRow = await ops.query('select cluster_id from module where id = $1', [block.data.id])
+    expect(blockRow.rows[0].cluster_id).toBe(strand.data.id)
+  })
+})
+
 describe('apply_agenda', () => {
   it('writes every block with all its fields in one call', async () => {
     const { must } = await connect(me)
@@ -765,5 +1031,50 @@ describe('apply_agenda', () => {
       workshopId,
     ])
     expect(rows.rows[0]).toEqual({ n: 0 })
+  })
+
+  it('names the block inside a strand, three levels down, and still writes nothing', async () => {
+    // The same promise one level deeper. If the pre-checks had not grown with
+    // the schema, this would either point at the wrong place or write half a day.
+    const { must, call } = await connect(me)
+    const { data } = await must('create_workshop', { title: unique('Agenda tief') })
+    const workshopId = data.workshopId as string
+    const dayId = data.dayId as string
+
+    const result = await call('apply_agenda', {
+      workshopId,
+      dayId,
+      items: [
+        { kind: 'module', typeKey: 'break' },
+        {
+          kind: 'breakout',
+          title: 'Drei Räume',
+          children: [
+            { title: 'A', children: [{ typeKey: 'presentation', desc: { presenter: 'Linh' } }] },
+            {
+              title: 'B',
+              children: [
+                { typeKey: 'break' },
+                { typeKey: 'presentation', desc: { presenter: 42 } },
+              ],
+            },
+          ],
+        },
+      ],
+    })
+    expect(result.isError).toBe(true)
+    expect(result.text).toContain('items[1].children[1].children[1]')
+    expect(result.text).toContain('presenter')
+
+    const modules = await ops.query(
+      'select count(*)::int as n from module where workshop_id = $1',
+      [workshopId],
+    )
+    const clusters = await ops.query(
+      'select count(*)::int as n from cluster where workshop_id = $1',
+      [workshopId],
+    )
+    expect(modules.rows[0]).toEqual({ n: 0 })
+    expect(clusters.rows[0]).toEqual({ n: 0 })
   })
 })
