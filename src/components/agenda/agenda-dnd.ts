@@ -74,7 +74,14 @@ export const agendaCollisionDetection: CollisionDetection = (args) => {
               id: container.id,
               data: {
                 droppableContainer: container,
-                value: Math.abs(rect.top - collisionRect.top),
+                // Top edge first, left edge as the tie-break. Without the
+                // second term three blocks in three strands are the same place
+                // to the keyboard: they share a top edge, the distance is zero
+                // three times over, and whoever comes first in the DOM wins --
+                // so ArrowDown in strand 3 lands in strand 1.
+                value:
+                  Math.abs(rect.top - collisionRect.top) * 1000 +
+                  Math.abs(rect.left - collisionRect.left),
               },
             },
           ]

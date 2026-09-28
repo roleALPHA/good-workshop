@@ -41,10 +41,10 @@ export function treeKeyboardCoordinateGetter(indentPx: number): KeyboardCoordina
     switch (event.code) {
       case KeyboardCode.Left:
         event.preventDefault()
-        return { x: x - indentPx, y }
+        return beside(args, -1) ?? { x: x - indentPx, y }
       case KeyboardCode.Right:
         event.preventDefault()
-        return { x: x + indentPx, y }
+        return beside(args, 1) ?? { x: x + indentPx, y }
       case KeyboardCode.Up:
         event.preventDefault()
         return neighbourRow(args, -1)
@@ -58,23 +58,73 @@ export function treeKeyboardCoordinateGetter(indentPx: number): KeyboardCoordina
 }
 
 /**
+ * A row that stands BESIDE the drag rather than above or below it.
+ *
+ * Only a breakout produces such a thing: its strands are real columns, so the
+ * row to the right of this one is a different strand -- not the same row,
+ * indented. Everywhere else no other row's box overlaps ours vertically, so
+ * this returns undefined and left/right go back to meaning indent. One gesture
+ * that does exactly one thing in each place, rather than one that does two
+ * everywhere.
+ *
+ * Decided from geometry, not from the document: this file is built once at
+ * module level and must not grow an opinion about what a breakout is. Columns
+ * are simply rows that share vertical space, and that is a fact about the
+ * layout the measured rects already carry.
+ */
+function beside(args: CoordinateArgs, step: -1 | 1): Coordinates | undefined {
+  const { collisionRect, droppableRects, droppableContainers } = args.context
+  if (!collisionRect) return undefined
+
+  const candidates = droppableContainers
+    .getEnabled()
+    .flatMap((container) => {
+      const rect = droppableRects.get(container.id)
+      if (!rect || !overlapsVertically(rect, collisionRect)) return []
+      const ahead =
+        step === 1 ? rect.left > collisionRect.left + 1 : rect.left < collisionRect.left - 1
+      return ahead ? [{ left: rect.left, top: rect.top }] : []
+    })
+    .sort((a, b) => (step === 1 ? a.left - b.left : b.left - a.left))
+
+  const target = candidates[0]
+  return target ? { x: target.left, y: target.top } : undefined
+}
+
+/** Sharing vertical space means standing next to each other, not above. */
+function overlapsVertically(
+  a: { top: number; bottom: number },
+  b: { top: number; bottom: number },
+) {
+  const shared = Math.min(a.bottom, b.bottom) - Math.max(a.top, b.top)
+  return shared > Math.min(a.bottom - a.top, b.bottom - b.top) / 2
+}
+
+/**
  * The row one step above or below the one the drag currently sits on.
  *
  * Rows are ordered by their measured top edge, which dnd-kit measures free of
  * transforms -- so this is the document's own order, the same order
  * `getProjection` indexes into, and it does not shift while the list reshuffles
  * underneath the drag.
+ *
+ * Inside a breakout that order alone is not enough: three blocks in three
+ * strands share a top edge, and stepping down would walk sideways into the next
+ * column. So when anything shares OUR column -- overlaps us horizontally -- the
+ * walk is restricted to that column. In an ordinary agenda every row spans the
+ * full width, every row qualifies, and nothing changes.
  */
 function neighbourRow(args: CoordinateArgs, step: -1 | 1): Coordinates | undefined {
   const { collisionRect, droppableRects, droppableContainers, over } = args.context
   if (!collisionRect) return undefined
 
-  const rows = droppableContainers
-    .getEnabled()
-    .flatMap((container) => {
-      const rect = droppableRects.get(container.id)
-      return rect ? [{ id: container.id, top: rect.top }] : []
-    })
+  const all = droppableContainers.getEnabled().flatMap((container) => {
+    const rect = droppableRects.get(container.id)
+    return rect ? [{ id: container.id, top: rect.top, left: rect.left, right: rect.right }] : []
+  })
+
+  const rows = all
+    .filter((row) => row.right > collisionRect.left && row.left < collisionRect.right)
     .sort((a, b) => a.top - b.top)
 
   // Where the drag is *projected*, not where it started: holding ArrowDown has

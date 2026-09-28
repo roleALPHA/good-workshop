@@ -1,25 +1,31 @@
 import { describe, expect, it } from 'vitest'
+import type { Depth } from './flatten'
 import { getProjection, rowsForDrag, type ProjectionRow } from './projection'
 
 const INDENT = 28
 
-/** `C:id` a cluster, `m:id` a day-level module, `m:id>parent` a module in a cluster. */
+/**
+ * `C:id` a section, `B:id` a breakout, `m:id` a block; `x>parent` puts it in
+ * one. Depth is derived from the parent chain rather than written out, so a
+ * token stays readable once there are three levels of it.
+ */
 function rows(spec: string): ProjectionRow[] {
-  return spec
-    .trim()
-    .split(/\s+/)
-    .map((token) => {
-      const [kind, rest] = token.split(':') as ['C' | 'm', string]
-      const [id, parent] = rest.split('>')
-      return kind === 'C'
-        ? { id: id!, kind: 'cluster' as const, depth: 0 as const, parentId: null }
-        : {
-            id: id!,
-            kind: 'module' as const,
-            depth: (parent ? 1 : 0) as 0 | 1,
-            parentId: parent ?? null,
-          }
+  const out: ProjectionRow[] = []
+  const depthById = new Map<string, Depth>()
+  for (const token of spec.trim().split(/\s+/)) {
+    const [kind, rest] = token.split(':') as ['C' | 'B' | 'm', string]
+    const [id, parent] = rest.split('>')
+    const depth = (parent ? (depthById.get(parent) ?? 0) + 1 : 0) as Depth
+    depthById.set(id!, depth)
+    out.push({
+      id: id!,
+      kind: kind === 'm' ? 'module' : 'cluster',
+      mode: kind === 'B' ? 'parallel' : 'sequential',
+      depth,
+      parentId: parent ?? null,
     })
+  }
+  return out
 }
 
 const project = (
@@ -168,5 +174,98 @@ describe('getProjection / drag offset maps to indentation steps', () => {
     for (const offset of [-INDENT * 5, 0, INDENT * 5]) {
       expect(project('C:c1 m:x>c1 m:a', 'a', 'x', offset).depth).toBe(1)
     }
+  })
+})
+
+/**
+ * A breakout is where the flat outline stops being one-dimensional: strands are
+ * columns on screen. The rule this section nails down is that a horizontal drag
+ * offset means nesting only where nesting is INVISIBLE -- inside a breakout the
+ * column under the pointer already answers the question, and having two answers
+ * to it is what makes a drag feel haunted.
+ */
+describe('getProjection / breakouts', () => {
+  /** A breakout with two strands of one block, and a day-level block after it. */
+  // A block above the breakout, because dropping ON a container row only means
+  // "into it" when the container is above the landing spot -- dragging upwards
+  // onto a header has always meant "before it".
+  const DAY = 'm:top B:bo C:s1>bo m:x>s1 C:s2>bo m:y>s2 m:z'
+
+  it('snaps a block dropped on the breakout head into its first strand', () => {
+    expect(project(DAY, 'top', 'bo')).toMatchObject({ depth: 2, parentId: 's1', valid: true })
+  })
+
+  it('keeps a block at strand depth however far right it is dragged', () => {
+    expect(project(DAY, 'z', 'x', INDENT * 9)).toMatchObject({ depth: 2, parentId: 's1' })
+  })
+
+  it.each([-INDENT * 5, -INDENT, 0, INDENT, INDENT * 5])(
+    'ignores a horizontal offset of %ipx inside a breakout',
+    (offset) => {
+      expect(project(DAY, 'z', 'y', offset)).toMatchObject({ depth: 2, parentId: 's2' })
+    },
+  )
+
+  it('lands a block at the end of the strand it was dropped in', () => {
+    expect(project(DAY, 'z', 'x')).toMatchObject({ depth: 2, parentId: 's1', afterId: null })
+  })
+
+  it('turns a strand dragged to day level into an ordinary section', () => {
+    expect(project(DAY, 's1', 'z')).toMatchObject({ depth: 0, parentId: null, valid: true })
+  })
+
+  it('turns a section dragged onto a breakout into a strand of it', () => {
+    const spec = 'B:bo C:s1>bo m:x>s1 C:sec m:q>sec'
+    expect(project(spec, 'sec', 's1')).toMatchObject({ depth: 1, parentId: 'bo', valid: true })
+  })
+
+  it('never nests a breakout, however far right it goes', () => {
+    const spec = 'C:sec m:q>sec B:bo C:s1>bo'
+    expect(project(spec, 'bo', 'q', INDENT * 5)).toMatchObject({ depth: 0, parentId: null })
+  })
+
+  it('refuses to put a strand inside a strand', () => {
+    const spec = 'B:bo C:s1>bo m:x>s1 C:s2>bo'
+    expect(project(spec, 's2', 'x', INDENT * 3)).toMatchObject({ depth: 1, parentId: 'bo' })
+  })
+
+  it('takes the whole subtree out of the list while a breakout is dragged', () => {
+    // The old filter only removed direct children, so a breakout's BLOCKS
+    // stayed behind -- and a breakout could be dropped into its own strand.
+    const ids = rowsForDrag(rows(DAY), 'bo').map((r) => r.id)
+    expect(ids).toEqual(['top', 'bo', 'z'])
+  })
+
+  it('takes a strand’s blocks out of the list while the strand is dragged', () => {
+    expect(rowsForDrag(rows(DAY), 's1').map((r) => r.id)).toEqual([
+      'top',
+      'bo',
+      's1',
+      's2',
+      'y',
+      'z',
+    ])
+  })
+
+  it('leaves a block’s siblings alone while the block is dragged', () => {
+    expect(rowsForDrag(rows(DAY), 'x').map((r) => r.id)).toEqual([
+      'top',
+      'bo',
+      's1',
+      'x',
+      's2',
+      'y',
+      'z',
+    ])
+  })
+
+  it('still reads a plain section the way it always did', () => {
+    // The outline mode has to be untouched: everything outside a breakout is
+    // exactly the gesture it was.
+    const spec = 'm:z C:sec m:q>sec'
+    expect(project(spec, 'z', 'sec', INDENT)).toMatchObject({ depth: 1, parentId: 'sec' })
+    expect(project(spec, 'z', 'q', INDENT)).toMatchObject({ depth: 1, parentId: 'sec' })
+    // And out again: the offset still decides, because nothing here is a column.
+    expect(project(spec, 'q', 'q', -INDENT * 3)).toMatchObject({ depth: 0, parentId: null })
   })
 })
