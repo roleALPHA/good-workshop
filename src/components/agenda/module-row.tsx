@@ -37,6 +37,7 @@ export function ModuleRow({
   type,
   entry,
   nested,
+  layout = 'table',
   chrome,
   editing,
   people,
@@ -45,6 +46,15 @@ export function ModuleRow({
   type: ModuleTypeDto | undefined
   entry: ScheduleEntry
   nested: boolean
+  /**
+   * 'table' is the day's six-column grid. 'stack' is a strand column, which is
+   * too narrow for it: the cells stack, and the chips move under the title.
+   *
+   * A layout switch rather than a second component. A column-shaped copy of a
+   * block row would be the place the two quietly drift apart -- and every field
+   * a block has is a field it has in a strand too.
+   */
+  layout?: 'table' | 'stack'
   chrome?: RowChrome
   editing?: RowEditing
   /** The workspace's members, to show them under their current names. */
@@ -82,7 +92,7 @@ export function ModuleRow({
         catClass(type?.color),
         'group relative break-inside-avoid border-b border-[var(--border)]',
         chrome?.isDragging && 'opacity-40',
-        GRID,
+        layout === 'table' ? GRID : 'md:grid md:grid-cols-[var(--gw-track-cols)] md:items-start',
       )}
     >
       {chrome?.handle}

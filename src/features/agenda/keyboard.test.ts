@@ -89,3 +89,79 @@ describe('treeKeyboardCoordinateGetter', () => {
     expect(getter(key('Tab'), args({ over: 'm-1' }))).toBeUndefined()
   })
 })
+
+/**
+ * Columns. The whole X-axis decision hangs on these: inside a breakout left and
+ * right mean "the strand beside this one", everywhere else they still mean
+ * indent -- and ArrowDown must walk down a column rather than sideways along a
+ * shared top edge.
+ */
+describe('treeKeyboardCoordinateGetter / breakout columns', () => {
+  const getter = treeKeyboardCoordinateGetter(INDENT)
+
+  /** Three strands side by side, two blocks each, plus a full-width row below. */
+  const COLUMNS = [
+    { id: 'a1', top: 100, height: 40, left: 0, width: 200 },
+    { id: 'b1', top: 100, height: 60, left: 220, width: 200 },
+    { id: 'c1', top: 100, height: 40, left: 440, width: 200 },
+    { id: 'a2', top: 150, height: 40, left: 0, width: 200 },
+    { id: 'b2', top: 170, height: 40, left: 220, width: 200 },
+    { id: 'after', top: 300, height: 40, left: 0, width: 660 },
+  ]
+
+  function columnArgs(over: string): Args {
+    const rect = (row: (typeof COLUMNS)[number]) => ({
+      top: row.top,
+      bottom: row.top + row.height,
+      height: row.height,
+      left: row.left,
+      right: row.left + row.width,
+      width: row.width,
+    })
+    const current = COLUMNS.find((r) => r.id === over)!
+    return {
+      active: over,
+      currentCoordinates: { x: current.left, y: current.top },
+      context: {
+        collisionRect: rect(current),
+        droppableRects: new Map(COLUMNS.map((r) => [r.id, rect(r)])),
+        droppableContainers: { getEnabled: () => COLUMNS.map((r) => ({ id: r.id })) },
+        over: { id: over },
+      },
+    } as unknown as Args
+  }
+
+  it('moves right into the next strand instead of indenting', () => {
+    expect(getter(key('ArrowRight'), columnArgs('a1'))).toEqual({ x: 220, y: 100 })
+  })
+
+  it('moves left into the previous strand', () => {
+    expect(getter(key('ArrowLeft'), columnArgs('c1'))).toEqual({ x: 220, y: 100 })
+  })
+
+  it('skips over a strand to reach the one beyond it, not two at once', () => {
+    expect(getter(key('ArrowRight'), columnArgs('a1'))).not.toEqual({ x: 440, y: 100 })
+  })
+
+  it('falls back to indenting at the edge of the row', () => {
+    // Nothing to the right of the last column, so the gesture goes back to
+    // meaning what it means everywhere else.
+    expect(getter(key('ArrowRight'), columnArgs('c1'))).toEqual({ x: 440 + INDENT, y: 100 })
+  })
+
+  it('walks DOWN its own column rather than sideways along a shared top edge', () => {
+    // a1, b1 and c1 all start at y=100. Ranking by top edge alone made every
+    // ArrowDown land in the first column.
+    expect(getter(key('ArrowDown'), columnArgs('a1'))).toEqual({ x: 0, y: 150 })
+    expect(getter(key('ArrowDown'), columnArgs('b1'))).toEqual({ x: 220, y: 170 })
+  })
+
+  it('leaves the breakout downwards when its column runs out', () => {
+    expect(getter(key('ArrowDown'), columnArgs('a2'))).toEqual({ x: 0, y: 300 })
+  })
+
+  it('keeps left and right meaning indent on a full-width row', () => {
+    expect(getter(key('ArrowRight'), columnArgs('after'))).toEqual({ x: 0 + INDENT, y: 300 })
+    expect(getter(key('ArrowLeft'), columnArgs('after'))).toEqual({ x: 0 - INDENT, y: 300 })
+  })
+})

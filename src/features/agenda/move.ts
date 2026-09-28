@@ -1,7 +1,7 @@
 import type { DayDoc } from '@/domain/agenda/types'
-import { flattenDay } from './flatten'
+import { flattenDay, type Depth } from './flatten'
 import type { Projection } from './projection'
-import { rowsForDrag, toProjectionRows } from './projection'
+import { descendants, rowsForDrag, toProjectionRows } from './projection'
 
 /**
  * Applies a completed drag to the document.
@@ -33,35 +33,61 @@ export function applyMove(doc: DayDoc, activeId: string, projection: Projection)
     parentId: projection.parentId,
   })
 
-  // A cluster travelled without its children; they follow it here.
-  const order = active.kind === 'cluster' ? reattachChildren(doc, moved, activeId) : moved
+  // A container travelled without its children; they follow it here.
+  const order =
+    active.kind === 'cluster' ? reattachChildren(doc, moved, activeId, projection) : moved
 
   return renumber(doc, order)
 }
 
+/**
+ * Puts a moved container's subtree back behind it.
+ *
+ * Taken from the freshly flattened document rather than rebuilt, so a breakout
+ * keeps its strands AND their blocks, in the order they had. Rebuilding one
+ * level of children was enough while the tree was two deep; with a breakout it
+ * would have dropped every block of every strand on the floor.
+ */
 function reattachChildren(
   doc: DayDoc,
   rows: ReturnType<typeof toProjectionRows>,
-  clusterId: string,
+  containerId: string,
+  projection: Projection,
 ): ReturnType<typeof toProjectionRows> {
-  const children = doc.modules
-    .filter((m) => m.clusterId === clusterId)
-    .sort((a, b) => a.order - b.order || a.id.localeCompare(b.id))
-    .map((m) => ({ id: m.id, kind: 'module' as const, depth: 1 as const, parentId: clusterId }))
+  const all = toProjectionRows(flattenDay(doc))
+  const inside = descendants(all, containerId)
 
-  const at = rows.findIndex((r) => r.id === clusterId)
+  // The subtree keeps its shape; only its distance from the day changes, by
+  // however far the container itself moved.
+  const container = all.find((r) => r.id === containerId)
+  const shift = projection.depth - (container?.depth ?? 0)
+  const children = all
+    .filter((r) => r.id !== containerId && inside.has(r.id))
+    .map((r) => ({ ...r, depth: Math.max(0, Math.min(2, r.depth + shift)) as Depth }))
+
+  const at = rows.findIndex((r) => r.id === containerId)
   const out = rows.slice()
   out.splice(at + 1, 0, ...children)
   return out
 }
 
-/** Rewrites `order` and `clusterId` on the document to match the new row order. */
+/**
+ * Rewrites `order` and the parent on the document to match the new row order.
+ *
+ * One counter per parent, at every depth. The day level keeps sharing a counter
+ * between clusters and day-level blocks, exactly as before -- they share a
+ * sibling list, so they share a numbering.
+ */
 function renumber(doc: DayDoc, rows: ReturnType<typeof toProjectionRows>): DayDoc {
   const clusterById = new Map(doc.clusters.map((c) => [c.id, c]))
   const moduleById = new Map(doc.modules.map((m) => [m.id, m]))
 
-  let dayOrder = 0
-  const childOrder = new Map<string, number>()
+  const seen = new Map<string | null, number>()
+  const next = (parent: string | null): number => {
+    const n = seen.get(parent) ?? 0
+    seen.set(parent, n + 1)
+    return n
+  }
 
   const clusters: DayDoc['clusters'] = []
   const modules: DayDoc['modules'] = []
@@ -69,20 +95,15 @@ function renumber(doc: DayDoc, rows: ReturnType<typeof toProjectionRows>): DayDo
   for (const row of rows) {
     if (row.kind === 'cluster') {
       const cluster = clusterById.get(row.id)
-      if (cluster) clusters.push({ ...cluster, order: dayOrder++ })
+      if (cluster) {
+        clusters.push({ ...cluster, parentClusterId: row.parentId, order: next(row.parentId) })
+      }
       continue
     }
 
     const mod = moduleById.get(row.id)
     if (!mod) continue
-
-    if (row.depth === 1 && row.parentId !== null) {
-      const next = childOrder.get(row.parentId) ?? 0
-      childOrder.set(row.parentId, next + 1)
-      modules.push({ ...mod, clusterId: row.parentId, order: next })
-    } else {
-      modules.push({ ...mod, clusterId: null, order: dayOrder++ })
-    }
+    modules.push({ ...mod, clusterId: row.parentId, order: next(row.parentId) })
   }
 
   return { ...doc, clusters, modules }

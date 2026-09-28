@@ -3,26 +3,25 @@
 import { useMemo, useState } from 'react'
 import { DndContext, DragOverlay, MeasuringStrategy } from '@dnd-kit/core'
 import { restrictToWindowEdges } from '@dnd-kit/modifiers'
-import { SortableContext, useSortable, verticalListSortingStrategy } from '@dnd-kit/sortable'
-import { CSS } from '@dnd-kit/utilities'
+import { SortableContext, verticalListSortingStrategy } from '@dnd-kit/sortable'
 import { useTranslations } from 'next-intl'
 import type { AssignablePerson } from '@/domain/agenda/responsible'
 import { computeSchedule } from '@/domain/schedule/computeSchedule'
 import { formatDuration } from '@/features/agenda/duration'
 import { flattenDay, toScheduleItems, withGapRows } from '@/features/agenda/flatten'
+import { groupBreakouts } from '@/features/agenda/group-rows'
+import { descendants, toProjectionRows } from '@/features/agenda/projection'
 import type { AgendaDocument, Peer } from '@/features/agenda/document'
 import type { ParkedElsewhere } from '@/features/agenda/days'
 import { useAgendaDrag } from '@/features/agenda/use-agenda-drag'
 import { catClass } from '@/lib/category-colors'
 import { cn } from '@/lib/cn'
-import { ModuleDetails } from '@/components/inspector/module-details'
 import { agendaCollisionDetection, INDENT_PX, SILENT_ANNOUNCEMENTS } from './agenda-dnd'
-import { EndOfDay, GapRow, HeaderRow, type RowChrome } from './agenda-rows'
-import { ClusterRow } from './cluster-row'
-import { ModuleRow } from './module-row'
+import { EndOfDay, HeaderRow } from './agenda-rows'
+import { EditorBreakout } from './editor-breakout'
+import { EditorRow, type RowContext } from './editor-row'
 import { BlockPicker } from './block-picker'
 import { DayHeader } from './day-header'
-import { DragHandle } from './drag-handle'
 import { LiveRegion } from './live-region'
 import { ParkingArea } from './parking'
 import { PresenceBar } from './presence'
@@ -87,22 +86,21 @@ export function AgendaEditor({
    * an optimistic one over the same shape; the component does not learn about
    * it either way.
    */
-  function patchModule(moduleId: string, patch: Partial<(typeof doc)['modules'][number]>) {
-    // Listed field by field rather than spread: undefined means "not part of
-    // this change", and passing the whole object through would let a caller's
-    // missing key clear a field it never mentioned.
-    agenda.patchModule(moduleId, {
-      title: patch.title,
-      durationMinutes: patch.durationMinutes,
-      pinnedStartMinute: patch.pinnedStartMinute,
-      desc: patch.desc,
-      parked: patch.parked,
-      responsible: patch.responsible,
-    })
-  }
 
   const activeRow = rows.find((r) => r.id === activeId)
   const projectedParent = projection?.parentId ?? null
+
+  // Folded only for rendering. The document, the drag and the keyboard all keep
+  // working on the flat list -- dnd-kit wants ids, not DOM siblings.
+  const nodes = useMemo(() => groupBreakouts(rendered), [rendered])
+
+  // The whole subtree, not just direct children: a breakout's blocks hang on
+  // its strands, so a one-level check would leave them standing while their
+  // breakout travels.
+  const insideActive = useMemo(
+    () => (activeId ? descendants(toProjectionRows(rows), activeId) : new Set<string>()),
+    [rows, activeId],
+  )
 
   // Grouped once per render rather than filtered per row: a day is tens of
   // rows and a room is a handful of people, but the nested scan is the kind of
@@ -142,6 +140,18 @@ export function AgendaEditor({
     agenda.setFocus(null)
   }
 
+  const rowContext: RowContext = {
+    agenda,
+    schedule,
+    people,
+    expandedId,
+    onToggleExpanded: (id) => setExpandedId((current) => (current === id ? null : id)),
+    newClusterId: newSectionId,
+    projectedParent,
+    presenceByBlock,
+    activeId,
+  }
+
   return (
     <DndContext
       sensors={sensors}
@@ -176,88 +186,36 @@ export function AgendaEditor({
 
         <SortableContext items={sortableIds} strategy={verticalListSortingStrategy}>
           <div className="border-t border-[var(--border)] md:border-t-0">
-            {rendered.map((row) => {
-              if (row.kind === 'gap') return <GapRow key={row.id} minutes={row.minutes} />
-
-              const entry = schedule.entries.get(row.id)
-              if (!entry) return null
-
-              // A dragged cluster's children are hidden for the duration of the
-              // drag; they are travelling with it.
-              if (activeId && row.kind === 'module' && row.parentId === activeId) return null
-
-              return (
-                <SortableRow
-                  key={row.id}
-                  id={row.id}
-                  label={row.kind === 'cluster' ? row.cluster.title : row.module.title}
-                  nested={row.kind === 'module' && row.depth > 0}
-                >
-                  {(chrome) =>
-                    row.kind === 'cluster' ? (
-                      <ClusterRow
-                        cluster={row.cluster}
-                        entry={entry}
-                        childCount={row.childCount}
-                        chrome={{
-                          ...chrome,
-                          isDropTarget: projectedParent === row.id,
-                          presence: presenceByBlock.get(row.id),
-                        }}
-                        editing={{
-                          onPinChange: (pinnedStartMinute) =>
-                            agenda.patchCluster(row.id, { pinnedStartMinute }),
-                          onTitleChange: (title) => agenda.patchCluster(row.id, { title }),
-                          onColorChange: (color) => agenda.patchCluster(row.id, { color }),
-                          autoFocusTitle: row.id === newSectionId,
-                          // The same op the MCP tool uses: it takes the blocks
-                          // inside with it, which is what removing a section
-                          // means.
-                          onRemove: () => agenda.removeModule(row.id),
-                        }}
-                      />
-                    ) : (
-                      <ModuleRow
-                        module={row.module}
-                        type={doc.moduleTypes[row.module.moduleTypeId]}
-                        entry={entry}
-                        nested={row.depth > 0}
-                        people={people}
-                        chrome={{ ...chrome, presence: presenceByBlock.get(row.id) }}
-                        editing={{
-                          onResponsibleChange: (responsible) =>
-                            patchModule(row.id, { responsible }),
-                          expanded: expandedId === row.id,
-                          onToggleExpanded: () =>
-                            setExpandedId((current) => (current === row.id ? null : row.id)),
-                          onTitleChange: (title) => patchModule(row.id, { title }),
-                          onDurationChange: (durationMinutes) =>
-                            patchModule(row.id, { durationMinutes }),
-                          onDescChange: (desc) => patchModule(row.id, { desc }),
-                          onPinChange: (pinnedStartMinute) =>
-                            patchModule(row.id, { pinnedStartMinute }),
-                          onPark: () => patchModule(row.id, { parked: true }),
-                          onRemove: () => agenda.removeModule(row.id),
-                          details: (
-                            <ModuleDetails
-                              module={row.module}
-                              type={doc.moduleTypes[row.module.moduleTypeId]}
-                              onChange={(desc) => patchModule(row.id, { desc })}
-                            />
-                          ),
-                        }}
-                      />
-                    )
-                  }
-                </SortableRow>
-              )
-            })}
+            {nodes.map((node) =>
+              node.kind === 'row' ? (
+                // A dragged container's children are hidden for the duration of
+                // the drag; they are travelling with it.
+                activeId && insideActive.has(node.row.id) && node.row.id !== activeId ? null : (
+                  <EditorRow key={node.row.id} row={node.row} ctx={rowContext} />
+                )
+              ) : (
+                <EditorBreakout key={node.id} node={node} ctx={rowContext} />
+              ),
+            )}
           </div>
         </SortableContext>
 
         <BlockPicker
           types={Object.values(doc.moduleTypes)}
           onAddSection={() => setNewSectionId(agenda.addCluster({ title: t('section.newTitle') }))}
+          onAddBreakout={() =>
+            setNewSectionId(
+              // Two strands to start with: a breakout with one is not one, and
+              // with none it is an empty raster that explains nothing.
+              agenda.addBreakout({
+                title: t('breakout.newTitle'),
+                strands: [
+                  { title: `${t('breakout.newTrackTitle')} 1` },
+                  { title: `${t('breakout.newTrackTitle')} 2` },
+                ],
+              }),
+            )
+          }
           onAdd={(typeKey) => {
             const type = Object.values(doc.moduleTypes).find((t) => t.key === typeKey)
             if (!type) return
@@ -328,30 +286,4 @@ export function AgendaEditor({
       />
     </DndContext>
   )
-}
-
-function SortableRow({
-  id,
-  label,
-  nested,
-  children,
-}: {
-  id: string
-  /** The row's own title -- a screen reader hearing "m-3 verschieben" learns nothing. */
-  label: string
-  nested: boolean
-  children: (chrome: RowChrome) => React.ReactNode
-}) {
-  const { attributes, listeners, setNodeRef, transform, transition, isDragging } = useSortable({
-    id,
-  })
-
-  return children({
-    rootRef: setNodeRef,
-    style: { transform: CSS.Translate.toString(transform), transition },
-    isDragging,
-    handle: (
-      <DragHandle attributes={attributes} listeners={listeners} label={label} nested={nested} />
-    ),
-  })
 }

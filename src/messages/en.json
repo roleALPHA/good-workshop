@@ -205,7 +205,10 @@
       "inSection": "in section {title}",
       "landed": "{title} lands {where}, position {position, number}.",
       "landedWithTime": "{title} lands {where}, position {position, number}, new start time {time}.",
-      "picked": "{title} picked up."
+      "picked": "{title} picked up.",
+      "inTrack": "in strand {track} of breakout {breakout}",
+      "becomesTrack": "{title} becomes a strand in breakout {breakout}, with {count, plural, one {# block} other {# blocks}}.",
+      "leavesBreakout": "{title} leaves breakout {breakout} and becomes a section of its own, with {count, plural, one {# block} other {# blocks}}."
     },
     "dragHandle": "Move {title}",
     "end": "End",
@@ -276,7 +279,28 @@
     "blockDuration": "Duration",
     "deleteCluster": "{count, plural, =0 {Delete section} one {Delete with # block} other {Delete with # blocks}}",
     "deleteClusterLabel": "{count, plural, =0 {Delete the section “{title}”} one {Delete the section “{title}” and the # block in it} other {Delete the section “{title}” and the # blocks in it}}",
-    "deleteClusterHint": "{count, plural, =0 {Removes the section.} one {Removes the section and the # block in it.} other {Removes the section and the # blocks in it.}}"
+    "deleteClusterHint": "{count, plural, =0 {Removes the section.} one {Removes the section and the # block in it.} other {Removes the section and the # blocks in it.}}",
+    "breakout": {
+      "add": "Add breakout",
+      "newTitle": "New breakout",
+      "title": "Breakout name",
+      "color": "Breakout colour",
+      "simultaneous": "{count, plural, one {# strand} other {# strands}}, at the same time",
+      "longest": "longest strand {duration}",
+      "delete": "{count, plural, =0 {Delete breakout} one {Delete with # strand} other {Delete with # strands}}",
+      "deleteLabel": "Delete breakout “{title}” with {tracks, plural, one {# strand} other {# strands}} and {blocks, plural, one {# block} other {# blocks}}",
+      "deleteHint": "Removes the breakout with every strand and block in it.",
+      "addTrack": "Add strand",
+      "newTrackTitle": "New strand",
+      "trackTitle": "Strand name",
+      "trackColor": "Strand colour",
+      "trackPosition": "Strand {index, number} of {count, number}",
+      "trackDelete": "{count, plural, =0 {Delete strand} one {Delete with # block} other {Delete with # blocks}}",
+      "trackDeleteLabel": "Delete strand “{title}” and the {count, plural, one {# block} other {# blocks}} in it",
+      "trackDeleteHint": "{count, plural, =0 {Removes the strand.} one {Removes the strand and the # block in it.} other {Removes the strand and the # blocks in it.}}",
+      "emptyTrack": "No block yet.",
+      "addBlockToTrack": "Add block to {title}"
+    }
   },
   "auth": {
     "guest": {

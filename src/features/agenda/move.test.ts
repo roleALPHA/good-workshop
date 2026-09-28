@@ -175,3 +175,138 @@ describe('applyMove', () => {
     expect(dayOrders).toEqual([0, 1])
   })
 })
+
+/**
+ * A breakout moves as a whole: strands and the blocks inside them. The bug this
+ * guards against is quiet -- a drag that looks right on screen and leaves the
+ * work of three groups sitting loose on the day.
+ */
+describe('applyMove / breakouts', () => {
+  type C = { id: string; order: number; parent?: string | null; mode?: 'parallel' | 'sequential' }
+
+  const breakoutDoc = (clusters: C[], modules: [string, number, string | null][]): DayDoc => {
+    const base = doc([], modules)
+    return {
+      ...base,
+      clusters: clusters.map((c) => ({
+        id: c.id,
+        parentClusterId: c.parent ?? null,
+        mode: c.mode ?? ('sequential' as const),
+        title: c.id,
+        color: null,
+        pinnedStartMinute: null,
+        collapsed: false,
+        targetDurationMinutes: null,
+        order: c.order,
+      })),
+    }
+  }
+
+  /** bo[ s1[a1 a2] s2[b1] ] then a day-level block z. */
+  const day = () =>
+    breakoutDoc(
+      [
+        { id: 'bo', order: 0, mode: 'parallel' },
+        { id: 's1', order: 0, parent: 'bo' },
+        { id: 's2', order: 1, parent: 'bo' },
+      ],
+      [
+        ['a1', 0, 's1'],
+        ['a2', 1, 's1'],
+        ['b1', 0, 's2'],
+        ['z', 1, null],
+      ],
+    )
+
+  const move = (source: DayDoc, activeId: string, overId: string, offsetX = 0) => {
+    const rows = rowsForDrag(toProjectionRows(flattenDay(source)), activeId)
+    return applyMove(source, activeId, getProjection(rows, activeId, overId, offsetX, INDENT))
+  }
+
+  const shape = (d: DayDoc) =>
+    flattenDay(d).map((r) => [r.id, r.depth, r.parentId] as [string, number, string | null])
+
+  it('numbers each strand’s blocks among themselves, starting at 0', () => {
+    expect(
+      day()
+        .modules.filter((m) => m.clusterId === 's1')
+        .map((m) => m.order),
+    ).toEqual([0, 1])
+    // Dragged upwards onto b1, so it lands in front of it -- and the strand is
+    // renumbered from 0 among its own blocks, not from anywhere in the day.
+    const after = move(day(), 'z', 'b1')
+    expect(after.modules.filter((m) => m.clusterId === 's2').map((m) => [m.id, m.order])).toEqual([
+      ['z', 0],
+      ['b1', 1],
+    ])
+    // The other strand is untouched, which is what "parallel" has to mean here.
+    expect(after.modules.filter((m) => m.clusterId === 's1').map((m) => m.order)).toEqual([0, 1])
+  })
+
+  it('takes a strand out to the day with its blocks', () => {
+    const after = move(day(), 's1', 'z')
+    const strand = after.clusters.find((c) => c.id === 's1')!
+    expect(strand.parentClusterId).toBeNull()
+    expect(after.modules.filter((m) => m.clusterId === 's1').map((m) => m.id)).toEqual(['a1', 'a2'])
+    // It became an ordinary section: its blocks sit one level in, not two.
+    expect(shape(after)).toContainEqual(['a1', 1, 's1'])
+  })
+
+  it('takes a section into a breakout as a strand, blocks and all', () => {
+    const source = breakoutDoc(
+      [
+        { id: 'bo', order: 0, mode: 'parallel' },
+        { id: 's1', order: 0, parent: 'bo' },
+        { id: 'sec', order: 1 },
+      ],
+      [
+        ['a1', 0, 's1'],
+        ['q1', 0, 'sec'],
+        ['q2', 1, 'sec'],
+      ],
+    )
+    const after = move(source, 'sec', 's1')
+    expect(after.clusters.find((c) => c.id === 'sec')!.parentClusterId).toBe('bo')
+    expect(after.modules.filter((m) => m.clusterId === 'sec').map((m) => m.id)).toEqual([
+      'q1',
+      'q2',
+    ])
+    expect(shape(after)).toContainEqual(['q1', 2, 'sec'])
+  })
+
+  it('moves a whole breakout with its strands and every block in them', () => {
+    const source = breakoutDoc(
+      [
+        { id: 'top', order: 0 },
+        { id: 'bo', order: 1, mode: 'parallel' },
+        { id: 's1', order: 0, parent: 'bo' },
+        { id: 's2', order: 1, parent: 'bo' },
+      ],
+      [
+        ['t1', 0, 'top'],
+        ['a1', 0, 's1'],
+        ['b1', 0, 's2'],
+      ],
+    )
+    const after = move(source, 'bo', 't1')
+
+    // Nothing fell out: the shape is identical, only the position changed.
+    expect(after.clusters.find((c) => c.id === 's1')!.parentClusterId).toBe('bo')
+    expect(after.modules.find((m) => m.id === 'a1')!.clusterId).toBe('s1')
+    expect(after.modules.find((m) => m.id === 'b1')!.clusterId).toBe('s2')
+    expect(
+      shape(after)
+        .filter(([, d]) => d === 2)
+        .map(([id]) => id),
+    ).toEqual(['a1', 'b1'])
+  })
+
+  it('keeps the strand order when one is dragged past another', () => {
+    const after = move(day(), 's2', 's1')
+    const strands = after.clusters
+      .filter((c) => c.parentClusterId === 'bo')
+      .sort((a, b) => a.order - b.order)
+      .map((c) => c.id)
+    expect(strands).toEqual(['s2', 's1'])
+  })
+})
