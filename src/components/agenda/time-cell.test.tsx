@@ -11,6 +11,7 @@ const entry = (over: Partial<ScheduleEntry> = {}): ScheduleEntry => ({
   durationMinutes: 15,
   pinned: false,
   conflict: null,
+  countsTowardsTotals: true,
   ...over,
 })
 

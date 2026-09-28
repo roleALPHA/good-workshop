@@ -34,6 +34,7 @@ const entry: ScheduleEntry = {
   durationMinutes: 45,
   pinned: false,
   conflict: null,
+  countsTowardsTotals: true,
 }
 
 describe('ClusterRow', () => {
