@@ -301,7 +301,9 @@
       "emptyTrack": "Noch kein Block.",
       "addBlockToTrack": "Block in {title} hinzufügen",
       "addTrackTo": "Strang zu {title} hinzufügen"
-    }
+    },
+    "presenceModel": "KI-Assistent",
+    "presenceEditing": "bearbeitet diesen Block gerade"
   },
   "auth": {
     "guest": {

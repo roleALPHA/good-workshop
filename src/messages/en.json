@@ -301,7 +301,9 @@
       "emptyTrack": "No block yet.",
       "addBlockToTrack": "Add block to {title}",
       "addTrackTo": "Add strand to {title}"
-    }
+    },
+    "presenceModel": "AI assistant",
+    "presenceEditing": "is editing this block"
   },
   "auth": {
     "guest": {

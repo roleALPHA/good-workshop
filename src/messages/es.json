@@ -301,7 +301,9 @@
       "emptyTrack": "Aún no hay ningún bloque.",
       "addBlockToTrack": "Añadir bloque a {title}",
       "addTrackTo": "Añadir grupo a {title}"
-    }
+    },
+    "presenceModel": "Asistente de IA",
+    "presenceEditing": "está editando este bloque"
   },
   "auth": {
     "guest": {

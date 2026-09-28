@@ -18,9 +18,18 @@ import { useTranslations } from 'next-intl'
 
 const hueStyle = (hue: number) => ({ '--peer-hue': String(hue) }) as CSSProperties
 
-/** What to call this participant, honestly, including when it is not a person. */
-function describe(peer: Peer): string {
-  return peer.kind === 'model' ? `${peer.name} (KI)` : peer.name
+/**
+ * What to call this participant, honestly, including when it is not a person.
+ *
+ * The name for a model comes from HERE and not from the wire. The room sets
+ * presence names on the server, where there is no request language -- the
+ * collaboration bundle deliberately has no next-intl in it -- so an English,
+ * French or Spanish reader used to be told a German word was in their
+ * document. The client knows both the language and `kind`, so it says it
+ * itself; the transmitted name stays as the fallback for anything else.
+ */
+function describe(peer: Peer, t: ReturnType<typeof useTranslations<'agenda'>>): string {
+  return peer.kind === 'model' ? t('presenceModel') : peer.name
 }
 
 function initials(name: string): string {
@@ -59,7 +68,7 @@ export function PresenceBar({ peers }: { peers: Peer[] }) {
             >
               {peer.kind === 'model' ? <Bot className="size-3" /> : initials(peer.name)}
             </span>
-            {describe(peer)}
+            {describe(peer, t)}
           </span>
         </li>
       ))}
@@ -75,6 +84,7 @@ export function PresenceBar({ peers }: { peers: Peer[] }) {
  * them apart at all.
  */
 export function PeerMarks({ peers }: { peers: Peer[] }) {
+  const t = useTranslations('agenda')
   if (peers.length === 0) return null
   const [first] = peers as [Peer, ...Peer[]]
 
@@ -92,8 +102,8 @@ export function PeerMarks({ peers }: { peers: Peer[] }) {
         )}
         style={hueStyle(first.hue)}
       >
-        {peers.length === 1 ? describe(first) : `${describe(first)} +${peers.length - 1}`}
-        <span className="sr-only"> bearbeitet diesen Block gerade</span>
+        {peers.length === 1 ? describe(first, t) : `${describe(first, t)} +${peers.length - 1}`}
+        <span className="sr-only"> {t('presenceEditing')}</span>
       </span>
     </>
   )
