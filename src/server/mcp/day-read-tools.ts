@@ -75,7 +75,10 @@ export function registerDayReadTools(server: McpServer, { actor }: Ctx): void {
         'The agenda of a workshop day with computed start times, block ids, cluster ids and parked blocks. ' +
         'The parking area belongs to the whole workshop: `parkedElsewhere` lists the blocks parked on the other days, ' +
         'and move_module with toDayId brings one into this day. ' +
-        'The structured `blocks` carry every field update_module can change. `view: markdown` returns the finished export.',
+        'The structured `blocks` carry every field update_module can change. Clusters carry ' +
+        '`mode` and `parentId`: a cluster with mode=parallel is a breakout, and the clusters ' +
+        'whose parentId names it are its strands, all running at the same time. ' +
+        '`view: markdown` returns the finished export.',
       inputSchema: {
         workshopId: Id,
         dayId: Id.optional(),
@@ -131,7 +134,15 @@ export function registerDayReadTools(server: McpServer, { actor }: Ctx): void {
             const entry = schedule.entries.get(row.id)
             const time = entry ? formatTime(entry.startMinute, MCP_LOCALE) : '--:--'
             if (row.kind === 'cluster') {
-              return `${index}. [${time}] ## ${row.cluster.title} · cluster · id=${row.id}`
+              // Said in the prose too, not only in structuredContent: a model
+              // has to be able to tell a breakout from a strand without parsing.
+              const mark =
+                row.mode === 'parallel'
+                  ? `breakout · parallel · ${row.childCount} strands`
+                  : row.depth === 1
+                    ? `strand · ${row.childCount} blocks`
+                    : `cluster · ${row.childCount} blocks`
+              return `${index}. [${time}] ${'  '.repeat(row.depth)}## ${row.cluster.title} · ${mark} · id=${row.id}`
             }
             if (row.kind !== 'module') return `${index}. [${time}] (buffer)`
             const pinned = row.module.pinnedStartMinute === null ? '' : ' · pinned'
@@ -151,7 +162,11 @@ export function registerDayReadTools(server: McpServer, { actor }: Ctx): void {
             ...doc.clusters.map((c) => ({
               id: c.id,
               kind: 'cluster' as const,
-              parentId: null,
+              mode: c.mode,
+              // Was hard-wired to null. Without the real parent the whole shape
+              // of a breakout is invisible in the structured answer -- which is
+              // the only place ids may be read from.
+              parentId: c.parentClusterId,
               order: c.order,
               title: c.title,
               color: c.color,

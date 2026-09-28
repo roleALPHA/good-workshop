@@ -3,7 +3,7 @@ import { uuidv7 } from 'uuidv7'
 import type { McpServer } from '@modelcontextprotocol/sdk/server/mcp.js'
 import { ModuleDescError, validateModuleDesc, type FieldError } from '@/domain/moduleType/validate'
 import { addClusterBlock, addModuleBlock, clearBlocks, patchBlock } from '@/domain/collab/ops'
-import { CATEGORY_COLORS } from '@/lib/category-colors'
+import { agendaBlocks, agendaItemsSchema, type BlockShape } from './agenda-items'
 import { publicToolError } from './errors'
 import { fail, guarded, ok, toolError } from './respond'
 import { requireScope } from './auth'
@@ -71,24 +71,15 @@ export function registerDayAgendaTools(server: McpServer, ctx: Ctx): void {
         'or description, matching its schema from list_module_types. `replace` replaces the day, ' +
         '`append` adds to it. All or nothing: if one block names an unknown type or a `desc` that ' +
         'does not fit its schema, nothing is written. ' +
-        'Always use this tool to build or fill in an agenda -- not twenty separate calls.',
+        'Always use this tool to build or fill in an agenda -- not twenty separate calls. ' +
+        'An item with kind "breakout" is a section whose strands run AT THE SAME TIME: its ' +
+        "children are the strands, and each strand's children are its blocks.",
       inputSchema: {
         workshopId: Id,
         dayId: Id,
         mode: z.enum(['replace', 'append']).default('append'),
         expectedVersion: Version,
-        items: z.array(
-          z.union([
-            z.object({
-              kind: z.literal('cluster'),
-              title: z.string().min(1),
-              color: z.enum(CATEGORY_COLORS).optional(),
-              pinnedStartMinute: Minute.nullable().optional(),
-              children: z.array(z.object(BlockFields)).optional(),
-            }),
-            z.object({ kind: z.literal('module'), ...BlockFields }),
-          ]),
-        ),
+        items: agendaItemsSchema(BlockFields),
       },
     },
     async ({ workshopId, dayId, mode, items, expectedVersion }) =>
@@ -97,12 +88,16 @@ export function registerDayAgendaTools(server: McpServer, ctx: Ctx): void {
         const types = await preflight(workshopId, expectedVersion, (tx) => readTypes(tx))
         if (!types) return fail('The block types could not be read.')
 
+        // One walk, three readers. The type check, the desc validation and the
+        // people lookup all have to name the SAME place, and three loops each
+        // building their own path is three chances for an error to point
+        // somewhere the input is not.
+        const blocks = [...agendaBlocks(items)]
+
         // Every type is resolved before anything is written: a day half
         // applied because the eleventh block named a type that does not exist
         // is worse than a day not applied at all.
-        const wanted = items.flatMap((item) =>
-          item.kind === 'cluster' ? (item.children ?? []).map((c) => c.typeKey) : [item.typeKey],
-        )
+        const wanted = blocks.map(({ block }) => block.typeKey)
         const unknown = [...new Set(wanted)].filter((key) => !types.has(key))
         if (unknown.length > 0) return fail(unknownTypes(unknown, types))
 
@@ -122,21 +117,11 @@ export function registerDayAgendaTools(server: McpServer, ctx: Ctx): void {
               })),
             )
         }
-        items.forEach((item, i) => {
-          if (item.kind === 'module') return check(item, `items[${i}]`)
-          item.children?.forEach((child, j) => check(child, `items[${i}].children[${j}]`))
-        })
+        for (const { at, block } of blocks) check(block, at)
         if (issues.length > 0) return toolError(new ModuleDescError(issues))
 
         const people = await lookUpPeople(
-          items.flatMap((item, i) =>
-            item.kind === 'module'
-              ? [{ at: `items[${i}]`, people: item.responsible }]
-              : (item.children ?? []).map((child, j) => ({
-                  at: `items[${i}].children[${j}]`,
-                  people: child.responsible,
-                })),
-          ),
+          blocks.map(({ at, block }) => ({ at, people: block.responsible })),
         )
         if (people.problems.length > 0) {
           return fail(['Nothing was written.', ...people.problems].join('\n'))
@@ -158,27 +143,62 @@ export function registerDayAgendaTools(server: McpServer, ctx: Ctx): void {
                 return
               }
 
-              const clusterId = uuidv7()
-              addClusterBlock(doc, clusterId, { title: item.title, color: item.color ?? null })
+              const containerId = uuidv7()
+              addClusterBlock(doc, containerId, {
+                title: item.title,
+                color: item.color ?? null,
+                mode: item.kind === 'breakout' ? 'parallel' : 'sequential',
+              })
               if (item.pinnedStartMinute != null) {
-                patchBlock(doc, clusterId, { pinnedStartMinute: item.pinnedStartMinute })
+                patchBlock(doc, containerId, { pinnedStartMinute: item.pinnedStartMinute })
               }
               created += 1
-              item.children?.forEach((child, j) => {
+
+              const addBlock = (child: BlockShape, at: string, parentId: string) => {
                 addModuleBlock(doc, uuidv7(), {
                   ...moduleFrom(child, types),
-                  desc: descs.get(`items[${i}].children[${j}]`),
-                  responsible: people.values.get(`items[${i}].children[${j}]`),
-                  parentId: clusterId,
+                  desc: descs.get(at),
+                  responsible: people.values.get(at),
+                  parentId,
                 })
                 created += 1
+              }
+
+              if (item.kind === 'cluster') {
+                item.children?.forEach((child, j) =>
+                  addBlock(child, `items[${i}].children[${j}]`, containerId),
+                )
+                return
+              }
+
+              // Strands count as written entries of their own: three strands
+              // are three things that arrived, and "how much got there" is the
+              // question the number answers.
+              item.children.forEach((strand, j) => {
+                const strandId = uuidv7()
+                addClusterBlock(doc, strandId, {
+                  title: strand.title,
+                  color: strand.color ?? null,
+                  mode: 'sequential',
+                  parentId: containerId,
+                })
+                created += 1
+                strand.children?.forEach((child, k) =>
+                  addBlock(child, `items[${i}].children[${j}].children[${k}]`, strandId),
+                )
               })
             })
           })
           return created
         })
 
-        await record('agenda.apply', workshopId, { dayId, mode, created: result, rejected })
+        await record('agenda.apply', workshopId, {
+          dayId,
+          mode,
+          created: result,
+          rejected,
+          breakouts: items.filter((item) => item.kind === 'breakout').length,
+        })
         // Saying "10 entries written" while one of them did not reach the
         // record would be telling the caller something untrue. The block keeps
         // whatever it held before; see validatedDescs in collab/materialize.

@@ -1,6 +1,8 @@
 import type { DayDoc } from '@/domain/agenda/types'
 import { computeSchedule } from '@/domain/schedule/computeSchedule'
+import type { Schedule } from '@/domain/schedule/types'
 import { formatDuration, formatTime } from '@/features/agenda/duration'
+import { dayTotals } from '@/features/agenda/totals'
 import { flattenDay, toScheduleItems } from '@/features/agenda/flatten'
 import { richTextToMarkdown } from '@/lib/richtext/markdown'
 import { isRichTextValue } from '@/lib/richtext/schema'
@@ -144,7 +146,7 @@ function layOutDay(day: DayDoc, opts: Opts): DayPart {
     day.title || null,
     day.date,
     `${formatTime(schedule.dayStartMinute, opts.locale)}–${formatTime(schedule.dayEndMinute, opts.locale)}`,
-    contentSplit(day, opts.locale),
+    contentSplit(day, schedule, opts.locale),
   ].filter(Boolean)
 
   const body = [`> ${summary.join(' · ')}`]
@@ -433,14 +435,8 @@ const yaml = (value: string) => JSON.stringify(value)
 const namesOf = (mod: DayDoc['modules'][number]) =>
   (mod.responsible ?? []).map((person) => person.name).join(', ')
 
-function contentSplit(day: DayDoc, locale: Locale): string {
-  let content = 0
-  let breaks = 0
-  for (const mod of day.modules) {
-    const type = day.moduleTypes[mod.moduleTypeId]
-    if (type?.countsAsContent === false) breaks += mod.durationMinutes
-    else content += mod.durationMinutes
-  }
+function contentSplit(day: DayDoc, schedule: Schedule, locale: Locale): string {
+  const { content, breaks } = dayTotals(day, schedule)
   return translator(locale, 'export')('split', {
     content: formatDuration(content, { spaced: true }),
     breaks: formatDuration(breaks, { spaced: true }),
