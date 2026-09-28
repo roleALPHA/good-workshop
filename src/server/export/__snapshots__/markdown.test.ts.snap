@@ -5,12 +5,12 @@ exports[`renderDayMarkdown > renders the agenda flavour 1`] = `
 title: "Design Sprint Kickoff"
 date: 2026-09-15
 tags: ["design-sprint", "acme"]
-duration: 4h 30m
+duration: 6h
 ---
 
 # Design Sprint Kickoff
 
-> Tag 1 · 2026-09-15 · 13:00–17:30 · 3h 45m Inhalt, 1h 15m Pausen
+> Tag 1 · 2026-09-15 · 13:00–19:00 · 5h 15m Inhalt, 1h 15m Pausen
 
 | Zeit | Dauer | Block | Info |
 | --- | --- | --- | --- |
@@ -23,11 +23,17 @@ duration: 4h 30m
 | 14:20 | 30m | ↳ Spannungsfelder sammeln | Gruppenarbeit |
 | 14:50 | 10m | ↳ Einwandintegration | Entscheidung / Abstimmung |
 | 14:30 🔒 | 1h | Mittagessen | Mittagessen · ⚠ Überschneidung |
-| 15:30 | 45m | IT-Management verorten | Gruppenarbeit |
-| 16:15 | 15m | Kaffeepause | Pause |
-| 16:30 | 30m | Was sind die nächsten großen Fragen? | Plenumsdiskussion |
-| 17:00 | 15m | Nächste Schritte | Nächste Schritte |
-| 17:15 | 15m | Check-out | Check-out |
+| 15:30 | 1h30m | **Vertiefung in drei Räumen** | 2 Stränge · parallel |
+| 15:30 | 1h30m | ↳ **A · Datenmodell** | Strang 1 von 2 · 2 Blöcke |
+| 15:30 | 45m | ↳↳ Bestandsaufnahme | Breakout-Session |
+| 16:15 | 45m | ↳↳ Zielbild skizzieren | Breakout-Session |
+| 15:30 | 50m | ↳ **B · Prozesse** | Strang 2 von 2 · 1 Block |
+| 15:30 | 50m | ↳↳ Prozesslandkarte | Breakout-Session |
+| 17:00 | 45m | IT-Management verorten | Gruppenarbeit |
+| 17:45 | 15m | Kaffeepause | Pause |
+| 18:00 | 30m | Was sind die nächsten großen Fragen? | Plenumsdiskussion |
+| 18:30 | 15m | Nächste Schritte | Nächste Schritte |
+| 18:45 | 15m | Check-out | Check-out |
 
 ## Details
 
@@ -79,13 +85,35 @@ Konsolidierte Version per Konsent-Verfahren integrieren.
 
 **Verpflegung:** Vegetarische Option ist bestellt.
 
-### 15:30 · IT-Management verorten
+### 15:30 · Bestandsaufnahme
+
+Wo stehen wir heute? Bestand sichten, nicht bewerten.
+
+**Raum:** Raum 1
+
+**Gruppengröße:** 5
+
+**Rückmeldung ins Plenum:** Kurz im Plenum
+
+### 16:15 · Zielbild skizzieren
+
+**Raum:** Raum 1
+
+### 15:30 · Prozesslandkarte
+
+**Raum:** Raum 2
+
+**Gruppengröße:** 4
+
+**Rückmeldung ins Plenum:** Galerierundgang
+
+### 17:00 · IT-Management verorten
 
 Wo auf dem Zielbild ist das IT-Management zu verorten?
 
 **Sozialform:** Kleingruppen
 
-### 16:30 · Was sind die nächsten großen Fragen?
+### 18:00 · Was sind die nächsten großen Fragen?
 
 Wie kommen wir von einem High-Level-Zielbild zu einem differenzierten Zielbild?
 
@@ -95,11 +123,11 @@ Wie kommen wir von einem High-Level-Zielbild zu einem differenzierten Zielbild?
 - Projektlogik
 - Governance
 
-### 17:00 · Nächste Schritte
+### 18:30 · Nächste Schritte
 
 Wer macht was bis wann?
 
-### 17:15 · Check-out
+### 18:45 · Check-out
 
 Ein Wort zum Tag, Blitzlichtrunde.
 
@@ -116,12 +144,12 @@ exports[`renderDayMarkdown > renders the outline flavour 1`] = `
 title: "Design Sprint Kickoff"
 date: 2026-09-15
 tags: ["design-sprint", "acme"]
-duration: 4h 30m
+duration: 6h
 ---
 
 # Design Sprint Kickoff
 
-> Tag 1 · 2026-09-15 · 13:00–17:30 · 3h 45m Inhalt, 1h 15m Pausen
+> Tag 1 · 2026-09-15 · 13:00–19:00 · 5h 15m Inhalt, 1h 15m Pausen
 
 ## Ankommen & Rahmen
 *13:00 · 35m*
@@ -184,17 +212,51 @@ Konsolidierte Version per Konsent-Verfahren integrieren.
 
 **Verpflegung:** Vegetarische Option ist bestellt.
 
-### 15:30 · IT-Management verorten
+## Vertiefung in drei Räumen
+*15:30 · 1h 30m · 2 Stränge, parallel*
+
+### A · Datenmodell
+*15:30 · 1h 30m*
+
+#### 15:30 · Bestandsaufnahme
+\`45m\` · Breakout-Session
+
+Wo stehen wir heute? Bestand sichten, nicht bewerten.
+
+**Raum:** Raum 1
+
+**Gruppengröße:** 5
+
+**Rückmeldung ins Plenum:** Kurz im Plenum
+
+#### 16:15 · Zielbild skizzieren
+\`45m\` · Breakout-Session
+
+**Raum:** Raum 1
+
+### B · Prozesse
+*15:30 · 50m*
+
+#### 15:30 · Prozesslandkarte
+\`50m\` · Breakout-Session
+
+**Raum:** Raum 2
+
+**Gruppengröße:** 4
+
+**Rückmeldung ins Plenum:** Galerierundgang
+
+### 17:00 · IT-Management verorten
 \`45m\` · Gruppenarbeit
 
 Wo auf dem Zielbild ist das IT-Management zu verorten?
 
 **Sozialform:** Kleingruppen
 
-### 16:15 · Kaffeepause
+### 17:45 · Kaffeepause
 \`15m\` · Pause
 
-### 16:30 · Was sind die nächsten großen Fragen?
+### 18:00 · Was sind die nächsten großen Fragen?
 \`30m\` · Plenumsdiskussion
 
 Wie kommen wir von einem High-Level-Zielbild zu einem differenzierten Zielbild?
@@ -205,12 +267,12 @@ Wie kommen wir von einem High-Level-Zielbild zu einem differenzierten Zielbild?
 - Projektlogik
 - Governance
 
-### 17:00 · Nächste Schritte
+### 18:30 · Nächste Schritte
 \`15m\` · Nächste Schritte
 
 Wer macht was bis wann?
 
-### 17:15 · Check-out
+### 18:45 · Check-out
 \`15m\` · Check-out
 
 Ein Wort zum Tag, Blitzlichtrunde.
@@ -230,7 +292,7 @@ dates: ["2026-10-05", "2026-10-06"]
 folder: "Kunden / Acme"
 tags: ["design-sprint", "acme"]
 days: 2
-duration: 9h
+duration: 12h
 ---
 
 # Design Sprint Kickoff
@@ -239,7 +301,7 @@ duration: 9h
 
 ## Auftakt
 
-> Auftakt · 2026-10-05 · 13:00–17:30 · 3h 45m Inhalt, 1h 15m Pausen
+> Auftakt · 2026-10-05 · 13:00–19:00 · 5h 15m Inhalt, 1h 15m Pausen
 
 | Zeit | Dauer | Block | Info |
 | --- | --- | --- | --- |
@@ -252,11 +314,17 @@ duration: 9h
 | 14:20 | 30m | ↳ Spannungsfelder sammeln | Gruppenarbeit |
 | 14:50 | 10m | ↳ Einwandintegration | Entscheidung / Abstimmung |
 | 14:30 🔒 | 1h | Mittagessen | Mittagessen · ⚠ Überschneidung |
-| 15:30 | 45m | IT-Management verorten | Gruppenarbeit |
-| 16:15 | 15m | Kaffeepause | Pause |
-| 16:30 | 30m | Was sind die nächsten großen Fragen? | Plenumsdiskussion |
-| 17:00 | 15m | Nächste Schritte | Nächste Schritte |
-| 17:15 | 15m | Check-out | Check-out |
+| 15:30 | 1h30m | **Vertiefung in drei Räumen** | 2 Stränge · parallel |
+| 15:30 | 1h30m | ↳ **A · Datenmodell** | Strang 1 von 2 · 2 Blöcke |
+| 15:30 | 45m | ↳↳ Bestandsaufnahme | Breakout-Session |
+| 16:15 | 45m | ↳↳ Zielbild skizzieren | Breakout-Session |
+| 15:30 | 50m | ↳ **B · Prozesse** | Strang 2 von 2 · 1 Block |
+| 15:30 | 50m | ↳↳ Prozesslandkarte | Breakout-Session |
+| 17:00 | 45m | IT-Management verorten | Gruppenarbeit |
+| 17:45 | 15m | Kaffeepause | Pause |
+| 18:00 | 30m | Was sind die nächsten großen Fragen? | Plenumsdiskussion |
+| 18:30 | 15m | Nächste Schritte | Nächste Schritte |
+| 18:45 | 15m | Check-out | Check-out |
 
 ### Details
 
@@ -308,13 +376,35 @@ Konsolidierte Version per Konsent-Verfahren integrieren.
 
 **Verpflegung:** Vegetarische Option ist bestellt.
 
-#### 15:30 · IT-Management verorten
+#### 15:30 · Bestandsaufnahme
+
+Wo stehen wir heute? Bestand sichten, nicht bewerten.
+
+**Raum:** Raum 1
+
+**Gruppengröße:** 5
+
+**Rückmeldung ins Plenum:** Kurz im Plenum
+
+#### 16:15 · Zielbild skizzieren
+
+**Raum:** Raum 1
+
+#### 15:30 · Prozesslandkarte
+
+**Raum:** Raum 2
+
+**Gruppengröße:** 4
+
+**Rückmeldung ins Plenum:** Galerierundgang
+
+#### 17:00 · IT-Management verorten
 
 Wo auf dem Zielbild ist das IT-Management zu verorten?
 
 **Sozialform:** Kleingruppen
 
-#### 16:30 · Was sind die nächsten großen Fragen?
+#### 18:00 · Was sind die nächsten großen Fragen?
 
 Wie kommen wir von einem High-Level-Zielbild zu einem differenzierten Zielbild?
 
@@ -324,11 +414,11 @@ Wie kommen wir von einem High-Level-Zielbild zu einem differenzierten Zielbild?
 - Projektlogik
 - Governance
 
-#### 17:00 · Nächste Schritte
+#### 18:30 · Nächste Schritte
 
 Wer macht was bis wann?
 
-#### 17:15 · Check-out
+#### 18:45 · Check-out
 
 Ein Wort zum Tag, Blitzlichtrunde.
 
@@ -336,7 +426,7 @@ Ein Wort zum Tag, Blitzlichtrunde.
 
 ## Vertiefung
 
-> Vertiefung · 2026-10-06 · 13:00–17:30 · 3h 45m Inhalt, 1h 15m Pausen
+> Vertiefung · 2026-10-06 · 13:00–19:00 · 5h 15m Inhalt, 1h 15m Pausen
 
 | Zeit | Dauer | Block | Info |
 | --- | --- | --- | --- |
@@ -349,11 +439,17 @@ Ein Wort zum Tag, Blitzlichtrunde.
 | 14:20 | 30m | ↳ Spannungsfelder sammeln | Gruppenarbeit |
 | 14:50 | 10m | ↳ Einwandintegration | Entscheidung / Abstimmung |
 | 14:30 🔒 | 1h | Mittagessen | Mittagessen · ⚠ Überschneidung |
-| 15:30 | 45m | IT-Management verorten | Gruppenarbeit |
-| 16:15 | 15m | Kaffeepause | Pause |
-| 16:30 | 30m | Was sind die nächsten großen Fragen? | Plenumsdiskussion |
-| 17:00 | 15m | Nächste Schritte | Nächste Schritte |
-| 17:15 | 15m | Check-out | Check-out |
+| 15:30 | 1h30m | **Vertiefung in drei Räumen** | 2 Stränge · parallel |
+| 15:30 | 1h30m | ↳ **A · Datenmodell** | Strang 1 von 2 · 2 Blöcke |
+| 15:30 | 45m | ↳↳ Bestandsaufnahme | Breakout-Session |
+| 16:15 | 45m | ↳↳ Zielbild skizzieren | Breakout-Session |
+| 15:30 | 50m | ↳ **B · Prozesse** | Strang 2 von 2 · 1 Block |
+| 15:30 | 50m | ↳↳ Prozesslandkarte | Breakout-Session |
+| 17:00 | 45m | IT-Management verorten | Gruppenarbeit |
+| 17:45 | 15m | Kaffeepause | Pause |
+| 18:00 | 30m | Was sind die nächsten großen Fragen? | Plenumsdiskussion |
+| 18:30 | 15m | Nächste Schritte | Nächste Schritte |
+| 18:45 | 15m | Check-out | Check-out |
 
 ### Details
 
@@ -405,13 +501,35 @@ Konsolidierte Version per Konsent-Verfahren integrieren.
 
 **Verpflegung:** Vegetarische Option ist bestellt.
 
-#### 15:30 · IT-Management verorten
+#### 15:30 · Bestandsaufnahme
+
+Wo stehen wir heute? Bestand sichten, nicht bewerten.
+
+**Raum:** Raum 1
+
+**Gruppengröße:** 5
+
+**Rückmeldung ins Plenum:** Kurz im Plenum
+
+#### 16:15 · Zielbild skizzieren
+
+**Raum:** Raum 1
+
+#### 15:30 · Prozesslandkarte
+
+**Raum:** Raum 2
+
+**Gruppengröße:** 4
+
+**Rückmeldung ins Plenum:** Galerierundgang
+
+#### 17:00 · IT-Management verorten
 
 Wo auf dem Zielbild ist das IT-Management zu verorten?
 
 **Sozialform:** Kleingruppen
 
-#### 16:30 · Was sind die nächsten großen Fragen?
+#### 18:00 · Was sind die nächsten großen Fragen?
 
 Wie kommen wir von einem High-Level-Zielbild zu einem differenzierten Zielbild?
 
@@ -421,11 +539,11 @@ Wie kommen wir von einem High-Level-Zielbild zu einem differenzierten Zielbild?
 - Projektlogik
 - Governance
 
-#### 17:00 · Nächste Schritte
+#### 18:30 · Nächste Schritte
 
 Wer macht was bis wann?
 
-#### 17:15 · Check-out
+#### 18:45 · Check-out
 
 Ein Wort zum Tag, Blitzlichtrunde.
 

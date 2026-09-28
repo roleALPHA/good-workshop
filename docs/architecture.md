@@ -503,6 +503,13 @@ itself a cluster, so a model reads the structure back off `mode` and `parentId` 
 a breakout rather than on one of its strands, a pin on a strand — are refused with the next move
 named in the message.
 
+There is a block type for the work inside a strand — `breakout_session`, carrying the room, the
+group size and how the group reports back. Those fields sit on the BLOCK rather than on the
+strand, and that is a decision rather than an omission: a strand is a `cluster`, and a cluster
+has a title, a colour and a pin and nothing else. Giving containers fields would mean a second,
+parallel type system — its own validation, its own localisation, its own rendering — for the
+sake of one field. The room is written where it is declared.
+
 Its counterpart for an agenda that already exists is `update_modules`: the fields of many blocks
 and clusters of one day in one call, ids unchanged. It follows the same rule — every entry is
 checked against the day before any is written, and the error names each one (`updates[2]`).

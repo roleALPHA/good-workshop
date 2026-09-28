@@ -39,28 +39,53 @@ function agendaItems() {
     ...(m.pinnedStartMinute === null ? {} : { pinnedStartMinute: m.pinnedStartMinute }),
   })
 
-  // Day-level blocks and clusters, in the order the fixture gives them.
+  const childrenOf = (clusterId: string) =>
+    doc.modules
+      .filter((m) => m.clusterId === clusterId)
+      .sort((a, b) => a.order - b.order)
+      .map((m) => {
+        const { kind: _kind, ...child } = asModule(m)
+        return child
+      })
+
+  // Day-level blocks and clusters, in the order the fixture gives them. A
+  // strand is a cluster with a parent and belongs to its breakout, not here.
   const ordered = [
-    ...doc.clusters.map((c) => ({ order: c.order, cluster: c })),
+    ...doc.clusters
+      .filter((c) => c.parentClusterId === null)
+      .map((c) => ({ order: c.order, cluster: c })),
     ...doc.modules.filter((m) => m.clusterId === null).map((m) => ({ order: m.order, module: m })),
   ].sort((a, b) => a.order - b.order)
 
-  return ordered.map((entry) =>
-    'cluster' in entry
-      ? {
-          kind: 'cluster' as const,
-          title: entry.cluster.title,
-          color: entry.cluster.color ?? undefined,
-          children: doc.modules
-            .filter((m) => m.clusterId === entry.cluster.id)
-            .sort((a, b) => a.order - b.order)
-            .map((m) => {
-              const { kind: _kind, ...child } = asModule(m)
-              return child
-            }),
-        }
-      : asModule(entry.module),
-  )
+  return ordered.map((entry) => {
+    if (!('cluster' in entry)) return asModule(entry.module)
+
+    // The fixture carries a breakout, so every e2e run writes the newer
+    // apply_agenda shape over the real HTTP path -- the best regression cover
+    // that schema can get.
+    if (entry.cluster.mode === 'parallel') {
+      return {
+        kind: 'breakout' as const,
+        title: entry.cluster.title,
+        color: entry.cluster.color ?? undefined,
+        children: doc.clusters
+          .filter((c) => c.parentClusterId === entry.cluster.id)
+          .sort((a, b) => a.order - b.order)
+          .map((strand) => ({
+            title: strand.title,
+            color: strand.color ?? undefined,
+            children: childrenOf(strand.id),
+          })),
+      }
+    }
+
+    return {
+      kind: 'cluster' as const,
+      title: entry.cluster.title,
+      color: entry.cluster.color ?? undefined,
+      children: childrenOf(entry.cluster.id),
+    }
+  })
 }
 
 /**

@@ -302,7 +302,8 @@ declare const messages: {
       "trackDeleteLabel": "Strang „{title}“ und die {count, plural, one {# Block} other {# Blöcke}} darin löschen",
       "trackDeleteHint": "{count, plural, =0 {Entfernt den Strang.} one {Entfernt den Strang und den # Block darin.} other {Entfernt den Strang und die # Blöcke darin.}}",
       "emptyTrack": "Noch kein Block.",
-      "addBlockToTrack": "Block in {title} hinzufügen"
+      "addBlockToTrack": "Block in {title} hinzufügen",
+      "addTrackTo": "Strang zu {title} hinzufügen"
     }
   },
   "auth": {
@@ -579,7 +580,10 @@ declare const messages: {
     "split": "{content} Inhalt, {breaks} Pausen",
     "yes": "ja",
     "no": "nein",
-    "responsible": "Verantwortlich"
+    "responsible": "Verantwortlich",
+    "parallel": "parallel",
+    "strandCount": "{count, plural, one {# Strang} other {# Stränge}}",
+    "strandOf": "Strang {n} von {total}"
   },
   "library": {
     "allWorkshops": "Alle Workshops",

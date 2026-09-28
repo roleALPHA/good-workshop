@@ -299,7 +299,8 @@
       "trackDeleteLabel": "Eliminar el grupo «{title}» y {count, plural, one {el # bloque} many {los # bloques} other {los # bloques}} que contiene",
       "trackDeleteHint": "{count, plural, =0 {Elimina el grupo.} one {Elimina el grupo y el # bloque que contiene.} many {Elimina el grupo y los # bloques que contiene.} other {Elimina el grupo y los # bloques que contiene.}}",
       "emptyTrack": "Aún no hay ningún bloque.",
-      "addBlockToTrack": "Añadir bloque a {title}"
+      "addBlockToTrack": "Añadir bloque a {title}",
+      "addTrackTo": "Añadir grupo a {title}"
     }
   },
   "auth": {
@@ -576,7 +577,10 @@
     "split": "{content} de contenido, {breaks} de pausas",
     "yes": "sí",
     "no": "no",
-    "responsible": "Responsable"
+    "responsible": "Responsable",
+    "parallel": "en paralelo",
+    "strandCount": "{count, plural, one {# grupo} many {# grupos} other {# grupos}}",
+    "strandOf": "Grupo {n} de {total}"
   },
   "library": {
     "allWorkshops": "Todos los talleres",

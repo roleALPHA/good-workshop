@@ -98,8 +98,25 @@
     "question": {
       "title": "Pregunta guía"
     },
+    "report_back": {
+      "title": "Puesta en común",
+      "enum": {
+        "none": "Ninguna",
+        "plenary_short": "Breve en plenario",
+        "gallery_walk": "Paseo de galería",
+        "written": "Por escrito"
+      }
+    },
+    "room": {
+      "title": "Sala",
+      "help": "Dónde trabaja este grupo: la sala, la mesa, el enlace"
+    },
     "room_setup": {
       "title": "Disposición de la sala"
+    },
+    "self_selection": {
+      "title": "Elección libre del grupo",
+      "help": "Las personas eligen en lugar de ser asignadas"
     },
     "slides_url": {
       "title": "Diapositivas"
@@ -190,6 +207,10 @@
           "title": "Pregunta de reflexión"
         }
       }
+    },
+    "breakout_session": {
+      "name": "Sesión en grupo paralelo",
+      "description": "Un grupo pequeño trabaja en su propia sala, al mismo tiempo que los demás."
     }
   }
 }

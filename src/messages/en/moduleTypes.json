@@ -98,8 +98,25 @@
     "question": {
       "title": "Guiding question"
     },
+    "report_back": {
+      "title": "Report back",
+      "enum": {
+        "none": "None",
+        "plenary_short": "Short in plenary",
+        "gallery_walk": "Gallery walk",
+        "written": "Written"
+      }
+    },
+    "room": {
+      "title": "Room",
+      "help": "Where this group works -- the room, the table, the breakout link"
+    },
     "room_setup": {
       "title": "Room setup"
+    },
+    "self_selection": {
+      "title": "Free choice of strand",
+      "help": "Participants pick for themselves rather than being assigned"
     },
     "slides_url": {
       "title": "Slides"
@@ -190,6 +207,10 @@
           "title": "Reflection question"
         }
       }
+    },
+    "breakout_session": {
+      "name": "Breakout session",
+      "description": "A small group works in its own room, at the same time as the others."
     }
   }
 }

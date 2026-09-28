@@ -41,7 +41,12 @@ test.describe('breakouts', () => {
     // Inline, never a dialog -- docs/ui-conventions.md reserves those for
     // confirming the irreversible.
     await expect(page.getByRole('dialog')).toHaveCount(0)
-    await expect(page.getByLabel('Name des Breakouts', { exact: true })).toBeFocused()
+    // The day already carries a breakout from the fixture, so the field is
+    // picked by its value rather than by its label -- the label is the same on
+    // every breakout, which is exactly what makes it a label.
+    await expect(
+      page.getByLabel('Name des Breakouts', { exact: true }).filter({ hasText: 'Neuer Breakout' }),
+    ).toBeFocused()
   })
 
   test('puts the strands side by side on a desktop', async ({ page }) => {
@@ -60,7 +65,7 @@ test.describe('breakouts', () => {
 
   test('adds a third strand from the raster itself', async ({ page }) => {
     await addBreakout(page)
-    await page.getByRole('button', { name: 'Strang hinzufügen' }).click()
+    await page.getByRole('button', { name: 'Strang zu Neuer Breakout hinzufügen' }).click()
     await expect(group(page, /Neuer Strang 3/)).toBeVisible()
   })
 

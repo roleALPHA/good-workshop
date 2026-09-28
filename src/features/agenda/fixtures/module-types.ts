@@ -57,6 +57,15 @@ export const BUILTIN_MODULE_TYPES: ModuleTypeDto[] = [
     countsAsContent: true,
   },
   {
+    id: 'mt-breakout-session',
+    key: 'breakout_session',
+    name: 'Breakout-Session',
+    color: 'teal',
+    icon: 'users-round',
+    defaultDurationMinutes: 30,
+    countsAsContent: true,
+  },
+  {
     id: 'mt-exercise',
     key: 'exercise',
     name: 'Übung',

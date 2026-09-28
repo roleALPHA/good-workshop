@@ -299,7 +299,8 @@
       "trackDeleteLabel": "Supprimer le volet « {title} » et {count, plural, one {le # bloc} many {les # blocs} other {les # blocs}} qu’il contient",
       "trackDeleteHint": "{count, plural, =0 {Supprime le volet.} one {Supprime le volet et le # bloc qu’il contient.} many {Supprime le volet et les # blocs qu’il contient.} other {Supprime le volet et les # blocs qu’il contient.}}",
       "emptyTrack": "Aucun bloc pour l’instant.",
-      "addBlockToTrack": "Ajouter un bloc à {title}"
+      "addBlockToTrack": "Ajouter un bloc à {title}",
+      "addTrackTo": "Ajouter un volet à {title}"
     }
   },
   "auth": {
@@ -576,7 +577,10 @@
     "split": "{content} de contenu, {breaks} de pauses",
     "yes": "oui",
     "no": "non",
-    "responsible": "Responsable"
+    "responsible": "Responsable",
+    "parallel": "en parallèle",
+    "strandCount": "{count, plural, one {# volet} many {# volets} other {# volets}}",
+    "strandOf": "Volet {n} sur {total}"
   },
   "library": {
     "allWorkshops": "Tous les ateliers",

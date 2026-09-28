@@ -153,6 +153,11 @@ export function BreakoutRow({
           <button
             type="button"
             onClick={editing.onAddTrack}
+            // Named after its breakout, like the strand's own add button: with
+            // two breakouts on a day, three buttons all called "add strand"
+            // are one repeated thing to a screen reader rather than three
+            // different ones.
+            aria-label={t('breakout.addTrackTo', { title: cluster.title })}
             // The last cell of the grid, where a new column would appear. The
             // raster explains itself that way, instead of a button somewhere
             // above it explaining the raster.
