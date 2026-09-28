@@ -53,6 +53,91 @@ describe('the inline description field', () => {
   })
 })
 
+describe('the inline title field', () => {
+  it('grows with a title too long for one line', async () => {
+    const user = userEvent.setup()
+    const height = vi
+      .spyOn(HTMLTextAreaElement.prototype, 'scrollHeight', 'get')
+      .mockReturnValue(240)
+
+    render(<TitleInput value="Check-in" onCommit={() => {}} />)
+
+    const field = screen.getByRole('textbox', { name: 'Titel' })
+    expect(field).toHaveAttribute('rows', '1')
+
+    await user.type(field, ' und Ankommen im Raum, ausführlich')
+    expect(field).toHaveStyle({ height: '240px' })
+
+    height.mockRestore()
+  })
+
+  it('commits on Enter without putting a line break into the title', async () => {
+    const user = userEvent.setup()
+    const onCommit = vi.fn()
+    render(<TitleInput value="Check-in" onCommit={onCommit} />)
+
+    const field = screen.getByRole('textbox', { name: 'Titel' })
+    await user.type(field, ' kurz{Enter}')
+
+    expect(onCommit).toHaveBeenCalledExactlyOnceWith('Check-in kurz')
+  })
+
+  it('treats Shift+Enter as a commit too, because a title has no second line', async () => {
+    const user = userEvent.setup()
+    const onCommit = vi.fn()
+    render(<TitleInput value="Check-in" onCommit={onCommit} />)
+
+    const field = screen.getByRole('textbox', { name: 'Titel' })
+    await user.type(field, ' kurz{Shift>}{Enter}{/Shift}')
+
+    expect(onCommit).toHaveBeenCalledExactlyOnceWith('Check-in kurz')
+  })
+
+  it('abandons an edit on Escape instead of committing it', async () => {
+    // blur() is delivered synchronously, so an Escape that only reset the
+    // draft still left onBlur reading the pre-Escape value out of its closure
+    // -- and storing exactly the edit somebody had just abandoned.
+    const user = userEvent.setup()
+    const onCommit = vi.fn()
+    render(<TitleInput value="Check-in" onCommit={onCommit} />)
+
+    const field = screen.getByRole('textbox', { name: 'Titel' })
+    await user.type(field, ' versehentlich{Escape}')
+
+    expect(onCommit).not.toHaveBeenCalled()
+    expect(field).toHaveValue('Check-in')
+  })
+
+  it('collapses a pasted line break into one line', async () => {
+    const user = userEvent.setup()
+    const onCommit = vi.fn()
+    render(<TitleInput value="Check-in" onCommit={onCommit} />)
+
+    const field = screen.getByRole('textbox', { name: 'Titel' })
+    await user.clear(field)
+    await user.click(field)
+    await user.paste('Ankommen\nund Rahmen')
+    await user.tab()
+
+    expect(onCommit).toHaveBeenCalledExactlyOnceWith('Ankommen und Rahmen')
+  })
+})
+
+describe('the inline duration field', () => {
+  it('abandons an edit on Escape instead of committing it', async () => {
+    // The same stale closure as the title field had, two functions down.
+    const user = userEvent.setup()
+    const onCommit = vi.fn()
+    render(<DurationInput minutes={15} onCommit={onCommit} />)
+
+    const field = screen.getByRole('textbox', { name: 'Dauer' })
+    await user.clear(field)
+    await user.type(field, '45{Escape}')
+
+    expect(onCommit).not.toHaveBeenCalled()
+  })
+})
+
 describe('the fields a screen reader announces', () => {
   it('returns an emptied name rather than storing a row without one', async () => {
     const onCommit = vi.fn()
