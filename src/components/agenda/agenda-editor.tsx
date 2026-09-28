@@ -191,7 +191,7 @@ export function AgendaEditor({
                   key={row.id}
                   id={row.id}
                   label={row.kind === 'cluster' ? row.cluster.title : row.module.title}
-                  nested={row.kind === 'module' && row.depth === 1}
+                  nested={row.kind === 'module' && row.depth > 0}
                 >
                   {(chrome) =>
                     row.kind === 'cluster' ? (
@@ -221,7 +221,7 @@ export function AgendaEditor({
                         module={row.module}
                         type={doc.moduleTypes[row.module.moduleTypeId]}
                         entry={entry}
-                        nested={row.depth === 1}
+                        nested={row.depth > 0}
                         people={people}
                         chrome={{ ...chrome, presence: presenceByBlock.get(row.id) }}
                         editing={{
@@ -291,7 +291,7 @@ export function AgendaEditor({
           // indent is padding inside the box rather than a margin around it.
           <div
             className="h-full w-full"
-            style={{ paddingLeft: projection?.depth === 1 ? INDENT_PX : 0 }}
+            style={{ paddingLeft: (projection?.depth ?? 0) * INDENT_PX }}
           >
             <div
               className={cn(

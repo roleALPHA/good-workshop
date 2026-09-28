@@ -137,7 +137,7 @@ export function registerDayReadTools(server: McpServer, { actor }: Ctx): void {
             const pinned = row.module.pinnedStartMinute === null ? '' : ' · pinned'
             const who = row.module.responsible.map((person) => person.name).join(', ')
             const responsible = who ? ` · responsible: ${who}` : ''
-            return `${index}. [${time}] ${row.depth === 1 ? '  ' : ''}${row.module.title} · ${formatDuration(row.module.durationMinutes)} · ${typeKey(row.module.moduleTypeId) ?? '?'}${pinned}${responsible} · id=${row.id}`
+            return `${index}. [${time}] ${'  '.repeat(row.depth)}${row.module.title} · ${formatDuration(row.module.durationMinutes)} · ${typeKey(row.module.moduleTypeId) ?? '?'}${pinned}${responsible} · id=${row.id}`
           })
 
           // Parked blocks are out of the running order, so flattenDay leaves

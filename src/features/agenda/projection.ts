@@ -1,4 +1,4 @@
-import type { FlatRow } from './flatten'
+import type { Depth, FlatRow } from './flatten'
 
 /**
  * Where a dragged row would land: at which depth, under which parent, at which
@@ -14,13 +14,18 @@ import type { FlatRow } from './flatten'
 export type ProjectionRow = {
   id: string
   kind: 'cluster' | 'module'
-  depth: 0 | 1
+  /**
+   * The document can hold three levels -- day, breakout, strand -- so the type
+   * says three. What this function LETS a drag reach is a separate question,
+   * and today the clamps below still answer it with two.
+   */
+  depth: Depth
   /** For a module inside a cluster: that cluster's id. */
   parentId: string | null
 }
 
 export type Projection = {
-  depth: 0 | 1
+  depth: Depth
   parentId: string | null
   /** Index in the reordered list where the active row lands. */
   index: number
@@ -121,7 +126,7 @@ export function getProjection(
 function findAnchor(
   rows: ProjectionRow[],
   index: number,
-  depth: 0 | 1,
+  depth: Depth,
   parentId: string | null,
 ): string | null {
   for (let i = index - 1; i >= 0; i--) {
@@ -141,7 +146,7 @@ function findAnchor(
  * a recursive tree, a recursive schedule walk and a recursive export -- and the
  * product does not ask for it. Enforcing it here removes a whole class of bugs.
  */
-function maxDepthFor(active: ProjectionRow, previous: ProjectionRow | undefined): 0 | 1 {
+function maxDepthFor(active: ProjectionRow, previous: ProjectionRow | undefined): Depth {
   if (active.kind === 'cluster') return 0
   if (!previous) return 0
   // Below a cluster header: become its first child.
@@ -155,7 +160,7 @@ function maxDepthFor(active: ProjectionRow, previous: ProjectionRow | undefined)
  * between them would split the cluster, so the floor rises to the depth of
  * whatever follows.
  */
-function minDepthFor(active: ProjectionRow, next: ProjectionRow | undefined): 0 | 1 {
+function minDepthFor(active: ProjectionRow, next: ProjectionRow | undefined): Depth {
   if (active.kind === 'cluster') return 0
   if (!next) return 0
   return next.kind === 'module' ? next.depth : 0
@@ -171,7 +176,7 @@ function findParentId(rows: ProjectionRow[], index: number): string | null {
   return null
 }
 
-function clamp(value: number, min: 0 | 1, max: 0 | 1): 0 | 1 {
+function clamp(value: number, min: Depth, max: Depth): Depth {
   if (value <= min) return min
   if (value >= max) return max
   return value as 0 | 1

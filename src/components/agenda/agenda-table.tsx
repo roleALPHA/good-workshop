@@ -49,7 +49,7 @@ export function AgendaTable({
               module={row.module}
               type={doc.moduleTypes[row.module.moduleTypeId]}
               entry={entry}
-              nested={row.depth === 1}
+              nested={row.depth > 0}
               people={people}
             />
           )

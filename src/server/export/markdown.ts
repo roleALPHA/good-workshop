@@ -223,7 +223,7 @@ function renderTable(
     if (row.kind !== 'module') continue
 
     const type = day.moduleTypes[row.module.moduleTypeId]
-    const title = row.depth === 1 ? `↳ ${cell(row.module.title)}` : cell(row.module.title)
+    const title = `${'↳'.repeat(row.depth)}${row.depth > 0 ? ' ' : ''}${cell(row.module.title)}`
     const people = namesOf(row.module)
     const info = [
       people ? `${t('responsible')}: ${people}` : null,
