@@ -154,15 +154,22 @@ type Words = {
   moveTo: string
   description: string
   addResponsible: string
+  blockTitle: string
 }
 
 /**
  * The few interface words this file has to aim at, per language.
  *
- * "Titel" and "Dauer" are missing on purpose: those two inputs carry a
- * hard-coded German aria-label in every language (inline-inputs.tsx), so they
- * are found by the same word everywhere. That is a finding, not a convention --
- * noted here because this file is where it shows.
+ * `blockTitle` was left out once, back when that input really did carry a
+ * hard-coded German aria-label in every language. It does not any more --
+ * inline-inputs.tsx reads `t('blockTitle')` -- and the note saying otherwise
+ * outlived the code by long enough that three of the four languages had been
+ * failing silently: only German got pictures, because "Titel" happens to be the
+ * German word. Nothing caught it, because this file is skipped without
+ * GW_CAPTURE and therefore never runs in CI.
+ *
+ * So: every word this file aims at belongs here, and none of them is spelled
+ * out at the call site.
  */
 const WORDS: Record<string, Words> = {
   de: {
@@ -171,6 +178,7 @@ const WORDS: Record<string, Words> = {
     moveTo: 'Verschieben nach',
     description: 'Beschreibung',
     addResponsible: 'Verantwortliche Person hinzufügen',
+    blockTitle: 'Titel',
   },
   en: {
     newFolder: 'Folder',
@@ -178,6 +186,7 @@ const WORDS: Record<string, Words> = {
     moveTo: 'Move to',
     description: 'Description',
     addResponsible: 'Add a responsible person',
+    blockTitle: 'Title',
   },
   es: {
     newFolder: 'Carpeta',
@@ -185,6 +194,7 @@ const WORDS: Record<string, Words> = {
     moveTo: 'Mover a',
     description: 'Descripción',
     addResponsible: 'Añadir una persona responsable',
+    blockTitle: 'Título',
   },
   fr: {
     newFolder: 'Dossier',
@@ -192,6 +202,7 @@ const WORDS: Record<string, Words> = {
     moveTo: 'Déplacer vers',
     description: 'Description',
     addResponsible: 'Ajouter une personne responsable',
+    blockTitle: 'Titre',
   },
 }
 
@@ -207,7 +218,7 @@ async function furnish(page: Page, content: Content, words: Words) {
     if (!(await row.count())) continue
 
     if (block.title !== block.from) {
-      await row.getByLabel('Titel').first().fill(block.title)
+      await row.getByLabel(words.blockTitle).first().fill(block.title)
       await page.keyboard.press('Tab')
     }
 
@@ -322,7 +333,14 @@ for (const [locale, content] of Object.entries(CONTENT)) {
             .getByRole('button', { name: asPattern(workshop) })
             .first()
             .click()
-          await page.getByLabel(words.moveTo).last().selectOption({ label: folder })
+          // By role, not by label alone: getByLabel matches a substring, and in
+          // Spanish "Mover a" is a prefix of the row's "Mover … a la papelera"
+          // button -- so `.last()` picked the bin instead of the select, and
+          // only Spanish noticed. See the note on this trap in CLAUDE.md.
+          await page
+            .getByRole('combobox', { name: words.moveTo })
+            .last()
+            .selectOption({ label: folder })
           await expect(page.getByText(folder).first()).toBeVisible()
         }
       }
