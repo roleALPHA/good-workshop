@@ -1,7 +1,8 @@
 import * as Y from 'yjs'
 import { keyAtEnd, placeAfter, sortByPosition, type Ordered } from '@/domain/agenda/ordering'
 import { normalizeResponsible, type Responsible } from '@/domain/agenda/responsible'
-import { blocksOf, dayOf } from './doc'
+import type { ClusterMode } from '@/domain/agenda/types'
+import { blocksOf, dayOf, modeOf, type BlockKind } from './doc'
 
 /**
  * Mutations on the shared document.
@@ -62,6 +63,61 @@ export type ModuleSnapshot = {
 export type NewClusterBlock = {
   title: string
   color?: string | null
+  /** 'parallel' makes it a breakout: it holds strands that run at the same time. */
+  mode?: ClusterMode
+  /** The breakout this becomes a strand of. A breakout itself sits on the day. */
+  parentId?: string | null
+}
+
+export type NewBreakout = {
+  title: string
+  color?: string | null
+  /** The strands, in the order they stand next to each other. */
+  strands: { id: string; title: string }[]
+}
+
+/**
+ * Which parent a block may actually have.
+ *
+ * The shape is two storeys and not arbitrarily deep: a breakout holds strands,
+ * a strand holds blocks, a block holds nothing. Clamped here means no caller --
+ * a drag, a keystroke, a model over MCP -- has to remember that, and the
+ * materialiser clamps rather than repairs.
+ */
+function allowedParent(
+  blocks: Y.Map<Y.Map<unknown>>,
+  moving: { id: string; kind: BlockKind; mode: ClusterMode },
+  wanted: string | null,
+): { ok: boolean; parentId: string | null } {
+  if (wanted === null) return { ok: true, parentId: null }
+  if (wanted === moving.id) return { ok: false, parentId: null }
+
+  const parent = blocks.get(wanted)
+  if (!parent || parent.get('kind') !== 'cluster') return { ok: false, parentId: null }
+
+  if (moving.kind === 'cluster') {
+    // Only a breakout holds sections, and only a sequential one can be held.
+    const ok = modeOf(parent) === 'parallel' && moving.mode === 'sequential'
+    return ok ? { ok: true, parentId: wanted } : { ok: false, parentId: null }
+  }
+
+  // A block goes into a section or into a strand -- never straight into a
+  // breakout, which holds strands and nothing else.
+  return modeOf(parent) === 'sequential'
+    ? { ok: true, parentId: wanted }
+    : { ok: false, parentId: null }
+}
+
+/**
+ * What a block in the document says it is.
+ *
+ * Taken as plain values rather than read off the Y.Map at the point of use,
+ * because a block being CREATED is not in the document yet and Yjs refuses to
+ * read an unintegrated type. One shape for both callers beats two rules.
+ */
+function describeBlock(block: Y.Map<unknown>, id: string) {
+  const kind: BlockKind = block.get('kind') === 'cluster' ? 'cluster' : 'module'
+  return { id, kind, mode: kind === 'cluster' ? modeOf(block) : ('sequential' as ClusterMode) }
 }
 
 export function patchBlock(doc: Y.Doc, blockId: string, patch: BlockPatch): boolean {
@@ -131,21 +187,51 @@ export function parkedModules(doc: Y.Doc): (ModuleSnapshot & { id: string })[] {
   return sortByPosition(parked).map(({ id }) => ({ id, ...snapshotModule(doc, id)! }))
 }
 
-/** Appends a cluster to the end of the day. Clusters only ever live at day level. */
+/**
+ * Appends a cluster: a section on the day, a breakout, or a strand of one.
+ *
+ * `mode` is always written, even 'sequential'. Absence stays valid for
+ * documents from before breakouts; new ones say what they are.
+ */
 export function addClusterBlock(doc: Y.Doc, id: string, input: NewClusterBlock): void {
   const blocks = blocksOf(doc)
+  const mode = input.mode ?? 'sequential'
 
   doc.transact(() => {
-    blocks.set(
-      id,
-      buildBlock({
-        kind: 'cluster',
-        parentId: null,
-        position: keyAtEnd(siblings(blocks, null)),
-        title: input.title,
-        color: input.color ?? null,
-      }),
-    )
+    const block = buildBlock({
+      kind: 'cluster',
+      parentId: null,
+      position: 'a0',
+      title: input.title,
+      color: input.color ?? null,
+      mode,
+    })
+    // Asked through the same gate a move uses, so "where may this live" has one
+    // answer and not two: a breakout is clamped back to the day, a strand keeps
+    // the breakout it names.
+    const target = allowedParent(blocks, { id, kind: 'cluster', mode }, input.parentId ?? null)
+    block.set('parentId', target.parentId)
+    block.set('position', keyAtEnd(siblings(blocks, target.parentId)))
+    blocks.set(id, block)
+  })
+}
+
+/**
+ * A breakout with its strands, in one transaction.
+ *
+ * "Add a breakout" is one act, not three. Written as three the people sharing
+ * the room would see the intermediate states flicker past -- an empty breakout,
+ * then one strand, then two -- and an interrupted write would leave a breakout
+ * that holds nothing.
+ */
+export function addBreakoutBlock(doc: Y.Doc, id: string, input: NewBreakout): void {
+  // Nested transacts are folded into the outer one by Yjs, so the strands and
+  // their breakout reach everybody else as a single change.
+  doc.transact(() => {
+    addClusterBlock(doc, id, { title: input.title, color: input.color ?? null, mode: 'parallel' })
+    for (const strand of input.strands) {
+      addClusterBlock(doc, strand.id, { title: strand.title, mode: 'sequential', parentId: id })
+    }
   })
 }
 
@@ -162,18 +248,35 @@ export function removeBlock(doc: Y.Doc, blockId: string): number {
   const block = blocks.get(blockId)
   if (!block) return 0
 
-  const children: string[] = []
-  if (block.get('kind') === 'cluster') {
-    blocks.forEach((candidate, id) => {
-      if (((candidate.get('parentId') as string | null) ?? null) === blockId) children.push(id)
-    })
+  const childrenOf = new Map<string, string[]>()
+  blocks.forEach((candidate, id) => {
+    const parent = (candidate.get('parentId') as string | null) ?? null
+    if (parent === null) return
+    const bucket = childrenOf.get(parent)
+    if (bucket) bucket.push(id)
+    else childrenOf.set(parent, [id])
+  })
+
+  // Breadth-first with `seen`: a parent loop, which two clients writing the
+  // same document can produce in principle, must not become an endless loop
+  // here. Deleting a section is the last place one wants a frozen tab.
+  const doomed: string[] = []
+  const seen = new Set([blockId])
+  const queue = [blockId]
+  while (queue.length > 0) {
+    const id = queue.shift()!
+    doomed.push(id)
+    for (const child of childrenOf.get(id) ?? []) {
+      if (seen.has(child)) continue
+      seen.add(child)
+      queue.push(child)
+    }
   }
 
   doc.transact(() => {
-    for (const id of children) blocks.delete(id)
-    blocks.delete(blockId)
+    for (const id of doomed) blocks.delete(id)
   })
-  return children.length + 1
+  return doomed.length
 }
 
 /**
@@ -192,15 +295,16 @@ export function moveBlock(
   const moving = blocks.get(blockId)
   if (!moving) return false
 
-  // A cluster inside a cluster is not a shape this product has; clamping here
-  // means no caller has to remember that.
-  const target = moving.get('kind') === 'cluster' ? null : parentId
-  if (target !== null && !blocks.has(target)) return false
+  // Refused rather than silently clamped to the day. A cluster that quietly
+  // jumps somewhere nobody aimed at is exactly the haunted feeling this
+  // module's sibling warns about -- the caller gets to say something instead.
+  const target = allowedParent(blocks, describeBlock(moving, blockId), parentId)
+  if (!target.ok) return false
 
   doc.transact(() => {
-    const placement = placeAfter(siblings(blocks, target, blockId), afterId)
+    const placement = placeAfter(siblings(blocks, target.parentId, blockId), afterId)
     applyPlacement(blocks, moving, placement)
-    moving.set('parentId', target)
+    moving.set('parentId', target.parentId)
   })
   return true
 }

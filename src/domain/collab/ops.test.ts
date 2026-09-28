@@ -3,6 +3,7 @@ import * as Y from 'yjs'
 import { blocksOf, dayOf, seedFromDayDoc, toDayDoc } from './doc'
 import { createDemoDay } from '@/features/agenda/fixtures/day-fixture'
 import {
+  addBreakoutBlock,
   addClusterBlock,
   addModuleBlock,
   clearBlocks,
@@ -92,12 +93,101 @@ describe('moveBlock', () => {
     expect(moveBlock(emptyDay(), 'weg', null, null)).toBe(false)
   })
 
-  it('keeps a cluster at day level even when asked to nest it', () => {
+  it('refuses to put a section inside a section, and leaves it where it was', () => {
+    // Refused rather than quietly clamped to the day: a block that jumps
+    // somewhere nobody aimed at is worse than a move that does not happen, and
+    // the caller can now say so.
     const doc = emptyDay()
     addClusterBlock(doc, 'k1', { title: 'Eins' })
     addClusterBlock(doc, 'k2', { title: 'Zwei' })
-    expect(moveBlock(doc, 'k2', 'k1', null)).toBe(true)
+    expect(moveBlock(doc, 'k2', 'k1', null)).toBe(false)
     expect(blocksOf(doc).get('k2')!.get('parentId')).toBeNull()
+  })
+})
+
+describe('breakouts', () => {
+  const emptyBreakout = () => {
+    const doc = emptyDay()
+    addBreakoutBlock(doc, 'bo', {
+      title: 'Drei Räume',
+      strands: [
+        { id: 's1', title: 'A' },
+        { id: 's2', title: 'B' },
+      ],
+    })
+    return doc
+  }
+
+  it('creates a breakout with its strands in one go', () => {
+    const blocks = blocksOf(emptyBreakout())
+    expect(blocks.get('bo')!.get('mode')).toBe('parallel')
+    expect(blocks.get('bo')!.get('parentId')).toBeNull()
+    expect(blocks.get('s1')!.get('mode')).toBe('sequential')
+    expect(blocks.get('s1')!.get('parentId')).toBe('bo')
+    expect(blocks.get('s2')!.get('parentId')).toBe('bo')
+  })
+
+  it('gives the strands their own key space, starting over inside the breakout', () => {
+    const blocks = blocksOf(emptyBreakout())
+    const first = String(blocks.get('s1')!.get('position'))
+    const second = String(blocks.get('s2')!.get('position'))
+    // Lexicographic, like the ORDER BY the server uses -- not numeric.
+    expect(first < second).toBe(true)
+  })
+
+  it('clamps a breakout back to the day when asked to nest it', () => {
+    const doc = emptyBreakout()
+    addClusterBlock(doc, 'inner', { title: 'Innen', mode: 'parallel', parentId: 'bo' })
+    expect(blocksOf(doc).get('inner')!.get('parentId')).toBeNull()
+  })
+
+  it('refuses to hang a block on the breakout itself', () => {
+    const doc = emptyBreakout()
+    addModuleBlock(doc, 'm', { moduleTypeId: 't', title: 'Block', durationMinutes: 15 })
+    expect(moveBlock(doc, 'm', 'bo', null)).toBe(false)
+    expect(blocksOf(doc).get('m')!.get('parentId')).toBeNull()
+  })
+
+  it('takes a block into a strand', () => {
+    const doc = emptyBreakout()
+    addModuleBlock(doc, 'm', { moduleTypeId: 't', title: 'Block', durationMinutes: 15 })
+    expect(moveBlock(doc, 'm', 's1', null)).toBe(true)
+    expect(blocksOf(doc).get('m')!.get('parentId')).toBe('s1')
+  })
+
+  it('moves a strand to another breakout, and out to the day', () => {
+    const doc = emptyBreakout()
+    addBreakoutBlock(doc, 'bo2', { title: 'Zweiter', strands: [] })
+    expect(moveBlock(doc, 's1', 'bo2', null)).toBe(true)
+    expect(blocksOf(doc).get('s1')!.get('parentId')).toBe('bo2')
+    expect(moveBlock(doc, 's1', null, null)).toBe(true)
+    expect(blocksOf(doc).get('s1')!.get('parentId')).toBeNull()
+  })
+
+  it('refuses to put a strand inside a strand', () => {
+    const doc = emptyBreakout()
+    expect(moveBlock(doc, 's2', 's1', null)).toBe(false)
+  })
+
+  it('deletes a breakout with its strands and everything in them', () => {
+    const doc = emptyBreakout()
+    addModuleBlock(doc, 'm', { moduleTypeId: 't', title: 'Block', durationMinutes: 15 })
+    moveBlock(doc, 'm', 's1', null)
+    // 1 breakout + 2 strands + 1 block
+    expect(removeBlock(doc, 'bo')).toBe(4)
+    expect(blocksOf(doc).size).toBe(0)
+  })
+
+  it('does not hang when two clusters point at each other', () => {
+    const doc = emptyDay()
+    addClusterBlock(doc, 'a', { title: 'A' })
+    addClusterBlock(doc, 'b', { title: 'B' })
+    const blocks = blocksOf(doc)
+    doc.transact(() => {
+      blocks.get('a')!.set('parentId', 'b')
+      blocks.get('b')!.set('parentId', 'a')
+    })
+    expect(removeBlock(doc, 'a')).toBe(2)
   })
 })
 
