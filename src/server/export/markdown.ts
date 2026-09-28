@@ -204,6 +204,9 @@ function renderTable(
   opts: Opts,
 ): string {
   const t = translator(opts.locale, 'export')
+  // Counted here rather than carried on FlatRow: it is a caption, and the row
+  // type should not grow a field for one.
+  const { strandIndex, strandTotal } = countStrands(rows)
   const lines = [
     `| ${t('columns.time')} | ${t('columns.duration')} | ${t('columns.block')} | ${t('columns.info')} |`,
     '| --- | --- | --- | --- |',
@@ -214,8 +217,19 @@ function renderTable(
     if (!entry) continue
 
     if (row.kind === 'cluster') {
+      // Repeated times in a table read as a mistake unless the document says
+      // why they repeat. Breaking the table apart was the alternative and is
+      // worse: this flavour exists to paste cleanly into Notion, where every
+      // table becomes a database of its own.
+      const info =
+        row.mode === 'parallel'
+          ? `${t('strandCount', { count: row.childCount })} · ${t('parallel')}`
+          : row.depth === 1
+            ? `${t('strandOf', { n: (strandIndex.get(row.id) ?? 0) + 1, total: strandTotal.get(row.parentId ?? '') ?? 0 })} · ${t('blockCount', { count: row.childCount })}`
+            : t('blockCount', { count: row.childCount })
+
       lines.push(
-        `| ${formatTime(entry.startMinute, opts.locale)} | ${formatDuration(entry.durationMinutes)} | **${cell(row.cluster.title)}** | ${t('blockCount', { count: row.childCount })} |`,
+        `| ${formatTime(entry.startMinute, opts.locale)} | ${formatDuration(entry.durationMinutes)} | ${'↳'.repeat(row.depth)}${row.depth > 0 ? ' ' : ''}**${cell(row.cluster.title)}** | ${info} |`,
       )
       continue
     }
@@ -253,10 +267,18 @@ function renderOutline(
     if (!entry) continue
 
     if (row.kind === 'cluster') {
+      // A strand gets a heading of its own, one below its breakout. Wikis and
+      // static generators build their table of contents from headings, and
+      // "which room am I in" is the question somebody jumps into the document
+      // with -- a strand that is not in the contents is one you have to hunt for.
+      const caption =
+        row.mode === 'parallel'
+          ? ` · ${translator(opts.locale, 'export')('strandCount', { count: row.childCount })}, ${translator(opts.locale, 'export')('parallel')}`
+          : ''
       lines.push(
         '',
-        `${h(opts, 2)} ${text(row.cluster.title)}`,
-        `*${formatTime(entry.startMinute, opts.locale)} · ${formatDuration(entry.durationMinutes, { spaced: true })}*`,
+        `${h(opts, 2 + row.depth)} ${text(row.cluster.title)}`,
+        `*${formatTime(entry.startMinute, opts.locale)} · ${formatDuration(entry.durationMinutes, { spaced: true })}${caption}*`,
       )
       continue
     }
@@ -265,7 +287,7 @@ function renderOutline(
     const type = day.moduleTypes[row.module.moduleTypeId]
     lines.push(
       '',
-      `${h(opts, 3)} ${formatTime(entry.startMinute, opts.locale)}${entry.pinned ? ' 🔒' : ''} · ${text(row.module.title)}`,
+      `${h(opts, row.depth === 2 ? 4 : 3)} ${formatTime(entry.startMinute, opts.locale)}${entry.pinned ? ' 🔒' : ''} · ${text(row.module.title)}`,
       `\`${formatDuration(entry.durationMinutes)}\`${type ? ` · ${type.name}` : ''}`,
     )
     const people = namesOf(row.module)
@@ -310,4 +332,25 @@ function contentSplit(day: DayDoc, schedule: Schedule, locale: Locale): string {
     content: formatDuration(content, { spaced: true }),
     breaks: formatDuration(breaks, { spaced: true }),
   })
+}
+
+/**
+ * Which strand of which breakout, for the captions.
+ *
+ * "Strand 2 of 3" is what turns three identical times in a table from a riddle
+ * into a statement -- without it the repetition looks like a bug in the export.
+ */
+function countStrands(rows: ReturnType<typeof flattenDay>): {
+  strandIndex: Map<string, number>
+  strandTotal: Map<string, number>
+} {
+  const strandIndex = new Map<string, number>()
+  const strandTotal = new Map<string, number>()
+  for (const row of rows) {
+    if (row.kind !== 'cluster' || row.depth !== 1 || row.parentId === null) continue
+    const seen = strandTotal.get(row.parentId) ?? 0
+    strandIndex.set(row.id, seen)
+    strandTotal.set(row.parentId, seen + 1)
+  }
+  return { strandIndex, strandTotal }
 }

@@ -659,6 +659,187 @@
     }
   },
   {
+    "key": "breakout_session",
+    "name": "Breakout-Session",
+    "description": "Eine Kleingruppe arbeitet parallel zu den anderen in ihrem eigenen Raum.",
+    "category": "activity",
+    "color": "teal",
+    "icon": "users-round",
+    "defaultDurationMinutes": 30,
+    "countsAsContent": true,
+    "jsonSchema": {
+      "$schema": "https://json-schema.org/draft/2020-12/schema",
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "description": {
+          "type": "object",
+          "properties": {
+            "format": {
+              "const": "tiptap-doc-v1"
+            },
+            "doc": {
+              "type": "object"
+            },
+            "text": {
+              "type": "string"
+            }
+          },
+          "required": ["format", "doc"],
+          "additionalProperties": false,
+          "title": "Beschreibung",
+          "x-gw": {
+            "group": "Inhalt",
+            "order": 1,
+            "cols": 12,
+            "widget": "richtext"
+          }
+        },
+        "task": {
+          "type": "object",
+          "properties": {
+            "format": {
+              "const": "tiptap-doc-v1"
+            },
+            "doc": {
+              "type": "object"
+            },
+            "text": {
+              "type": "string"
+            }
+          },
+          "required": ["format", "doc"],
+          "additionalProperties": false,
+          "title": "Arbeitsauftrag",
+          "x-gw": {
+            "group": "Inhalt",
+            "order": 2,
+            "cols": 12,
+            "widget": "richtext"
+          }
+        },
+        "participation": {
+          "type": "string",
+          "title": "Sozialform",
+          "enum": ["plenary", "small_groups", "pairs", "individual", "none"],
+          "x-gw": {
+            "group": "Inhalt",
+            "order": 3,
+            "cols": 6,
+            "widget": "select",
+            "export": "inline"
+          }
+        },
+        "room": {
+          "type": "string",
+          "title": "Raum",
+          "maxLength": 120,
+          "x-gw": {
+            "group": "Vorbereitung",
+            "order": 1,
+            "cols": 6,
+            "summary": true,
+            "help": "Wo diese Gruppe arbeitet — der Raum, der Tisch, der Breakout-Link"
+          }
+        },
+        "room_setup": {
+          "type": "string",
+          "title": "Raumaufbau",
+          "x-gw": {
+            "group": "Vorbereitung",
+            "order": 2,
+            "cols": 6
+          }
+        },
+        "materials": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          },
+          "title": "Material",
+          "x-gw": {
+            "group": "Vorbereitung",
+            "order": 3,
+            "cols": 12,
+            "widget": "tags",
+            "help": "Alles, was auf dem Tisch liegen muss",
+            "summary": true,
+            "export": "inline-list"
+          }
+        },
+        "group_size": {
+          "type": "integer",
+          "title": "Gruppengröße",
+          "minimum": 2,
+          "maximum": 20,
+          "x-gw": {
+            "group": "Ablauf",
+            "order": 1,
+            "cols": 4
+          }
+        },
+        "self_selection": {
+          "type": "boolean",
+          "title": "Freie Wahl des Strangs",
+          "x-gw": {
+            "group": "Ablauf",
+            "order": 2,
+            "cols": 4,
+            "widget": "checkbox",
+            "help": "Teilnehmende wählen selbst, statt zugeteilt zu werden"
+          }
+        },
+        "report_back": {
+          "type": "string",
+          "title": "Rückmeldung ins Plenum",
+          "enum": ["none", "plenary_short", "gallery_walk", "written"],
+          "x-gw": {
+            "group": "Ablauf",
+            "order": 3,
+            "cols": 4,
+            "widget": "select"
+          }
+        },
+        "deliverable": {
+          "type": "string",
+          "title": "Ergebnis",
+          "x-gw": {
+            "group": "Ablauf",
+            "order": 4,
+            "cols": 12,
+            "summary": true,
+            "export": "inline"
+          }
+        },
+        "facilitator_notes": {
+          "type": "object",
+          "properties": {
+            "format": {
+              "const": "tiptap-doc-v1"
+            },
+            "doc": {
+              "type": "object"
+            },
+            "text": {
+              "type": "string"
+            }
+          },
+          "required": ["format", "doc"],
+          "additionalProperties": false,
+          "title": "Moderationsnotizen",
+          "x-gw": {
+            "group": "Moderation",
+            "order": 1,
+            "cols": 12,
+            "widget": "richtext",
+            "private": true
+          },
+          "description": "Nur für dich sichtbar, nicht im Teilnehmer-Export."
+        }
+      }
+    }
+  },
+  {
     "key": "exercise",
     "name": "Übung",
     "description": "",

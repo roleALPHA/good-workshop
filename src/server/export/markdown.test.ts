@@ -164,3 +164,39 @@ describe('renderWorkshopMarkdown', () => {
     expect(markdown).not.toMatch(/^date: /m)
   })
 })
+
+describe('breakouts', () => {
+  const day = createDemoDay()
+
+  it('marks the strands of a breakout in the table', () => {
+    // Deliberately not a snapshot: these exact sentences are what turn three
+    // repeated times from a riddle into a statement, and a snapshot would let
+    // them drift silently.
+    const out = renderDayMarkdown(meta, day, { flavor: 'agenda' })
+    expect(out).toContain('↳↳ ')
+    expect(out).toContain('2 Stränge · parallel')
+    expect(out).toContain('Strang 2 von 2')
+  })
+
+  it('lets the day resume after the LONGEST strand, not the first', () => {
+    // Strand A is 90 minutes, strand B is 50. The block after the breakout
+    // starts at 17:00 -- the single assertion that makes a wrong aggregation
+    // visible in the export.
+    const out = renderDayMarkdown(meta, day, { flavor: 'agenda' })
+    expect(out).toContain('| 17:00 | 45m | IT-Management verorten')
+  })
+
+  it('gives a strand a heading one below its breakout', () => {
+    const out = renderDayMarkdown(meta, day, { flavor: 'outline' })
+    expect(out).toContain('## Vertiefung in drei Räumen')
+    expect(out).toContain('### A · Datenmodell')
+    expect(out).toContain('#### 15:30 · Bestandsaufnahme')
+  })
+
+  it('moves the whole breakout one level down in a workshop export', () => {
+    const out = renderWorkshopMarkdown(meta, [day], { flavor: 'outline' })
+    expect(out).toContain('### Vertiefung in drei Räumen')
+    expect(out).toContain('#### A · Datenmodell')
+    expect(out).toContain('##### 15:30 · Bestandsaufnahme')
+  })
+})

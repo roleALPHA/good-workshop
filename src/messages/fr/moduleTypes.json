@@ -98,8 +98,25 @@
     "question": {
       "title": "Question directrice"
     },
+    "report_back": {
+      "title": "Restitution en plénière",
+      "enum": {
+        "none": "Aucune",
+        "plenary_short": "Brève en plénière",
+        "gallery_walk": "Visite de la galerie",
+        "written": "Écrite"
+      }
+    },
+    "room": {
+      "title": "Salle",
+      "help": "Où ce groupe travaille : la salle, la table, le lien"
+    },
     "room_setup": {
       "title": "Disposition de la salle"
+    },
+    "self_selection": {
+      "title": "Choix libre du volet",
+      "help": "Les participants choisissent eux-mêmes au lieu d’être répartis"
     },
     "slides_url": {
       "title": "Diapositives"
@@ -190,6 +207,10 @@
           "title": "Question de réflexion"
         }
       }
+    },
+    "breakout_session": {
+      "name": "Session en sous-groupe",
+      "description": "Un sous-groupe travaille dans sa propre salle, en même temps que les autres."
     }
   }
 }

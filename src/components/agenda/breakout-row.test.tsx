@@ -128,7 +128,8 @@ describe('BreakoutRow', () => {
         <div />
       </BreakoutRow>,
     )
-    await userEvent.click(screen.getByRole('button', { name: 'Strang hinzufügen' }))
+    // Named after its breakout, so several on one screen are several things.
+    await userEvent.click(screen.getByRole('button', { name: 'Strang zu Drei Räume hinzufügen' }))
     expect(onAddTrack).toHaveBeenCalled()
   })
 })

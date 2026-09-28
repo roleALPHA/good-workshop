@@ -110,9 +110,11 @@ describe('the agenda as a whole', () => {
     expect(lunch).toHaveTextContent('14:30')
     expect(lunch).toHaveTextContent('Überschneidet den vorherigen Block um 30m')
 
-    // Nothing was auto-shortened: lunch runs its full hour and the block after
-    // it starts accordingly.
-    expect(block('IT-Management verorten')).toHaveTextContent('15:30')
+    // Nothing was auto-shortened: lunch runs its full hour and what comes after
+    // it starts accordingly -- which is the breakout.
+    expect(screen.getByRole('group', { name: /Vertiefung in drei Räumen/ })).toHaveTextContent(
+      '15:30',
+    )
   })
 
   it('derives a cluster duration from its children', () => {
@@ -129,8 +131,19 @@ describe('the agenda as a whole', () => {
 
     // The day is planned to 17:00 and the blocks add up past it.
     const end = screen.getByText('Ende', { exact: true }).parentElement
-    expect(end).toHaveTextContent('17:30')
-    expect(end).toHaveTextContent('30m über Plan')
+    expect(end).toHaveTextContent('19:00')
+    expect(end).toHaveTextContent('2h über Plan')
+  })
+
+  it('ends a breakout with its longest strand rather than the sum of them', () => {
+    renderReading()
+
+    // 90 minutes of strand A against 50 of strand B: the day carries on at 90,
+    // and the section says so rather than claiming 140.
+    const breakout = screen.getByRole('group', { name: /Vertiefung in drei Räumen/ })
+    expect(breakout).toHaveTextContent('2 Stränge, gleichzeitig')
+    expect(breakout).toHaveTextContent('längster Strang 1h 30m')
+    expect(block('IT-Management verorten')).toHaveTextContent('17:00')
   })
 
   it('labels the columns on a wide screen', () => {

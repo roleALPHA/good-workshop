@@ -299,7 +299,8 @@
       "trackDeleteLabel": "Delete strand “{title}” and the {count, plural, one {# block} other {# blocks}} in it",
       "trackDeleteHint": "{count, plural, =0 {Removes the strand.} one {Removes the strand and the # block in it.} other {Removes the strand and the # blocks in it.}}",
       "emptyTrack": "No block yet.",
-      "addBlockToTrack": "Add block to {title}"
+      "addBlockToTrack": "Add block to {title}",
+      "addTrackTo": "Add strand to {title}"
     }
   },
   "auth": {
@@ -576,7 +577,10 @@
     "split": "{content} content, {breaks} breaks",
     "yes": "yes",
     "no": "no",
-    "responsible": "Responsible"
+    "responsible": "Responsible",
+    "parallel": "parallel",
+    "strandCount": "{count, plural, one {# strand} other {# strands}}",
+    "strandOf": "Strand {n} of {total}"
   },
   "library": {
     "allWorkshops": "All workshops",

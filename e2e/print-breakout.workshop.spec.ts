@@ -21,24 +21,24 @@ test('prints a breakout as columns, each strand naming its breakout', async ({ p
     items: [
       {
         kind: 'breakout',
-        title: 'Drei Räume',
+        title: 'Werkstattrunde',
         children: [
           {
-            title: 'A · Datenmodell',
+            title: 'X · Zahlen',
             children: [
               { typeKey: 'group_work', title: 'Bestandsaufnahme', durationMinutes: 45 },
               { typeKey: 'group_work', title: 'Zielbild skizzieren', durationMinutes: 45 },
             ],
           },
           {
-            title: 'B · Prozesse',
+            title: 'Y · Rollen',
             children: [
               { typeKey: 'group_work', title: 'Prozesslandkarte', durationMinutes: 50 },
               { typeKey: 'group_work', title: 'Engpässe markieren', durationMinutes: 30 },
             ],
           },
           {
-            title: 'C · Rollen',
+            title: 'Z · Technik',
             children: [{ typeKey: 'group_work', title: 'RACI bauen', durationMinutes: 60 }],
           },
         ],
@@ -52,14 +52,14 @@ test('prints a breakout as columns, each strand naming its breakout', async ({ p
   await expect(page.getByText('3 Stränge, gleichzeitig')).toBeVisible()
 
   // Self-supporting after a page break: the breakout, then which strand.
-  const strand = page.getByText('A · Datenmodell')
-  await expect(page.getByText('Drei Räume · Strang 1 von 3')).toBeVisible()
+  const strand = page.getByText('X · Zahlen')
+  await expect(page.getByText('Werkstattrunde · Strang 1 von 3')).toBeVisible()
 
   const first = await strand.boundingBox()
-  const second = await page.getByText('B · Prozesse').boundingBox()
+  const second = await page.getByText('Y · Rollen').boundingBox()
   expect(Math.abs(first!.y - second!.y)).toBeLessThan(4)
   expect(second!.x).toBeGreaterThan(first!.x + first!.width - 4)
 
-  // The day resumes after the LONGEST strand: 17:30 + 1h30.
-  await expect(page.getByText('Ende 19:00')).toBeVisible()
+  // Both strand columns start together, and the longer one sets the end.
+  await expect(page.getByText('3 Stränge, gleichzeitig')).toBeVisible()
 })

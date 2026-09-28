@@ -98,8 +98,25 @@
     "question": {
       "title": "Leitfrage"
     },
+    "report_back": {
+      "title": "Rückmeldung ins Plenum",
+      "enum": {
+        "none": "Keine",
+        "plenary_short": "Kurz im Plenum",
+        "gallery_walk": "Galerierundgang",
+        "written": "Schriftlich"
+      }
+    },
+    "room": {
+      "title": "Raum",
+      "help": "Wo diese Gruppe arbeitet — der Raum, der Tisch, der Breakout-Link"
+    },
     "room_setup": {
       "title": "Raumaufbau"
+    },
+    "self_selection": {
+      "title": "Freie Wahl des Strangs",
+      "help": "Teilnehmende wählen selbst, statt zugeteilt zu werden"
     },
     "slides_url": {
       "title": "Folien"
@@ -190,6 +207,10 @@
           "title": "Reflexionsfrage"
         }
       }
+    },
+    "breakout_session": {
+      "name": "Breakout-Session",
+      "description": "Eine Kleingruppe arbeitet parallel zu den anderen in ihrem eigenen Raum."
     }
   }
 }
