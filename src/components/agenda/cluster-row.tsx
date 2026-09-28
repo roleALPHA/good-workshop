@@ -95,12 +95,25 @@ export function ClusterRow({
           />
         </div>
         <span className="hidden md:block" />
-        <div className="flex items-baseline gap-2 border-l-4 border-[var(--cat-bar)] py-2 pl-3 md:px-3">
+        {/*
+          Spanning the last three columns, like GapRow does: a section header
+          has no material and no extra info, so leaving those columns empty
+          spent 250px on nothing while the name was squeezed out of the one
+          column it did have. The two trailing spacers are gone with it -- six
+          tracks with a 3-wide item plus two more children would push them into
+          a second grid row.
+
+          flex-wrap, and the heading has a floor: a heading must never be the
+          item that gives way. With `flex-1 min-w-0` beside siblings that
+          cannot shrink it was handed exactly 0px, so the name disappeared
+          rather than being shortened. Now the chrome wraps instead.
+        */}
+        <div className="flex min-w-0 flex-wrap items-baseline gap-x-2 gap-y-1 border-l-4 border-[var(--cat-bar)] py-2 pl-3 md:col-span-3 md:px-3">
           {editing ? (
             // Inside the heading, not beside it: the row's accessible name is
             // computed from the heading, and an embedded field still answers
             // for it -- which is what the e2e suite looks a section up by.
-            <h2 id={titleId} className="min-w-0 flex-1">
+            <h2 id={titleId} className="min-w-0 grow basis-full break-words md:min-w-40 md:basis-0">
               <TitleInput
                 value={cluster.title}
                 onCommit={editing.onTitleChange}
@@ -110,11 +123,14 @@ export function ClusterRow({
               />
             </h2>
           ) : (
-            <h2 id={titleId} className="text-[15px] font-semibold text-[var(--cat-fg)]">
+            <h2
+              id={titleId}
+              className="min-w-0 text-[15px] font-semibold break-words text-[var(--cat-fg)]"
+            >
               {cluster.title}
             </h2>
           )}
-          <span className="tabular text-[13px] text-[var(--cat-fg)] opacity-80">
+          <span className="tabular shrink-0 text-[13px] whitespace-nowrap text-[var(--cat-fg)] opacity-80">
             {t('blockCount', { count: childCount })} ·{' '}
             {formatDuration(entry.durationMinutes, { spaced: true })}
           </span>
@@ -147,7 +163,7 @@ export function ClusterRow({
               // Quiet until the row is touched, like the delete beside it --
               // but never invisible-yet-tappable: on a touch screen there is
               // no hover to reveal it with.
-              className="ml-auto opacity-0 group-focus-within:opacity-100 group-hover:opacity-100 focus-within:opacity-100 pointer-coarse:opacity-100"
+              className="ml-auto shrink-0 opacity-0 group-focus-within:opacity-100 group-hover:opacity-100 focus-within:opacity-100 pointer-coarse:opacity-100"
             />
           )}
 
@@ -157,18 +173,24 @@ export function ClusterRow({
               onClick={editing.onRemove}
               aria-label={t('deleteClusterLabel', { title: cluster.title, count: childCount })}
               title={t('deleteClusterHint', { count: childCount })}
-              // pointer-coarse, which was missing: hidden by opacity but still
+              // 44px under a thumb only: an unconditional one makes every
+              // section row 44px tall under a mouse. min-w as well as min-h,
+              // because the word no longer supplies the width -- and
+              // pointer-coarse:opacity, because hidden by opacity but still
               // hit-testable is the worst of both on a touch screen. The
               // colour select beside it carries the ml-auto for the pair.
-              className="inline-flex min-h-11 items-center gap-1 rounded px-1 text-[13px] text-[var(--cat-fg)] opacity-0 group-focus-within:opacity-80 group-hover:opacity-80 hover:text-[var(--danger-fg)] focus-visible:opacity-100 pointer-coarse:opacity-100"
+              className="inline-flex shrink-0 items-center justify-center gap-1 rounded px-1 text-[13px] text-[var(--cat-fg)] opacity-0 group-focus-within:opacity-80 group-hover:opacity-80 hover:text-[var(--danger-fg)] focus-visible:opacity-100 pointer-coarse:min-h-11 pointer-coarse:min-w-11 pointer-coarse:opacity-100"
             >
               <Trash2 aria-hidden className="size-3.5" />
-              {t('deleteCluster', { count: childCount })}
+              {/*
+                The word only where there is room for it, as the library rows
+                do: the count and the name are on the button as its accessible
+                name either way, so nothing goes missing when it is an icon.
+              */}
+              <span className="hidden lg:inline">{t('deleteCluster', { count: childCount })}</span>
             </button>
           )}
         </div>
-        <span className="hidden md:block" />
-        <span className="hidden md:block" />
       </div>
     </div>
   )

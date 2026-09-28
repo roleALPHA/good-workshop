@@ -160,6 +160,38 @@ test.describe('the day view on a phone', () => {
     expect(Math.min(...sizes)).toBeGreaterThanOrEqual(16)
   })
 
+  test('gives a section its name, and its own controls under a thumb', async ({ page }) => {
+    // The section header carried a colour picker and a spelled-out delete from
+    // v0.8.6 on, and the name was the flex item with nothing to stand on: it
+    // was handed 0px and vanished. Nothing here covered the section row, which
+    // is why a released version could look like that on an iPad.
+    const section = page.getByRole('group', { name: 'Ankommen & Rahmen' })
+    const name = section.getByLabel('Name des Abschnitts')
+    await expect(name).toBeVisible()
+
+    const shown = await name.evaluate((el) => ({
+      width: el.getBoundingClientRect().width,
+      size: parseFloat(getComputedStyle(el).fontSize),
+    }))
+    expect(shown.width).toBeGreaterThan(200)
+    expect(shown.size).toBeGreaterThanOrEqual(16)
+
+    // toHaveCSS and not toBeVisible: Playwright counts an opacity-0 element as
+    // visible, and there is no hover here to reveal anything with.
+    await expect(section.getByLabel('Farbe des Abschnitts')).toHaveCSS('opacity', '1')
+    const remove = section.getByRole('button', { name: /Ankommen & Rahmen.*löschen/ })
+    await expect(remove).toHaveCSS('opacity', '1')
+
+    const hit = (await remove.boundingBox())!
+    expect(Math.min(hit.width, hit.height)).toBeGreaterThanOrEqual(44)
+
+    const viewport = page.viewportSize()!
+    for (const box of [(await name.boundingBox())!, hit]) {
+      expect(box.x).toBeGreaterThanOrEqual(0)
+      expect(box.x + box.width).toBeLessThanOrEqual(viewport.width)
+    }
+  })
+
   test('needs a long press to drag, so a swipe still scrolls the page', async ({ page }) => {
     const handle = page.getByRole('button', { name: 'Check-in & Start verschieben' })
     const box = (await handle.boundingBox())!

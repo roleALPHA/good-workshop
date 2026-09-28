@@ -67,6 +67,15 @@ Clusters become `position: sticky` section headers with a running clock time.
   mouse and must become 16 px under a finger (`pointer-coarse:`). Asserted in
   `e2e/reading-view.spec.ts`.
 - Line length 45–75 characters.
+- **A heading is never the flex item that gives way.** A heading with `flex-1 min-w-0` beside
+  siblings that cannot shrink is handed exactly 0 px once they fill the line — the name
+  disappears instead of being shortened, and `ml-auto` goes inert with it. The row wraps and the
+  chrome gives way first: `flex-wrap` on the cell, a width floor on the heading, `shrink-0` on
+  the controls. This cost a release — v0.8.6 shipped section headers with no name on any screen
+  narrower than a desktop, because the colour picker added that release was free to push it out.
+- **A title wraps; it is never cut off.** The field that edits a heading is a textarea, not an
+  input, because an input cannot wrap and the rest of a long title is simply gone past the width
+  of its column. The editor must not show less of the agenda than the reading view does.
 - Touch targets ≥ **44 × 44 px**, spacing between tap targets ≥ 8 px. Where a control sits
   inside a dense row, spend the 44 px on coarse pointers only — a 44 px box around one line of
   13 px text is not a touch target under a mouse, it is what turns an 86 px row into a 144 px
@@ -217,7 +226,9 @@ Concretely:
   alone. Adding one is a second button beside "Block hinzufügen", not an entry in the type list:
   a section is not a module type, and a pretend one would take the filter's first match with it.
   A new section arrives empty and at the end of the day — blocks are dragged in, by pointer or
-  with the arrow keys.
+  with the arrow keys. The name is a wrapping field rather than one line, and the row spans the
+  columns a section has no use for: it carries no material and no extra info, so the space that
+  would hold them belongs to the name.
 - **An emptied name returns rather than being stored.** A row with no name cannot be told apart
   from its neighbours, and a section with no name leaves its own group and its delete button
   without one. Same rule as a duration that cannot be read.

@@ -25,6 +25,50 @@ import type { RichTextValue } from '@/lib/richtext/schema'
 const bare =
   'w-full rounded-sm border border-transparent bg-transparent px-1 py-0.5 hover:border-[var(--border)] focus:border-[var(--brand-ring)] focus:bg-[var(--surface)] focus:outline-none'
 
+/**
+ * Keeps a textarea exactly as tall as what is in it.
+ *
+ * Shared by the two fields that wrap, so there is one of these rather than a
+ * copy per field. Height goes to `auto` first: `scrollHeight` reports the
+ * content height only when the box is not already holding it open.
+ */
+function useAutoGrow(draft: string) {
+  const ref = useRef<HTMLTextAreaElement>(null)
+
+  useLayoutEffect(() => {
+    const textarea = ref.current
+    if (!textarea) return
+
+    const resize = () => {
+      textarea.style.height = 'auto'
+      if (textarea.scrollHeight === 0) return
+      // Plus the border, because these boxes are border-box and scrollHeight
+      // is not: setting the height to scrollHeight alone leaves the last line
+      // a border's worth short, which overflow-hidden then quietly clips.
+      const border = textarea.offsetHeight - textarea.clientHeight
+      textarea.style.height = `${textarea.scrollHeight + border}px`
+    }
+
+    resize()
+    window.addEventListener('resize', resize)
+    return () => window.removeEventListener('resize', resize)
+  }, [draft])
+
+  return ref
+}
+
+/**
+ * The name of a row, edited where it is read.
+ *
+ * A textarea and not an input, because an input cannot wrap: past the width of
+ * its column the rest of a long title was simply gone, and the reading view --
+ * where the same title is a heading -- showed more of it than the editor did.
+ * The editor must not be the worse way to read the agenda.
+ *
+ * It stays a one-line value for all that. Enter commits with or without Shift,
+ * and a pasted line break is folded into a space on the way out, so nothing
+ * here can store a newline that the print view would then grow a line for.
+ */
 export function TitleInput({
   value,
   onCommit,
@@ -55,7 +99,9 @@ export function TitleInput({
     setDraft(value)
   }
 
-  const field = useRef<HTMLInputElement>(null)
+  const field = useAutoGrow(draft)
+  const cancelled = useRef(false)
+
   // On arrival only, and selected rather than merely focused: a section comes
   // with a placeholder name, and typing should replace it, not append to it.
   // jsdom's select() does not focus on its own, hence both.
@@ -63,30 +109,55 @@ export function TitleInput({
     if (!autoFocus) return
     field.current?.focus()
     field.current?.select()
-  }, [autoFocus])
+  }, [autoFocus, field])
+
+  function commit() {
+    // Escape is read here rather than acted on there: blur() is delivered
+    // synchronously, so a handler that only reset the draft left this one
+    // reading the pre-Escape value out of its closure -- and storing exactly
+    // the edit somebody had just abandoned.
+    if (cancelled.current) {
+      cancelled.current = false
+      setDraft(value)
+      return
+    }
+
+    // An emptied name returns rather than being stored: a row with no name
+    // cannot be told apart from its neighbours, and a section with no name
+    // leaves its own group and its delete button without one either. Same
+    // rule as a duration that cannot be read.
+    const next = draft.replace(/\s+/g, ' ').trim()
+    if (next === '') return setDraft(value)
+    if (next !== value) onCommit(next)
+  }
 
   return (
-    <input
-      type="text"
+    <textarea
+      ref={field}
+      rows={1}
+      // Honest about the behaviour: Enter commits, so a screen reader must not
+      // be promised a line break that never arrives.
+      aria-multiline={false}
       aria-label={label ?? t('blockTitle')}
       placeholder={placeholder}
-      className={cn(bare, '-ml-1 font-semibold', className ?? 'text-[var(--fg)]')}
-      ref={field}
+      className={cn(
+        bare,
+        '-ml-1 min-h-7 resize-none overflow-hidden leading-6 font-semibold break-words pointer-coarse:text-[16px]',
+        className ?? 'text-[var(--fg)]',
+      )}
       value={draft}
       onChange={(e) => setDraft(e.target.value)}
-      // An emptied name returns rather than being stored: a row with no name
-      // cannot be told apart from its neighbours, and a section with no name
-      // leaves its own group and its delete button without one either. Same
-      // rule as a duration that cannot be read.
-      onBlur={() => {
-        const next = draft.trim()
-        if (next === '') return setDraft(value)
-        if (next !== value) onCommit(next)
-      }}
+      onBlur={commit}
       onKeyDown={(e) => {
-        if (e.key === 'Enter') e.currentTarget.blur()
+        // Shift or no Shift: a title has no second line, so both commit. The
+        // preventDefault is what keeps the keypress from inserting a newline
+        // before the blur lands.
+        if (e.key === 'Enter') {
+          e.preventDefault()
+          e.currentTarget.blur()
+        }
         if (e.key === 'Escape') {
-          setDraft(value)
+          cancelled.current = true
           e.currentTarget.blur()
         }
       }}
@@ -107,7 +178,7 @@ export function DescriptionInput({
 }) {
   const source = value ? editableMarkdown(value) : ''
   const [draft, setDraft] = useState(source)
-  const ref = useRef<HTMLTextAreaElement>(null)
+  const ref = useAutoGrow(draft)
   const cancelled = useRef(false)
   // Adopt values from collaboration during render, matching the other inline
   // fields and avoiding an extra stale paint after a remote change.
@@ -116,20 +187,6 @@ export function DescriptionInput({
     setSeenSource(source)
     setDraft(source)
   }
-
-  useLayoutEffect(() => {
-    const textarea = ref.current
-    if (!textarea) return
-
-    const resize = () => {
-      textarea.style.height = 'auto'
-      if (textarea.scrollHeight > 0) textarea.style.height = `${textarea.scrollHeight}px`
-    }
-
-    resize()
-    window.addEventListener('resize', resize)
-    return () => window.removeEventListener('resize', resize)
-  }, [draft])
 
   function commit() {
     if (cancelled.current) {
@@ -192,6 +249,7 @@ export function DurationInput({
   const [draft, setDraft] = useState(() => formatDuration(minutes))
   const [invalid, setInvalid] = useState(false)
   const ref = useRef<HTMLInputElement>(null)
+  const cancelled = useRef(false)
 
   const [seenMinutes, setSeenMinutes] = useState(minutes)
   if (minutes !== seenMinutes) {
@@ -203,6 +261,16 @@ export function DurationInput({
   }
 
   function commit() {
+    // Read here rather than acted on in the key handler, for the reason spelled
+    // out in TitleInput: blur() is synchronous, so an Escape that only reset
+    // the draft left this function committing the abandoned edit anyway.
+    if (cancelled.current) {
+      cancelled.current = false
+      setDraft(formatDuration(minutes))
+      setInvalid(false)
+      return
+    }
+
     const parsed = parseDuration(draft)
     if (parsed === null) {
       // Reverting beats guessing: a silently wrong duration shifts every
@@ -242,7 +310,7 @@ export function DurationInput({
       onKeyDown={(e) => {
         if (e.key === 'Enter') e.currentTarget.blur()
         else if (e.key === 'Escape') {
-          setDraft(formatDuration(minutes))
+          cancelled.current = true
           e.currentTarget.blur()
         } else if (e.key === 'ArrowUp') {
           e.preventDefault()

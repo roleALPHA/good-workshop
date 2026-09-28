@@ -16,7 +16,7 @@ import { seedReferenceDay } from './fixtures/seed-day'
  * would collide with the bullet lists inside descriptions.
  */
 
-const block = (page: Page, name: string) => page.getByRole('article', { name })
+const block = (page: Page, name: string | RegExp) => page.getByRole('article', { name })
 const section_ = (page: Page, name: string) => page.getByRole('group', { name })
 const agenda = (page: Page) => page.getByRole('region', { name: /^Agenda/ })
 
@@ -279,6 +279,32 @@ test.describe('inline editing in the day view', () => {
     await expect(page.getByRole('dialog')).toHaveCount(0)
   })
 
+  test('shows the whole of a long title instead of cutting it off', async ({ page }) => {
+    // A title used to be a single-line input, which cannot wrap: past the width
+    // of its column the rest of the sentence was simply gone -- and the reading
+    // view, where the same title is a heading, showed more of it than the
+    // editor did.
+    const title = block(page, 'Spannungsfelder sammeln').getByLabel('Titel', { exact: true })
+    const before = (await title.boundingBox())!.height
+
+    const long = 'Check-in: Was hat das beste Team, in dem du je gearbeitet hast, ausgemacht?'
+    await title.fill(long)
+    await page.keyboard.press('Tab')
+
+    const grown = block(page, /Was hat das beste Team/)
+    await expect(grown).toBeVisible()
+
+    const field = grown.getByLabel('Titel', { exact: true })
+    expect((await field.boundingBox())!.height).toBeGreaterThan(before)
+
+    // Nothing hidden behind an edge, horizontally or vertically.
+    const clipped = await field.evaluate((el) => ({
+      x: el.scrollWidth > el.clientWidth + 1,
+      y: el.scrollHeight > el.clientHeight + 1,
+    }))
+    expect(clipped).toEqual({ x: false, y: false })
+  })
+
   test('opens the type’s own fields inside the same row', async ({ page }) => {
     const row = block(page, 'Spannungsfelder sammeln')
     const toggle = row.getByRole('button', { name: /Mehr Felder/ })
@@ -425,6 +451,10 @@ test.describe('inline editing in the day view', () => {
     await row.hover()
     // Not toBeVisible: Playwright counts an opacity-0 element as visible.
     await expect(colour).toHaveCSS('opacity', '1')
+
+    // The name keeps its room beside the controls: it used to be the flex item
+    // that gave way, and gave way to nothing at all.
+    expect(await name.evaluate((el) => el.getBoundingClientRect().width)).toBeGreaterThan(200)
 
     const before = await bar(row)
     await colour.selectOption('amber')
