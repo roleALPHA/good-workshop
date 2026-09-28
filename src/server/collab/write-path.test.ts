@@ -24,7 +24,11 @@ describe('the blocks of a day', () => {
   /** Only the materialiser. Reads are free; this is about writes. */
   const WRITER = 'server/collab/materialize.ts'
 
-  const TABLES = ['workshopModule', 'workshopCluster']
+  // 'cluster', not 'workshopCluster'. There is no such export -- the drizzle
+  // table is exported under the same name as the SQL table -- so the cluster
+  // write paths were never actually guarded, and the test meant to notice
+  // matched straight past them.
+  const TABLES = ['workshopModule', 'cluster']
   const WRITES = ['insert', 'update', 'delete']
 
   const sources = (dir: string): string[] =>
