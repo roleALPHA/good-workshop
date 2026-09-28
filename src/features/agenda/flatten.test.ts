@@ -7,6 +7,8 @@ import { MODULE_TYPES_BY_ID } from './fixtures/module-types'
 
 const cluster = (id: string, order: number, extra: Partial<ClusterDto> = {}): ClusterDto => ({
   id,
+  parentClusterId: null,
+  mode: 'sequential',
   title: id,
   color: null,
   pinnedStartMinute: null,

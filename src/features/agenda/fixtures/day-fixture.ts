@@ -50,6 +50,8 @@ export function createDemoDay(): DayDoc {
   const clusters: ClusterDto[] = [
     {
       id: 'cl-1',
+      parentClusterId: null,
+      mode: 'sequential',
       title: 'Ankommen & Rahmen',
       color: 'rose',
       pinnedStartMinute: null,
@@ -59,6 +61,8 @@ export function createDemoDay(): DayDoc {
     },
     {
       id: 'cl-2',
+      parentClusterId: null,
+      mode: 'sequential',
       title: 'Zielbild erarbeiten',
       color: 'emerald',
       pinnedStartMinute: null,
@@ -309,6 +313,8 @@ export function createStressDay(rowCount = 150, seed = 42): DayDoc {
     if (i % 7 === 0) {
       currentCluster = {
         id: `s-cl-${clusters.length}`,
+        parentClusterId: null,
+        mode: 'sequential',
         title: `Block ${clusters.length + 1}: ${STRESS_TITLES[clusters.length % STRESS_TITLES.length]}`,
         color: null,
         pinnedStartMinute: null,

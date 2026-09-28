@@ -93,6 +93,8 @@ async function seedLog() {
       {
         id: clusterId,
         title: 'Warm-up',
+        parentClusterId: null,
+        mode: 'sequential',
         color: null,
         pinnedStartMinute: null,
         collapsed: false,

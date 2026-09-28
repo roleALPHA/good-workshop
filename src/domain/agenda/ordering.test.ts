@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest'
-import { keyAtEnd, keyBetween, placeAfter, sortByPosition } from './ordering'
+import { keyAtEnd, keyBetween, ordinalsByParent, placeAfter, sortByPosition } from './ordering'
 
 const item = (id: string, position: string) => ({ id, position })
 
@@ -14,6 +14,57 @@ describe('sortByPosition', () => {
     // the tie-break is what keeps the result deterministic when one happens.
     const sorted = sortByPosition([item('b', 'a0'), item('a', 'a0')])
     expect(sorted.map((s) => s.id)).toEqual(['a', 'b'])
+  })
+})
+
+describe('ordinalsByParent', () => {
+  const row = (id: string, position: string, parentId: string | null = null) => ({
+    id,
+    position,
+    parentId,
+  })
+
+  it.each([
+    [
+      'numbers the day level from 0, clusters and blocks in one list',
+      [row('cl', 'a1'), row('m1', 'a0'), row('m2', 'a2')],
+      { m1: 0, cl: 1, m2: 2 },
+    ],
+    [
+      'gives every sibling list its own 0',
+      [row('cl', 'a0'), row('a', 'a0', 'cl'), row('b', 'a1', 'cl')],
+      { cl: 0, a: 0, b: 1 },
+    ],
+    [
+      'counts the strands of a breakout among themselves, not in the day',
+      [row('bo', 'a0'), row('s1', 'a0', 'bo'), row('s2', 'a1', 'bo'), row('after', 'a1')],
+      { bo: 0, after: 1, s1: 0, s2: 1 },
+    ],
+    [
+      'counts the blocks of a strand among themselves -- three levels, three spaces',
+      [
+        row('bo', 'a0'),
+        row('s1', 'a0', 'bo'),
+        row('x', 'a0', 's1'),
+        row('y', 'a1', 's1'),
+        row('s2', 'a1', 'bo'),
+        row('z', 'a0', 's2'),
+      ],
+      { bo: 0, s1: 0, s2: 1, x: 0, y: 1, z: 0 },
+    ],
+    [
+      'breaks ties on equal keys by id, like the database',
+      [row('b', 'a0'), row('a', 'a0')],
+      { a: 0, b: 1 },
+    ],
+    ['says nothing about nothing', [], {}],
+  ])('%s', (_name, rows, expected) => {
+    expect(Object.fromEntries(ordinalsByParent(rows))).toEqual(expected)
+  })
+
+  it('does not care what order the rows arrive in', () => {
+    const rows = [row('s2', 'a1', 'bo'), row('bo', 'a0'), row('s1', 'a0', 'bo')]
+    expect(Object.fromEntries(ordinalsByParent(rows))).toEqual({ bo: 0, s1: 0, s2: 1 })
   })
 })
 
