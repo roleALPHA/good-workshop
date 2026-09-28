@@ -8,6 +8,7 @@ import type {
   DayPatch,
   ModulePatch,
   NewBlock,
+  NewBreakout,
   NewSection,
   Peer,
 } from './document'
@@ -69,12 +70,6 @@ export function useLocalDocument(initial: DayDoc): AgendaDocument {
    * one space. MAX_SAFE_INTEGER would do for a single addition and then tie on
    * the second, leaving flattenDay to decide the order by comparing ids.
    */
-  const nextOrder = (current: DayDoc) =>
-    Math.max(
-      0,
-      ...current.clusters.map((c) => c.order),
-      ...current.modules.filter((m) => m.clusterId === null).map((m) => m.order),
-    ) + 1
 
   const addModule = useCallback((block: NewBlock) => {
     setDoc((current) => ({
@@ -83,7 +78,7 @@ export function useLocalDocument(initial: DayDoc): AgendaDocument {
         ...current.modules,
         {
           id: `local-${crypto.randomUUID()}`,
-          clusterId: null,
+          clusterId: block.clusterId ?? null,
           moduleTypeId: block.moduleTypeId,
           title: block.title,
           durationMinutes: block.durationMinutes,
@@ -101,21 +96,35 @@ export function useLocalDocument(initial: DayDoc): AgendaDocument {
     const id = `local-${crypto.randomUUID()}`
     setDoc((current) => ({
       ...current,
-      clusters: [
+      clusters: [...current.clusters, newCluster(id, section, current)],
+    }))
+    return id
+  }, [])
+
+  const addBreakout = useCallback((breakout: NewBreakout) => {
+    const id = `local-${crypto.randomUUID()}`
+    setDoc((current) => {
+      // One state update for the breakout and its strands, so nobody ever
+      // renders the half-built thing in between.
+      const clusters = [
         ...current.clusters,
-        {
-          id,
-          title: section.title,
-          parentClusterId: null,
+        newCluster(id, { title: breakout.title, mode: 'parallel' }, current),
+      ]
+      breakout.strands.forEach((strand, index) => {
+        clusters.push({
+          id: `local-${crypto.randomUUID()}`,
+          title: strand.title,
+          parentClusterId: id,
           mode: 'sequential',
-          color: section.color ?? null,
+          color: null,
           pinnedStartMinute: null,
           collapsed: false,
           targetDurationMinutes: null,
-          order: nextOrder(current),
-        },
-      ],
-    }))
+          order: index,
+        })
+      })
+      return { ...current, clusters }
+    })
     return id
   }, [])
 
@@ -146,15 +155,60 @@ export function useLocalDocument(initial: DayDoc): AgendaDocument {
       move,
       addModule,
       addCluster,
+      addBreakout,
       removeModule,
       status: { kind: 'local' as const },
       // Nothing is shared, so nobody is here and there is nothing to announce.
       peers: NOBODY,
       setFocus: () => {},
     }),
-    [doc, patchModule, patchCluster, patchDay, move, addModule, addCluster, removeModule],
+    [
+      doc,
+      patchModule,
+      patchCluster,
+      patchDay,
+      move,
+      addModule,
+      addCluster,
+      addBreakout,
+      removeModule,
+    ],
   )
 }
 
 /** One frozen array, so it never re-renders anything by identity. */
 const NOBODY: Peer[] = []
+
+/**
+ * The next free sort key at day level, where clusters and loose blocks share
+ * one space. MAX_SAFE_INTEGER would do for a single addition and then tie on
+ * the second, leaving flattenDay to decide the order by comparing ids.
+ */
+function nextOrder(current: DayDoc): number {
+  return (
+    Math.max(
+      0,
+      ...current.clusters.filter((c) => c.parentClusterId === null).map((c) => c.order),
+      ...current.modules.filter((m) => m.clusterId === null).map((m) => m.order),
+    ) + 1
+  )
+}
+
+/** A cluster row, wherever it hangs. Order comes from its own sibling list. */
+function newCluster(id: string, section: NewSection, current: DayDoc): DayDoc['clusters'][number] {
+  const parentClusterId = section.parentId ?? null
+  return {
+    id,
+    title: section.title,
+    parentClusterId,
+    mode: section.mode ?? 'sequential',
+    color: section.color ?? null,
+    pinnedStartMinute: null,
+    collapsed: false,
+    targetDurationMinutes: null,
+    order:
+      parentClusterId === null
+        ? nextOrder(current)
+        : current.clusters.filter((c) => c.parentClusterId === parentClusterId).length,
+  }
+}

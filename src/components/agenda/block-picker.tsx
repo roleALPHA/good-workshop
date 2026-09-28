@@ -1,11 +1,9 @@
 'use client'
 
 import { useState } from 'react'
-import { Plus, Rows3 } from 'lucide-react'
+import { Columns3, Plus, Rows3 } from 'lucide-react'
 import type { ModuleTypeDto } from '@/domain/agenda/types'
-import { formatDuration } from '@/features/agenda/duration'
-import { catClass } from '@/lib/category-colors'
-import { cn } from '@/lib/cn'
+import { BlockTypeList } from './block-type-list'
 import { useTranslations } from 'next-intl'
 
 const dashed =
@@ -27,17 +25,19 @@ export function BlockPicker({
   types,
   onAdd,
   onAddSection,
+  onAddBreakout,
   disabled,
 }: {
   types: ModuleTypeDto[]
   onAdd: (typeKey: string) => void
   /** Appends a section. Its name is edited in the row it creates. */
   onAddSection: () => void
+  /** Appends a breakout, already holding two strands. */
+  onAddBreakout?: () => void
   disabled?: boolean
 }) {
   const t = useTranslations('agenda')
   const [open, setOpen] = useState(false)
-  const [filter, setFilter] = useState('')
 
   if (disabled) return null
 
@@ -58,62 +58,33 @@ export function BlockPicker({
           <Rows3 aria-hidden className="size-4" />
           {t('section.add')}
         </button>
+        {/*
+          A third dashed button in a wrapping row, and not a popover: the two
+          hand-built popovers stay two. A breakout is a section with a different
+          shape, so it belongs beside the section button rather than inside the
+          type list, for the same reason the section button is not in there.
+        */}
+        {onAddBreakout && (
+          <button type="button" onClick={onAddBreakout} className={dashed}>
+            <Columns3 aria-hidden className="size-4" />
+            {t('breakout.add')}
+          </button>
+        )}
       </div>
     )
   }
 
-  const matches = types.filter((type) =>
-    type.name.toLowerCase().includes(filter.trim().toLowerCase()),
-  )
-
   return (
     <div className="mx-4 my-3 rounded border border-[var(--border)] bg-[var(--surface-raised)] p-3 md:mx-2">
-      <input
-        autoFocus
-        type="text"
-        aria-label={t('searchType')}
-        placeholder={t('filterPlaceholder')}
-        className="w-full rounded border border-[var(--border-strong)] bg-[var(--surface)] px-2.5 py-1.5 text-[16px]"
-        value={filter}
-        onChange={(e) => setFilter(e.target.value)}
-        onKeyDown={(e) => {
-          if (e.key === 'Escape') setOpen(false)
-          if (e.key === 'Enter' && matches[0]) {
-            onAdd(matches[0].key)
-            setOpen(false)
-            setFilter('')
-          }
+      <BlockTypeList
+        types={types}
+        compact={false}
+        onPick={(key) => {
+          onAdd(key)
+          setOpen(false)
         }}
+        onCancel={() => setOpen(false)}
       />
-
-      <ul className="mt-2 grid gap-1 sm:grid-cols-2">
-        {matches.map((type) => (
-          <li key={type.id}>
-            <button
-              type="button"
-              onClick={() => {
-                onAdd(type.key)
-                setOpen(false)
-                setFilter('')
-              }}
-              className={cn(
-                catClass(type.color),
-                'flex w-full items-center gap-2 rounded border border-[var(--border)] bg-[var(--surface)] px-2 py-1.5 text-left hover:border-[var(--cat-bar)]',
-              )}
-            >
-              <span aria-hidden className="h-5 w-1 shrink-0 rounded-full bg-[var(--cat-bar)]" />
-              <span className="min-w-0 flex-1 truncate text-[15px]">{type.name}</span>
-              <span className="tabular shrink-0 text-[13px] text-[var(--fg-subtle)]">
-                {formatDuration(type.defaultDurationMinutes)}
-              </span>
-            </button>
-          </li>
-        ))}
-      </ul>
-
-      {matches.length === 0 && (
-        <p className="mt-2 text-[14px] text-[var(--fg-muted)]">{t('noTypeMatches')}</p>
-      )}
     </div>
   )
 }

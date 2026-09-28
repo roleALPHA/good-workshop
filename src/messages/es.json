@@ -205,7 +205,10 @@
       "inSection": "en la sección {title}",
       "landed": "{title} queda {where}, posición {position, number}.",
       "landedWithTime": "{title} queda {where}, posición {position, number}, nueva hora de inicio {time}.",
-      "picked": "{title} agarrado."
+      "picked": "{title} agarrado.",
+      "inTrack": "en el grupo {track} del breakout {breakout}",
+      "becomesTrack": "{title} pasa a ser un grupo del breakout {breakout}, con {count, plural, one {# bloque} many {# bloques} other {# bloques}}.",
+      "leavesBreakout": "{title} sale del breakout {breakout} y pasa a ser una sección propia, con {count, plural, one {# bloque} many {# bloques} other {# bloques}}."
     },
     "dragHandle": "Mover {title}",
     "end": "Fin",
@@ -276,7 +279,28 @@
     "blockDuration": "Duración",
     "deleteCluster": "{count, plural, =0 {Eliminar la sección} one {Eliminar con # bloque} many {Eliminar con # bloques} other {Eliminar con # bloques}}",
     "deleteClusterLabel": "{count, plural, =0 {Eliminar la sección «{title}»} one {Eliminar la sección «{title}» y el # bloque que contiene} many {Eliminar la sección «{title}» y los # bloques que contiene} other {Eliminar la sección «{title}» y los # bloques que contiene}}",
-    "deleteClusterHint": "{count, plural, =0 {Elimina la sección.} one {Elimina la sección y el # bloque que contiene.} many {Elimina la sección y los # bloques que contiene.} other {Elimina la sección y los # bloques que contiene.}}"
+    "deleteClusterHint": "{count, plural, =0 {Elimina la sección.} one {Elimina la sección y el # bloque que contiene.} many {Elimina la sección y los # bloques que contiene.} other {Elimina la sección y los # bloques que contiene.}}",
+    "breakout": {
+      "add": "Añadir breakout",
+      "newTitle": "Nuevo breakout",
+      "title": "Nombre del breakout",
+      "color": "Color del breakout",
+      "simultaneous": "{count, plural, one {# grupo} many {# grupos} other {# grupos}}, a la vez",
+      "longest": "grupo más largo {duration}",
+      "delete": "{count, plural, =0 {Eliminar breakout} one {Eliminar con # grupo} many {Eliminar con # grupos} other {Eliminar con # grupos}}",
+      "deleteLabel": "Eliminar el breakout «{title}» con {tracks, plural, one {# grupo} many {# grupos} other {# grupos}} y {blocks, plural, one {# bloque} many {# bloques} other {# bloques}}",
+      "deleteHint": "Elimina el breakout con todos sus grupos y bloques.",
+      "addTrack": "Añadir grupo",
+      "newTrackTitle": "Nuevo grupo",
+      "trackTitle": "Nombre del grupo",
+      "trackColor": "Color del grupo",
+      "trackPosition": "Grupo {index, number} de {count, number}",
+      "trackDelete": "{count, plural, =0 {Eliminar grupo} one {Eliminar con # bloque} many {Eliminar con # bloques} other {Eliminar con # bloques}}",
+      "trackDeleteLabel": "Eliminar el grupo «{title}» y {count, plural, one {el # bloque} many {los # bloques} other {los # bloques}} que contiene",
+      "trackDeleteHint": "{count, plural, =0 {Elimina el grupo.} one {Elimina el grupo y el # bloque que contiene.} many {Elimina el grupo y los # bloques que contiene.} other {Elimina el grupo y los # bloques que contiene.}}",
+      "emptyTrack": "Aún no hay ningún bloque.",
+      "addBlockToTrack": "Añadir bloque a {title}"
+    }
   },
   "auth": {
     "guest": {

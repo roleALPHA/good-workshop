@@ -208,7 +208,10 @@ declare const messages: {
       "inSection": "in Abschnitt {title}",
       "landed": "{title} landet {where}, Position {position, number}.",
       "landedWithTime": "{title} landet {where}, Position {position, number}, neue Startzeit {time}.",
-      "picked": "{title} aufgenommen."
+      "picked": "{title} aufgenommen.",
+      "inTrack": "in Strang {track} von Breakout {breakout}",
+      "becomesTrack": "{title} wird Strang in Breakout {breakout}, mit {count, plural, one {# Block} other {# Blöcken}}.",
+      "leavesBreakout": "{title} verlässt Breakout {breakout} und wird eigener Abschnitt, mit {count, plural, one {# Block} other {# Blöcken}}."
     },
     "dragHandle": "{title} verschieben",
     "end": "Ende",
@@ -279,7 +282,28 @@ declare const messages: {
     "blockDuration": "Dauer",
     "deleteCluster": "{count, plural, =0 {Abschnitt löschen} one {Mit # Block löschen} other {Mit # Blöcken löschen}}",
     "deleteClusterLabel": "{count, plural, =0 {Abschnitt „{title}“ löschen} one {Abschnitt „{title}“ und den # Block darin löschen} other {Abschnitt „{title}“ und die # Blöcke darin löschen}}",
-    "deleteClusterHint": "{count, plural, =0 {Entfernt den Abschnitt.} one {Entfernt den Abschnitt und den # Block darin.} other {Entfernt den Abschnitt und die # Blöcke darin.}}"
+    "deleteClusterHint": "{count, plural, =0 {Entfernt den Abschnitt.} one {Entfernt den Abschnitt und den # Block darin.} other {Entfernt den Abschnitt und die # Blöcke darin.}}",
+    "breakout": {
+      "add": "Breakout hinzufügen",
+      "newTitle": "Neuer Breakout",
+      "title": "Name des Breakouts",
+      "color": "Farbe des Breakouts",
+      "simultaneous": "{count, plural, one {# Strang} other {# Stränge}}, gleichzeitig",
+      "longest": "längster Strang {duration}",
+      "delete": "{count, plural, =0 {Breakout löschen} one {Mit # Strang löschen} other {Mit # Strängen löschen}}",
+      "deleteLabel": "Breakout „{title}“ mit {tracks, plural, one {# Strang} other {# Strängen}} und {blocks, plural, one {# Block} other {# Blöcken}} löschen",
+      "deleteHint": "Entfernt den Breakout mit allen Strängen und Blöcken darin.",
+      "addTrack": "Strang hinzufügen",
+      "newTrackTitle": "Neuer Strang",
+      "trackTitle": "Name des Strangs",
+      "trackColor": "Farbe des Strangs",
+      "trackPosition": "Strang {index, number} von {count, number}",
+      "trackDelete": "{count, plural, =0 {Strang löschen} one {Mit # Block löschen} other {Mit # Blöcken löschen}}",
+      "trackDeleteLabel": "Strang „{title}“ und die {count, plural, one {# Block} other {# Blöcke}} darin löschen",
+      "trackDeleteHint": "{count, plural, =0 {Entfernt den Strang.} one {Entfernt den Strang und den # Block darin.} other {Entfernt den Strang und die # Blöcke darin.}}",
+      "emptyTrack": "Noch kein Block.",
+      "addBlockToTrack": "Block in {title} hinzufügen"
+    }
   },
   "auth": {
     "guest": {

@@ -21,11 +21,13 @@ import type {
   DocumentStatus,
   ModulePatch,
   NewBlock,
+  NewBreakout,
   NewSection,
 } from '@/features/agenda/document'
 import type { Projection } from '@/features/agenda/projection'
 import { CollabProvider, type ConnectionState, type PeerPresence } from './provider'
 import {
+  addBreakout,
   addCluster,
   addModule,
   applyProjection,
@@ -152,10 +154,34 @@ export function useCollabDocument(initial: DayDoc, target: CollabTarget): Agenda
       patchDay: (patch: DayPatch) => withDoc((d) => setDayFields(d, patch)),
       move: (blockId: string, projection: Projection) =>
         withDoc((d) => applyProjection(d, blockId, projection)),
-      addModule: (block: NewBlock) => withDoc((d) => addModule(d, uuidv7(), block)),
+      addModule: (block: NewBlock) =>
+        withDoc((d) =>
+          // `clusterId` on the contract, `parentId` in the document: the
+          // editor names the container the way the DTO does, the CRDT the way
+          // every block does. Passing the object straight through dropped it.
+          addModule(d, uuidv7(), {
+            moduleTypeId: block.moduleTypeId,
+            title: block.title,
+            durationMinutes: block.durationMinutes,
+            parentId: block.clusterId ?? null,
+          }),
+        ),
       addCluster: (section: NewSection) => {
         const id = uuidv7()
         withDoc((d) => addCluster(d, id, section))
+        return id
+      },
+      addBreakout: (breakout: NewBreakout) => {
+        const id = uuidv7()
+        // Ids are minted here, not inside the op: the caller needs the
+        // breakout's to put the cursor in its name, and the strands need
+        // theirs before the one transaction that writes them all.
+        withDoc((d) =>
+          addBreakout(d, id, {
+            title: breakout.title,
+            strands: breakout.strands.map((strand) => ({ id: uuidv7(), title: strand.title })),
+          }),
+        )
         return id
       },
       removeModule: (moduleId: string) => withDoc((d) => removeModule(d, moduleId)),

@@ -10,7 +10,11 @@ export {
   patchBlock as patchCluster,
   removeBlock as removeModule,
 } from '@/domain/collab/ops'
-export { addModuleBlock as addModule, addClusterBlock as addCluster } from '@/domain/collab/ops'
+export {
+  addModuleBlock as addModule,
+  addClusterBlock as addCluster,
+  addBreakoutBlock as addBreakout,
+} from '@/domain/collab/ops'
 
 /**
  * Applies a finished drag.

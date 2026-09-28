@@ -1,4 +1,3 @@
-import { Trash2 } from 'lucide-react'
 import { useTranslations } from 'next-intl'
 import type { ClusterDto } from '@/domain/agenda/types'
 import type { CategoryColor } from '@/lib/category-colors'
@@ -6,9 +5,8 @@ import type { ScheduleEntry } from '@/domain/schedule/types'
 import { formatDuration } from '@/features/agenda/duration'
 import { catClass } from '@/lib/category-colors'
 import { cn } from '@/lib/cn'
-import { ColorSelect } from './color-select'
+import { ClusterChrome } from './cluster-chrome'
 import { PeerMarks } from './presence'
-import { TitleInput } from './inline-inputs'
 import { OverlapWarning, TimeCell } from './time-cell'
 import { GRID, type RowChrome } from './agenda-rows'
 
@@ -109,87 +107,40 @@ export function ClusterRow({
           rather than being shortened. Now the chrome wraps instead.
         */}
         <div className="flex min-w-0 flex-wrap items-baseline gap-x-2 gap-y-1 border-l-4 border-[var(--cat-bar)] py-2 pl-3 md:col-span-3 md:px-3">
-          {editing ? (
-            // Inside the heading, not beside it: the row's accessible name is
-            // computed from the heading, and an embedded field still answers
-            // for it -- which is what the e2e suite looks a section up by.
-            <h2 id={titleId} className="min-w-0 grow basis-full break-words md:min-w-40 md:basis-0">
-              <TitleInput
-                value={cluster.title}
-                onCommit={editing.onTitleChange}
-                label={t('section.title')}
-                className="text-[15px] text-[var(--cat-fg)]"
-                autoFocus={editing.autoFocusTitle}
-              />
-            </h2>
-          ) : (
-            <h2
-              id={titleId}
-              className="min-w-0 text-[15px] font-semibold break-words text-[var(--cat-fg)]"
-            >
-              {cluster.title}
-            </h2>
-          )}
-          <span className="tabular shrink-0 text-[13px] whitespace-nowrap text-[var(--cat-fg)] opacity-80">
-            {t('blockCount', { count: childCount })} ·{' '}
-            {formatDuration(entry.durationMinutes, { spaced: true })}
-          </span>
-          {/*
-            A section can be pinned too, so it can overrun too. Without this the
-            conflict was computed and then never said out loud.
-          */}
-          {entry.conflict?.kind === 'overlap' && (
-            <OverlapWarning minutes={entry.conflict.minutes} />
-          )}
-
-          {/*
-            Inline, like the delete on a block, and not behind a dialog:
-            docs/ui-conventions.md reserves those for confirming the
-            irreversible, and this is the same sort of edit as removing a
-            block. What it does say out loud is the number going with it --
-            `deleteCluster` names the count, because a section that quietly
-            takes six blocks with it is a surprise.
-
-            Until now a cluster row offered a pin and nothing else. That was
-            survivable while clusters only arrived over MCP; adopting a
-            catalogue entry brings one every time, and there was no way to
-            take it out again.
-          */}
-          {editing && (
-            <ColorSelect
-              value={cluster.color}
-              onChange={editing.onColorChange}
-              label={t('section.color')}
-              // Quiet until the row is touched, like the delete beside it --
-              // but never invisible-yet-tappable: on a touch screen there is
-              // no hover to reveal it with.
-              className="ml-auto shrink-0 opacity-0 group-focus-within:opacity-100 group-hover:opacity-100 focus-within:opacity-100 pointer-coarse:opacity-100"
-            />
-          )}
-
-          {editing?.onRemove && (
-            <button
-              type="button"
-              onClick={editing.onRemove}
-              aria-label={t('deleteClusterLabel', { title: cluster.title, count: childCount })}
-              title={t('deleteClusterHint', { count: childCount })}
-              // 44px under a thumb only: an unconditional one makes every
-              // section row 44px tall under a mouse. min-w as well as min-h,
-              // because the word no longer supplies the width -- and
-              // pointer-coarse:opacity, because hidden by opacity but still
-              // hit-testable is the worst of both on a touch screen. The
-              // colour select beside it carries the ml-auto for the pair.
-              className="inline-flex shrink-0 items-center justify-center gap-1 rounded px-1 text-[13px] text-[var(--cat-fg)] opacity-0 group-focus-within:opacity-80 group-hover:opacity-80 hover:text-[var(--danger-fg)] focus-visible:opacity-100 pointer-coarse:min-h-11 pointer-coarse:min-w-11 pointer-coarse:opacity-100"
-            >
-              <Trash2 aria-hidden className="size-3.5" />
-              {/*
-                The word only where there is room for it, as the library rows
-                do: the count and the name are on the button as its accessible
-                name either way, so nothing goes missing when it is an icon.
-              */}
-              <span className="hidden lg:inline">{t('deleteCluster', { count: childCount })}</span>
-            </button>
-          )}
+          <ClusterChrome
+            titleId={titleId}
+            title={cluster.title}
+            color={cluster.color}
+            editing={
+              editing && {
+                onTitleChange: editing.onTitleChange,
+                onColorChange: editing.onColorChange,
+                autoFocusTitle: editing.autoFocusTitle,
+                onRemove: editing.onRemove,
+              }
+            }
+            meta={
+              <>
+                {t('blockCount', { count: childCount })} ·{' '}
+                {formatDuration(entry.durationMinutes, { spaced: true })}
+              </>
+            }
+            labels={{
+              title: t('section.title'),
+              color: t('section.color'),
+              delete: t('deleteCluster', { count: childCount }),
+              deleteLabel: t('deleteClusterLabel', { title: cluster.title, count: childCount }),
+              deleteHint: t('deleteClusterHint', { count: childCount }),
+            }}
+          >
+            {/*
+              A section can be pinned too, so it can overrun too. Without this
+              the conflict was computed and then never said out loud.
+            */}
+            {entry.conflict?.kind === 'overlap' && (
+              <OverlapWarning minutes={entry.conflict.minutes} />
+            )}
+          </ClusterChrome>
         </div>
       </div>
     </div>

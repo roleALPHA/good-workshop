@@ -1,5 +1,5 @@
 import type { Responsible } from '@/domain/agenda/responsible'
-import type { DayDoc } from '@/domain/agenda/types'
+import type { ClusterMode, DayDoc } from '@/domain/agenda/types'
 import type { CategoryColor } from '@/lib/category-colors'
 import type { Projection } from './projection'
 
@@ -47,6 +47,15 @@ export type NewBlock = {
   moduleTypeId: string
   title: string
   durationMinutes: number
+  /**
+   * The container it belongs in. Left out means day level, at the end.
+   *
+   * Needed once strands are columns: dragging four blocks into three columns is
+   * drudgery, and the column is where you are standing. The same button helps
+   * an ordinary section, which is why it is on the contract rather than in the
+   * breakout.
+   */
+  clusterId?: string | null
 }
 
 /**
@@ -57,6 +66,22 @@ export type NewBlock = {
 export type NewSection = {
   title: string
   color?: CategoryColor | null
+  /** 'parallel' makes it a breakout, whose children are strands. */
+  mode?: ClusterMode
+  /** The breakout this becomes a strand of. A breakout itself sits on the day. */
+  parentId?: string | null
+}
+
+/**
+ * A breakout and the strands it opens with.
+ *
+ * One act, not three: a breakout with one strand is not one, and with none it
+ * is an empty raster that explains nothing. Created together also means the
+ * people sharing the room see one change rather than three flickering past.
+ */
+export type NewBreakout = {
+  title: string
+  strands: { title: string }[]
 }
 
 /**
@@ -94,6 +119,8 @@ export type AgendaDocument = {
    * to, and nothing else on the way back can name it.
    */
   addCluster: (section: NewSection) => string
+  /** Returns the breakout's id; its strands are created with it. */
+  addBreakout: (breakout: NewBreakout) => string
   removeModule: (moduleId: string) => void
   /** How the change is being shared, for the UI to report honestly. */
   status: DocumentStatus

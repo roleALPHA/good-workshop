@@ -51,11 +51,28 @@ export function describeProjection(
   const nextRows = flattenDay(next)
   const entry = computeSchedule(next.startMinute, toScheduleItems(nextRows)).entries.get(activeId)
 
+  // Inside a breakout the container alone is not enough: "in section A" says
+  // nothing about which of three rooms, and the rooms are the point.
+  const parent = projection.parentId
+  const parentRow = parent === null ? undefined : nextRows.find((r) => r.id === parent)
+  const breakoutId =
+    parentRow?.kind === 'cluster' && parentRow.depth === 1 ? parentRow.parentId : null
+
   const where =
-    projection.parentId !== null
-      ? t('drag.inSection', { title: titleOf(projection.parentId) })
-      : t('drag.atDayLevel')
-  const position = nextRows.findIndex((r) => r.id === activeId) + 1
+    parent === null
+      ? t('drag.atDayLevel')
+      : breakoutId !== null
+        ? t('drag.inTrack', { track: titleOf(parent), breakout: titleOf(breakoutId) })
+        : t('drag.inSection', { title: titleOf(parent) })
+
+  // Counted inside the strand rather than across the day: "position 14" spread
+  // over three columns is not information anybody can use. At day level and in
+  // an ordinary section it stays flat -- e2e/agenda.spec.ts pins that meaning,
+  // and changing it would be a side effect nobody asked for.
+  const siblings = parent !== null && breakoutId !== null
+  const position = siblings
+    ? nextRows.filter((r) => r.parentId === parent).findIndex((r) => r.id === activeId) + 1
+    : nextRows.findIndex((r) => r.id === activeId) + 1
 
   const title = titleOf(activeId)
 
