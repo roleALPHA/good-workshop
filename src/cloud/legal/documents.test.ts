@@ -31,8 +31,8 @@ const PUBLISHED: Record<LegalDocument, { version: string; sha256: string }> = {
     sha256: '6c0cecd3982b69c16cca7bb79f0cbbbb08c493a599819bea36d9b8444041d3eb',
   },
   datenschutz: {
-    version: '2026-09-22',
-    sha256: '4a2152bd47da7f9d6e7103cfee3333950093926504bfa2d6ea4454fe97c92178',
+    version: '2026-09-29',
+    sha256: '545b20fbbfbfa37d26ba3fdd9135d5dddaf0bf52cfcfeca2c6baed49b56a8fcf',
   },
   avv: {
     version: '2026-09-22',

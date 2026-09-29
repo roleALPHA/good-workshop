@@ -1,6 +1,6 @@
 # Política de privacidad
 
-Versión: 22 de septiembre de 2026
+Versión: 29 de septiembre de 2026
 
 > Solo la versión alemana de esta política es jurídicamente vinculante. Esta traducción se ofrece para facilitar la comprensión.
 
@@ -10,7 +10,17 @@ roleALPHA GmbH, Aschergasse 34, 1130 Viena, Austria, correo electrónico: [offic
 
 ## Qué datos tratamos y para qué
 
-**Sitio web.** Al acceder, nuestro servidor trata datos técnicamente necesarios (dirección IP, momento, dirección solicitada, identificación del navegador) para entregar la página y repeler ataques. La base jurídica es nuestro interés legítimo (art. 6.1.f RGPD). Eliminamos los registros del servidor a los 14 días. No utilizamos cookies de seguimiento ni de marketing; solo se establecen cookies técnicamente necesarias para el acceso y el idioma.
+**Sitio web.** Al acceder, nuestro servidor trata datos técnicamente necesarios (dirección IP, momento, dirección solicitada, identificación del navegador) para entregar la página y repeler ataques. La base jurídica es nuestro interés legítimo (art. 6.1.f RGPD). Eliminamos los registros del servidor a los 14 días. No utilizamos cookies de seguimiento ni de marketing y no incrustamos contenidos de terceros.
+
+Solo se establecen estas cookies, y únicamente cuando usted hace algo que las requiere:
+
+- **Sesión** – lo mantiene con la sesión iniciada; hasta que cierre la sesión, como máximo 14 días sin uso
+- **Acceso de invitado** – abre un taller compartido sin cuenta; durante la visita
+- **Idioma** – recuerda el idioma elegido; un año
+
+Además, el navegador de las personas con sesión iniciada guarda localmente la elección entre apariencia clara y oscura y qué carpetas están plegadas. Nada de esto requiere consentimiento, porque sin ese almacenamiento no existe el servicio que usted ha solicitado (§ 165.3 TKG 2021).
+
+**Medición de alcance.** En las páginas públicas de este sitio contamos las visitas con Umami, un programa de código abierto que operamos en nuestro propio servidor. No se establecen cookies, no se almacenan direcciones IP ni se elaboran perfiles; de la visita y los datos del navegador resulta una suma de verificación que cambia a diario y no puede atribuirse a ninguna persona. Las cifras así obtenidas no salen de nuestro servidor. La base jurídica es nuestro interés legítimo en disponer de estadísticas sin seguimiento (art. 6.1.f RGPD). **En el espacio de trabajo no se realiza medición alguna**: lo que los clientes hacen con sus talleres no lo contamos.
 
 **Registro y cuenta.** Nombre, dirección de correo electrónico, empresa, dirección de facturación y número de IVA de la persona que celebra el contrato para su empresa, con el fin de celebrar y ejecutar el contrato (art. 6.1.b RGPD).
 
