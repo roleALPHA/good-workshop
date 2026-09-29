@@ -30,6 +30,29 @@ updates:
       production-minor-patch:
         dependency-type: production
         update-types: [minor, patch]
+    # Drei Majors, die nicht an uns scheitern, sondern an einem Paket, das sie
+    # noch nicht mitgeht. Ohne diese Eintraege legt Dependabot die
+    # dev-dependencies-Gruppe jede Woche rot an, und der Rest der Gruppe kommt
+    # deshalb nie durch. Jeder Eintrag nennt, was sich bewegen muss, damit er
+    # wieder verschwindet -- ein ignore ohne diese Bedingung waere die stille
+    # Entscheidung, 2026er Werkzeug fuer immer zu fahren.
+    ignore:
+      # typescript-eslint deckelt `typescript` auf <6.1.0 (Stand 8.71.0) und
+      # wirft beim Laden, nicht bei einer Regel. Weg, sobald sein peer TS 7
+      # nennt: https://github.com/typescript-eslint/typescript-eslint/issues/10940
+      - dependency-name: typescript
+        update-types: [version-update:semver-major]
+      # eslint-plugin-react 7.37.5 ruft `context.getFilename()`, das ESLint 10
+      # entfernt hat. Es haengt an eslint-config-next, ist also nicht direkt
+      # waehlbar. Weg, sobald eslint-config-next ein eslint-plugin-react mit
+      # peer `^10` zieht (7.38 stable oder spaeter).
+      - dependency-name: eslint
+        update-types: [version-update:semver-major]
+      # @vitejs/plugin-react 6 verlangt vite ^8, vitest 5 bringt vite 7 mit.
+      # 5.2.0 deckt ^4 bis ^8 ab und passt damit auch nachher noch. Weg, sobald
+      # vitest auf vite 8 steht.
+      - dependency-name: '@vitejs/plugin-react'
+        update-types: [version-update:semver-major]
 
   - package-ecosystem: docker
     directory: /
