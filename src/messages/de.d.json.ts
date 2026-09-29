@@ -178,6 +178,15 @@ declare const messages: {
         "cancel": "Doch nicht",
         "scheduled": "Dieser Workspace wird am {date} gelöscht.",
         "undo": "Löschung zurücknehmen"
+      },
+      "voucher": {
+        "label": "Gutscheincode",
+        "redeem": "Einlösen",
+        "hint": "Ein Gutschein gilt ab diesem Monat für deine Rechnungen.",
+        "active": "Gutschein {code}: {percent, number} % Rabatt auf deine Rechnungen",
+        "free": "Gutschein {code}: kostenlos, ohne Rechnung",
+        "monthsLeft": "{count, plural, one {noch # Monat} other {noch # Monate}}",
+        "forever": "unbefristet"
       }
     }
   },
@@ -527,6 +536,13 @@ declare const messages: {
       },
       "workspace": {
         "readOnly": "Dieser Workspace ist schreibgeschützt. Inhalte lassen sich lesen und exportieren, aber nicht ändern."
+      },
+      "voucher": {
+        "unknown": "Diesen Gutscheincode kennen wir nicht.",
+        "expired": "Dieser Gutschein kann nicht mehr eingelöst werden.",
+        "exhausted": "Dieser Gutschein ist bereits aufgebraucht.",
+        "alreadyRedeemed": "Diesen Gutschein hat dein Workspace schon eingelöst.",
+        "active": "Für deinen Workspace läuft bereits ein Gutschein. Einen weiteren kannst du einlösen, sobald er ausgelaufen ist."
       }
     },
     "failed": "Das hat nicht geklappt. Versuch es noch einmal.",
@@ -1403,6 +1419,50 @@ declare const messages: {
       "never": "nie",
       "revoke": "Widerrufen",
       "revoked": "widerrufen"
+    },
+    "vouchers": {
+      "title": "Vouchers",
+      "intro": "Ein Voucher zieht einen Prozentsatz von der Monatsrechnung ab; bei 100 % gibt es keine Rechnung. Die Monate zählen ab dem ersten abgerechneten Monat, und jeder Workspace hat höchstens einen gleichzeitig.",
+      "code": "Code",
+      "codeHint": "leer lassen, dann wird einer erzeugt",
+      "percent": "Rabatt in %",
+      "months": "Wirkdauer in Monaten",
+      "monthsHint": "leer: unbefristet",
+      "until": "Einlösbar bis",
+      "untilHint": "leer: bis zum Widerruf",
+      "uses": "Nutzbar",
+      "usesOnce": "einmal",
+      "usesLimited": "mehrmals, höchstens",
+      "usesUnlimited": "unbegrenzt oft",
+      "maxRedemptions": "Anzahl Einlösungen",
+      "note": "Notiz (nur intern)",
+      "create": "Anlegen",
+      "created": "Angelegt: {code}",
+      "taken": "Diesen Code gibt es schon.",
+      "error": "Das hat nicht geklappt. Stimmen die Angaben?",
+      "none": "Noch keine Vouchers.",
+      "revoke": "Widerrufen",
+      "headCode": "Code",
+      "headDiscount": "Rabatt",
+      "headDuration": "Wirkdauer",
+      "headUntil": "Einlösbar bis",
+      "headRedeemed": "Eingelöst",
+      "headStatus": "Status",
+      "duration": "{count, plural, one {# Monat} other {# Monate}}",
+      "forever": "unbefristet",
+      "open": "offen",
+      "redeemedOf": "{count, number} von {max, number}",
+      "status": {
+        "active": "aktiv",
+        "revoked": "widerrufen",
+        "expired": "abgelaufen",
+        "exhausted": "aufgebraucht"
+      },
+      "tenantTitle": "Vouchers",
+      "tenantNone": "Keinen Voucher eingelöst.",
+      "used": "{used, number} von {count, number} Monaten verbraucht",
+      "running": "läuft",
+      "ended": "ausgelaufen"
     }
   },
   "discover": {

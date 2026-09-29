@@ -16,6 +16,7 @@ import { fakeAdapters } from '@/cloud/billing/adapters/fake'
 // Who is signed in, and what storing a payment method does to the database,
 // both have their own tests. What this file is about is the branch above them.
 vi.mock('next/cache', () => ({ revalidatePath: () => {} }))
+vi.mock('next-intl/server', () => ({ getTranslations: async () => (key: string) => key }))
 vi.mock('@/server/auth/session', () => ({
   readSession: async () => ({ tenantId: 't-1', memberId: 'm-1', tenantRole: 'admin' }),
 }))
@@ -28,6 +29,15 @@ vi.mock('@/cloud/workspace/account', () => ({
   requestCancellation: async () => new Date(),
   withdrawCancellation: async () => {},
 }))
+const redeemVoucher = vi.hoisted(() =>
+  vi.fn(async (_actor: unknown, code: unknown) => ({
+    code: String(code).toUpperCase(),
+    percent: 20,
+    durationMonths: 3,
+    monthsLeft: 3,
+  })),
+)
+vi.mock('@/cloud/workspace/voucher', () => ({ redeemVoucher }))
 
 /** The action as a build with these flags sees it. */
 async function actionWith(flags: { configured: boolean; paymentsConfigured: boolean }) {
@@ -64,5 +74,29 @@ describe('starting the payment setup', () => {
       ok: true,
       data: { url: 'https://payments.example.test/setup/t-1' },
     })
+  })
+})
+
+describe('redeeming a voucher', () => {
+  it('redeems it for the signed-in workspace', async () => {
+    const { redeemVoucherAction } = await import('./actions')
+    expect(await redeemVoucherAction('spring26')).toEqual({
+      ok: true,
+      data: { code: 'SPRING26', percent: 20, durationMonths: 3, monthsLeft: 3 },
+    })
+    expect(redeemVoucher).toHaveBeenCalledWith(
+      expect.objectContaining({ tenantId: 't-1' }),
+      'spring26',
+    )
+  })
+
+  it('stops a workspace from trying code after code', async () => {
+    const { redeemVoucherAction } = await import('./actions')
+    redeemVoucher.mockClear()
+    const answers = []
+    for (let attempt = 0; attempt < 12; attempt++) answers.push(await redeemVoucherAction('X'))
+    // Ten an hour: plenty for somebody mistyping, nothing for somebody guessing.
+    expect(redeemVoucher).toHaveBeenCalledTimes(10)
+    expect(answers.at(-1)).toMatchObject({ ok: false, messageKey: 'errors.tooManyRequests' })
   })
 })

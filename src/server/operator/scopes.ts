@@ -19,6 +19,14 @@ export const OPERATOR_SCOPES = [
   'ops:danger',
   /** Announcing and cancelling maintenance windows. */
   'ops:maintenance',
+  /**
+   * Making and revoking vouchers: a discount on what workspaces pay.
+   *
+   * Not `ops:lifecycle`, although nothing about it is irreversible: that scope
+   * is about a workspace that is in trouble, this one about money, and a token
+   * that may unblock somebody need not be one that may hand out free months.
+   */
+  'ops:vouchers',
   /** Writing catalogue content: entries, their agendas, the filter vocabulary -- and deleting one. */
   'catalog:author',
   /**
@@ -79,6 +87,7 @@ export const OPERATOR_SCOPE_TEXT: Record<OperatorScope, string> = {
   'ops:lifecycle': 'Pause and unpause workspaces, extend trials, grant grace, open billing periods',
   'ops:danger': 'Block a workspace, schedule its deletion, announce terms, write off an invoice',
   'ops:maintenance': 'Announce and cancel maintenance windows shown to every customer',
+  'ops:vouchers': 'Make vouchers that discount what workspaces pay, and revoke them',
   'catalog:author':
     'Write catalogue entries and the filter vocabulary, and delete an entry that is not live',
   'catalog:publish': 'Make catalogue content live, and take it back down',

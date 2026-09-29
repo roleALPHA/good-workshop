@@ -3,10 +3,11 @@ import { withTenant, type Actor, type Tx } from '@/server/db'
 import { assertTenantAdmin } from '@/domain/tenant/members'
 import { DELETION_GRACE_DAYS, isPlanKey, type PlanKey } from '@/cloud/billing/plans'
 import { readPriceList } from '@/cloud/billing/price-list'
-import { memberMonths, viennaDay, type Interval } from '@/cloud/billing/usage'
+import { discountedNetCents, memberMonths, viennaDay, type Interval } from '@/cloud/billing/usage'
 import type { BillingAdapters } from '@/cloud/billing/ports'
 import { parseBillingDetails, parseBillingEmail, SignupError } from '@/cloud/registration/rules'
 import type { VatCheck } from '@/cloud/tax/vies'
+import { readActiveVoucher, type ActiveVoucher } from './voucher'
 
 /**
  * A workspace's commercial side, as its admins see and change it.
@@ -38,8 +39,10 @@ export type BillingOverview = {
   paymentMethodReady: boolean
   /** What each plan costs today, from the accounting system. Null when unknown. */
   prices: Record<PlanKey, number | null>
-  /** What this month comes to so far, before tax. */
+  /** What this month comes to so far, before tax -- after the voucher, if one is running. */
   monthToDate: { quantity: number; netCents: number }
+  /** The voucher that discounts the workspace now. */
+  voucher: ActiveVoucher | null
   invoices: {
     month: string
     status: string
@@ -108,6 +111,8 @@ export async function readBillingOverview(
       ).length
     }
 
+    const voucher = await readActiveVoucher(tx)
+
     const invoices = await rows(
       tx,
       sql`select p.month, p.status, p.net_cents, p.gross_cents, p.invoice_number, p.invoice_url,
@@ -136,8 +141,13 @@ export async function readBillingOverview(
       prices: priceList.prices,
       monthToDate: {
         quantity,
-        netCents: Math.round(quantity * (priceList.prices[plan] ?? 0)),
+        netCents: discountedNetCents(
+          quantity,
+          priceList.prices[plan] ?? 0,
+          voucher?.percent ?? null,
+        ),
       },
+      voucher,
       invoices: invoices.map((row) => ({
         // A `date` column: already the calendar month, no time zone involved.
         month: String(row.month).slice(0, 7),

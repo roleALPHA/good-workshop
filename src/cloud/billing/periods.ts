@@ -2,7 +2,14 @@ import { isPlanKey } from './plans'
 import { priceAt } from './prices'
 import { readPlanPrices } from './plan-prices'
 import { PLANS } from './plans'
-import { invoiceRef, memberMonths, monthDays, netCents, viennaDay, type Interval } from './usage'
+import {
+  discountedNetCents,
+  invoiceRef,
+  memberMonths,
+  monthDays,
+  viennaDay,
+  type Interval,
+} from './usage'
 import { taxTreatment, type VatStatus } from '@/cloud/tax/treatment'
 import { DAY, type Db, type RunOptions } from './context'
 
@@ -82,7 +89,8 @@ export async function closeMonth(db: Db, month: string, options: RunOptions): Pr
       options.log('billing: no price for this month', { tenant: account.tenant_id, month })
       continue
     }
-    const net = netCents(quantity, unitNetCents)
+    const voucher = await runningVoucher(db, account.tenant_id, month)
+    const net = discountedNetCents(quantity, unitNetCents, voucher?.percent ?? null)
 
     const [status, holdReason] =
       net === 0
@@ -96,8 +104,9 @@ export async function closeMonth(db: Db, month: string, options: RunOptions): Pr
     const inserted = await db.query(
       `insert into billing_period
          (tenant_id, month, plan, quantity, unit_net_cents, net_cents, tax_kind, tax_country,
-          tax_rate, status, hold_reason, invoice_ref)
-       values ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12)
+          tax_rate, status, hold_reason, invoice_ref, voucher_redemption_id, discount_percent,
+          voucher_code)
+       values ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14, $15)
        on conflict (tenant_id, month) do nothing`,
       [
         account.tenant_id,
@@ -112,6 +121,9 @@ export async function closeMonth(db: Db, month: string, options: RunOptions): Pr
         status,
         holdReason,
         invoiceRef(account.tenant_id, month),
+        voucher?.id ?? null,
+        voucher?.percent ?? null,
+        voucher?.code ?? null,
       ],
     )
     created += inserted.rowCount ?? 0
@@ -133,4 +145,32 @@ export async function closeMonth(db: Db, month: string, options: RunOptions): Pr
   )
   options.log('billing: month closed', { month, periods: created })
   return created
+}
+
+/**
+ * The voucher that discounts a tenant's `month`, if any: redeemed in that month
+ * or before, and not yet used up by the months already billed with it.
+ *
+ * A month counts when its period is closed, void or not -- a free month is a
+ * month of the voucher. The terms are the ones copied at redemption, so a
+ * voucher revoked or edited afterwards changes nothing about what was given.
+ */
+async function runningVoucher(
+  db: Db,
+  tenantId: string,
+  month: string,
+): Promise<{ id: string; percent: number; code: string } | null> {
+  const { rows } = await db.query(
+    `select r.id, r.percent, r.code
+       from voucher_redemption r
+      where r.tenant_id = $1
+        and r.redeemed_month <= $2
+        and (r.duration_months is null
+             or (select count(*) from billing_period p where p.voucher_redemption_id = r.id)
+                < r.duration_months)
+      order by r.redeemed_at
+      limit 1`,
+    [tenantId, month],
+  )
+  return rows[0] ?? null
 }

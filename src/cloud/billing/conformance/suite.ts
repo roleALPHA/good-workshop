@@ -1,7 +1,7 @@
 import { describe, expect, it } from 'vitest'
 import { PLAN_KEYS, type PlanKey } from '../plans'
 import { implausible } from '../invoicing'
-import { netCents } from '../usage'
+import { discountedNetCents, netCents } from '../usage'
 import { AUSTRIAN_VAT_RATE, type TaxTreatment } from '../../tax/treatment'
 import type {
   BillingAdapters,
@@ -93,6 +93,22 @@ const AMOUNTS: [quantity: number, unitNetCents: number][] = [
   [0.03, 500],
   [31, 100],
   [2.5, 333],
+]
+
+/**
+ * Lines a voucher discounts: [quantity, unit price, percent]. The invoice has to
+ * show the discount on the line and arrive at the run's own amount -- a system
+ * that rounds per unit, or drops the discount, sends out an invoice the period
+ * does not match, and `implausible` only notices after it was sent.
+ */
+const DISCOUNTS: [quantity: number, unitNetCents: number, percent: number][] = [
+  [1, 500, 20],
+  [1.52, 500, 20],
+  [0.03, 500, 50],
+  [2.5, 333, 15],
+  // 1.15 × 100 is 114.99999999999999 as a float; half of it is exactly 57.5.
+  [1.15, 100, 50],
+  [31, 100, 99],
 ]
 
 export function describeBillingAdapters(target: ConformanceTarget): void {
@@ -195,6 +211,29 @@ export function describeBillingAdapters(target: ConformanceTarget): void {
         const expected = netCents(quantity, unitNetCents)
         // Asked with the run's own check rather than a second set of rounding
         // rules: what matters is that the production path would let it through.
+        expect(
+          implausible(
+            { net_cents: expected, tax_kind: 'domestic', tax_rate: AUSTRIAN_VAT_RATE },
+            invoice,
+          ),
+        ).toBeNull()
+      },
+    )
+
+    it.each(DISCOUNTS)(
+      `${COVERED.invoicing.issueInvoice}: %s × %i cents less %i %%`,
+      async (quantity, unitNetCents, percent) => {
+        const customerRef = await adapters.invoicing.upsertCustomer(customer(AT))
+        const invoice = await adapters.invoicing.issueInvoice({
+          customerRef,
+          ref: ref(`discount-${quantity}-${unitNetCents}-${percent}`),
+          lines: [{ ...line(quantity, unitNetCents), discountPercent: percent }],
+          tax: domestic,
+          collectedAfter: new Date(Date.now() + 2 * 86_400_000),
+          locale: 'de',
+        })
+
+        const expected = discountedNetCents(quantity, unitNetCents, percent)
         expect(
           implausible(
             { net_cents: expected, tax_kind: 'domestic', tax_rate: AUSTRIAN_VAT_RATE },

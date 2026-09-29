@@ -46,6 +46,10 @@ export default async function OperatorHome({
             {t('discover.title')}
           </Link>{' '}
           ·{' '}
+          <Link href={'/operator/vouchers' as Route} className="underline underline-offset-2">
+            {t('vouchers.title')}
+          </Link>{' '}
+          ·{' '}
           <Link href={'/operator/security' as Route} className="underline underline-offset-2">
             {t('passkeys.title')}
           </Link>{' '}

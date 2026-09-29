@@ -21,7 +21,7 @@ export default async function OperatorTenant({
     tenantDetail(operatorDb(), tenantId),
   ])
   if (!detail) notFound()
-  const { tenant, periods, audit } = detail
+  const { tenant, periods, audit, vouchers } = detail
   const date = (value: Date | null) =>
     value ? format.dateTime(value, { dateStyle: 'medium' }) : '–'
   const euro = (cents: number | null) =>
@@ -97,6 +97,29 @@ export default async function OperatorTenant({
             </tbody>
           </table>
         </div>
+      </section>
+
+      <section>
+        <h2 className="text-[17px] font-medium">{t('vouchers.tenantTitle')}</h2>
+        {vouchers.length === 0 ? (
+          <p className="mt-2 text-[14px] text-[var(--fg-muted)]">{t('vouchers.tenantNone')}</p>
+        ) : (
+          <ul className="mt-2 divide-y divide-[var(--border)] text-[14px]">
+            {vouchers.map((voucher) => (
+              <li key={voucher.code} className="py-2">
+                <span className="font-mono">{voucher.code}</span> · {voucher.percent} % ·{' '}
+                {voucher.durationMonths === null
+                  ? t('vouchers.forever')
+                  : t('vouchers.used', {
+                      used: voucher.monthsUsed,
+                      count: voucher.durationMonths,
+                    })}{' '}
+                · {voucher.running ? t('vouchers.running') : t('vouchers.ended')} ·{' '}
+                {date(voucher.redeemedAt)}
+              </li>
+            ))}
+          </ul>
+        )}
       </section>
 
       <section>

@@ -38,6 +38,14 @@ export type InvoiceLine = {
    * gets invoiced.
    */
   plan: PlanKey
+  /**
+   * A voucher's discount in whole percent, 1 to 99, shown on the line.
+   *
+   * The line then comes to `discountedNetCents(quantity, unitNetCents,
+   * discountPercent)`: quantity × price × (1 − discount), rounded once. A full
+   * discount never gets here -- a month that costs nothing is not invoiced.
+   */
+  discountPercent?: number
 }
 
 export type IssuedInvoice = {

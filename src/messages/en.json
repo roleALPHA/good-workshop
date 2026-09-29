@@ -175,6 +175,15 @@
         "cancel": "Keep it",
         "scheduled": "This workspace will be deleted on {date}.",
         "undo": "Take back deletion"
+      },
+      "voucher": {
+        "label": "Voucher code",
+        "redeem": "Redeem",
+        "hint": "A voucher applies to your invoices from this month on.",
+        "active": "Voucher {code}: {percent, number}% off your invoices",
+        "free": "Voucher {code}: free, no invoice",
+        "monthsLeft": "{count, plural, one {# more month} other {# more months}}",
+        "forever": "no end date"
       }
     }
   },
@@ -524,6 +533,13 @@
       },
       "workspace": {
         "readOnly": "This workspace is read-only. Content can be read and exported but not changed."
+      },
+      "voucher": {
+        "unknown": "We do not know this voucher code.",
+        "expired": "This voucher can no longer be redeemed.",
+        "exhausted": "This voucher has already been used up.",
+        "alreadyRedeemed": "Your workspace has already redeemed this voucher.",
+        "active": "A voucher is already running for your workspace. You can redeem another once it has ended."
       }
     },
     "failed": "That did not work. Try again.",
@@ -1400,6 +1416,50 @@
       "never": "never",
       "revoke": "Revoke",
       "revoked": "revoked"
+    },
+    "vouchers": {
+      "title": "Vouchers",
+      "intro": "A voucher takes a percentage off the monthly invoice; at 100 % there is no invoice. The months count from the first billed month, and a workspace has at most one at a time.",
+      "code": "Code",
+      "codeHint": "leave empty to have one made up",
+      "percent": "Discount in %",
+      "months": "Runs for months",
+      "monthsHint": "empty: no end",
+      "until": "Redeemable until",
+      "untilHint": "empty: until revoked",
+      "uses": "Can be used",
+      "usesOnce": "once",
+      "usesLimited": "several times, at most",
+      "usesUnlimited": "any number of times",
+      "maxRedemptions": "Number of redemptions",
+      "note": "Note (internal only)",
+      "create": "Create",
+      "created": "Created: {code}",
+      "taken": "This code already exists.",
+      "error": "That did not work. Are the details right?",
+      "none": "No vouchers yet.",
+      "revoke": "Revoke",
+      "headCode": "Code",
+      "headDiscount": "Discount",
+      "headDuration": "Runs for",
+      "headUntil": "Redeemable until",
+      "headRedeemed": "Redeemed",
+      "headStatus": "Status",
+      "duration": "{count, plural, one {# month} other {# months}}",
+      "forever": "no end",
+      "open": "open",
+      "redeemedOf": "{count, number} of {max, number}",
+      "status": {
+        "active": "active",
+        "revoked": "revoked",
+        "expired": "expired",
+        "exhausted": "used up"
+      },
+      "tenantTitle": "Vouchers",
+      "tenantNone": "No voucher redeemed.",
+      "used": "{used, number} of {count, number} months used",
+      "running": "running",
+      "ended": "ended"
     }
   },
   "discover": {

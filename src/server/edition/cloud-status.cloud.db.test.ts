@@ -194,7 +194,11 @@ describe('a read-only tenant', () => {
         and c.relname not in ('tenant_lifecycle', 'billing_account', 'vat_check', 'tax_evidence',
                               'usage_member_interval', 'usage_workshop_created', 'billing_period',
                               'operator_audit', 'invoice_document', 'legal_acknowledgement',
-                              'price_change_notice')
+                              'price_change_notice',
+                              -- Written by app.cloud_redeem_voucher only, and redeeming a
+                              -- voucher has to work in a read-only workspace: it is how
+                              -- somebody gets back to paying.
+                              'voucher_redemption')
     `)
     const undecided = rows
       .filter((row) => !row.guarded && !(row.table in notGuarded))

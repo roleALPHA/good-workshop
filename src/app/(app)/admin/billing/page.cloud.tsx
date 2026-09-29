@@ -14,6 +14,7 @@ import {
   PaymentPanel,
   PlanPanel,
 } from './billing-panels'
+import { VoucherForm } from './voucher-form'
 
 export const dynamic = 'force-dynamic'
 
@@ -53,7 +54,9 @@ export default async function BillingPage() {
         </p>
       </div>
       <PlanPanel overview={overview} />
-      <PaymentPanel ready={overview.paymentMethodReady} />
+      <PaymentPanel ready={overview.paymentMethodReady}>
+        <VoucherForm voucher={overview.voucher} />
+      </PaymentPanel>
       <DetailsPanel overview={overview} />
       <InvoicesPanel invoices={overview.invoices} />
       {/* Once a deletion is under way there is nothing left to give notice
