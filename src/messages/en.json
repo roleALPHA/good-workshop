@@ -1037,7 +1037,10 @@
       "moreTitle": "Read on",
       "moreMethods": "The building blocks of an agenda: fifteen methods, what they are good for and how long they run.",
       "moreFaq": "Frequently asked questions: pricing, data protection, self-hosting and the AI connection.",
-      "moreCompare": "Comparing with SessionLab? What GoodWorkshop does differently — and where it does less."
+      "moreCompare": "Comparing with SessionLab? What GoodWorkshop does differently — and where it does less.",
+      "videoTitle": "Two minutes through GoodWorkshop",
+      "videoLabel": "Product video: planning a workshop day, handing it over, and letting your AI work inside it (1:45)",
+      "videoNote": "1:45"
     },
     "pricing": {
       "title": "Pricing",

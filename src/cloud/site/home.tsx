@@ -102,16 +102,49 @@ export async function Home() {
         <p className="mt-3 text-[14px] text-[var(--fg-subtle)]">{t('trialNote')}</p>
       </section>
 
+      {/*
+        The tour, and then a still of the thing itself.
+
+        Served from here rather than embedded from a video platform, and that is
+        a product decision rather than a technical one: this site loads no third
+        party at all, and the FAQ two screens down says "no external services,
+        no tracking". An iframe would put cookies and an IP address in somebody
+        else's hands on the landing page, before anyone has agreed to anything.
+
+        `preload="none"` with a poster means the 4 MB are fetched when somebody
+        presses play and not before, so the page weighs a picture until then.
+        No autoplay: the narration carries half the message, and a video that
+        starts talking by itself gets muted or closed.
+      */}
+      <section className="mt-8" aria-labelledby="tour">
+        <h2 id="tour" className="sr-only">
+          {t('videoTitle')}
+        </h2>
+        <video
+          controls
+          preload="none"
+          poster="/marketing/tour-poster.jpg"
+          aria-label={t('videoLabel')}
+          // Stated for the same reason the pictures state theirs: without it
+          // the page reflows the moment the poster arrives.
+          width={1280}
+          height={720}
+          className="h-auto w-full rounded-lg border border-[var(--border)] shadow-sm"
+        >
+          <source src="/marketing/tour-en.mp4" type="video/mp4" />
+        </video>
+        <p className="mt-2 text-[14px] text-[var(--fg-subtle)]">{t('videoNote')}</p>
+      </section>
+
       {/* The product itself, before the list of what it does. The pictures are
           taken from the running application by e2e/marketing.capture.ts, so
           what is advertised here is what the tests run against. */}
-      <section className="mt-8">
+      <section className="mt-10">
         <Image
           src={`/marketing/${locale}/agenda.png`}
           alt={t('shotAgenda')}
           width={1280}
           height={860}
-          priority
           sizes="(min-width: 1024px) 64rem, 100vw"
           className="h-auto w-full rounded-lg border border-[var(--border)] shadow-sm"
         />
