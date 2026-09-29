@@ -4,7 +4,7 @@ import Link from 'next/link'
 import type { Route } from 'next'
 import { redirect } from 'next/navigation'
 import { getLocale, getTranslations } from 'next-intl/server'
-import { Bot, Github, Printer, Share2, Timer, Users } from 'lucide-react'
+import { Bot, Printer, Share2, Timer, Users } from 'lucide-react'
 import { readSessionCached } from '@/server/auth/session'
 import { SOURCE_URL } from '@/lib/attribution'
 import type { Locale } from '@/i18n/config'
@@ -12,6 +12,7 @@ import { siteMetadata } from './metadata'
 import { pathFor } from './routes'
 import { JsonLd, softwareApplication } from './structured-data'
 import { SiteShell } from './site-shell'
+import { GithubMark } from './github-mark'
 
 /**
  * The cloud's front page. Somebody already signed in has no use for a sales
@@ -205,7 +206,7 @@ export async function Home() {
           rel="noreferrer"
           className="mt-3 inline-flex min-h-11 items-center gap-2 text-[15px] underline underline-offset-2"
         >
-          <Github aria-hidden className="size-4" />
+          <GithubMark aria-hidden className="size-4" />
           {t('selfHostCta')}
         </a>
       </section>
