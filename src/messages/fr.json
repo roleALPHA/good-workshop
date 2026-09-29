@@ -1037,7 +1037,10 @@
       "moreTitle": "À lire ensuite",
       "moreMethods": "Les briques d'un agenda : quinze méthodes, à quoi elles servent et combien de temps elles durent.",
       "moreFaq": "Questions fréquentes : tarifs, protection des données, hébergement autonome et connexion à l'IA.",
-      "moreCompare": "Vous comparez avec SessionLab ? Ce que GoodWorkshop fait autrement — et là où il en fait moins."
+      "moreCompare": "Vous comparez avec SessionLab ? Ce que GoodWorkshop fait autrement — et là où il en fait moins.",
+      "videoTitle": "GoodWorkshop en deux minutes",
+      "videoLabel": "Vidéo du produit : préparer une journée d’atelier, la transmettre et laisser l’IA y travailler (1:45, en anglais)",
+      "videoNote": "1:45 · en anglais"
     },
     "pricing": {
       "title": "Tarifs",

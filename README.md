@@ -24,6 +24,15 @@ Plan the day, not the spreadsheet.</p>
 </p>
 
 <p align="center">
+  <a href="https://youtu.be/P2L5pnRIE_4"><img
+    src="docs/screenshots/tour-poster.jpg"
+    alt="Play the product tour: planning a workshop day, handing it over, and letting your AI work inside it (1:45)"></a>
+</p>
+
+<p align="center"><a href="https://youtu.be/P2L5pnRIE_4"><b>▶ Watch the tour</b></a> — 1:45: plan a
+day, hand it over, and let an AI client work inside the same agenda.</p>
+
+<p align="center">
   <a href="https://goodworkshop.org"><img
     src="docs/screenshots/agenda.png"
     alt="A workshop day in GoodWorkshop: blocks with times, durations, responsible people and material"></a>
