@@ -94,6 +94,8 @@ const UNITS: Record<InvoiceLocale, Record<'user_month' | 'workshop', string>> = 
   en: { user_month: 'user-months', workshop: 'workshops created' },
 }
 
+const VOUCHER: Record<InvoiceLocale, string> = { de: 'Gutschein', en: 'voucher' }
+
 /**
  * What one line of the invoice says.
  *
@@ -101,14 +103,19 @@ const UNITS: Record<InvoiceLocale, Record<'user_month' | 'workshop', string>> = 
  * on its own: what was used, and for which month. It read "GoodWorkshop
  * per_user Sat Aug" -- a key written for code, and a weekday where the month
  * belonged.
+ *
+ * A discounted line names the voucher it comes from; the percentage itself is
+ * the accounting system's discount column, not part of the text.
  */
 export function invoiceLine(
   unit: 'user_month' | 'workshop',
   month: string | Date,
   locale: InvoiceLocale,
+  voucherCode?: string | null,
 ): string {
   const [year, mon] = monthKey(month).split('-') as [string, string]
-  return `GoodWorkshop — ${UNITS[locale][unit]}, ${MONTHS[locale][Number(mon) - 1]} ${year}`
+  const line = `GoodWorkshop — ${UNITS[locale][unit]}, ${MONTHS[locale][Number(mon) - 1]} ${year}`
+  return voucherCode ? `${line} — ${VOUCHER[locale]} ${voucherCode}` : line
 }
 
 /** The month before the one an instant falls in, in Vienna: YYYY-MM-01. */
@@ -150,6 +157,26 @@ export function memberMonths(
 /** Net amount for a quantity, rounded to the cent. */
 export function netCents(quantity: number, unitNetCents: number): number {
   return Math.round(quantity * unitNetCents)
+}
+
+/**
+ * Net amount after a voucher's discount, rounded once to the cent.
+ *
+ * The accounting system computes a discounted line as quantity × price ×
+ * (1 − discount) and rounds the result, so this rounds once as well -- but not
+ * on a product that has already drifted: 1.15 × 100 is 114.99999999999999, and
+ * half of that rounds to 57 where the invoice says 58. The amount is taken in
+ * hundredths of a cent first, which is exact for every quantity the run
+ * produces (two decimals) and integer prices; the rest is integer arithmetic.
+ */
+export function discountedNetCents(
+  quantity: number,
+  unitNetCents: number,
+  percent: number | null,
+): number {
+  if (!percent) return netCents(quantity, unitNetCents)
+  const hundredths = Math.round(quantity * unitNetCents * 100)
+  return Math.round((hundredths * (100 - percent)) / 10_000)
 }
 
 /** The reference that identifies one tenant's month everywhere: GW-<tenant>-YYYY-MM. */

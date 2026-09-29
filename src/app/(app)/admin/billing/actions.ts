@@ -4,7 +4,9 @@ import { revalidatePath } from 'next/cache'
 import { adapters, paymentsConfigured } from '@gw/billing-adapters'
 import { authConfig } from '@/server/auth/config'
 import { currentActor, fail, toResult, type ActionResult } from '@/server/actions/context'
+import { rateLimiter } from '@/server/auth/ratelimit'
 import { checkVatId } from '@/cloud/tax/vies'
+import { redeemVoucher, type ActiveVoucher } from '@/cloud/workspace/voucher'
 import {
   cancelWorkspaceDeletion,
   changePlan,
@@ -20,6 +22,12 @@ import {
  * every one checks for a tenant admin in the domain, and the database refuses
  * anybody else on its own.
  */
+
+/**
+ * Per workspace, not per address: the guessing that matters is somebody trying
+ * codes, and they are signed in. Ten an hour is plenty for mistyping one.
+ */
+const voucherAttempts = rateLimiter({ limit: 10, windowMs: 60 * 60_000 })
 
 async function run<T>(
   fn: (actor: NonNullable<Awaited<ReturnType<typeof currentActor>>>) => Promise<T>,
@@ -64,6 +72,12 @@ export async function startPaymentSetupAction(): Promise<ActionResult<{ url: str
       new URL('/admin/billing', authConfig.appUrl).toString(),
     ),
   }))
+}
+
+export async function redeemVoucherAction(code: string): Promise<ActionResult<ActiveVoucher>> {
+  const actor = await currentActor()
+  if (actor && !voucherAttempts.take(actor.tenantId)) return fail('forbidden', 'tooManyRequests')
+  return run((actor) => redeemVoucher(actor, code))
 }
 
 export async function requestWorkspaceDeletionAction(): Promise<ActionResult<string>> {

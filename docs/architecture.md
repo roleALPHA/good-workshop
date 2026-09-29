@@ -121,6 +121,26 @@ the route: the query runs in the tenant's transaction and another workspace's mo
 nothing. Fetching is its own step -- an invoice that went out but whose PDF could not be fetched
 is not a failed invoice.
 
+**Vouchers** take a whole percentage off the monthly invoice. The console (and the operator MCP,
+under `ops:vouchers`) makes them: a code, a percentage, optionally a date after which it can no
+longer be redeemed, a number of billed months it runs for and a number of workspaces that may
+redeem it -- each left empty means no limit, and a single-use code is a limit of one. A workspace
+admin redeems one on the billing page, next to the payment method, through
+`app.cloud_redeem_voucher`; the application role cannot read the `voucher` table at all (blanket
+table grants meet a policy that matches nothing), so which codes exist is not something a
+workspace can list or find out by trying -- an unknown and a revoked code get the same answer.
+A workspace has one voucher at a time, and the redemption copies the terms, so revoking or
+editing a voucher afterwards changes nothing about what was given. When the run closes a month
+it applies the redemption from the month it was made in, and `billing_period.net_cents` is the
+amount **after** the discount: a month that costs nothing is void and never invoiced, and the
+plausibility check against the invoice is unchanged. A month counts towards the voucher when its
+period is closed, so a voucher redeemed during the trial loses none. The invoice line carries the
+discount as `discountPercent` and names the code; accounting rounds quantity × price × (1 −
+discount) once, and so does `discountedNetCents`. **A private build must not ship vouchers without
+an accounting adapter that honours `discountPercent`**: `issueInvoice` sends the invoice, so an
+adapter that ignored the field would send the full amount before the mismatch was noticed. The
+conformance suite has the discount cases that say so.
+
 Accounting and payments are ports (`src/cloud/billing/ports.ts`): the real adapters come from the
 private build through `@gw/billing-adapters`; every other build gets adapters that refuse, and the
 worker then only closes months and moves trials. The private build names its adapters with the

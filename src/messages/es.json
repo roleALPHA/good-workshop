@@ -175,6 +175,15 @@
         "cancel": "Mejor no",
         "scheduled": "Este espacio de trabajo se eliminará el {date}.",
         "undo": "Anular eliminación"
+      },
+      "voucher": {
+        "label": "Código de cupón",
+        "redeem": "Canjear",
+        "hint": "Un cupón se aplica a tus facturas a partir de este mes.",
+        "active": "Cupón {code}: {percent, number} % de descuento en tus facturas",
+        "free": "Cupón {code}: gratis, sin factura",
+        "monthsLeft": "{count, plural, one {# mes más} many {# meses más} other {# meses más}}",
+        "forever": "sin fecha de fin"
       }
     }
   },
@@ -524,6 +533,13 @@
       },
       "workspace": {
         "readOnly": "Este espacio de trabajo es de solo lectura. El contenido se puede leer y exportar, pero no modificar."
+      },
+      "voucher": {
+        "unknown": "No conocemos este código de cupón.",
+        "expired": "Este cupón ya no se puede canjear.",
+        "exhausted": "Este cupón ya se ha agotado.",
+        "alreadyRedeemed": "Tu espacio ya ha canjeado este cupón.",
+        "active": "Tu espacio ya tiene un cupón en curso. Podrás canjear otro cuando haya terminado."
       }
     },
     "failed": "No ha funcionado. Inténtalo de nuevo.",
@@ -1400,6 +1416,50 @@
       "never": "nunca",
       "revoke": "Revocar",
       "revoked": "revocada"
+    },
+    "vouchers": {
+      "title": "Cupones",
+      "intro": "Un cupón descuenta un porcentaje de la factura mensual; al 100 % no hay factura. Los meses cuentan desde el primer mes facturado, y un espacio tiene como máximo uno a la vez.",
+      "code": "Código",
+      "codeHint": "dejar vacío para generar uno",
+      "percent": "Descuento en %",
+      "months": "Duración en meses",
+      "monthsHint": "vacío: sin fin",
+      "until": "Canjeable hasta",
+      "untilHint": "vacío: hasta revocarlo",
+      "uses": "Uso",
+      "usesOnce": "una vez",
+      "usesLimited": "varias veces, como máximo",
+      "usesUnlimited": "sin límite",
+      "maxRedemptions": "Número de canjes",
+      "note": "Nota (solo interna)",
+      "create": "Crear",
+      "created": "Creado: {code}",
+      "taken": "Este código ya existe.",
+      "error": "No ha funcionado. ¿Son correctos los datos?",
+      "none": "Todavía no hay cupones.",
+      "revoke": "Revocar",
+      "headCode": "Código",
+      "headDiscount": "Descuento",
+      "headDuration": "Duración",
+      "headUntil": "Canjeable hasta",
+      "headRedeemed": "Canjeado",
+      "headStatus": "Estado",
+      "duration": "{count, plural, one {# mes} many {# meses} other {# meses}}",
+      "forever": "sin fin",
+      "open": "abierto",
+      "redeemedOf": "{count, number} de {max, number}",
+      "status": {
+        "active": "activo",
+        "revoked": "revocado",
+        "expired": "caducado",
+        "exhausted": "agotado"
+      },
+      "tenantTitle": "Cupones",
+      "tenantNone": "Ningún cupón canjeado.",
+      "used": "{used, number} de {count, number} meses usados",
+      "running": "en curso",
+      "ended": "terminado"
     }
   },
   "discover": {

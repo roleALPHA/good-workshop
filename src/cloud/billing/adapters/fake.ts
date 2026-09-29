@@ -1,5 +1,6 @@
 import { createHmac } from 'node:crypto'
 import type { BillingAdapters, IssuedInvoice, PaymentEvent } from '../ports'
+import { discountedNetCents } from '../usage'
 
 /** What a correctly signed webhook body carries, for tests. */
 export function fakeWebhookSignature(body: string): string {
@@ -54,8 +55,20 @@ export function fakeAdapters(
         // conformance suite is where that showed.
         const already = invoices.get(ref)
         if (already) return already
+        for (const line of lines) {
+          const percent = line.discountPercent
+          // The contract says 1 to 99. A full discount reaching an invoice is a
+          // bug in the run, and a double that accepts it would hide it.
+          if (
+            percent !== undefined &&
+            !(Number.isInteger(percent) && percent >= 1 && percent <= 99)
+          )
+            throw new Error(`discount of ${percent} % is not an invoice line`)
+        }
         const net = lines.reduce(
-          (sum, line) => sum + Math.round(line.quantity * line.unitNetCents),
+          (sum, line) =>
+            sum +
+            discountedNetCents(line.quantity, line.unitNetCents, line.discountPercent ?? null),
           0,
         )
         const rate = tax.kind === 'domestic' ? tax.rate : 0

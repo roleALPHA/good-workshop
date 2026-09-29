@@ -57,10 +57,16 @@ export async function invoicePeriods(db: Db, adapters: BillingAdapters, options:
           ref: period.invoice_ref,
           lines: [
             {
-              description: invoiceLine(PLANS[period.plan as PlanKey].unit, period.month, locale),
+              description: invoiceLine(
+                PLANS[period.plan as PlanKey].unit,
+                period.month,
+                locale,
+                period.voucher_code,
+              ),
               quantity: Number(period.quantity),
               unitNetCents: period.unit_net_cents,
               plan: period.plan,
+              ...(period.discount_percent ? { discountPercent: period.discount_percent } : {}),
             },
           ],
           tax: {

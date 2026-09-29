@@ -35,12 +35,14 @@ export function billingFixture(ops: Db) {
   const tenants: string[] = []
   const operators: string[] = []
   const announcements: string[] = []
+  const vouchers: string[] = []
 
   return {
     /** Every id handed out, so a caller can clean up exactly what it made. */
     tenants,
     operators,
     announcements,
+    vouchers,
 
     async tenant(setup: BillingSetup = {}): Promise<string> {
       const id = randomUUID()
@@ -94,10 +96,41 @@ export function billingFixture(ops: Db) {
       )
     },
 
+    /** A voucher, straight into the table. The code is unique per call. */
+    async voucher(
+      setup: {
+        percent?: number
+        durationMonths?: number | null
+        maxRedemptions?: number | null
+      } = {},
+    ): Promise<{ id: string; code: string }> {
+      const code = `T-${randomUUID().slice(0, 8).toUpperCase()}`
+      const { rows } = await ops.query(
+        `insert into voucher (code, percent, duration_months, max_redemptions)
+         values ($1, $2, $3, $4) returning id`,
+        [code, setup.percent ?? 20, setup.durationMonths ?? null, setup.maxRedemptions ?? null],
+      )
+      vouchers.push(rows[0].id)
+      return { id: rows[0].id, code }
+    },
+
+    /** A redemption made in `month` (YYYY-MM-01), as app.cloud_redeem_voucher would record it. */
+    async redeem(tenantId: string, voucherId: string, month: string): Promise<string> {
+      const { rows } = await ops.query(
+        `insert into voucher_redemption (tenant_id, voucher_id, code, percent, duration_months,
+           redeemed_at, redeemed_month)
+         select $1, id, code, percent, duration_months, $3::date, $3::date from voucher where id = $2
+         returning id`,
+        [tenantId, voucherId, month],
+      )
+      return rows[0].id
+    },
+
     /** Everything this fixture made, and nothing a neighbouring file made. */
     async cleanup(): Promise<void> {
       for (const table of [
         'billing_period',
+        'voucher_redemption',
         'billing_account',
         'tax_evidence',
         'vat_check',
@@ -106,6 +139,7 @@ export function billingFixture(ops: Db) {
       ]) {
         await ops.query(`delete from ${table} where tenant_id = any($1::uuid[])`, [tenants])
       }
+      await ops.query('delete from voucher where id = any($1::uuid[])', [vouchers])
       await ops.query('delete from operator_audit where operator_id = any($1::uuid[])', [operators])
       await ops.query('delete from legal_announcement where version = any($1)', [announcements])
       await ops.query('delete from tenant where id = any($1::uuid[])', [tenants])

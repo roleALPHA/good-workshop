@@ -8,6 +8,7 @@ import { displayVersion } from '@/lib/version'
 import { operatorConsoleEnabled, operatorDb } from '@/cloud/operator/db'
 import { registerOperatorCatalogTools } from '@/cloud/operator/mcp-catalog-tools'
 import { registerOperatorTenantTools } from '@/cloud/operator/mcp-tenant-tools'
+import { registerOperatorVoucherTools } from '@/cloud/operator/mcp-voucher-tools'
 import { resolveOperatorBearer } from '@/cloud/operator/tokens'
 import { operatorProfile, unauthorizedChallenge } from '@/server/oauth/metadata'
 
@@ -90,6 +91,7 @@ export async function POST(request: NextRequest) {
   try {
     registerOperatorTenantTools(server, actor)
     registerOperatorCatalogTools(server, actor)
+    registerOperatorVoucherTools(server, actor)
     await server.connect(transport)
     return await handleThroughNode(request, body, transport)
   } finally {

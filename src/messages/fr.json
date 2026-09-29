@@ -175,6 +175,15 @@
         "cancel": "Annuler",
         "scheduled": "Cet espace de travail sera supprimé le {date}.",
         "undo": "Annuler la suppression"
+      },
+      "voucher": {
+        "label": "Code de bon",
+        "redeem": "Utiliser",
+        "hint": "Un bon s’applique à tes factures à partir de ce mois-ci.",
+        "active": "Bon {code} : {percent, number} % de réduction sur tes factures",
+        "free": "Bon {code} : gratuit, sans facture",
+        "monthsLeft": "{count, plural, one {encore # mois} many {encore # mois} other {encore # mois}}",
+        "forever": "sans limite de durée"
       }
     }
   },
@@ -524,6 +533,13 @@
       },
       "workspace": {
         "readOnly": "Cet espace de travail est en lecture seule. Le contenu peut être lu et exporté, mais pas modifié."
+      },
+      "voucher": {
+        "unknown": "Nous ne connaissons pas ce code de bon.",
+        "expired": "Ce bon ne peut plus être utilisé.",
+        "exhausted": "Ce bon a déjà été entièrement utilisé.",
+        "alreadyRedeemed": "Ton espace a déjà utilisé ce bon.",
+        "active": "Un bon est déjà en cours pour ton espace. Tu pourras en utiliser un autre une fois celui-ci terminé."
       }
     },
     "failed": "Ça n'a pas marché. Réessaie.",
@@ -1400,6 +1416,50 @@
       "never": "jamais",
       "revoke": "Révoquer",
       "revoked": "révoqué"
+    },
+    "vouchers": {
+      "title": "Bons",
+      "intro": "Un bon déduit un pourcentage de la facture mensuelle ; à 100 %, il n’y a pas de facture. Les mois comptent à partir du premier mois facturé, et un espace en a au plus un à la fois.",
+      "code": "Code",
+      "codeHint": "laisser vide pour en générer un",
+      "percent": "Réduction en %",
+      "months": "Durée en mois",
+      "monthsHint": "vide : sans fin",
+      "until": "Utilisable jusqu’au",
+      "untilHint": "vide : jusqu’à révocation",
+      "uses": "Utilisable",
+      "usesOnce": "une fois",
+      "usesLimited": "plusieurs fois, au plus",
+      "usesUnlimited": "sans limite",
+      "maxRedemptions": "Nombre d’utilisations",
+      "note": "Note (interne)",
+      "create": "Créer",
+      "created": "Créé : {code}",
+      "taken": "Ce code existe déjà.",
+      "error": "Cela n’a pas fonctionné. Les indications sont-elles correctes ?",
+      "none": "Pas encore de bons.",
+      "revoke": "Révoquer",
+      "headCode": "Code",
+      "headDiscount": "Réduction",
+      "headDuration": "Durée",
+      "headUntil": "Utilisable jusqu’au",
+      "headRedeemed": "Utilisé",
+      "headStatus": "Statut",
+      "duration": "{count, plural, one {# mois} many {# mois} other {# mois}}",
+      "forever": "sans fin",
+      "open": "ouvert",
+      "redeemedOf": "{count, number} sur {max, number}",
+      "status": {
+        "active": "actif",
+        "revoked": "révoqué",
+        "expired": "expiré",
+        "exhausted": "épuisé"
+      },
+      "tenantTitle": "Bons",
+      "tenantNone": "Aucun bon utilisé.",
+      "used": "{used, number} mois utilisés sur {count, number}",
+      "running": "en cours",
+      "ended": "terminé"
     }
   },
   "discover": {

@@ -1,4 +1,5 @@
 import type pg from 'pg'
+import { tenantRedemptions } from './vouchers'
 
 /**
  * What the console reads and changes -- each a call to one app.op_* function,
@@ -57,13 +58,19 @@ export async function listTenants(db: Db): Promise<TenantSummary[]> {
 }
 
 export async function tenantDetail(db: Db, tenantId: string) {
-  const [tenants, periods, audit] = await Promise.all([
+  const [tenants, periods, audit, vouchers] = await Promise.all([
     db.query('select * from app.op_tenants($1)', [tenantId]),
     db.query('select * from app.op_periods($1)', [tenantId]),
     db.query('select * from app.op_audit_log($1)', [tenantId]),
+    tenantRedemptions(db, tenantId),
   ])
   if (!tenants.rows[0]) return null
-  return { tenant: summary(tenants.rows[0]), periods: periods.rows, audit: audit.rows }
+  return {
+    tenant: summary(tenants.rows[0]),
+    periods: periods.rows,
+    audit: audit.rows,
+    vouchers,
+  }
 }
 
 export type MaintenanceRow = {

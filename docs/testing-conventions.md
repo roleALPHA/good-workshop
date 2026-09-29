@@ -79,6 +79,11 @@ this worth its weight:
   added to a port without a statement about it fails `pnpm typecheck` — which is the only
   check that can hold for a contract whose other implementation this repository never sees.
 
+- Discounted lines (`DISCOUNTS` in the same file) are held to `discountedNetCents` through the
+  run's own `implausible()`, including a quantity whose float product lands just below a half
+  cent. An adapter that drops `discountPercent` or rounds per unit fails there rather than on a
+  customer's invoice.
+
 What the ports cannot show is what the document _says_: whether the reverse-charge sentence is
 on the invoice is a question only a person reading the PDF can answer. That is what the
 invoice capture in the private build is for, and it is deliberately not in this repository —

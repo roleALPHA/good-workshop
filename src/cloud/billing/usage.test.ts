@@ -1,6 +1,7 @@
 import { describe, expect, it } from 'vitest'
 import {
   blockAfter,
+  discountedNetCents,
   DUNNING_GRACE_DAYS,
   invoiceLocaleOf,
   invoiceRef,
@@ -133,6 +134,36 @@ describe('amounts and references', () => {
     expect(netCents(quantity, unit)).toBe(expected)
   })
 
+  /**
+   * What a voucher leaves to pay. The accounting system computes the same line
+   * as quantity × price × (1 − discount), rounded once to the cent -- so the
+   * rounding happens once here too, and never on a float that has already
+   * drifted: 1.15 × 100 is 114.99999999999999, and half of it would round down.
+   */
+  it.each([
+    [1, 500, 20, 400],
+    [1.52, 500, 20, 608],
+    [0.03, 500, 50, 8],
+    [2.5, 333, 15, 708],
+    [1.15, 100, 50, 58],
+    [0.01, 500, 90, 1],
+    [31, 100, 100, 0],
+    [0, 500, 20, 0],
+  ])('%s × %i cents less %i %% = %i cents', (quantity, unit, percent, expected) => {
+    expect(discountedNetCents(quantity, unit, percent)).toBe(expected)
+  })
+
+  it('without a voucher is the plain amount', () => {
+    for (const [quantity, unit] of [
+      [1, 100],
+      [0.52, 100],
+      [2.335, 100],
+      [1.52, 500],
+    ] as const) {
+      expect(discountedNetCents(quantity, unit, null)).toBe(netCents(quantity, unit))
+    }
+  })
+
   it('names one tenant’s month', () => {
     expect(invoiceRef('0198a2b3-c4d5-7e6f-8a9b-0c1d2e3f4a5b', '2026-03-01')).toBe(
       'GW-0198A2B3C4D5-2026-03',
@@ -242,6 +273,18 @@ describe('what an invoice line says', () => {
     // Also from the Date the driver hands back for a `date` column.
     expect(invoiceLine('workshop', new Date(2026, month - 1, 1), 'de')).toBe(
       `GoodWorkshop — angelegte Workshops, ${german}`,
+    )
+  })
+
+  it('names the voucher a discount comes from', () => {
+    expect(invoiceLine('user_month', '2026-08-01', 'de', 'FRUEHLING26')).toBe(
+      'GoodWorkshop — Benutzer-Monate, August 2026 — Gutschein FRUEHLING26',
+    )
+    expect(invoiceLine('workshop', '2026-12-01', 'en', 'SPRING26')).toBe(
+      'GoodWorkshop — workshops created, December 2026 — voucher SPRING26',
+    )
+    expect(invoiceLine('workshop', '2026-12-01', 'en', null)).toBe(
+      'GoodWorkshop — workshops created, December 2026',
     )
   })
 

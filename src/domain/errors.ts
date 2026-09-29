@@ -128,6 +128,14 @@ export const DOMAIN_ERROR_KEYS = [
   'signup.priceUnavailable',
   'signup.terms',
   'signup.dpa',
+  // Cloud vouchers, redeemed on the billing page. A code that does not exist and
+  // one that was revoked share `voucher.unknown`: which codes exist is not
+  // something to find out by trying.
+  'voucher.unknown',
+  'voucher.expired',
+  'voucher.exhausted',
+  'voucher.alreadyRedeemed',
+  'voucher.active',
   // First-run setup
   'setup.wrongKey',
   'setup.invalidEmail',

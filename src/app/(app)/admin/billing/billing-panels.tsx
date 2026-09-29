@@ -1,11 +1,11 @@
 'use client'
 
-import { useRouter } from 'next/navigation'
-import { useMemo, useState, useTransition } from 'react'
+import { useMemo, useState } from 'react'
 import { useFormatter, useLocale, useTranslations } from 'next-intl'
 import type { PlanKey } from '@/cloud/billing/plans'
 import { SIGNUP_COUNTRIES } from '@/cloud/registration/rules'
 import type { BillingOverview } from '@/cloud/workspace/account'
+import { Alert, card, field, primary, useAction } from './billing-ui'
 import {
   cancelWorkspaceDeletionAction,
   requestCancellationAction,
@@ -15,40 +15,6 @@ import {
   startPaymentSetupAction,
   updateBillingDetailsAction,
 } from './actions'
-
-const card = 'rounded border border-[var(--border)] bg-[var(--surface)] p-4'
-const field =
-  'mt-1 w-full rounded border border-[var(--border-strong)] bg-[var(--bg)] px-2.5 py-2 text-[16px]'
-const primary =
-  'min-h-11 rounded bg-[var(--brand)] px-4 text-[15px] font-medium text-[var(--brand-fg)] hover:bg-[var(--brand-hover)] disabled:opacity-60'
-
-type Result = { ok: boolean; message?: string }
-
-function useAction() {
-  const router = useRouter()
-  const [error, setError] = useState<string | null>(null)
-  const [pending, start] = useTransition()
-  const act = (fn: () => Promise<Result>, after?: () => void) =>
-    start(async () => {
-      const result = await fn()
-      if (!result.ok) {
-        setError(result.message ?? null)
-        return
-      }
-      setError(null)
-      after?.()
-      router.refresh()
-    })
-  return { error, pending, act }
-}
-
-function Alert({ message }: { message: string | null }) {
-  return message ? (
-    <p role="alert" className="mt-2 text-[14px] text-[var(--danger-fg)]">
-      {message}
-    </p>
-  ) : null
-}
 
 export function PlanPanel({ overview }: { overview: BillingOverview }) {
   const t = useTranslations('admin.billing')
@@ -177,7 +143,11 @@ export function DetailsPanel({ overview }: { overview: BillingOverview }) {
   )
 }
 
-export function PaymentPanel({ ready }: { ready: boolean }) {
+/**
+ * The payment method, and whatever goes with it -- the voucher form, which the
+ * page hands in, so that a code is entered where the card is.
+ */
+export function PaymentPanel({ ready, children }: { ready: boolean; children?: React.ReactNode }) {
   const t = useTranslations('admin.billing.payment')
   const [unavailable, setUnavailable] = useState(false)
   const { error, pending, act } = useAction()
@@ -205,6 +175,7 @@ export function PaymentPanel({ ready }: { ready: boolean }) {
       </button>
       {unavailable && <p className="mt-2 text-[14px] text-[var(--warn-fg)]">{t('unavailable')}</p>}
       <Alert message={error} />
+      {children}
     </section>
   )
 }
