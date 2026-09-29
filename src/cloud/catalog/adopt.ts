@@ -14,6 +14,7 @@ import type { RoomEditor } from '@/server/collab/across-days'
 import { blockMarkdown } from './block-prose'
 import type { EntryBlock, EntryDetail } from './ports'
 import type { Locale } from '@/i18n/config'
+import { translator } from '@/i18n/translator'
 
 /**
  * A design from the catalogue, written into somebody's workshops.
@@ -118,6 +119,9 @@ export async function adoptEntry(
         ? await createWorkshop(tx, actor, {
             title: input.target.title?.trim() || entry.name,
             folderId: input.target.folderId ?? null,
+            // The language the entry was read in, so the day the adoption
+            // creates is named the same way the rest of the page is.
+            dayTitle: translator(input.locale, 'workshop.day')('newTitle', { number: 1 }),
           })
         : { workshopId: input.target.workshopId, dayId: null }
 

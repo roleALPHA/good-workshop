@@ -1,6 +1,7 @@
 'use server'
 
 import { revalidatePath } from 'next/cache'
+import { getTranslations } from 'next-intl/server'
 import { z } from 'zod'
 import { listDays } from '@/domain/workshop/days'
 import {
@@ -53,7 +54,11 @@ export async function createWorkshopAction(raw: {
         .optional(),
     }),
     raw,
-    (tx, actor, input) => createWorkshop(tx, actor, input),
+    async (tx, actor, input) =>
+      createWorkshop(tx, actor, {
+        ...input,
+        dayTitle: (await getTranslations('workshop.day'))('newTitle', { number: 1 }),
+      }),
   )
 
   if (result.ok) revalidatePath('/library')
