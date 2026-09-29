@@ -19,7 +19,19 @@ import { type WorkshopAccess } from '@/domain/agenda/access'
  * days of a workshop in ./days.ts.
  */
 
-export type NewWorkshop = { title: string; folderId?: string | null; date?: string | null }
+export type NewWorkshop = {
+  title: string
+  folderId?: string | null
+  date?: string | null
+  /**
+   * What the first day is called.
+   *
+   * Passed in rather than written here, because this module has no language.
+   * It used to say 'Tag 1' outright, and every workshop anyone ever created --
+   * in English, French or Spanish -- opened on a German day name.
+   */
+  dayTitle: string
+}
 
 /**
  * Creates a workshop with its first day already in place.
@@ -71,7 +83,7 @@ export async function createWorkshop(
   await tx.insert(workshopDay).values({
     id: dayId,
     workshopId,
-    title: 'Tag 1',
+    title: input.dayTitle,
     date: input.date ?? null,
     position: keyAtEnd([]),
   })

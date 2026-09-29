@@ -23,7 +23,9 @@ import { withTenant, type Tx } from '@/server/db'
 import { auditEvent } from '@/server/db/schema'
 import { DEFAULT_LOCALE, LOCALES } from '@/i18n/config'
 import { requireScope, type PatActor } from './auth'
+import { translator } from '@/i18n/translator'
 import { guarded, ok } from './respond'
+import { MCP_LOCALE } from './shared'
 
 /**
  * The library over MCP: folders, workshops, tags and the bin.
@@ -255,6 +257,8 @@ export function registerLibraryTools(server: McpServer, { actor }: Ctx): void {
             title,
             folderId: folderId ?? null,
             date: date ?? null,
+            // English, like every other string this server hands a model.
+            dayTitle: translator(MCP_LOCALE, 'workshop.day')('newTitle', { number: 1 }),
           })
           await audit(tx, 'workshop', 'workshop.create', created.workshopId, {
             title,

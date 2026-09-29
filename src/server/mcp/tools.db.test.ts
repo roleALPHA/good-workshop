@@ -283,6 +283,20 @@ describe('folders', () => {
 })
 
 describe('workshops', () => {
+  it('names the first day in the language the caller gets answered in', async () => {
+    // The repository used to write 'Tag 1' outright, so a workshop created by
+    // an English-speaking person - or by a model, which this server answers in
+    // English throughout - opened on a German day name. Asserted against the
+    // table, because that is where the name is stored and where it was wrong.
+    const { must } = await connect(me)
+    const { data } = await must('create_workshop', { title: unique('Day name') })
+
+    const { rows } = await ops.query('select title from workshop_day where workshop_id = $1', [
+      data.workshopId,
+    ])
+    expect(rows[0].title).toBe('Day 1')
+  })
+
   it('renames, files, tags, bins, restores and purges', async () => {
     const { must, call } = await connect(me)
     const folder = await must('create_folder', { name: unique('Projekt') })
