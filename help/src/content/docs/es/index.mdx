@@ -1,0 +1,73 @@
+---
+title: Ayuda de GoodWorkshop
+description: Guías, referencia y resolución de problemas para GoodWorkshop, el planificador de talleres que calcula las horas por ti.
+template: splash
+hero:
+  tagline: Planifica la jornada, no la hoja de cálculo. Aquí verás cómo planificar un taller con GoodWorkshop, desde la primera idea hasta la agenda impresa, en solitario, en equipo o con tu asistente de IA.
+  image:
+    file: ../../../assets/es/agenda.png
+    alt: Una jornada de taller en GoodWorkshop con horas, duraciones, secciones y responsables
+  actions:
+    - text: Inicio rápido
+      link: /es/start/quickstart/
+      icon: right-arrow
+      variant: primary
+    - text: Planificar con IA
+      link: /es/ai/introduction/
+      variant: minimal
+---
+
+import { CardGrid, LinkCard } from '@astrojs/starlight/components'
+
+## ¿Qué buscas?
+
+Cada grupo empieza con la página que necesitas primero. La búsqueda de arriba encuentra cualquier
+palabra de la app: escribe sin más lo que ves en pantalla.
+
+<CardGrid>
+  <LinkCard
+    title="Primeros pasos"
+    description="Qué es GoodWorkshop, el primer taller en cinco minutos y cómo encaja todo."
+    href="/es/start/introduction/"
+  />
+  <LinkCard
+    title="Biblioteca"
+    description="Carpetas, talleres, etiquetas y la papelera: mantener el orden y encontrarlo todo."
+    href="/es/library/folders-and-workshops/"
+  />
+  <LinkCard
+    title="Planificar la agenda"
+    description="Jornadas, bloques, duraciones, horas de inicio fijadas, secciones, breakouts y los apartados."
+    href="/es/agenda/days/"
+  />
+  <LinkCard
+    title="Compartir e imprimir"
+    description="Compartir con el equipo y con invitados sin cuenta, imprimir y exportar como Markdown."
+    href="/es/sharing/share-with-people/"
+  />
+  <LinkCard
+    title="Asistente de IA (MCP)"
+    description="Conectar Claude, ChatGPT u otro asistente y diseñar agendas juntos."
+    href="/es/ai/introduction/"
+  />
+  <LinkCard
+    title="Cuenta y administración"
+    description="Perfil, idioma, passkeys y, para administradores, miembros, identidad visual y envío de correo."
+    href="/es/account/profile-and-language/"
+  />
+  <LinkCard
+    title="GoodWorkshop Cloud"
+    description="Registro, periodo de prueba, precios, facturas, cupones y descubrir métodos."
+    href="/es/cloud/overview/"
+  />
+  <LinkCard
+    title="Alojamiento propio"
+    description="Instalación con Docker, configuración, HTTPS, actualización y protección de datos."
+    href="/es/self-hosting/installation/"
+  />
+  <LinkCard
+    title="Resolución de problemas"
+    description="Cuando el enlace de acceso no llega, la conexión con la IA falla o algo no funciona como esperabas."
+    href="/es/troubleshooting/overview/"
+  />
+</CardGrid>

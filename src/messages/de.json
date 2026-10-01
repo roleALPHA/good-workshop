@@ -578,7 +578,8 @@
       "notYours": "Dieser Passkey gehört nicht zu deinem Konto."
     },
     "setupFailed": "Die Einrichtung ist fehlgeschlagen. Details stehen im Log.",
-    "unauthenticated": "Bitte melde dich an."
+    "unauthenticated": "Bitte melde dich an.",
+    "supportUnavailable": "Deine Anfrage konnte gerade nicht zugestellt werden. Schreib uns bitte direkt an {email}."
   },
   "export": {
     "columns": {
@@ -793,7 +794,9 @@
       "planned": "Geplante Wartung am {from} bis {until}. In dieser Zeit kann GoodWorkshop kurz nicht erreichbar sein.",
       "running": "Wartungsarbeiten laufen, voraussichtlich bis {until}."
     },
-    "discover": "Discover"
+    "discover": "Discover",
+    "help": "Hilfe",
+    "support": "Support"
   },
   "settings": {
     "intro": "Dein Konto: Name, Sprache, Sicherheit und KI-Verbindung.",
@@ -1503,5 +1506,18 @@
     "adoptIntoDay": "In einen Tag eines bestehenden Workshops",
     "adoptChooseDay": "Tag wählen",
     "adoptNoDays": "Dieser Workshop hat keine Tage."
+  },
+  "support": {
+    "title": "Support",
+    "intro": "Schreib uns, wenn etwas nicht klappt oder du eine Frage hast. Die Antwort kommt per E-Mail an {email}.",
+    "helpFirst": "Viele Fragen beantwortet schon die Hilfe:",
+    "helpLink": "Hilfe öffnen",
+    "subject": "Betreff",
+    "message": "Nachricht",
+    "messageHint": "Was hast du gemacht, was ist passiert, was hast du erwartet? Workspace, Rolle, Version und Sprache schicken wir automatisch mit.",
+    "send": "Anfrage senden",
+    "sending": "Wird gesendet …",
+    "sent": "Danke! Deine Anfrage ist als Ticket #{number} bei uns angekommen. Die Antwort kommt per E-Mail.",
+    "unconfigured": "Das Formular ist gerade nicht verfügbar. Schreib uns direkt an {email}."
   }
 }

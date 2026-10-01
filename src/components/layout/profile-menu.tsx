@@ -2,9 +2,21 @@
 
 import Link from 'next/link'
 import { useEffect, useId, useRef, useState } from 'react'
-import { useTranslations } from 'next-intl'
-import { Bot, Fingerprint, LogOut, Mail, Palette, Receipt, UserRound, Users } from 'lucide-react'
+import { useLocale, useTranslations } from 'next-intl'
+import {
+  Bot,
+  Fingerprint,
+  LifeBuoy,
+  LogOut,
+  Mail,
+  MessageSquare,
+  Palette,
+  Receipt,
+  UserRound,
+  Users,
+} from 'lucide-react'
 import { initials } from '@/domain/agenda/responsible'
+import { helpUrl } from '@/lib/help'
 
 /**
  * Everything about your own account, behind your name in the top right.
@@ -30,6 +42,7 @@ export function ProfileMenu({
   email,
   isAdmin,
   hasBilling = false,
+  hasSupport = false,
 }: {
   /** First and last name; '' for somebody who has none yet. */
   name: string
@@ -37,8 +50,11 @@ export function ProfileMenu({
   isAdmin: boolean
   /** The cloud: tenant admins also reach billing from here. */
   hasBilling?: boolean
+  /** The cloud: a form that opens a ticket with our support. */
+  hasSupport?: boolean
 }) {
   const t = useTranslations('nav')
+  const locale = useLocale()
   const [open, setOpen] = useState(false)
   const wrapperRef = useRef<HTMLDivElement>(null)
   const triggerRef = useRef<HTMLButtonElement>(null)
@@ -125,6 +141,31 @@ export function ProfileMenu({
             </ul>
           </nav>
 
+          {/* Help is the same site for both editions -- it describes the
+              product, and a self-hosted installation runs the same product.
+              The support form is not: it opens a ticket with us. */}
+          <nav aria-label={t('help')} className="border-t border-[var(--border)] py-1">
+            <ul>
+              <li>
+                <a
+                  href={helpUrl(locale)}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  onClick={() => setOpen(false)}
+                  className={entryClass}
+                >
+                  <LifeBuoy aria-hidden className="size-4 shrink-0 text-[var(--fg-muted)]" />
+                  {t('help')}
+                </a>
+              </li>
+              {hasSupport && (
+                <Entry href="/support" icon={MessageSquare} onPick={() => setOpen(false)}>
+                  {t('support')}
+                </Entry>
+              )}
+            </ul>
+          </nav>
+
           {isAdmin && (
             <nav
               aria-labelledby={`${panelId}-admin`}
@@ -174,24 +215,24 @@ export function ProfileMenu({
   )
 }
 
+const entryClass =
+  'flex min-h-11 items-center gap-2.5 rounded px-3 text-[15px] text-[var(--fg)] hover:bg-[var(--surface)] focus-visible:bg-[var(--surface)] focus-visible:outline-none'
+
 function Entry({
   href,
   icon: Icon,
   onPick,
   children,
 }: {
-  href: '/settings' | '/settings/security' | '/settings/ai-connection' | `/admin/${string}`
+  href:
+    '/settings' | '/settings/security' | '/settings/ai-connection' | '/support' | `/admin/${string}`
   icon: typeof UserRound
   onPick: () => void
   children: React.ReactNode
 }) {
   return (
     <li>
-      <Link
-        href={href as '/settings'}
-        onClick={onPick}
-        className="flex min-h-11 items-center gap-2.5 rounded px-3 text-[15px] text-[var(--fg)] hover:bg-[var(--surface)] focus-visible:bg-[var(--surface)] focus-visible:outline-none"
-      >
+      <Link href={href as '/settings'} onClick={onPick} className={entryClass}>
         <Icon aria-hidden className="size-4 shrink-0 text-[var(--fg-muted)]" />
         {children}
       </Link>

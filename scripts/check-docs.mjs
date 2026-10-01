@@ -79,6 +79,12 @@ const INTERNAL = {
     'content security policy; without it nothing external is loaded at all.',
   GW_ANALYTICS_WEBSITE_ID:
     'Cloud only: which site the counter counts for. Both have to be set, or nothing is loaded.',
+  GW_ZAMMAD_URL:
+    'Cloud only: the helpdesk the in-app support form opens tickets in. A self-hosted ' +
+    'installation is supported by whoever runs it and has no form.',
+  GW_ZAMMAD_GROUP: 'Cloud only: the helpdesk group support tickets land in.',
+  GW_ZAMMAD_TOKEN: 'Cloud only: the agent access token for the helpdesk.',
+  GW_ZAMMAD_TOKEN_FILE: 'Cloud only: the same, as a mounted secret file; wins over the value.',
   GW_BUILD:
     'Baked into the image by the Dockerfile from the build argument. Names the build the ' +
     'footer shows; an operator setting it would make the footer lie.',

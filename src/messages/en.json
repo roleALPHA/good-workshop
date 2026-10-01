@@ -578,7 +578,8 @@
       "notYours": "This passkey does not belong to your account."
     },
     "setupFailed": "Setup failed. The details are in the log.",
-    "unauthenticated": "Please sign in."
+    "unauthenticated": "Please sign in.",
+    "supportUnavailable": "Your request could not be delivered just now. Please write to us directly at {email}."
   },
   "export": {
     "columns": {
@@ -793,7 +794,9 @@
       "planned": "Planned maintenance on {from} until {until}. GoodWorkshop may be briefly unavailable.",
       "running": "Maintenance is under way, expected to finish at {until}."
     },
-    "discover": "Discover"
+    "discover": "Discover",
+    "help": "Help",
+    "support": "Support"
   },
   "settings": {
     "intro": "Your account: name, language, security and AI connection.",
@@ -1503,5 +1506,18 @@
     "adoptIntoDay": "Into a day of an existing workshop",
     "adoptChooseDay": "Choose a day",
     "adoptNoDays": "That workshop has no days."
+  },
+  "support": {
+    "title": "Support",
+    "intro": "Write to us when something does not work or you have a question. The answer comes by e-mail to {email}.",
+    "helpFirst": "Many questions are already answered in the help:",
+    "helpLink": "Open the help",
+    "subject": "Subject",
+    "message": "Message",
+    "messageHint": "What did you do, what happened, what did you expect? We send your workspace, role, version and language along automatically.",
+    "send": "Send request",
+    "sending": "Sending …",
+    "sent": "Thank you! Your request reached us as ticket #{number}. The answer comes by e-mail.",
+    "unconfigured": "The form is not available right now. Write to us directly at {email}."
   }
 }

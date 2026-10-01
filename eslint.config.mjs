@@ -42,6 +42,9 @@ const config = [
       '**/test-results/**',
       // The bundled collaboration server: generated output, not source.
       '**/dist/**',
+      // The help site is a package of its own (Astro, its own lockfile) whose
+      // code is two config scripts; the Next rules here do not apply to it.
+      'help/**',
     ],
   },
 

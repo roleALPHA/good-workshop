@@ -85,3 +85,4 @@ jobs:
         with:
           scan-args: |-
             --lockfile=./pnpm-lock.yaml
+            --lockfile=./help/pnpm-lock.yaml

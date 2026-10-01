@@ -1,0 +1,50 @@
+/*
+ * The app's colours, so the help looks like the product it explains. Values
+ * from src/styles/globals.css: the brand hue 262 and the neutral greys.
+ * Starlight's accent scale runs low (dark text) to high (light background).
+ */
+:root {
+  --sl-font: 'Inter Variable', ui-sans-serif, system-ui, -apple-system, 'Segoe UI', sans-serif;
+  --sl-color-accent-low: oklch(0.285 0.055 262);
+  --sl-color-accent: oklch(0.66 0.15 262);
+  --sl-color-accent-high: oklch(0.885 0.055 262);
+  --sl-color-white: oklch(0.955 0.004 255);
+  --sl-color-gray-1: oklch(0.9 0.006 255);
+  --sl-color-gray-2: oklch(0.8 0.008 255);
+  --sl-color-gray-3: oklch(0.7 0.01 255);
+  --sl-color-gray-4: oklch(0.52 0.012 255);
+  --sl-color-gray-5: oklch(0.38 0.012 255);
+  --sl-color-gray-6: oklch(0.248 0.01 255);
+  --sl-color-black: oklch(0.178 0.008 255);
+}
+
+:root[data-theme='light'] {
+  --sl-color-accent-low: oklch(0.965 0.028 262);
+  --sl-color-accent: oklch(0.545 0.17 262);
+  --sl-color-accent-high: oklch(0.4 0.11 262);
+  --sl-color-white: oklch(0.235 0.011 255);
+  --sl-color-gray-1: oklch(0.3 0.011 255);
+  --sl-color-gray-2: oklch(0.4 0.012 255);
+  --sl-color-gray-3: oklch(0.525 0.012 255);
+  --sl-color-gray-4: oklch(0.655 0.011 255);
+  --sl-color-gray-5: oklch(0.845 0.006 255);
+  --sl-color-gray-6: oklch(0.912 0.004 255);
+  --sl-color-gray-7: oklch(0.985 0.002 250);
+  --sl-color-black: oklch(1 0 0);
+}
+
+/* Screenshots are framed like the cards around them. */
+.sl-markdown-content img {
+  border: 1px solid var(--sl-color-hairline);
+  border-radius: 0.5rem;
+}
+
+/* The hero screenshot is a wide app window; shown whole rather than cropped. */
+.hero img {
+  width: 100%;
+  max-width: 36rem;
+  height: auto;
+  object-fit: contain;
+  border: 1px solid var(--sl-color-hairline);
+  border-radius: 0.5rem;
+}

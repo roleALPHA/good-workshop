@@ -52,6 +52,8 @@ export const CLIENT_NAMESPACES = [
   // The consent screen is a client component: it has to decide, in the
   // browser, what the buttons say while a request is in flight.
   'oauth',
+  // The cloud's support form, for the same reason.
+  'support',
   'errors',
   'enums',
 ] as const

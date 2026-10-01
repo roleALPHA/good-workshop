@@ -578,7 +578,8 @@
       "notYours": "Ce passkey n'appartient pas à ton compte."
     },
     "setupFailed": "L'installation a échoué. Les détails sont dans le journal.",
-    "unauthenticated": "Connecte-toi, s'il te plaît."
+    "unauthenticated": "Connecte-toi, s'il te plaît.",
+    "supportUnavailable": "Ta demande n'a pas pu être transmise pour l'instant. Écris-nous directement à {email}."
   },
   "export": {
     "columns": {
@@ -793,7 +794,9 @@
       "planned": "Maintenance prévue le {from} jusqu’à {until}. GoodWorkshop peut être brièvement indisponible.",
       "running": "Maintenance en cours, fin prévue à {until}."
     },
-    "discover": "Discover"
+    "discover": "Discover",
+    "help": "Aide",
+    "support": "Support"
   },
   "settings": {
     "intro": "Ton compte : nom, langue, sécurité et connexion IA.",
@@ -1503,5 +1506,18 @@
     "adoptIntoDay": "À une journée d’un atelier existant",
     "adoptChooseDay": "Choisir une journée",
     "adoptNoDays": "Cet atelier n’a aucune journée."
+  },
+  "support": {
+    "title": "Support",
+    "intro": "Écris-nous si quelque chose ne fonctionne pas ou si tu as une question. La réponse arrive par e-mail à {email}.",
+    "helpFirst": "L'aide répond déjà à beaucoup de questions :",
+    "helpLink": "Ouvrir l'aide",
+    "subject": "Objet",
+    "message": "Message",
+    "messageHint": "Qu'as-tu fait, que s'est-il passé, qu'attendais-tu ? Nous joignons automatiquement l'espace de travail, le rôle, la version et la langue.",
+    "send": "Envoyer la demande",
+    "sending": "Envoi …",
+    "sent": "Merci ! Ta demande nous est parvenue sous le ticket n° {number}. La réponse arrive par e-mail.",
+    "unconfigured": "Le formulaire n'est pas disponible pour le moment. Écris-nous directement à {email}."
   }
 }
