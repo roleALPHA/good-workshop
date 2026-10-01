@@ -176,6 +176,16 @@ jobs:
       # The image the cloud deployment builds from help/; a broken Dockerfile
       # should not first show up on the deploy runner.
       - run: docker build help -t goodworkshop-doc:ci
+      # The deployment scans this image too and stops on what it finds; the
+      # first release of it failed there on the base image's Caddy binary.
+      - name: Scan the image
+        uses: anchore/scan-action@27805bf3b4e84b4a5c980df22ed233c00390a439 # v7.4.2
+        with:
+          image: goodworkshop-doc:ci
+          fail-build: true
+          severity-cutoff: high
+          only-fixed: true
+          output-format: table
 
   db:
     name: Schema & Tenant Isolation

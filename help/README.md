@@ -10,7 +10,7 @@ pnpm --dir help dev       # http://localhost:4321/de/
 pnpm --dir help build     # checks the locales, builds, validates every internal link
 ```
 
-The image is `help/Dockerfile`: the built site behind a small Caddy on port 8080. The
+The image is `help/Dockerfile`: the built site behind nginx (unprivileged) on port 8080. The
 cloud deployment builds it next to the app image and serves it as `doc.goodworkshop.org`.
 
 ## Rules for pages
