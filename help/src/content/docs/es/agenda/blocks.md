@@ -36,7 +36,7 @@ Algunos tipos muestran además un campo como pequeña etiqueta en la columna **I
 
 Debajo de cada bloque aparece **Más campos**. Un clic despliega el resto de campos del tipo de bloque; **Menos** los vuelve a plegar. Solo hay un bloque desplegado a la vez, para que la agenda siga siendo legible. Los cambios se guardan en cuanto sales de un campo.
 
-Todos los tipos tienen el campo **Notas de facilitación**. Está marcado con «solo para ti» y no aparece en la vista de lectura. Al imprimir y al exportar en Markdown, las notas solo se incluyen si marcas **Con notas de moderación**. Si un bloque tiene notas, un pequeño icono junto a **Más campos** lo indica.
+Todos los tipos tienen el campo **Notas de facilitación**. Está marcado con «solo para ti» y no aparece en la vista de lectura. Al imprimir y al exportar en Markdown, las notas solo se incluyen si marcas **Con notas de facilitación**. Si un bloque tiene notas, un pequeño icono junto a **Más campos** lo indica.
 
 ## Los tipos de bloque
 

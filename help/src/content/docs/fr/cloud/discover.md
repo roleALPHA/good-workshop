@@ -57,14 +57,14 @@ plus de temps.
 
 Clique sur une entrée. La page l'affiche journée par journée, avec chaque bloc et sa durée. Les
 blocs prévus comme réserve dans l'entrée portent la mention **Mis de côté**. Si un texte
-n'existe pas encore en français, il est indiqué « Ce texte n'existe pas encore dans votre
+n'existe pas encore en français, il est indiqué « Ce texte n'existe pas encore dans ta
 langue. », et tu lis la version anglaise.
 
 **Retour à Discover** te ramène à la liste.
 
 ## Reprendre dans ton espace de travail
 
-Sous **Reprendre dans votre espace**, tu choisis où l'entrée doit aller :
+Sous **Reprendre dans ton espace**, tu choisis où l'entrée doit aller :
 
 | Destination                             | Ce qui se passe                                                                                                                                              |
 | --------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------ |

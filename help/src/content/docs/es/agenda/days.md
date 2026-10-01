@@ -14,7 +14,7 @@ Todo lo que se describe en esta página ocurre directamente encima de la agenda,
 ## Añadir una jornada
 
 1. Haz clic en **Jornada**, a la derecha de las pestañas.
-2. La nueva jornada se añade al final, se llama provisionalmente «Día 2», «Día 3», etc., y se abre de inmediato.
+2. La nueva jornada se añade al final, se llama provisionalmente «Jornada 2», «Jornada 3», etc., y se abre de inmediato.
 
 La nueva jornada adopta el **Inicio de la jornada** de la última jornada existente. Si tu taller empieza a las 08:30, la nueva jornada también empieza a las 08:30. La primerísima jornada de un taller empieza a las 09:00.
 

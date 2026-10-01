@@ -12,7 +12,7 @@ Para el día del taller a menudo quieres el desarrollo en papel: para ti en la m
 1. Abre una jornada del taller.
 2. Arriba a la derecha, con las dos casillas, decide qué se incluye:
    - **Todo el taller**: todas las jornadas en lugar de solo la abierta.
-   - **Con notas de moderación**: tus notas sobre los bloques.
+   - **Con notas de facilitación**: tus notas sobre los bloques.
 3. Haz clic en **Imprimir**. La vista de impresión se abre en una pestaña nueva.
 
 Allí imprimes con la orden de imprimir de tu navegador (Ctrl+P; en Mac, ⌘+P).
@@ -48,7 +48,7 @@ Las [secciones](/es/agenda/clusters-and-breakouts/) aparecen como subtítulos de
 :::note[Qué no se imprime]
 
 - Los bloques [apartados](/es/agenda/parking/): no están en el horario.
-- Las notas de facilitación, mientras **Con notas de moderación** no esté marcada. La casilla está desmarcada cada vez que abres la página: el caso más habitual es la copia impresa para el grupo, y ahí tus notas no pintan nada.
+- Las notas de facilitación, mientras **Con notas de facilitación** no esté marcada. La casilla está desmarcada cada vez que abres la página: el caso más habitual es la copia impresa para el grupo, y ahí tus notas no pintan nada.
   :::
 
 ## Quién puede imprimir

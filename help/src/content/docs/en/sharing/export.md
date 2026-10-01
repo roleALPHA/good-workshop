@@ -12,13 +12,13 @@ Every agenda can be downloaded as a Markdown file at any time. Markdown is plain
 1. Open a day of the workshop.
 2. Use the two checkboxes at the top right to decide what comes along:
    - **Whole workshop** – all days in one file instead of only the open one.
-   - **With facilitation notes** – your notes on the blocks.
+   - **With facilitator notes** – your notes on the blocks.
 3. Click **Markdown**. Your browser downloads a `.md` file, named after the workshop.
 
 Both checkboxes also apply to [printing](/en/sharing/print/) – they answer the same question: who is this copy for?
 
 :::caution[Notes are left out by default]
-Fields that a block type marks as private – currently the facilitator notes – are only in the file with **With facilitation notes**. The checkbox is off every time you open the page. Don't pass a file with notes on to participants.
+Fields that a block type marks as private – currently the facilitator notes – are only in the file with **With facilitator notes**. The checkbox is off every time you open the page. Don't pass a file with notes on to participants.
 :::
 
 ## What's in the file

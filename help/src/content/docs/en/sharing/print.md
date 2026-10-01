@@ -12,7 +12,7 @@ On the day itself you often want the schedule on paper: for you at the facilitat
 1. Open a day of the workshop.
 2. Use the two checkboxes at the top right to decide what comes along:
    - **Whole workshop** – all days instead of only the open one.
-   - **With facilitation notes** – your notes on the blocks.
+   - **With facilitator notes** – your notes on the blocks.
 3. Click **Print**. The print view opens in a new tab.
 
 There you print with your browser's print command (Ctrl+P, or ⌘+P on a Mac).
@@ -48,7 +48,7 @@ At the end it says when the day ends.
 :::note[What isn't printed]
 
 - Blocks in the [parking area](/en/agenda/parking/) – they aren't in the schedule.
-- Facilitator notes, as long as **With facilitation notes** isn't checked. The checkbox is off every time you open the page: the most common case is the printout for the group, and your notes have no place there.
+- Facilitator notes, as long as **With facilitator notes** isn't checked. The checkbox is off every time you open the page: the most common case is the printout for the group, and your notes have no place there.
   :::
 
 ## Who may print

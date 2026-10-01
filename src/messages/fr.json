@@ -43,8 +43,8 @@
       "removeOwnsNothing": "Ce membre ne possède ni ateliers ni dossiers.",
       "removeOwns": "À reprendre : {workshops, plural, =0 {aucun atelier} one {# atelier} many {# ateliers} other {# ateliers}} et {folders, plural, =0 {aucun dossier} one {# dossier} many {# dossiers} other {# dossiers}}.",
       "successor": "Repris par",
-      "successorPlaceholder": "Veuillez choisir …",
-      "removeTypeLabel": "Saisissez l'adresse e-mail pour confirmer : {email}",
+      "successorPlaceholder": "Choisis …",
+      "removeTypeLabel": "Saisis l'adresse e-mail pour confirmer : {email}",
       "removed": "{name} a été supprimé.",
       "editName": "Modifier le nom",
       "editNameOf": "Modifier le nom de {email}",
@@ -317,14 +317,14 @@
   "auth": {
     "guest": {
       "title": "Invitation à {workshop}",
-      "intro": "Saisissez l'adresse e-mail à laquelle cette invitation a été envoyée. Le lien ne fonctionne qu'avec cette adresse.",
+      "intro": "Saisis l'adresse e-mail à laquelle cette invitation a été envoyée. Le lien ne fonctionne qu'avec cette adresse.",
       "email": "Adresse e-mail",
       "open": "Ouvrir le déroulé",
       "opening": "Ouverture …",
-      "rejected": "Cela ne correspond pas. Vérifiez l'adresse à laquelle l'invitation a été envoyée.",
-      "tooMany": "Trop de tentatives. Attendez une minute puis réessayez.",
+      "rejected": "Cela ne correspond pas. Vérifie l'adresse à laquelle l'invitation a été envoyée.",
+      "tooMany": "Trop de tentatives. Attends une minute puis réessaie.",
       "invalidTitle": "Cette invitation n'est plus valable",
-      "invalidBody": "Le lien a été retiré, a expiré, ou n'a jamais existé. La personne qui vous a invité peut envoyer une nouvelle invitation."
+      "invalidBody": "Le lien a été retiré, a expiré, ou n'a jamais existé. La personne qui t'a invité peut envoyer une nouvelle invitation."
     },
     "login": {
       "title": "Se connecter à GoodWorkshop",
@@ -462,11 +462,11 @@
         "lastAdmin": "C'est le dernier admin actif. Nomme d'abord quelqu'un d'autre admin — sinon plus personne n'accédera à l'administration.",
         "cannotInvite": "Cette adresse ne peut pas être invitée.",
         "checkEmailAndRole": "Vérifie l'adresse e-mail et le rôle.",
-        "cannotRemoveSelf": "Vous ne pouvez pas vous supprimer vous-même. Demandez-le à une autre personne ayant les droits d'administration.",
-        "successorRequired": "Ce membre possède encore des ateliers ou des dossiers. Choisissez d'abord qui les reprend.",
+        "cannotRemoveSelf": "Tu ne peux pas te supprimer toi-même. Demande-le à une autre personne ayant les droits d'administration.",
+        "successorRequired": "Ce membre possède encore des ateliers ou des dossiers. Choisis d'abord qui les reprend.",
         "successorIsLeaver": "Le membre ne peut pas reprendre ce qu'il cède.",
-        "successorGone": "La personne qui devait reprendre n'est plus membre. Veuillez choisir à nouveau.",
-        "successorDisabled": "La personne qui doit reprendre est désactivée et ne pourrait pas se connecter. Réactivez-la ou choisissez quelqu'un d'autre."
+        "successorGone": "La personne qui devait reprendre n'est plus membre. Choisis à nouveau.",
+        "successorDisabled": "La personne qui doit reprendre est désactivée et ne pourrait pas se connecter. Réactive-la ou choisis quelqu'un d'autre."
       },
       "person": {
         "firstNameRequired": "Merci d’indiquer un prénom.",
@@ -485,7 +485,7 @@
         "ownerHasAccess": "Le propriétaire a déjà un accès complet.",
         "invalidEmail": "Cela ne ressemble pas à une adresse e-mail.",
         "linkGone": "Cette invitation n'existe plus.",
-        "tooManyInvites": "Trop d'invitations en peu de temps. Attendez une minute."
+        "tooManyInvites": "Trop d'invitations en peu de temps. Attends une minute."
       },
       "tags": {
         "tooMany": "{max, number} tags au maximum par atelier.",
@@ -591,7 +591,7 @@
     "blockCount": "{count, plural, one {# bloc} many {# blocs} other {# blocs}}",
     "overlap": "⚠ Chevauchement",
     "details": "Détails",
-    "dayNumber": "Jour {n}",
+    "dayNumber": "Journée {n}",
     "noDays": "Cet atelier n'a pas encore de journée.",
     "split": "{content} de contenu, {breaks} de pauses",
     "yes": "oui",
@@ -626,7 +626,7 @@
       "dropped": "{title} se trouve maintenant {where}.",
       "handleFolder": "Faire glisser le dossier {name}",
       "handleWorkshop": "Faire glisser {title}",
-      "instructions": "Faites glisser sur un dossier pour déplacer. Au clavier : le bouton à côté ouvre une liste de choix.",
+      "instructions": "Fais glisser sur un dossier pour déplacer. Au clavier : le bouton à côté ouvre une liste de choix.",
       "invalid": "{title} ne peut pas être déposé ici.",
       "landing": "{title} arrivera {where}.",
       "picked": "{title} saisi.",
@@ -696,7 +696,7 @@
     },
     "shareInvite": {
       "subject": "Invitation au déroulé : {workshop}",
-      "body": "Bonjour,\n\nvous êtes invité à consulter le déroulé de « {workshop} ».\n\n{link}\n\nLe lien demandera votre adresse e-mail. Saisissez {email} — seule cette adresse ouvre le déroulé.\n\nAucun compte n'est nécessaire."
+      "body": "Bonjour,\n\ntu es invité à consulter le déroulé de « {workshop} ».\n\n{link}\n\nLe lien demandera ton adresse e-mail. Saisis {email} — seule cette adresse ouvre le déroulé.\n\nAucun compte n'est nécessaire."
     },
     "test": {
       "subject": "GoodWorkshop : message de test",
@@ -736,8 +736,8 @@
         "body": "Bonjour,\n\nnous avons reçu ton paiement. Ton espace de travail est de nouveau accessible et tu peux reprendre ton travail :\n{link}"
       },
       "contract_ended": {
-        "subject": "Votre contrat GoodWorkshop a pris fin",
-        "body": "Bonjour,\n\nvotre contrat a pris fin à la fin du mois. Votre espace est désormais en lecture seule : la lecture et l'export restent possibles.\n\nVous pouvez télécharger vos ateliers jusqu'au {until}. Ensuite, nous supprimons les contenus.\n{link}"
+        "subject": "Ton contrat GoodWorkshop a pris fin",
+        "body": "Bonjour,\n\nton contrat a pris fin à la fin du mois. Ton espace est désormais en lecture seule : la lecture et l'export restent possibles.\n\nTu peux télécharger tes ateliers jusqu'au {until}. Ensuite, nous supprimons les contenus.\n{link}"
       },
       "readOnly": {
         "trial_ended": {
@@ -752,16 +752,16 @@
       "priceChange": {
         "per_user": {
           "subject": "Changement de tarif GoodWorkshop à partir du {from}",
-          "body": "Bonjour,\n\nà partir du {from}, GoodWorkshop coûte {price} € HT par utilisateur et par mois. Jusque-là, le tarif actuel s'applique.\n\nSi vous n'êtes pas d'accord, vous pouvez résilier le contrat jusqu'au {from}, avec effet à la date du changement :\n{link}"
+          "body": "Bonjour,\n\nà partir du {from}, GoodWorkshop coûte {price} € HT par utilisateur et par mois. Jusque-là, le tarif actuel s'applique.\n\nSi tu n'es pas d'accord, tu peux résilier le contrat jusqu'au {from}, avec effet à la date du changement :\n{link}"
         },
         "per_workshop": {
           "subject": "Changement de tarif GoodWorkshop à partir du {from}",
-          "body": "Bonjour,\n\nà partir du {from}, GoodWorkshop coûte {price} € HT par atelier créé. Jusque-là, le tarif actuel s'applique.\n\nSi vous n'êtes pas d'accord, vous pouvez résilier le contrat jusqu'au {from}, avec effet à la date du changement :\n{link}"
+          "body": "Bonjour,\n\nà partir du {from}, GoodWorkshop coûte {price} € HT par atelier créé. Jusque-là, le tarif actuel s'applique.\n\nSi tu n'es pas d'accord, tu peux résilier le contrat jusqu'au {from}, avec effet à la date du changement :\n{link}"
         }
       },
       "terms_change": {
         "subject": "Nouvelles conditions à partir du {from}",
-        "body": "Bonjour,\n\nnous avons modifié nos conditions. La nouvelle version ({version}) s'applique à partir du {from} ; jusque-là, l'actuelle reste en vigueur.\n\nLe texte complet se trouve sur goodworkshop.org. Si la modification change vos droits ou obligations de façon non négligeable, vous pouvez résilier jusqu'au {from} :\n{link}"
+        "body": "Bonjour,\n\nnous avons modifié nos conditions. La nouvelle version ({version}) s'applique à partir du {from} ; jusque-là, l'actuelle reste en vigueur.\n\nLe texte complet se trouve sur goodworkshop.org. Si la modification change tes droits ou obligations de façon non négligeable, tu peux résilier jusqu'au {from} :\n{link}"
       }
     }
   },
@@ -784,7 +784,7 @@
     "notice": {
       "trial": "Essai : {days, plural, one {encore un jour} many {encore # jours} other {encore # jours}}.",
       "read_only": "Cet espace de travail est en lecture seule : lecture et export possibles, modification non.",
-      "payment_blocked": "Cet espace est bloqué en raison d'une facture impayée. Vos ateliers restent exportables ; dès que le paiement aboutit, il se rouvre de lui-même.",
+      "payment_blocked": "Cet espace est bloqué en raison d'une facture impayée. Tes ateliers restent exportables ; dès que le paiement aboutit, il se rouvre de lui-même.",
       "paused": "Cet espace de travail est en pause. Le contenu peut être lu mais pas modifié.",
       "deleting": "Cet espace de travail sera supprimé le {date}. D’ici là, il peut être lu et exporté.",
       "priceChange": "De nouveaux tarifs s'appliquent à partir du {date}. Rien ne change d'ici là.",
@@ -843,7 +843,7 @@
     "tokens": {
       "title": "Connexion IA",
       "summary": "Connecter Claude, ChatGPT et d’autres clients IA à tes ateliers.",
-      "intro": "Pour les clients MCP comme Claude Code, Claude Desktop, Gemini CLI, Codex ou Langdock. Un jeton agit en votre nom — il ne peut jamais faire plus que vous. Claude, ChatGPT et d'autres peuvent aussi se connecter sans jeton via OAuth, plus bas sur cette page.",
+      "intro": "Pour les clients MCP comme Claude Code, Claude Desktop, Gemini CLI, Codex ou Langdock. Un jeton agit en ton nom — il ne peut jamais faire plus que toi. Claude, ChatGPT et d'autres peuvent aussi se connecter sans jeton via OAuth, plus bas sur cette page.",
       "freshLabel": "Ton nouveau jeton",
       "freshHint": "Il n'est affiché qu'une fois — seul son hachage est conservé.",
       "hide": "Compris, masquer",
@@ -886,27 +886,27 @@
       },
       "oauth": {
         "title": "Se connecter sans jeton (OAuth)",
-        "intro": "Claude, ChatGPT et beaucoup d'autres clients se connectent eux-mêmes. Vous saisissez l'URL du serveur, vous vous connectez à GoodWorkshop dans le navigateur et vous confirmez ce que le client peut faire. Aucun jeton n'est nécessaire.",
+        "intro": "Claude, ChatGPT et beaucoup d'autres clients se connectent eux-mêmes. Tu saisis l'URL du serveur, tu te connectes à GoodWorkshop dans le navigateur et tu confirmes ce que le client peut faire. Aucun jeton n'est nécessaire.",
         "endpointLabel": "URL du serveur",
         "copyEndpoint": "Copier l'URL du serveur",
-        "publicNote": "Claude (web, bureau, app) et ChatGPT se connectent depuis le cloud de leur éditeur. Cela ne fonctionne que si cette adresse est accessible depuis Internet en HTTPS. Claude Code et Gemini CLI s'exécutent sur votre ordinateur et atteignent aussi les installations d'un réseau d'entreprise.",
-        "signInFirst": "Connectez-vous d'abord à GoodWorkshop dans ce navigateur. Sinon, vous arrivez dans la bibliothèque après la connexion et devez relancer la connexion depuis le client.",
-        "permissions": "Via OAuth, un client peut lire et écrire les ateliers et lire les types de blocs. La page d'autorisation l'indique avant que vous acceptiez. Il ne peut gérer ni les membres ni les partages.",
+        "publicNote": "Claude (web, bureau, app) et ChatGPT se connectent depuis le cloud de leur éditeur. Cela ne fonctionne que si cette adresse est accessible depuis Internet en HTTPS. Claude Code et Gemini CLI s'exécutent sur ton ordinateur et atteignent aussi les installations d'un réseau d'entreprise.",
+        "signInFirst": "Connecte-toi d'abord à GoodWorkshop dans ce navigateur. Sinon, tu arrives dans la bibliothèque après la connexion et dois relancer la connexion depuis le client.",
+        "permissions": "Via OAuth, un client peut lire et écrire les ateliers et lire les types de blocs. La page d'autorisation l'indique avant que tu acceptes. Il ne peut gérer ni les membres ni les partages.",
         "claude": "Claude (web, bureau, app)",
-        "claudeStep1": "Dans Claude, ouvrez « Customize » → « Connectors », cliquez sur « + » puis choisissez « Add custom connector ».",
-        "claudeStep2": "Donnez-lui un nom, par exemple GoodWorkshop, et collez l'URL du serveur. Laissez « Advanced settings » vide.",
-        "claudeStep3": "« Add », puis « Connect ». Connectez-vous à GoodWorkshop dans le navigateur et choisissez « Autoriser l'accès ».",
+        "claudeStep1": "Dans Claude, ouvre « Customize » → « Connectors », clique sur « + » puis choisis « Add custom connector ».",
+        "claudeStep2": "Donne-lui un nom, par exemple GoodWorkshop, et colle l'URL du serveur. Laisse « Advanced settings » vide.",
+        "claudeStep3": "« Add », puis « Connect ». Connecte-toi à GoodWorkshop dans le navigateur et choisis « Autoriser l'accès ».",
         "claudeTeam": "Avec Claude Team et Enterprise, seul un Owner ajoute le connecteur, sous « Organization settings » → « Connectors ». Les autres cliquent ensuite simplement sur « Connect ». Le forfait gratuit permet un connecteur personnalisé.",
         "chatgpt": "ChatGPT",
-        "chatgptStep1": "Sur le web, activez le mode développeur sous « Paramètres » → « Apps » → « Paramètres avancés ». Il est disponible avec Plus, Pro, Business, Enterprise et Edu ; dans un espace de travail, un administrateur doit peut-être l'autoriser d'abord.",
-        "chatgptStep2": "Sous « Apps », créez une nouvelle app : nom, URL du serveur, authentification « OAuth ».",
-        "chatgptStep3": "Enregistrez et connectez. Connectez-vous à GoodWorkshop dans le navigateur et choisissez « Autoriser l'accès ».",
+        "chatgptStep1": "Sur le web, active le mode développeur sous « Paramètres » → « Apps » → « Paramètres avancés ». Il est disponible avec Plus, Pro, Business, Enterprise et Edu ; dans un espace de travail, un administrateur doit peut-être l'autoriser d'abord.",
+        "chatgptStep2": "Sous « Apps », crée une nouvelle app : nom, URL du serveur, authentification « OAuth ».",
+        "chatgptStep3": "Enregistre et connecte. Connecte-toi à GoodWorkshop dans le navigateur et choisis « Autoriser l'accès ».",
         "claudeCode": "Claude Code (OAuth)",
-        "claudeCodeStep": "Ajoutez-le dans le terminal sans en-tête. Puis lancez /mcp dans Claude Code, choisissez le serveur et « Authenticate » – le navigateur s'ouvre.",
+        "claudeCodeStep": "Ajoute-le dans le terminal sans en-tête. Puis lance /mcp dans Claude Code, choisis le serveur et « Authenticate » – le navigateur s'ouvre.",
         "gemini": "Gemini CLI (OAuth)",
-        "geminiStep": "Ajoutez-le dans le terminal sans en-tête. Le navigateur s'ouvre de lui-même à la première connexion ; pour vous reconnecter plus tard, lancez /mcp auth goodworkshop.",
+        "geminiStep": "Ajoute-le dans le terminal sans en-tête. Le navigateur s'ouvre de lui-même à la première connexion ; pour te reconnecter plus tard, lance /mcp auth goodworkshop.",
         "other": "Autres clients",
-        "otherStep": "Mistral Le Chat, Cursor, VS Code et d'autres : saisissez l'URL du serveur, choisissez OAuth comme authentification (le client le détecte souvent lui-même), connectez-vous dans le navigateur et acceptez. Si un client ne peut envoyer que des en-têtes fixes, utilisez un jeton plus haut.",
+        "otherStep": "Mistral Le Chat, Cursor, VS Code et d'autres : saisis l'URL du serveur, choisis OAuth comme authentification (le client le détecte souvent lui-même), connecte-toi dans le navigateur et accepte. Si un client ne peut envoyer que des en-têtes fixes, utilise un jeton plus haut.",
         "revoke": "Mettre fin à l'accès : clique sur « Retirer l'accès » sous « Clients connectés » ci-dessus. Le client le perd aussitôt et doit se reconnecter.",
         "labelsNote": "Les noms de menus dans Claude et ChatGPT peuvent légèrement varier selon la langue et la version.",
         "copyClaudeCode": "Copier la commande pour Claude Code",
@@ -948,11 +948,11 @@
     "days": "Journées",
     "end": "Fin {time}",
     "guest": {
-      "banner": "Vous consultez ce déroulé en tant qu’invité.",
-      "bannerEditor": "Vous consultez ce déroulé en tant qu’invité et pouvez le modifier.",
+      "banner": "Tu consultes ce déroulé en tant qu’invité.",
+      "bannerEditor": "Tu consultes ce déroulé en tant qu’invité et tu peux le modifier.",
       "leave": "Terminer l’accès",
       "goneTitle": "Ce déroulé n’est plus disponible",
-      "goneBody": "L’accès a été terminé, retiré ou a expiré. La personne qui vous a invité peut envoyer une nouvelle invitation."
+      "goneBody": "L’accès a été terminé, retiré ou a expiré. La personne qui t’a invité peut envoyer une nouvelle invitation."
     },
     "guests": {
       "title": "Invités sans compte",
@@ -971,7 +971,7 @@
       "validUntil": "valable jusqu'au {date}",
       "validUntilRevoked": "valable jusqu'au retrait",
       "mailed": "Invitation envoyée à {email}.",
-      "notMailed": "Aucun envoi de courrier n'est configuré. Transmettez ce lien vous-même à {email} — il ne fonctionne qu'avec cette adresse :",
+      "notMailed": "Aucun envoi de courrier n'est configuré. Transmets ce lien toi-même à {email} — il ne fonctionne qu'avec cette adresse :",
       "until": "Le lien est valable jusqu'à la dernière journée du déroulé.",
       "untilUndated": "Le déroulé n'a pas encore de date, le lien reste donc valable jusqu'à son retrait."
     },
@@ -983,11 +983,11 @@
     "untitled": "Atelier",
     "untitledDay": "Journée",
     "you": "toi",
-    "withNotes": "Avec les notes de modération",
+    "withNotes": "Avec les notes d'animation",
     "day": {
       "add": "Ajouter une journée d'atelier",
       "addShort": "Journée",
-      "newTitle": "Jour {number, number}",
+      "newTitle": "Journée {number, number}",
       "title": "Nom de la journée",
       "date": "Date de la journée",
       "start": "Début de la journée",
@@ -1036,7 +1036,7 @@
     },
     "home": {
       "title": "Planifier des ateliers — avec un agenda qui calcule tout seul.",
-      "lead": "GoodWorkshop est l'outil de planification pour l'animation et la facilitation : des déroulés de journée avec horaires, méthodes et responsables, modifiés à plusieurs en direct — et reliés à votre IA.",
+      "lead": "GoodWorkshop est l'outil de planification pour l'animation et la facilitation : des déroulés de journée avec horaires, méthodes et responsables, modifiés à plusieurs en direct — et reliés à ton IA.",
       "cta": "Essai gratuit de 14 jours",
       "ctaSecondary": "Voir les tarifs",
       "featuresTitle": "Ce que fait GoodWorkshop",
@@ -1071,7 +1071,7 @@
       "moreTitle": "À lire ensuite",
       "moreMethods": "Les briques d'un agenda : quinze méthodes, à quoi elles servent et combien de temps elles durent.",
       "moreFaq": "Questions fréquentes : tarifs, protection des données, hébergement autonome et connexion à l'IA.",
-      "moreCompare": "Vous comparez avec SessionLab ? Ce que GoodWorkshop fait autrement — et là où il en fait moins.",
+      "moreCompare": "Tu compares avec SessionLab ? Ce que GoodWorkshop fait autrement — et là où il en fait moins.",
       "videoTitle": "GoodWorkshop en deux minutes",
       "videoLabel": "Vidéo du produit : préparer une journée d’atelier, la transmettre et laisser l’IA y travailler (1:45, en anglais)",
       "videoNote": "1:45 · en anglais"
@@ -1105,13 +1105,13 @@
     },
     "legal": {
       "germanBinds": "Seule la version allemande fait foi. Les traductions servent à la compréhension.",
-      "notTranslated": "Ce texte n'existe pas encore dans votre langue. De toute façon, seule la version allemande fait foi."
+      "notTranslated": "Ce texte n'existe pas encore dans ta langue. De toute façon, seule la version allemande fait foi."
     },
     "meta": {
       "shareImageAlt": "Une journée d'atelier dans GoodWorkshop : des blocs avec horaire, durée et personne responsable.",
       "home": {
         "title": "GoodWorkshop : planifier l'agenda d'un atelier",
-        "description": "L'outil de planification pour l'animation et la facilitation : un agenda dont les horaires se recalculent quand vous déplacez un bloc, à plusieurs en direct, à imprimer et à exporter. 14 jours gratuits."
+        "description": "L'outil de planification pour l'animation et la facilitation : un agenda dont les horaires se recalculent quand tu déplaces un bloc, à plusieurs en direct, à imprimer et à exporter. 14 jours gratuits."
       },
       "pricing": {
         "title": "Tarifs : par personne ou par atelier",
@@ -1123,7 +1123,7 @@
       },
       "compare": {
         "title": "Alternative à SessionLab : GoodWorkshop en comparaison",
-        "description": "Vous cherchez une alternative à SessionLab ? GoodWorkshop planifie des agendas d'atelier, tourne dans l'UE ou sur votre propre serveur, et dialogue avec votre IA."
+        "description": "Tu cherches une alternative à SessionLab ? GoodWorkshop planifie des agendas d'atelier, tourne dans l'UE ou sur ton propre serveur, et dialogue avec ton IA."
       },
       "faq": {
         "title": "Questions fréquentes",
@@ -1143,7 +1143,7 @@
       },
       "avv": {
         "title": "Contrat de sous-traitance",
-        "description": "Le contrat prévu à l'art. 28 du RGPD entre vous, responsable du traitement, et roleALPHA, sous-traitant."
+        "description": "Le contrat prévu à l'art. 28 du RGPD entre toi, responsable du traitement, et roleALPHA, sous-traitant."
       }
     },
     "register": {
@@ -1190,9 +1190,9 @@
       "durationLabel": "Durée habituelle",
       "socialLabel": "Forme sociale",
       "howTitle": "Comment cela devient une journée",
-      "howBody": "L'ordre n'est pas affaire de goût. Une journée commence par l'arrivée et finit par la clôture ; entre les deux, les blocs où l'on reçoit alternent avec les blocs où l'on travaille la matière. Une pause après quatre-vingt-dix minutes, du mouvement après le déjeuner, et les prochaines étapes avant le check-out. Dans GoodWorkshop, vous déplacez les blocs et tous les horaires qui suivent se recalculent — et le déjeuner reste tout de même en place si vous l'épinglez à l'heure.",
+      "howBody": "L'ordre n'est pas affaire de goût. Une journée commence par l'arrivée et finit par la clôture ; entre les deux, les blocs où l'on reçoit alternent avec les blocs où l'on travaille la matière. Une pause après quatre-vingt-dix minutes, du mouvement après le déjeuner, et les prochaines étapes avant le check-out. Dans GoodWorkshop, tu déplaces les blocs et tous les horaires qui suivent se recalculent — et le déjeuner reste tout de même en place si tu l'épingles à l'heure.",
       "ctaTitle": "Faire un agenda avec ces briques",
-      "ctaBody": "Créez la journée, glissez les blocs dans l'ordre que vous avez en tête, et laissez les horaires se calculer tout seuls. Ou décrivez votre intention à votre IA et laissez-la écrire le premier jet.",
+      "ctaBody": "Crée la journée, glisse les blocs dans l'ordre que tu as en tête, et laisse les horaires se calculer tout seuls. Ou décris ton intention à ton IA et laisse-la écrire le premier jet.",
       "cta": "Essayer 14 jours gratuitement",
       "emptyTitle": "La collection est en cours d’écriture.",
       "emptyBody": "Les premières méthodes apparaîtront ici dès qu’elles seront prêtes.",
@@ -1200,47 +1200,47 @@
     },
     "compare": {
       "title": "GoodWorkshop comme alternative à SessionLab",
-      "lead": "Les deux outils planifient des agendas d'atelier, et tous deux vous épargnent le calcul des horaires. Cette page dit ce que GoodWorkshop fait autrement — et, à la fin, là où il en fait moins. Qui compare n'a de toute façon que faire de publicité.",
-      "neutral": "SessionLab est un service hébergé de conception de sessions, avec une grande bibliothèque de méthodes publique. Ce qui y est écrit y est mieux écrit qu'ici ; nous ne citons ni prix ni fonctionnalités d'un produit qui n'est pas le nôtre, parce que les deux sont périmés dès que nous les écrivons. Allez voir et comparez vous-même.",
+      "lead": "Les deux outils planifient des agendas d'atelier, et tous deux t'épargnent le calcul des horaires. Cette page dit ce que GoodWorkshop fait autrement — et, à la fin, là où il en fait moins. Qui compare n'a de toute façon que faire de publicité.",
+      "neutral": "SessionLab est un service hébergé de conception de sessions, avec une grande bibliothèque de méthodes publique. Ce qui y est écrit y est mieux écrit qu'ici ; nous ne citons ni prix ni fonctionnalités d'un produit qui n'est pas le nôtre, parce que les deux sont périmés dès que nous les écrivons. Va voir et compare par toi-même.",
       "pointsTitle": "Ce que GoodWorkshop fait autrement",
       "selfHost": {
-        "title": "Vous pouvez l'héberger vous-même",
-        "body": "Le code source est public, et un conteneur Docker plus une base Postgres suffisent. Usage commercial inclus, sans coût de licence : les ateliers avec lesquels vous gagnez votre vie sont précisément ceux que vous avez le droit de planifier avec. Le cloud vend l'exploitation, pas l'accès au logiciel."
+        "title": "Tu peux l'héberger toi-même",
+        "body": "Le code source est public, et un conteneur Docker plus une base Postgres suffisent. Usage commercial inclus, sans coût de licence : les ateliers avec lesquels tu gagnes ta vie sont précisément ceux que tu as le droit de planifier avec. Le cloud vend l'exploitation, pas l'accès au logiciel."
       },
       "ai": {
-        "title": "Votre IA planifie avec vous, sans intermédiaire",
-        "body": "GoodWorkshop est lui-même un serveur MCP. Claude, ChatGPT ou Gemini s'y connectent directement et créent des ateliers, réécrivent des agendas, mettent des blocs de côté. Pas de copier-coller depuis une fenêtre de discussion, pas de produit supplémentaire — une connexion que vous établissez dans les réglages."
+        "title": "Ton IA planifie avec toi, sans intermédiaire",
+        "body": "GoodWorkshop est lui-même un serveur MCP. Claude, ChatGPT ou Gemini s'y connectent directement et créent des ateliers, réécrivent des agendas, mettent des blocs de côté. Pas de copier-coller depuis une fenêtre de discussion, pas de produit supplémentaire — une connexion que tu établis dans les réglages."
       },
       "data": {
-        "title": "Les données sont là où vous les voulez",
-        "body": "Le cloud tourne dans l'UE, exploité par une société autrichienne, avec un contrat de sous-traitance. Si cela ne suffit pas, hébergez vous-même : elles sont alors chez vous. Dans les deux cas, vous ressortez chaque agenda en Markdown sans demander la permission."
+        "title": "Les données sont là où tu les veux",
+        "body": "Le cloud tourne dans l'UE, exploité par une société autrichienne, avec un contrat de sous-traitance. Si cela ne suffit pas, héberge-le toi-même : elles sont alors chez toi. Dans les deux cas, tu ressors chaque agenda en Markdown sans demander la permission."
       },
       "pricing": {
         "title": "Deux formules, dont une pour un travail irrégulier",
-        "body": "Par membre actif et par mois, facturé au jour près — ou par atelier créé, avec autant de membres que vous voulez. La seconde formule existe parce que l'animation vient par vagues : trois ateliers au printemps, puis trois mois de calme. Les invités ne comptent jamais."
+        "body": "Par membre actif et par mois, facturé au jour près — ou par atelier créé, avec autant de membres que tu veux. La seconde formule existe parce que l'animation vient par vagues : trois ateliers au printemps, puis trois mois de calme. Les invités ne comptent jamais."
       },
       "room": {
         "title": "Fait pour la salle, pas seulement pour la préparation",
-        "body": "L'agenda fonctionne sur un téléphone, survit à un mauvais wifi et permet à la co-animation de modifier la même journée en même temps. Vos notes d'animation restent chez vous : la vue d'impression et l'export les laissent de côté par défaut, pour que le groupe ait l'agenda et vous le reste."
+        "body": "L'agenda fonctionne sur un téléphone, survit à un mauvais wifi et permet à la co-animation de modifier la même journée en même temps. Tes notes d'animation restent chez toi : la vue d'impression et l'export les laissent de côté par défaut, pour que le groupe ait l'agenda et toi le reste."
       },
       "limitsTitle": "Là où GoodWorkshop en fait moins",
-      "limitsBody": "La bibliothèque de GoodWorkshop est volontairement petite. Discover rassemble des méthodes et des déroulés d’atelier tout prêts que nous écrivons et entretenons nous-mêmes : quelques dizaines, pas des centaines, et aucune galerie de modèles pour chaque occasion. Si vous cherchez la plus grande collection possible à parcourir, vous serez mieux servi ailleurs. GoodWorkshop est aussi plus jeune et plus petit : moins d’intégrations, pas d’équipe de trente personnes derrière. Si vous cherchez un agenda qui calcule, qui vous appartient, que votre IA sait manipuler — et une poignée de déroulés que vous reprenez en une étape —, vous êtes au bon endroit.",
-      "ctaTitle": "Voir par vous-même",
+      "limitsBody": "La bibliothèque de GoodWorkshop est volontairement petite. Discover rassemble des méthodes et des déroulés d’atelier tout prêts que nous écrivons et entretenons nous-mêmes : quelques dizaines, pas des centaines, et aucune galerie de modèles pour chaque occasion. Si tu cherches la plus grande collection possible à parcourir, tu seras mieux servi ailleurs. GoodWorkshop est aussi plus jeune et plus petit : moins d’intégrations, pas d’équipe de trente personnes derrière. Si tu cherches un agenda qui calcule, qui t'appartient, que ton IA sait manipuler — et une poignée de déroulés que tu reprends en une étape —, tu es au bon endroit.",
+      "ctaTitle": "Voir par toi-même",
       "ctaBody": "Quatorze jours, sans données de paiement. Si cela ne convient pas, cela s'arrête tout seul.",
       "cta": "Essayer gratuitement",
       "ctaSecondary": "Héberger soi-même"
     },
     "faq": {
       "title": "Questions fréquentes",
-      "lead": "Ce que l'on demande le plus souvent avant de commencer. S'il manque quelque chose, écrivez-nous — cette page grandit avec les questions.",
+      "lead": "Ce que l'on demande le plus souvent avant de commencer. S'il manque quelque chose, écris-nous — cette page grandit avec les questions.",
       "entries": {
         "cost": {
           "q": "Combien coûte GoodWorkshop ?",
-          "a": "Il existe deux formules, changeables chaque mois : par membre actif et par mois, facturé au jour près, ou par atelier créé avec autant de membres que vous voulez. Tous les prix sont hors taxes ; GoodWorkshop Cloud n'est vendu qu'aux entreprises. Les montants exacts figurent sur la page des tarifs. Hébergé par vos soins, il ne coûte rien."
+          "a": "Il existe deux formules, changeables chaque mois : par membre actif et par mois, facturé au jour près, ou par atelier créé avec autant de membres que tu veux. Tous les prix sont hors taxes ; GoodWorkshop Cloud n'est vendu qu'aux entreprises. Les montants exacts figurent sur la page des tarifs. Hébergé par tes soins, il ne coûte rien."
         },
         "free": {
           "q": "GoodWorkshop est-il gratuit ?",
-          "a": "Sur votre propre serveur, oui, durablement et pour un usage commercial également. Le code source est sous Apache 2.0 avec Commons Clause : vous pouvez utiliser et adapter GoodWorkshop sans limite, mais pas le revendre comme service à vous. Le cloud est payant parce que quelqu'un y prend en charge l'exploitation, les mises à jour et les sauvegardes. Les quatorze premiers jours sont gratuits, sans données de paiement."
+          "a": "Sur ton propre serveur, oui, durablement et pour un usage commercial également. Le code source est sous Apache 2.0 avec Commons Clause : tu peux utiliser et adapter GoodWorkshop sans limite, mais pas le revendre comme ton propre service. Le cloud est payant parce que quelqu'un y prend en charge l'exploitation, les mises à jour et les sauvegardes. Les quatorze premiers jours sont gratuits, sans données de paiement."
         },
         "selfhost": {
           "q": "Puis-je héberger GoodWorkshop moi-même ?",
@@ -1248,23 +1248,23 @@
         },
         "data": {
           "q": "Où sont mes données ?",
-          "a": "Dans le cloud, dans l'UE, exploité par roleALPHA GmbH en Autriche, avec un contrat de sous-traitance au sens de l'art. 28 du RGPD. Si vous hébergez vous-même, elles sont là où se trouve votre serveur. Dans les deux cas, vous exportez chaque agenda en Markdown à tout moment."
+          "a": "Dans le cloud, dans l'UE, exploité par roleALPHA GmbH en Autriche, avec un contrat de sous-traitance au sens de l'art. 28 du RGPD. Si tu héberges toi-même, elles sont là où se trouve ton serveur. Dans les deux cas, tu exportes chaque agenda en Markdown à tout moment."
         },
         "ai": {
           "q": "Comment fonctionne la connexion à l'IA ?",
-          "a": "GoodWorkshop est lui-même un serveur MCP — Model Context Protocol, l'interface par laquelle les assistants IA pilotent des outils. Vous établissez la connexion une fois dans les réglages ; ensuite Claude, ChatGPT, Gemini et d'autres clients peuvent créer des ateliers, réécrire des agendas, mettre des blocs de côté et déplacer des journées. L'IA travaille dans votre atelier, pas dans une fenêtre de discussion à côté."
+          "a": "GoodWorkshop est lui-même un serveur MCP — Model Context Protocol, l'interface par laquelle les assistants IA pilotent des outils. Tu établis la connexion une fois dans les réglages ; ensuite Claude, ChatGPT, Gemini et d'autres clients peuvent créer des ateliers, réécrire des agendas, mettre des blocs de côté et déplacer des journées. L'IA travaille dans ton atelier, pas dans une fenêtre de discussion à côté."
         },
         "collab": {
           "q": "Plusieurs personnes peuvent-elles travailler en même temps ?",
-          "a": "Oui. Plusieurs personnes modifient la même journée en direct sans s'écraser mutuellement. Les clientes et la co-animation sans compte reçoivent un lien — en lecture ou en modification, comme vous le réglez."
+          "a": "Oui. Plusieurs personnes modifient la même journée en direct sans s'écraser mutuellement. Les clientes et la co-animation sans compte reçoivent un lien — en lecture ou en modification, comme tu le règles."
         },
         "times": {
           "q": "Que se passe-t-il quand un horaire change ?",
-          "a": "Rien que vous ayez à reprendre à la main. Déplacez un bloc ou changez une durée, et tous les horaires suivants se recalculent. Les blocs qui ne doivent pas bouger — le déjeuner, le créneau de la cliente à 15 h — vous les épinglez à l'heure ; si quelque chose entre en collision, la ligne le dit au lieu de raccourcir en silence."
+          "a": "Rien que tu aies à reprendre à la main. Déplace un bloc ou change une durée, et tous les horaires suivants se recalculent. Les blocs qui ne doivent pas bouger — le déjeuner, le créneau de la cliente à 15 h — tu les épingles à l'heure ; si quelque chose entre en collision, la ligne le dit au lieu de raccourcir en silence."
         },
         "print": {
           "q": "Puis-je imprimer ou exporter l'agenda ?",
-          "a": "Oui, les deux. Il y a une vue d'impression pour la salle et un export Markdown pour le support et la documentation. Vos notes d'animation restent par défaut en dehors des deux."
+          "a": "Oui, les deux. Il y a une vue d'impression pour la salle et un export Markdown pour le support et la documentation. Tes notes d'animation restent par défaut en dehors des deux."
         },
         "mobile": {
           "q": "Est-ce que cela fonctionne sur un téléphone ?",
@@ -1272,7 +1272,7 @@
         },
         "migrate": {
           "q": "J'utilise déjà un autre outil. Puis-je changer ?",
-          "a": "Il n'existe pas d'import automatique. Le chemin le plus rapide est la connexion à l'IA : donnez à votre assistant l'agenda existant sous forme de texte et laissez-le créer l'atelier dans GoodWorkshop. Pour une seule journée, c'est l'affaire de quelques minutes."
+          "a": "Il n'existe pas d'import automatique. Le chemin le plus rapide est la connexion à l'IA : donne à ton assistant l'agenda existant sous forme de texte et laisse-le créer l'atelier dans GoodWorkshop. Pour une seule journée, c'est l'affaire de quelques minutes."
         }
       },
       "ctaTitle": "Une question reste ouverte ?",
@@ -1285,11 +1285,11 @@
     "signIn": {
       "title": "Console opérateur",
       "intro": "Connexion par passkey. Pas de passkey sous la main ? Nous t’envoyons un lien.",
-      "button": "Se connecter avec une passkey",
+      "button": "Se connecter avec un passkey",
       "failed": "Échec de la connexion.",
-      "enrollTitle": "Configurer la passkey",
-      "enrollIntro": "Configure la passkey pour {email}.",
-      "enroll": "Configurer la passkey",
+      "enrollTitle": "Configurer le passkey",
+      "enrollIntro": "Configure le passkey pour {email}.",
+      "enroll": "Configurer le passkey",
       "enrollInvalid": "Ce lien est invalide ou a expiré. scripts/operator.mjs enroll sur le serveur en crée un nouveau.",
       "mailTitle": "Se connecter par e-mail",
       "mailIntro": "Nous envoyons un lien à l’adresse enregistrée. Il vaut quinze minutes et une seule fois.",
@@ -1306,12 +1306,12 @@
     },
     "passkeys": {
       "title": "Sécurité",
-      "intro": "Passkeys de {email}. La passkey est la voie d’entrée ; le lien par e-mail est le retour quand aucun appareil avec passkey n’est à portée de main.",
+      "intro": "Passkeys de {email}. Le passkey est la voie d’entrée ; le lien par e-mail est le retour quand aucun appareil avec passkey n’est à portée de main.",
       "none": "Pas encore de passkey. En attendant, la connexion ne passe que par le lien par e-mail.",
-      "add": "Configurer une passkey",
+      "add": "Configurer un passkey",
       "adding": "Configuration …",
       "failed": "Cela n’a pas fonctionné. Réessaie.",
-      "created": "Créée le {when}",
+      "created": "Créé le {when}",
       "lastUsed": "Dernière utilisation : {when}",
       "never": "jamais",
       "remove": "Retirer",
@@ -1417,7 +1417,7 @@
       "backToTenants": "Retour aux espaces",
       "entries": "Entrées",
       "blocksViaMcp": "Les journées et les blocs se gèrent par MCP : un éditeur de journées ici ferait double emploi avec l’éditeur d’agenda, qui est déjà bon.",
-      "dayCount": "{count, plural, one {# jour} many {# jours} other {# jours}}"
+      "dayCount": "{count, plural, one {# journée} many {# journées} other {# journées}}"
     },
     "tokens": {
       "title": "Accès MCP",
@@ -1487,7 +1487,7 @@
     "emptyTitle": "Il n'y a encore rien ici.",
     "emptyBody": "La bibliothèque est en construction. Les entrées apparaîtront ici dès qu’elles seront écrites.",
     "noMatchTitle": "Rien ne correspond.",
-    "noMatchBody": "Retirez un filtre ou accordez plus de temps.",
+    "noMatchBody": "Retire un filtre ou accorde plus de temps.",
     "filtersLabel": "Filtres",
     "clear": "Réinitialiser les filtres",
     "groupSizeLabel": "Taille du groupe",
@@ -1496,16 +1496,16 @@
     "searchLabel": "Rechercher",
     "apply": "Appliquer",
     "more": "Afficher plus",
-    "days": "{count, plural, one {# jour} many {# jours} other {# jours}}",
+    "days": "{count, plural, one {# journée} many {# journées} other {# journées}}",
     "peopleAny": "n'importe quel nombre de personnes",
     "peopleFrom": "à partir de {min, number} personnes",
     "peopleTo": "jusqu'à {max, number} personnes",
     "peopleRange": "{min, number}–{max, number} personnes",
-    "untranslated": "Ce texte n'existe pas encore dans votre langue.",
+    "untranslated": "Ce texte n'existe pas encore dans ta langue.",
     "back": "Retour à Discover",
-    "dayHeading": "Jour {n, number}",
+    "dayHeading": "Journée {n, number}",
     "parked": "Mis de côté",
-    "adoptTitle": "Reprendre dans votre espace",
+    "adoptTitle": "Reprendre dans ton espace",
     "adoptNew": "Comme nouvel atelier",
     "adoptAppend": "Ajouter à un atelier existant",
     "adoptChoose": "Choisir un atelier",
@@ -1514,10 +1514,10 @@
     "adoptOpen": "Ouvrir l'atelier",
     "adoptDegraded": "{count, plural, one {# bloc est arrivé comme note, car cet espace n'a pas son type.} many {# blocs sont arrivés comme notes, car cet espace n'a pas leurs types.} other {# blocs sont arrivés comme notes, car cet espace n'a pas leurs types.}}",
     "adoptDropped": "{count, plural, one {# bloc est arrivé sans sa description.} many {# blocs sont arrivés sans leur description.} other {# blocs sont arrivés sans leur description.}}",
-    "adoptDaysFailed": "{count, plural, one {# jour n'a pas pu être écrit et reste vide.} many {# jours n'ont pas pu être écrits et restent vides.} other {# jours n'ont pas pu être écrits et restent vides.}}",
-    "adoptNoWorkshops": "Vous n'avez pas encore d'atelier auquel ajouter quelque chose.",
+    "adoptDaysFailed": "{count, plural, one {# journée n'a pas pu être écrite et reste vide.} many {# journées n'ont pas pu être écrites et restent vides.} other {# journées n'ont pas pu être écrites et restent vides.}}",
+    "adoptNoWorkshops": "Tu n'as pas encore d'atelier auquel ajouter quelque chose.",
     "loading": "Chargement …",
-    "loadFailed": "Impossible de charger la suite. Réessayez.",
+    "loadFailed": "Impossible de charger la suite. Réessaie.",
     "adoptIntoDay": "À une journée d’un atelier existant",
     "adoptChooseDay": "Choisir une journée",
     "adoptNoDays": "Cet atelier n’a aucune journée."

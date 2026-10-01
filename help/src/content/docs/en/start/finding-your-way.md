@@ -51,7 +51,7 @@ row shows the title, tags, number of days and status, and below that the folder 
 Clicking a workshop opens its first day. From top to bottom:
 
 1. **← Library**, the workshop title and below it its tags (**+ tag**).
-2. On the right, the output options: **Access**, **With facilitation notes**,
+2. On the right, the output options: **Access**, **With facilitator notes**,
    **Whole workshop**, **Markdown** and **Print**.
 3. The day tabs and **Workshop day** for adding one. Below them the name, date and start of the
    open day, the arrows for reordering and **Delete workshop day**.

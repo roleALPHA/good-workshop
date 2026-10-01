@@ -12,20 +12,20 @@ Cualquier desarrollo se puede descargar en todo momento como archivo Markdown. M
 1. Abre una jornada del taller.
 2. Arriba a la derecha, con las dos casillas, decide qué se incluye:
    - **Todo el taller**: todas las jornadas en un solo archivo en lugar de solo la abierta.
-   - **Con notas de moderación**: tus notas sobre los bloques.
+   - **Con notas de facilitación**: tus notas sobre los bloques.
 3. Haz clic en **Markdown**. Tu navegador descarga un archivo `.md` con el nombre del taller.
 
 Las dos casillas valen también para [imprimir](/es/sharing/print/): responden a la misma pregunta, ¿para quién es esta copia?
 
 :::caution[Las notas quedan fuera por defecto]
-Los campos que un tipo de bloque marca como privados (hoy, las notas de facilitación) solo están en el archivo con **Con notas de moderación**. La casilla está desmarcada cada vez que abres la página. No pases a los participantes un archivo con notas.
+Los campos que un tipo de bloque marca como privados (hoy, las notas de facilitación) solo están en el archivo con **Con notas de facilitación**. La casilla está desmarcada cada vez que abres la página. No pases a los participantes un archivo con notas.
 :::
 
 ## Qué contiene el archivo
 
 **Al principio, una cabecera** con datos para herramientas que leen metadatos de Markdown: título, fecha (con varias jornadas, una lista de fechas) y duración total. Con el taller entero se añaden la ruta de carpetas, las [etiquetas](/es/library/tags/) y el número de jornadas.
 
-**Después, el título** del taller como encabezado. Con el taller entero, cada jornada va bajo su propio encabezado: su nombre, si no su fecha, y si no «Día 1», «Día 2»…
+**Después, el título** del taller como encabezado. Con el taller entero, cada jornada va bajo su propio encabezado: su nombre, si no su fecha, y si no «Jornada 1», «Jornada 2»…
 
 **Para cada jornada, un resumen**: nombre, fecha, inicio y fin, y el reparto, por ejemplo «5h 30m de contenido, 1h 15m de pausas».
 
@@ -50,10 +50,10 @@ Los bloques [apartados](/es/agenda/parking/) no están en el horario y por eso t
 
 ## Una jornada o el taller entero
 
-| Selección              | Resultado                                                                                                                                                                                          |
-| ---------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| sin **Todo el taller** | Un archivo con la jornada abierta.                                                                                                                                                                 |
-| con **Todo el taller** | Un archivo con todas las jornadas en su orden, no un archivo comprimido con archivos sueltos. Un taller sin jornadas da un archivo con el título y la frase «Este taller aún no tiene ningún día.» |
+| Selección              | Resultado                                                                                                                                                                                               |
+| ---------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| sin **Todo el taller** | Un archivo con la jornada abierta.                                                                                                                                                                      |
+| con **Todo el taller** | Un archivo con todas las jornadas en su orden, no un archivo comprimido con archivos sueltos. Un taller sin jornadas da un archivo con el título y la frase «Este taller aún no tiene ninguna jornada.» |
 
 ## Idioma del archivo
 

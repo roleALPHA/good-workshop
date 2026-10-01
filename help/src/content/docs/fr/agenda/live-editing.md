@@ -7,7 +7,7 @@ sidebar:
 
 Toutes les personnes autorisées à modifier un atelier travaillent dans le même document. Si quelqu'un modifie un titre, déplace un bloc ou met quelque chose de côté, les autres le voient immédiatement, sans recharger. Il n'y a ni bouton d'enregistrement ni mode édition. Chaque modification est transmise automatiquement.
 
-Le partage se fait _par journée_. Qui a ouvert le Jour 1 voit immédiatement les modifications du Jour 1 ; ce qui se passe sur le Jour 2, tu le vois dès que tu y passes.
+Le partage se fait _par journée_. Qui a ouvert la Journée 1 voit immédiatement les modifications de la Journée 1 ; ce qui se passe sur la Journée 2, tu le vois dès que tu y passes.
 
 ## Qui est présent
 

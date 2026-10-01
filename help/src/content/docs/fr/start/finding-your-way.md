@@ -52,7 +52,7 @@ plus : [Dossiers et ateliers](/fr/library/folders-and-workshops/).
 Un clic sur un atelier ouvre sa première journée. De haut en bas :
 
 1. **← Bibliothèque**, le titre de l'atelier et, en dessous, ses tags (**+ tag**).
-2. À droite, les sorties : **Accès**, **Avec les notes de modération**, **Tout l'atelier**,
+2. À droite, les sorties : **Accès**, **Avec les notes d'animation**, **Tout l'atelier**,
    **Markdown** et **Imprimer**.
 3. Les onglets des journées et **Journée** pour en ajouter une. En dessous, le nom, la date et le
    début de la journée ouverte, les flèches pour réordonner et **Supprimer la journée d'atelier**.
