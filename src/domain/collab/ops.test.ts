@@ -206,6 +206,60 @@ describe('removeBlock', () => {
   it('reports nothing removed for an unknown id', () => {
     expect(removeBlock(emptyDay(), 'weg')).toBe(0)
   })
+
+  it('keeps a parked block when its section is deleted, on the day level and still parked', () => {
+    // The parking area belongs to the workshop, not to the section the block
+    // was parked from. The delete button counts only the scheduled blocks, so
+    // taking a parked one along would delete something nobody was told about.
+    const doc = emptyDay()
+    addClusterBlock(doc, 'k', { title: 'Warm-up' })
+    add(doc, 'a', 'Im Ablauf', 'k')
+    addModuleBlock(doc, 'p', {
+      moduleTypeId: 't',
+      title: 'Alternative',
+      durationMinutes: 20,
+      parentId: 'k',
+      parked: true,
+    })
+    add(doc, 'c', 'Draußen')
+
+    expect(removeBlock(doc, 'k')).toBe(2)
+    const parked = blocksOf(doc).get('p')!
+    expect(parked.get('parentId')).toBeNull()
+    expect(parked.get('parked')).toBe(true)
+    expect([...blocksOf(doc).keys()].sort()).toEqual(['c', 'p'])
+  })
+
+  it('keeps parked blocks from the strands of a deleted breakout', () => {
+    const doc = emptyDay()
+    addBreakoutBlock(doc, 'bo', {
+      title: 'Gruppen',
+      strands: [
+        { id: 's1', title: 'A' },
+        { id: 's2', title: 'B' },
+      ],
+    })
+    add(doc, 'm', 'Block', 's1')
+    addModuleBlock(doc, 'p', {
+      moduleTypeId: 't',
+      title: 'Geparkt',
+      durationMinutes: 10,
+      parentId: 's2',
+      parked: true,
+    })
+
+    // 1 breakout + 2 strands + 1 scheduled block
+    expect(removeBlock(doc, 'bo')).toBe(4)
+    expect([...blocksOf(doc).keys()]).toEqual(['p'])
+    expect(blocksOf(doc).get('p')!.get('parentId')).toBeNull()
+  })
+
+  it('still deletes a parked block that is itself the target', () => {
+    const doc = emptyDay()
+    addModuleBlock(doc, 'p', { moduleTypeId: 't', title: 'X', durationMinutes: 5, parked: true })
+    expect(removeBlock(doc, 'p')).toBe(1)
+    expect(blocksOf(doc).size).toBe(0)
+  })
 })
 
 describe('patchBlock', () => {

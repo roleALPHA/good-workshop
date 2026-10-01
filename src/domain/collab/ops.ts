@@ -236,12 +236,18 @@ export function addBreakoutBlock(doc: Y.Doc, id: string, input: NewBreakout): vo
 }
 
 /**
- * Deletes a block, and a cluster's children with it.
+ * Deletes a block, and a cluster's children with it -- except the parked ones.
  *
  * Leaving the children behind would strand them on a parent that no longer
  * exists. The materialiser rescues orphans onto the day, so the blocks would
  * survive -- but as a scatter of loose modules where a section used to be,
  * which is not what anyone means by "delete this section".
+ *
+ * A parked block is the exception. It remembers the section it was parked
+ * from, but it belongs to the workshop's parking area, not to the section: the
+ * delete button counts only what is in the schedule, and taking a parked block
+ * along deleted something nobody had been told about. It moves to the day
+ * level and stays parked. The count returned is what was deleted.
  */
 export function removeBlock(doc: Y.Doc, blockId: string): number {
   const blocks = blocksOf(doc)
@@ -261,6 +267,7 @@ export function removeBlock(doc: Y.Doc, blockId: string): number {
   // same document can produce in principle, must not become an endless loop
   // here. Deleting a section is the last place one wants a frozen tab.
   const doomed: string[] = []
+  const rescued: string[] = []
   const seen = new Set([blockId])
   const queue = [blockId]
   while (queue.length > 0) {
@@ -269,11 +276,21 @@ export function removeBlock(doc: Y.Doc, blockId: string): number {
     for (const child of childrenOf.get(id) ?? []) {
       if (seen.has(child)) continue
       seen.add(child)
+      const candidate = blocks.get(child)
+      if (candidate?.get('kind') !== 'cluster' && candidate?.get('parked') === true) {
+        rescued.push(child)
+        continue
+      }
       queue.push(child)
     }
   }
 
   doc.transact(() => {
+    for (const id of rescued) {
+      const block = blocks.get(id)!
+      block.set('position', keyAtEnd(siblings(blocks, null, id)))
+      block.set('parentId', null)
+    }
     for (const id of doomed) blocks.delete(id)
   })
   return doomed.length

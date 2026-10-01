@@ -45,8 +45,8 @@ Park the block, switch to the target day using the tabs, and click **Back into t
 
 When you delete a day, its schedule goes with it. Its parked blocks, however, stay: they move to the parking area of the day before, or of the day after if you delete the first day. Tidying up a day doesn't decide anything about the alternatives that were meant for the whole workshop. See [Days](/en/agenda/days/).
 
-:::caution[Sections take their parked blocks with them]
-A parked block remembers the section or strand it came from. If you delete that section, strand or breakout, the parked block is deleted along with it, even though the delete button only counts the blocks in the schedule. If you want to keep it, first bring it back with **Back into the schedule** and drag it out of the section, or bring it over from another day.
+:::note[Parked blocks outlive their section]
+A parked block remembers the section or strand it came from. If you delete that section, strand or breakout, the parked block is kept anyway: it moves to the day level and stays in the parking area. Only what the delete button counts is deleted – the blocks in the schedule.
 :::
 
 ## Who can do what

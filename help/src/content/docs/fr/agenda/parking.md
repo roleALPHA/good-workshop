@@ -45,8 +45,8 @@ Mets le bloc de côté, passe à la journée cible via les onglets et clique là
 
 Si tu supprimes une journée, son déroulé disparaît avec elle. Ses blocs mis de côté, eux, sont conservés : ils passent dans la zone « De côté » de la journée précédente, ou de la suivante si tu supprimes la première journée. Faire le ménage dans une journée ne décide rien des alternatives prévues pour tout l'atelier. Voir [Journées](/fr/agenda/days/).
 
-:::caution[Les sections emportent leurs blocs mis de côté]
-Un bloc mis de côté se souvient de la section ou du volet d'où il vient. Si tu supprimes cette section, ce volet ou ce breakout, le bloc mis de côté est supprimé avec, même si le bouton de suppression ne compte que les blocs du déroulé. Pour le garder, remets-le d'abord dans le déroulé avec **Remettre dans le déroulé** et sors-le de la section, ou fais-le venir depuis une autre journée.
+:::note[Les blocs mis de côté survivent à leur section]
+Un bloc mis de côté se souvient de la section ou du volet d'où il vient. Si tu supprimes cette section, ce volet ou ce breakout, le bloc mis de côté est conservé : il passe au niveau de la journée et reste dans la zone « De côté ». Seul ce que compte le bouton de suppression est supprimé – les blocs du déroulé.
 :::
 
 ## Qui peut faire quoi

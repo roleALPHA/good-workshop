@@ -14,6 +14,7 @@ import type {
 } from './document'
 import { applyMove } from './move'
 import type { Projection } from './projection'
+import { removeFromDay } from './remove'
 
 /**
  * The editor without a server: changes live in this component and nowhere else.
@@ -129,21 +130,11 @@ export function useLocalDocument(initial: DayDoc): AgendaDocument {
   }, [])
 
   /**
-   * Takes a section's blocks with it, like removeBlock does in the shared ops.
-   * Until a section could be created here this only ever saw module ids, and a
-   * cluster passed to it quietly did nothing.
+   * Takes a section's scheduled blocks with it, like removeBlock does in the
+   * shared ops, and keeps its parked ones -- see removeFromDay.
    */
   const removeModule = useCallback((moduleId: string) => {
-    setDoc((current) => {
-      if (current.clusters.some((c) => c.id === moduleId)) {
-        return {
-          ...current,
-          clusters: current.clusters.filter((c) => c.id !== moduleId),
-          modules: current.modules.filter((m) => m.clusterId !== moduleId),
-        }
-      }
-      return { ...current, modules: current.modules.filter((m) => m.id !== moduleId) }
-    })
+    setDoc((current) => removeFromDay(current, moduleId))
   }, [])
 
   return useMemo(

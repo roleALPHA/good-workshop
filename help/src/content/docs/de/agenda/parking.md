@@ -45,8 +45,8 @@ Park den Block, wechsle über die Reiter auf den Zieltag und klicke dort auf **I
 
 Löschst du einen Tag, geht sein Ablauf mit. Seine geparkten Blöcke aber bleiben: Sie wandern auf den Parkplatz des Tages davor, oder des Tages danach, wenn du den ersten Tag löschst. Wer einen Tag aufräumt, hat damit nichts über die Alternativen entschieden, die für den ganzen Workshop gedacht waren. Siehe [Tage](/de/agenda/days/).
 
-:::caution[Abschnitte nehmen ihre geparkten Blöcke mit]
-Ein geparkter Block merkt sich den Abschnitt oder Strang, aus dem er kommt. Löschst du diesen Abschnitt, Strang oder Breakout, wird der geparkte Block mitgelöscht, obwohl der Lösch-Knopf nur die Blöcke im Ablauf mitzählt. Willst du ihn behalten, hol ihn vorher mit **In den Ablauf** zurück und zieh ihn aus dem Abschnitt heraus, oder hol ihn von einem anderen Tag aus herüber.
+:::note[Geparkte Blöcke überleben ihren Abschnitt]
+Ein geparkter Block merkt sich den Abschnitt oder Strang, aus dem er kommt. Löschst du diesen Abschnitt, Strang oder Breakout, bleibt der geparkte Block trotzdem erhalten: Er wandert auf die Tagesebene und bleibt auf dem Parkplatz. Gelöscht wird nur, was der Lösch-Knopf mitzählt – die Blöcke im Ablauf.
 :::
 
 ## Wer was darf

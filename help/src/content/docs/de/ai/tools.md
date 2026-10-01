@@ -124,7 +124,7 @@ Alle Stränge eines Breakouts beginnen mit ihm; er endet, wenn der längste Stra
 | `add_cluster`   | Hängt einen Abschnitt an das Ende des Tags. Mit `mode: parallel` wird daraus ein Breakout; ein Strang ist ein Abschnitt mit `parentClusterId` = Breakout.                   | `workshopId`, `dayId`, `title`, `color`, `mode` (`sequential` oder `parallel`), `parentClusterId` | S       |
 | `update_module` | Ändert Felder eines Blocks oder Abschnitts; Weggelassenes bleibt. `desc` ersetzt die ganze Beschreibung.                                                                    | `workshopId`, `dayId`, `moduleId` und die Blockfelder                                             | S       |
 | `move_module`   | Verschiebt einen Block oder Abschnitt innerhalb des Tags – oder mit `toDayId` einen Block an das Ende eines anderen Tags desselben Workshops. Dort bekommt er eine neue ID. | `workshopId`, `moduleId`, `dayId` (wo er jetzt ist), `clusterId`, `afterId`, `toDayId`, `parked`  | S       |
-| `delete_module` | Löscht einen Block endgültig. Ein gelöschter Abschnitt nimmt seine Blöcke mit, ein gelöschter Breakout seine Stränge samt Inhalt.                                           | `workshopId`, `dayId`, `moduleId`                                                                 | S       |
+| `delete_module` | Löscht einen Block endgültig. Ein gelöschter Abschnitt nimmt seine Blöcke im Ablauf mit, ein gelöschter Breakout seine Stränge samt Inhalt; geparkte Blöcke daraus bleiben. | `workshopId`, `dayId`, `moduleId`                                                                 | S       |
 
 Alle Werkzeuge für Tage und Blöcke brauchen mindestens **Bearbeiten** am Workshop.
 

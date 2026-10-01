@@ -327,8 +327,9 @@ export function registerDayBlockTools(server: McpServer, ctx: Ctx): void {
     {
       title: 'Delete a block',
       description:
-        'Deletes a block for good. Deleting a section deletes the blocks inside it; deleting a ' +
-        'breakout deletes its strands and everything in them.',
+        'Deletes a block for good. Deleting a section deletes the scheduled blocks inside it; ' +
+        'deleting a breakout deletes its strands and everything scheduled in them. Parked blocks ' +
+        'from inside them are kept: they move to the day level and stay parked.',
       inputSchema: {
         workshopId: Id,
         dayId: Id,
