@@ -15,6 +15,8 @@ playwright-report
 Dockerfile
 .dockerignore
 README.md
+# The help site builds its own image from help/ (see help/Dockerfile).
+help
 
 # LICENSE and NOTICE are NOT excluded, although they are documentation like the
 # README above. Apache 2.0 section 4 asks that both accompany every

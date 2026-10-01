@@ -54,8 +54,29 @@ updates:
       - dependency-name: '@vitejs/plugin-react'
         update-types: [version-update:semver-major]
 
+  # The help site (help/) has a lockfile of its own; nothing in it ships in
+  # the app image.
+  - package-ecosystem: npm
+    directory: /help
+    schedule:
+      interval: weekly
+    cooldown:
+      default-days: 7
+    open-pull-requests-limit: 2
+    groups:
+      help:
+        patterns: ['*']
+
   - package-ecosystem: docker
     directory: /
+    schedule:
+      interval: weekly
+    cooldown:
+      default-days: 7
+
+  # The help site's base images (node for the build, caddy to serve it).
+  - package-ecosystem: docker
+    directory: /help
     schedule:
       interval: weekly
     cooldown:

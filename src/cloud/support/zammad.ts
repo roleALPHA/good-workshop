@@ -56,9 +56,23 @@ export function zammadConfig(
   const url = env['GW_ZAMMAD_URL']
   const group = env['GW_ZAMMAD_GROUP']
   const tokenFile = env['GW_ZAMMAD_TOKEN_FILE']
-  const token = tokenFile ? readFileSync(tokenFile, 'utf8').trim() : env['GW_ZAMMAD_TOKEN']
+  const token = tokenFile ? readToken(tokenFile) : env['GW_ZAMMAD_TOKEN']
   if (!url || !group || !token) return null
   return { url, group, token }
+}
+
+/**
+ * A secret file that cannot be read means no helpdesk, not a page that throws:
+ * a bind mount of a file the server does not have arrives as a directory. The
+ * form then shows the mail address, and the log says why.
+ */
+function readToken(file: string): string | undefined {
+  try {
+    return readFileSync(file, 'utf8').trim() || undefined
+  } catch (error) {
+    console.error('support: cannot read GW_ZAMMAD_TOKEN_FILE', (error as { code?: string }).code)
+    return undefined
+  }
 }
 
 export async function createTicket(

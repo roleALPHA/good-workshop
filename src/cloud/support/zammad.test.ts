@@ -121,4 +121,19 @@ describe('the configuration', () => {
       })?.token,
     ).toBe('from-file')
   })
+
+  it('has no helpdesk, rather than a broken page, when the token file is unreadable', () => {
+    // A bind mount of a missing file is a directory: the secret was forgotten
+    // on the server. The form then says where to write instead.
+    const spy = vi.spyOn(console, 'error').mockImplementation(() => {})
+    expect(
+      zammadConfig({
+        GW_ZAMMAD_URL: 'https://h.test',
+        GW_ZAMMAD_GROUP: 'GoodWorkshop',
+        GW_ZAMMAD_TOKEN_FILE: '/nonexistent/zammad_token',
+      }),
+    ).toBeNull()
+    expect(spy).toHaveBeenCalled()
+    spy.mockRestore()
+  })
 })
