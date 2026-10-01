@@ -15,13 +15,13 @@ Below the day tabs is the **Start of the day** field. Change the time there, and
 
 The duration is shown in bold below the start time. Click into it and type a new one. The field understands many ways of writing it:
 
-| You type                 | Result                      |
-| ------------------------ | --------------------------- |
-| `45`, `45m`, `45 min`    | 45 minutes                  |
-| `1h30`, `1h 30m`, `1:30` | 1 hour 30 minutes           |
-| `1,5h`, `1.5h`, `1h`     | 1 hour 30 minutes or 1 hour |
+| You type                            | Result                      |
+| ----------------------------------- | --------------------------- |
+| `45`, `45m`, `45 min`, `45 minutes` | 45 minutes                  |
+| `1h30`, `1h 30m`, `1:30`            | 1 hour 30 minutes           |
+| `1,5h`, `1.5h`, `1 hour`            | 1 hour 30 minutes or 1 hour |
 
-These formats work in every interface language; spelled-out English words such as `hours` or `mins` are not recognized. Enter or a click elsewhere accepts the value, Escape discards it. Anything the field can't read unambiguously is not guessed: it jumps back to the old value, and a red border warns you while you're still typing. A duration is between 0 minutes and 24 hours.
+The short forms work in every interface language; the field also understands the words of the language you use GoodWorkshop in, such as `hours`, `hrs` or `mins`. Enter or a click elsewhere accepts the value, Escape discards it. Anything the field can't read unambiguously is not guessed: it jumps back to the old value, and a red border warns you while you're still typing. A duration is between 0 minutes and 24 hours.
 
 :::tip[With the arrow keys]
 In the duration field, Arrow Up adds 5 minutes and Arrow Down takes off 5. With Shift held down, it's 15 minutes. The value is applied immediately.

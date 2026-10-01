@@ -2,13 +2,14 @@
 
 import { useEffect, useLayoutEffect, useRef, useState } from 'react'
 import { Lock, LockOpen } from 'lucide-react'
-import { useTranslations } from 'next-intl'
+import { useLocale, useTranslations } from 'next-intl'
 import {
   formatDuration,
   fromTimeValue,
   parseDuration,
   toTimeValue,
 } from '@/features/agenda/duration'
+import { DEFAULT_LOCALE, isLocale } from '@/i18n/config'
 import { cn } from '@/lib/cn'
 import { markdownToRichText, richTextToMarkdown } from '@/lib/richtext/markdown'
 import type { RichTextValue } from '@/lib/richtext/schema'
@@ -246,6 +247,12 @@ export function DurationInput({
   onCommit: (minutes: number) => void
 }) {
   const t = useTranslations('agenda')
+  // The words a facilitator types are those of the language on screen: the
+  // field used to parse German whatever the interface said, and "45 minutes"
+  // in English was reverted without a word. The neutral forms -- 90, 1:30,
+  // 1h30 -- work in every language either way.
+  const rawLocale = useLocale()
+  const locale = isLocale(rawLocale) ? rawLocale : DEFAULT_LOCALE
   const [draft, setDraft] = useState(() => formatDuration(minutes))
   const [invalid, setInvalid] = useState(false)
   const ref = useRef<HTMLInputElement>(null)
@@ -271,7 +278,7 @@ export function DurationInput({
       return
     }
 
-    const parsed = parseDuration(draft)
+    const parsed = parseDuration(draft, locale)
     if (parsed === null) {
       // Reverting beats guessing: a silently wrong duration shifts every
       // following block and is easy to miss.
@@ -284,7 +291,7 @@ export function DurationInput({
   }
 
   function step(delta: number) {
-    const base = parseDuration(draft) ?? minutes
+    const base = parseDuration(draft, locale) ?? minutes
     const next = Math.min(1440, Math.max(0, base + delta))
     setDraft(formatDuration(next))
     onCommit(next)
@@ -304,7 +311,7 @@ export function DurationInput({
       value={draft}
       onChange={(e) => {
         setDraft(e.target.value)
-        setInvalid(e.target.value !== '' && parseDuration(e.target.value) === null)
+        setInvalid(e.target.value !== '' && parseDuration(e.target.value, locale) === null)
       }}
       onBlur={commit}
       onKeyDown={(e) => {

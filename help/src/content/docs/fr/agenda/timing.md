@@ -15,13 +15,13 @@ Sous les onglets des journées se trouve le champ **Début de la journée**. Mod
 
 La durée est affichée en gras sous l'heure de début. Clique dedans et tapes-en une nouvelle. Le champ comprend de nombreuses écritures :
 
-| Tu tapes                         | Résultat                      |
-| -------------------------------- | ----------------------------- |
-| `45`, `45m`, `45 min`, `45 min.` | 45 minutes                    |
-| `1h30`, `1h 30m`, `1:30`         | 1 heure 30 minutes            |
-| `1,5h`, `1.5h`, `1 h`            | 1 heure 30 minutes ou 1 heure |
+| Tu tapes                            | Résultat                      |
+| ----------------------------------- | ----------------------------- |
+| `45`, `45m`, `45 min`, `45 minutes` | 45 minutes                    |
+| `1h30`, `1h 30m`, `1:30`            | 1 heure 30 minutes            |
+| `1,5h`, `1.5h`, `1 heure`           | 1 heure 30 minutes ou 1 heure |
 
-Pour l'instant, le champ ne reconnaît pas les mots français comme « minutes » ou « heure » : utilise les abréviations `h` et `min`.
+Les formes courtes fonctionnent dans toutes les langues de l'interface ; le champ comprend aussi les mots de la langue dans laquelle tu utilises GoodWorkshop, comme « heure » ou « minutes ».
 
 Entrée ou un clic à côté valide la valeur, Échap l'annule. Ce que le champ ne peut pas lire sans ambiguïté n'est pas deviné : il revient à l'ancienne valeur, et un cadre rouge t'avertit dès la saisie. Une durée est comprise entre 0 minute et 24 heures.
 
