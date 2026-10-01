@@ -45,8 +45,8 @@ Aparta el bloque, cambia a la jornada de destino con las pestañas y haz clic al
 
 Si eliminas una jornada, su desarrollo se va con ella. Sus bloques apartados, en cambio, se conservan: pasan a los apartados de la jornada anterior, o de la siguiente si eliminas la primera jornada. Quien ordena una jornada no ha decidido con ello nada sobre las alternativas pensadas para todo el taller. Consulta [Jornadas](/es/agenda/days/).
 
-:::caution[Las secciones se llevan sus bloques apartados]
-Un bloque apartado recuerda la sección o el grupo del que viene. Si eliminas esa sección, ese grupo o ese breakout, el bloque apartado se elimina con ellos, aunque el botón de eliminar solo cuente los bloques del desarrollo. Si quieres conservarlo, recupéralo antes con **Volver al desarrollo** y sácalo de la sección arrastrándolo, o tráelo desde otra jornada.
+:::note[Los bloques apartados sobreviven a su sección]
+Un bloque apartado recuerda la sección o el grupo del que viene. Si eliminas esa sección, ese grupo o ese breakout, el bloque apartado se conserva: pasa al nivel de la jornada y sigue apartado. Solo se elimina lo que cuenta el botón de eliminar: los bloques del desarrollo.
 :::
 
 ## Quién puede hacer qué
