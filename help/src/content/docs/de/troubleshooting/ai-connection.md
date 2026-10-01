@@ -91,8 +91,7 @@ verwalten. Das ist Absicht und lässt sich nicht freischalten.
 ## Zugang beenden
 
 Ein Token ziehst du unter **KI-Verbindung** mit **Zurückziehen** zurück. Einen OAuth-Zugang beendest
-du, indem du den Connector im Client trennst — in GoodWorkshop selbst lässt er sich bisher nicht
-zurückziehen, siehe [Bekannte Probleme](/de/troubleshooting/known-issues/).
+du dort unter **Verbundene Clients** mit **Zugriff entziehen**; er gilt ab der nächsten Anfrage nicht mehr.
 
 ## Weiterlesen
 

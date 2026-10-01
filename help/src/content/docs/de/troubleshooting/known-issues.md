@@ -11,13 +11,6 @@ stehen, meldest du über den [Support](/de/troubleshooting/support/).
 
 ## Für alle
 
-### Ein OAuth-Zugang lässt sich in GoodWorkshop nicht zurückziehen
-
-Verbindest du Claude, ChatGPT oder einen anderen Client per OAuth, endet der Zugang bisher nur,
-wenn du den Connector im Client trennst. Die Freigabeseite erwähnt zwar die Einstellungen unter
-**KI-Verbindung**, dort gibt es für OAuth-Zugänge aber noch keinen Knopf. Tokens ziehst du dort
-mit **Zurückziehen** zurück. Siehe [KI-Verbindung](/de/troubleshooting/ai-connection/).
-
 ### Nach der Anmeldung geht es nicht zur Freigabeseite zurück
 
 Bist du nicht angemeldet, wenn ein Client dich zur Freigabe schickt, meldest du dich an und

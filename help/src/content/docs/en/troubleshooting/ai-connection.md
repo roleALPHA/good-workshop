@@ -90,9 +90,8 @@ intentional and can't be unlocked.
 
 ## End access
 
-You revoke a token under **AI Connection** with **Revoke**. You end OAuth access by disconnecting
-the connector in the client — GoodWorkshop itself can't revoke it yet, see
-[Known issues](/en/troubleshooting/known-issues/).
+You revoke a token under **AI Connection** with **Revoke**. You end OAuth access there under
+**Connected clients** with **Revoke access**; it stops working with the next request.
 
 ## Read on
 

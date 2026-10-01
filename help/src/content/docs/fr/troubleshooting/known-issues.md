@@ -11,13 +11,6 @@ figurent pas, tu les signales via le [Support](/fr/troubleshooting/support/).
 
 ## Pour tout le monde
 
-### Un accès OAuth ne peut pas être révoqué dans GoodWorkshop
-
-Si tu connectes Claude, ChatGPT ou un autre client par OAuth, l'accès ne prend fin pour l'instant
-que lorsque tu déconnectes le connecteur dans le client. La page d'autorisation mentionne bien les
-réglages sous **Connexion IA**, mais il n'y a pas encore de bouton pour les accès OAuth. Les jetons,
-tu les révoques à cet endroit avec **Révoquer**. Voir [Connexion IA](/fr/troubleshooting/ai-connection/).
-
 ### Après la connexion, pas de retour à la page d'autorisation
 
 Si tu n'es pas connecté quand un client t'envoie vers la page d'autorisation, tu te connectes et tu
