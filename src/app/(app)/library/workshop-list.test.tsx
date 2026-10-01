@@ -42,6 +42,7 @@ function workshop(overrides: Partial<WorkshopSummary> = {}): WorkshopSummary {
     dayCount: 2,
     tags: [],
     role: 'owner',
+    canDelete: true,
     ...overrides,
   }
 }
@@ -345,5 +346,22 @@ describe('a workspace that may only export', () => {
     ).toHaveAttribute('href', '/api/w/w-1/export')
     expect(screen.queryByRole('link', { name: /Strategie-Retreat$/ })).not.toBeInTheDocument()
     expect(screen.getByText('Strategie-Retreat')).toBeInTheDocument()
+  })
+})
+
+describe('what a row offers', () => {
+  it('offers the bin only to somebody who may delete, not to an editor', () => {
+    show([
+      workshop({ id: 'w-own', title: 'Eigener' }),
+      workshop({ id: 'w-ed', title: 'Mitbearbeitet', role: 'editor', canDelete: false }),
+    ])
+
+    expect(
+      within(rowFor('Eigener')).getByRole('button', { name: 'Eigener in den Papierkorb' }),
+    ).toBeInTheDocument()
+    const editorRow = rowFor('Mitbearbeitet')
+    // Moving is the editor's to do; throwing away is not.
+    expect(within(editorRow).queryByRole('button', { name: /Papierkorb/ })).not.toBeInTheDocument()
+    expect(within(editorRow).getByRole('button', { name: /verschieben/i })).toBeInTheDocument()
   })
 })

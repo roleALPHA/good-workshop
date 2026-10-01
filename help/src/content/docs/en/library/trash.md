@@ -15,7 +15,7 @@ In the library, click **Move to the bin** in the workshop's row. The workshop di
 the list immediately. There is no confirmation, because nothing is lost.
 
 The workshop's **Owner** and **admins** can move it to the bin. Anyone who may only edit or
-read a workshop can't throw it away – not even through a shared folder.
+read a workshop can't throw it away – not even through a shared folder. For them the library doesn't show the button at all.
 
 While a workshop is in the bin, it can't be opened and doesn't appear in the library.
 
@@ -23,7 +23,8 @@ While a workshop is in the bin, it can't be opened and doesn't appear in the lib
 
 The **Bin** link is in the library on the left, below the folder tree. There you see the
 workshops that belong to you or that you're directly involved in; admins see all of them in the
-workspace. The most recently discarded item is at the top, with the date (“discarded on …”).
+workspace. The most recently discarded item is at the top, with the date (“discarded on …”). For workshops you only edit, the buttons are replaced by
+“Only the owner of the workshop or an admin can restore it.”
 
 **Back to the library** takes you back to the library.
 

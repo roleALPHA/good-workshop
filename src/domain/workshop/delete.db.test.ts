@@ -174,6 +174,45 @@ describe('the bin', () => {
     await expect(access(as(adminId, 'admin'), id, 'workshop.delete')).resolves.toBeTruthy()
   })
 
+  it('tells the list who may throw a workshop away, so nobody sees a button that fails', async () => {
+    // An editor may rename, tag and move -- not delete. The library showed the
+    // bin button to every non-viewer, and an editor's click ended in
+    // "permission missing: workshop.delete".
+    const id = await makeWorkshop('Gemeinsam', ownerId)
+    await ops.query(
+      `insert into workshop_collaborator (tenant_id, workshop_id, member_id, role)
+       values ($1, $2, $3, 'editor')`,
+      [TENANT, id, colleagueId],
+    )
+    const canDeleteIn = async (actor: Actor) =>
+      (await withTenant(actor, (tx) => listWorkshops(tx, actor, {}))).workshops.find(
+        (w) => w.id === id,
+      )?.canDelete
+
+    expect(await canDeleteIn(as(ownerId))).toBe(true)
+    expect(await canDeleteIn(as(colleagueId))).toBe(false)
+    expect(await canDeleteIn(as(adminId, 'admin'))).toBe(true)
+  })
+
+  it('tells the bin who may restore or purge, and an editor may do neither', async () => {
+    const id = await makeWorkshop('Im Eimer, gemeinsam', ownerId)
+    await ops.query(
+      `insert into workshop_collaborator (tenant_id, workshop_id, member_id, role)
+       values ($1, $2, $3, 'editor')`,
+      [TENANT, id, colleagueId],
+    )
+    await withTenant(as(ownerId), async (tx) =>
+      trashWorkshop(tx, await assertWorkshopAccess(tx, as(ownerId), id, 'workshop.delete')),
+    )
+    const canDeleteIn = async (actor: Actor) =>
+      (await withTenant(actor, (tx) => listTrashedWorkshops(tx, actor))).find((w) => w.id === id)
+        ?.canDelete
+
+    expect(await canDeleteIn(as(ownerId))).toBe(true)
+    expect(await canDeleteIn(as(colleagueId))).toBe(false)
+    expect(await canDeleteIn(as(adminId, 'admin'))).toBe(true)
+  })
+
   it('keeps one tenant out of another tenant’s bin', async () => {
     const id = await makeWorkshop('Geheim', ownerId)
     await withTenant(as(ownerId), async (tx) =>

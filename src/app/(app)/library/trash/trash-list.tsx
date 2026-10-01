@@ -4,7 +4,13 @@ import { useState, useTransition } from 'react'
 import { purgeWorkshopAction, restoreWorkshopAction } from '@/server/actions/workshop'
 import { useFormatter, useTranslations } from 'next-intl'
 
-type Entry = { id: string; title: string; deletedAt: string | null }
+type Entry = {
+  id: string
+  title: string
+  deletedAt: string | null
+  /** Owner or admin: only they hold `workshop.delete`, which restore and purge need. */
+  canDelete: boolean
+}
 
 /**
  * The bin, where deleting finally means it.
@@ -70,28 +76,34 @@ export function TrashList({ initial }: { initial: Entry[] }) {
                   {t('discardedOn', { date: format.dateTime(new Date(entry.deletedAt), 'short') })}
                 </span>
               )}
-              <button
-                type="button"
-                onClick={() => restore(entry.id)}
-                disabled={pending}
-                className="shrink-0 rounded border border-[var(--border-strong)] px-2 py-1 text-[14px] hover:bg-[var(--surface-raised)] disabled:opacity-60"
-              >
-                {t('restore')}
-              </button>
-              <button
-                type="button"
-                onClick={() => {
-                  setConfirming(confirming === entry.id ? null : entry.id)
-                  setTyped('')
-                }}
-                disabled={pending}
-                className="shrink-0 rounded px-2 py-1 text-[14px] text-[var(--warn-fg)] hover:bg-[var(--surface-raised)] disabled:opacity-60"
-              >
-                {t('purge')}
-              </button>
+              {entry.canDelete ? (
+                <>
+                  <button
+                    type="button"
+                    onClick={() => restore(entry.id)}
+                    disabled={pending}
+                    className="shrink-0 rounded border border-[var(--border-strong)] px-2 py-1 text-[14px] hover:bg-[var(--surface-raised)] disabled:opacity-60"
+                  >
+                    {t('restore')}
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => {
+                      setConfirming(confirming === entry.id ? null : entry.id)
+                      setTyped('')
+                    }}
+                    disabled={pending}
+                    className="shrink-0 rounded px-2 py-1 text-[14px] text-[var(--warn-fg)] hover:bg-[var(--surface-raised)] disabled:opacity-60"
+                  >
+                    {t('purge')}
+                  </button>
+                </>
+              ) : (
+                <span className="text-[13px] text-[var(--fg-muted)]">{t('ownerOnly')}</span>
+              )}
             </div>
 
-            {confirming === entry.id && (
+            {entry.canDelete && confirming === entry.id && (
               <div className="mt-3 rounded border border-[var(--border)] bg-[var(--surface)] p-3">
                 <p className="text-[14px]">
                   {t.rich('purgeWarning', {

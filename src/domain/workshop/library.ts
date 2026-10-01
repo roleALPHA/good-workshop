@@ -1,6 +1,7 @@
 import { and, asc, desc, eq, ilike, isNotNull, isNull, or, sql } from 'drizzle-orm'
 import { memberIdOf, type Actor, type Tx } from '@/server/db'
 import { tag, workshop, workshopCollaborator, workshopDay } from '@/server/db/schema'
+import { roleCan } from '@/domain/agenda/access'
 import {
   folderPathSql,
   folderReachSql,
@@ -42,6 +43,12 @@ export type WorkshopSummary = {
   dayCount: number
   tags: WorkshopTag[]
   role: 'owner' | 'editor' | 'viewer' | 'admin'
+  /**
+   * May this person throw it away. Not derivable from `role` on the client
+   * without copying the capability table there -- an editor may rename and
+   * move, but not delete.
+   */
+  canDelete: boolean
 }
 
 export type LibraryQuery = {
@@ -158,7 +165,7 @@ export async function listWorkshops(
       updatedAt: row.updatedAt,
       dayCount: row.dayCount,
       tags: row.tags ?? [],
-      role: roleOf(row.ownerId, row.collaboratorRole, row.folderPath, actor),
+      ...withDeleteRight(roleOf(row.ownerId, row.collaboratorRole, row.folderPath, actor)),
     })),
     nextCursor: rows.length > limit && last ? makeCursor(last.updatedAt, last.id) : null,
   }
@@ -251,16 +258,33 @@ export async function listTags(tx: Tx): Promise<TagSummary[]> {
   return rows
 }
 
-/** What is in the bin, newest first -- the order somebody looks for a mistake in. */
+/**
+ * What is in the bin, newest first -- the order somebody looks for a mistake in.
+ *
+ * Each entry says whether this person may restore or purge it: an editor sees a
+ * workshop they work on in the bin, but only the owner and an admin hold
+ * `workshop.delete`, and buttons that fail are worse than no buttons.
+ */
 export async function listTrashedWorkshops(tx: Tx, actor: Actor) {
-  return tx
+  const rows = await tx
     .select({
       id: workshop.id,
       title: workshop.title,
       deletedAt: workshop.deletedAt,
       ownerId: workshop.ownerId,
+      collaboratorRole: workshopCollaborator.role,
+      folderPath: folderPathSql(workshop.folderId, memberIdOf(actor)).mapWith(
+        (v) => v as FolderPathRow[],
+      ),
     })
     .from(workshop)
+    .leftJoin(
+      workshopCollaborator,
+      and(
+        eq(workshopCollaborator.workshopId, workshop.id),
+        eq(workshopCollaborator.memberId, memberIdOf(actor)),
+      ),
+    )
     .where(
       and(
         isNotNull(workshop.deletedAt),
@@ -277,4 +301,13 @@ export async function listTrashedWorkshops(tx: Tx, actor: Actor) {
       ),
     )
     .orderBy(desc(workshop.deletedAt))
+
+  return rows.map(({ collaboratorRole, folderPath, ...row }) => ({
+    ...row,
+    canDelete: withDeleteRight(roleOf(row.ownerId, collaboratorRole, folderPath, actor)).canDelete,
+  }))
+}
+
+function withDeleteRight(role: WorkshopSummary['role']) {
+  return { role, canDelete: roleCan(role, 'workshop.delete') }
 }

@@ -16,7 +16,7 @@ disparaît aussitôt de la liste. Il n'y a pas de demande de confirmation, car r
 
 Peuvent mettre un atelier à la corbeille sa ou son **Propriétaire** et les **Admins**. Qui a
 seulement le droit de modifier ou de lire un atelier ne peut pas le jeter – pas même via un dossier
-partagé.
+partagé. Pour ces personnes, la bibliothèque n'affiche donc pas le bouton.
 
 Tant qu'un atelier est dans la corbeille, il ne peut pas être ouvert et n'apparaît pas dans la
 bibliothèque.
@@ -26,7 +26,8 @@ bibliothèque.
 Le lien **Corbeille** se trouve dans la bibliothèque, à gauche sous l'arborescence des dossiers.
 Tu y vois les ateliers qui t'appartiennent ou auxquels tu participes directement ; les admins
 voient tous ceux de l'espace de travail. Le dernier élément jeté est en haut, avec la date
-(« jeté le … »).
+(« jeté le … »). Pour les ateliers que tu modifies seulement, les boutons sont remplacés par
+« Seul le propriétaire de l'atelier ou un admin peut le restaurer. »
 
 Avec **Retour à la bibliothèque**, tu reviens à la bibliothèque.
 

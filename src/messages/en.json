@@ -616,7 +616,8 @@
       "purge": "Delete for good",
       "purgeWarning": "This removes <b>{title}</b> with all its days and blocks. There is no way back.",
       "purgeConfirmLabel": "Type the title to confirm:",
-      "purgeConfirm": "Delete irreversibly"
+      "purgeConfirm": "Delete irreversibly",
+      "ownerOnly": "Only the owner of the workshop or an admin can restore it."
     },
     "creating": "Creating …",
     "dayCount": "{count, plural, one {# day} other {# days}}",
