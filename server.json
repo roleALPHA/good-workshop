@@ -3,7 +3,7 @@
   "name": "io.github.roleALPHA/good-workshop",
   "title": "GoodWorkshop",
   "description": "Plan workshop agendas: days, blocks, pinned times, parking. Start times recalculate automatically.",
-  "version": "0.8.24",
+  "version": "0.8.25",
   "websiteUrl": "https://goodworkshop.org",
   "repository": {
     "url": "https://github.com/roleALPHA/good-workshop",
