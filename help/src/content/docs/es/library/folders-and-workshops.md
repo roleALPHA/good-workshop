@@ -30,9 +30,10 @@ solo puedes leer un taller, lleva **Solo lectura** y solo ofrece la exportación
 2. Haz clic en **Nuevo taller** y escribe el título. Encima del campo se indica dónde se guardará.
 3. Confirma con **Crear** o con la tecla Intro.
 
-El taller se abre enseguida, con su primera jornada. Te pertenece. El título de un taller lo
-decides aquí; en la propia app no se puede cambiar después, pero sí a través del
-[asistente de IA](/es/ai/tools/).
+El taller se abre enseguida, con su primera jornada. Te pertenece. Puedes cambiarle el nombre más
+tarde arriba en su página: haz clic en el lápiz junto al título (**Cambiar el nombre del taller …**),
+escribe el nuevo nombre y confirma con Intro. Esc cancela. Puede hacerlo cualquiera que pueda editar
+el taller.
 
 ## Crear una carpeta
 

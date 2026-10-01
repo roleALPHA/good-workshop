@@ -985,7 +985,10 @@
       "deleteWarning": "Supprimer définitivement « {title} » et son déroulé ? Les blocs mis de côté sont conservés.",
       "deleteConfirm": "Supprimer définitivement",
       "cancel": "Annuler"
-    }
+    },
+    "rename": "Renommer",
+    "renameLabel": "Renommer l'atelier {name}",
+    "renameField": "Nouveau nom pour {name}"
   },
   "oauth": {
     "title": "Autoriser l'accès ?",

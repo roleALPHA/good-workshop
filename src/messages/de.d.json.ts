@@ -988,7 +988,10 @@ declare const messages: {
       "deleteWarning": "„{title}“ mit seinem Ablauf endgültig löschen? Geparkte Blöcke bleiben auf dem Parkplatz.",
       "deleteConfirm": "Endgültig löschen",
       "cancel": "Abbrechen"
-    }
+    },
+    "rename": "Umbenennen",
+    "renameLabel": "Workshop {name} umbenennen",
+    "renameField": "Neuer Name für {name}"
   },
   "oauth": {
     "title": "Zugriff erlauben?",

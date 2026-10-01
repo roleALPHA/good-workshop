@@ -27,9 +27,10 @@ Symbole. Darfst du einen Workshop nur lesen, trägt er **Nur Lesen** und bietet 
 2. Klick auf **Neuer Workshop** und gib den Titel ein. Über dem Feld steht, wo er abgelegt wird.
 3. Bestätige mit **Anlegen** oder der Eingabetaste.
 
-Der Workshop öffnet sich sofort, mit seinem ersten Tag. Er gehört dir. Den Titel eines Workshops
-legst du hier fest; in der App selbst lässt er sich danach nicht umbenennen, wohl aber über den
-[KI-Assistenten](/de/ai/tools/).
+Der Workshop öffnet sich sofort, mit seinem ersten Tag. Er gehört dir. Umbenennen kannst du ihn später
+oben auf seiner Seite: Klick neben dem Titel auf den Stift (**Workshop … umbenennen**), tipp den
+neuen Namen und bestätige mit der Eingabetaste. Escape bricht ab. Das dürfen alle, die den
+Workshop bearbeiten können.
 
 ## Einen Ordner anlegen
 

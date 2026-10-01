@@ -985,7 +985,10 @@
       "deleteWarning": "Delete “{title}” and its schedule for good? Parked blocks stay in the parking area.",
       "deleteConfirm": "Delete for good",
       "cancel": "Cancel"
-    }
+    },
+    "rename": "Rename",
+    "renameLabel": "Rename workshop {name}",
+    "renameField": "New name for {name}"
   },
   "oauth": {
     "title": "Allow access?",
