@@ -1,0 +1,230 @@
+---
+title: Connecter un assistant
+description: Connecter Claude, ChatGPT, Gemini et d'autres clients MCP à GoodWorkshop – via OAuth sans jeton ou avec un jeton personnel.
+sidebar:
+  order: 2
+---
+
+import { Tabs, TabItem } from '@astrojs/starlight/components'
+
+Il y a deux façons de connecter un assistant IA à GoodWorkshop :
+
+| Méthode                | Pour qui                                                                                                                             | Ce qu'il te faut                                                               |
+| ---------------------- | ------------------------------------------------------------------------------------------------------------------------------------ | ------------------------------------------------------------------------------ |
+| **OAuth** (sans jeton) | Claude sur le web, sur ordinateur et dans l'app, ChatGPT, Claude Code, Gemini CLI, Mistral Le Chat, Cursor, VS Code et bien d'autres | seulement l'URL du serveur ; tu te connectes dans le navigateur et tu acceptes |
+| **Jeton personnel**    | les clients qui envoient un en-tête fixe : Claude Code, Claude Desktop, Gemini CLI, Codex, Langdock                                  | un jeton créé dans **Connexion IA**                                            |
+
+Si ton client sait faire OAuth, choisis OAuth. Tout ce qui concerne la connexion se trouve dans GoodWorkshop, dans le menu du profil en haut à droite, sous **Connexion IA**.
+
+## L'URL du serveur
+
+```text
+https://<ton-installation>/api/mcp
+```
+
+Dans GoodWorkshop Cloud, c'est :
+
+```text
+https://goodworkshop.org/api/mcp
+```
+
+Sur la page **Connexion IA**, l'adresse de ton installation figure sous **URL du serveur**, avec un bouton pour la copier.
+
+## Se connecter avec OAuth
+
+:::caution[Se connecter d'abord dans le navigateur]
+Connecte-toi **d'abord** à GoodWorkshop dans le navigateur où la connexion va s'ouvrir. Si tu ne te connectes qu'en cours de route, tu arrives ensuite dans la bibliothèque au lieu de la page d'autorisation et tu dois relancer la connexion dans le client.
+:::
+
+:::note[Auto-hébergé dans un réseau d'entreprise ?]
+Claude (web, bureau, app) et ChatGPT se connectent depuis le cloud de leur éditeur. Cela ne fonctionne que si ton installation est accessible depuis Internet en HTTPS – voir [HTTPS et reverse proxy](/fr/self-hosting/tls/). Claude Code et Gemini CLI s'exécutent sur ton ordinateur et atteignent aussi les installations d'un réseau d'entreprise.
+:::
+
+Les noms de menus dans Claude et ChatGPT peuvent légèrement varier selon la langue et la version.
+
+<Tabs syncKey="oauth-client">
+<TabItem label="Claude">
+
+Valable pour Claude sur le web, sur ordinateur et dans l'app.
+
+1. Dans Claude, ouvre **Customize** → **Connectors**, clique sur **+** et choisis **Add custom connector**.
+2. Donne-lui un nom, par exemple GoodWorkshop, et colle l'URL du serveur. Laisse **Advanced settings** vide.
+3. Clique sur **Add**, puis sur **Connect**.
+4. Connecte-toi à GoodWorkshop dans le navigateur et clique sur **Autoriser l'accès**.
+
+Avec Claude Team et Enterprise, seul un Owner ajoute le connecteur, sous **Organization settings** → **Connectors**. Les autres cliquent ensuite simplement sur **Connect** de leur côté. Le forfait gratuit permet un connecteur personnalisé.
+
+</TabItem>
+<TabItem label="ChatGPT">
+
+1. Sur le web, active le mode développeur sous **Paramètres** → **Apps** → **Paramètres avancés**. Il est disponible avec Plus, Pro, Business, Enterprise et Edu ; dans un espace de travail, un admin doit peut-être l'autoriser d'abord.
+2. Sous **Apps**, crée une nouvelle app : nom, URL du serveur, authentification **OAuth**.
+3. Enregistre et connecte.
+4. Connecte-toi à GoodWorkshop dans le navigateur et clique sur **Autoriser l'accès**.
+
+</TabItem>
+<TabItem label="Claude Code">
+
+Ajoute le serveur dans le terminal **sans** en-tête :
+
+```bash
+claude mcp add --transport http goodworkshop https://goodworkshop.org/api/mcp
+```
+
+Lance ensuite `/mcp` dans Claude Code, choisis le serveur puis **Authenticate**. Le navigateur s'ouvre ; connecte-toi et clique sur **Autoriser l'accès**.
+
+</TabItem>
+<TabItem label="Gemini CLI">
+
+Ajoute le serveur dans le terminal **sans** en-tête :
+
+```bash
+gemini mcp add --transport http goodworkshop https://goodworkshop.org/api/mcp
+```
+
+À la première connexion, le navigateur s'ouvre de lui-même. Pour te reconnecter plus tard, lance `/mcp auth goodworkshop`.
+
+</TabItem>
+<TabItem label="Autres">
+
+Mistral Le Chat, Cursor, VS Code et d'autres :
+
+1. Saisis l'URL du serveur.
+2. Choisis OAuth comme authentification – le client le détecte souvent lui-même.
+3. Connecte-toi dans le navigateur et accepte.
+
+Si un client ne peut envoyer que des en-têtes fixes, utilise un jeton personnel (voir plus bas).
+
+</TabItem>
+</Tabs>
+
+Si tu héberges GoodWorkshop toi-même, remplace `goodworkshop.org` par ta propre adresse dans les commandes.
+
+### La page d'autorisation
+
+Pendant la connexion, GoodWorkshop affiche la page **Autoriser l'accès ?**. Elle indique quel client fait la demande, pour quel compte, et sous **Le client pourra :** ce qu'il a le droit de faire. Via OAuth, ce sont :
+
+- **Lire les ateliers**
+- **Écrire les ateliers**
+- **Lire les types de blocs**
+
+En dessous figure : « Il agit en tant que toi … et ne peut jamais faire plus que toi. La gestion des utilisateurs est exclue. »
+
+Tu as deux possibilités : **Autoriser l'accès** ou **Refuser**. Il n'est pas possible de désélectionner certains périmètres – un client aux droits partiels échouerait plus tard à un endroit inattendu.
+
+### Mettre fin à un accès OAuth
+
+Déconnecte le connecteur dans le client. GoodWorkshop ne permet pas encore de révoquer lui-même un accès OAuth.
+
+## Se connecter avec un jeton personnel
+
+![La page Connexion IA avec la commande toute prête pour Claude Code (interface en anglais)](../../../../assets/mcp.png)
+
+### Créer un jeton
+
+1. Dans le menu du profil, ouvre **Connexion IA**.
+2. Clique sur **Créer un jeton**.
+3. Sous **À quoi sert-il ?**, saisis un nom, par exemple « Claude Desktop ».
+4. Sous **Que peut-il faire ?**, choisis les périmètres (voir le tableau ci-dessous). **Lire les ateliers** et **Lire les types de blocs** sont présélectionnés – l'assistant peut ainsi lire, mais ne rien modifier. S'il doit écrire des agendas, coche **Écrire les ateliers**.
+5. Clique sur **Créer un jeton**.
+
+:::danger[Le jeton n'apparaît qu'une fois]
+Sous **Ton nouveau jeton**, il s'affiche en clair – puis plus jamais, seule une empreinte est conservée. Copie-le maintenant. À ce moment-là, les instructions sous **Connecter un client** sont déjà remplies avec ton jeton et ton adresse. Quiconque possède le jeton agit en ton nom dans GoodWorkshop : traite-le comme un mot de passe.
+:::
+
+Plus tard, les instructions affichent `gwp_…` à la place du jeton. Remplace-le par le tien.
+
+### Périmètres d'un jeton
+
+| Périmètre                     | À quoi il sert                                                                                               |
+| ----------------------------- | ------------------------------------------------------------------------------------------------------------ |
+| **Lire les ateliers**         | lire la bibliothèque, les journées, la corbeille et l'export ; dans le Cloud aussi la collection de méthodes |
+| **Écrire les ateliers**       | créer, modifier et supprimer des dossiers, des ateliers, des journées et des blocs ; reprendre des méthodes  |
+| **Lire les types de blocs**   | lire les types de blocs et leurs champs – nécessaire pour que l'assistant remplisse correctement les blocs   |
+| **Écrire les types de blocs** | sélectionnable, actuellement utilisé par aucun outil                                                         |
+| **Lire l'espace**             | sélectionnable, actuellement utilisé par aucun outil                                                         |
+
+S'il manque un périmètre à un jeton, l'outil le signale à l'assistant. Crée alors un nouveau jeton avec le périmètre adéquat. La gestion des utilisateurs n'est délibérément pas proposée.
+
+### Configurer le client
+
+<Tabs syncKey="token-client">
+<TabItem label="Claude Code">
+
+Une fois, dans le terminal. Ensuite chaque projet connaît le serveur.
+
+```bash
+claude mcp add --transport http goodworkshop https://goodworkshop.org/api/mcp --header "Authorization: Bearer gwp_…"
+```
+
+</TabItem>
+<TabItem label="Claude Desktop">
+
+À ajouter dans le fichier de configuration, puis redémarre Claude Desktop. Si `"mcpServers"` existe déjà, seule la partie intérieure est à ajouter.
+
+- macOS : `~/Library/Application Support/Claude/claude_desktop_config.json`
+- Windows : `%APPDATA%\Claude\claude_desktop_config.json`
+
+```json
+{
+  "mcpServers": {
+    "goodworkshop": {
+      "command": "npx",
+      "args": [
+        "-y",
+        "mcp-remote",
+        "https://goodworkshop.org/api/mcp",
+        "--header",
+        "Authorization:${GW_TOKEN}"
+      ],
+      "env": { "GW_TOKEN": "Bearer gwp_…" }
+    }
+  }
+}
+```
+
+Reprends cette écriture exactement : `Authorization:${GW_TOKEN}` sans espace, le mot `Bearer` dans `env`. Avec un espace, l'en-tête se perd en route, et chaque appel est rejeté sans message d'erreur.
+
+</TabItem>
+<TabItem label="Gemini CLI">
+
+Une fois, dans le terminal. L'entrée atterrit dans `~/.gemini/settings.json`.
+
+```bash
+gemini mcp add --transport http --header "Authorization: Bearer gwp_…" goodworkshop https://goodworkshop.org/api/mcp
+```
+
+</TabItem>
+<TabItem label="Codex">
+
+Deux lignes dans le terminal. Codex garde le jeton hors du fichier de configuration ; l'entrée ne nomme que la variable d'environnement.
+
+```bash
+export GW_TOKEN=gwp_…
+codex mcp add goodworkshop --url https://goodworkshop.org/api/mcp --bearer-token-env-var GW_TOKEN
+```
+
+Pour que cela dure, la première ligne va dans la configuration de ton shell (`~/.zshrc` ou `~/.bashrc`).
+
+</TabItem>
+<TabItem label="Langdock">
+
+1. **Paramètres** → **Intégrations** → **MCP** → **Ajouter une connexion**.
+2. Colle l'URL du serveur.
+3. Authentification : **API Key**, type d'en-tête : **Authorization: Bearer**.
+4. Colle le jeton nu comme clé – sans le mot « Bearer », Langdock l'ajoute lui-même.
+5. **Test connection**, choisis les outils, enregistre.
+
+</TabItem>
+</Tabs>
+
+### Révoquer un jeton
+
+Dans la liste de la page **Connexion IA**, chaque jeton figure avec son nom, ses périmètres et la **dernière fois** qu'il a été utilisé. **Révoquer** le bloque immédiatement. Tu ne peux créer et gérer des jetons que pour toi-même ; même les admins ne voient pas les jetons des autres.
+
+## Voir aussi
+
+- [Planifier avec l'assistant IA](/fr/ai/introduction/)
+- [Référence des outils](/fr/ai/tools/)
+- [Exemples](/fr/ai/examples/)
+- [Connexion IA – Dépannage](/fr/troubleshooting/ai-connection/)

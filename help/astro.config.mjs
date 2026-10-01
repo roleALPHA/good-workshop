@@ -23,7 +23,12 @@ export default defineConfig({
   trailingSlash: 'always',
   integrations: [
     starlight({
-      title: 'GoodWorkshop Hilfe',
+      title: {
+        de: 'GoodWorkshop Hilfe',
+        en: 'GoodWorkshop Help',
+        fr: 'Aide GoodWorkshop',
+        es: 'Ayuda de GoodWorkshop',
+      },
       description: 'Workshops planen mit GoodWorkshop: Anleitungen, Referenz und Fehlerbehebung.',
       logo: { src: './src/assets/logo.svg', replacesTitle: false },
       favicon: '/favicon.svg',

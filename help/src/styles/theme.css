@@ -38,3 +38,13 @@
   border: 1px solid var(--sl-color-hairline);
   border-radius: 0.5rem;
 }
+
+/* The hero screenshot is a wide app window; shown whole rather than cropped. */
+.hero img {
+  width: 100%;
+  max-width: 36rem;
+  height: auto;
+  object-fit: contain;
+  border: 1px solid var(--sl-color-hairline);
+  border-radius: 0.5rem;
+}

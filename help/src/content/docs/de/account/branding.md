@@ -72,8 +72,8 @@ wirken und nicht leuchten. Deine Eingabe bleibt trotzdem die Grundlage.
 
 :::note[Warum die Bausteintypen ihre Farben behalten]
 Die Farben der Bausteintypen bedeuten etwas – eine Pause sieht aus wie eine Pause. Würde die
-Hausfarbe alle Typen übermalen, wäre die Agenda nicht mehr lesbar. Die Farbe eines
-Bausteintyps änderst du deshalb einzeln beim Typ selbst; mehr dazu unter
+Hausfarbe alle Typen übermalen, wäre die Agenda nicht mehr lesbar. Die Farben gehören darum
+fest zum Bausteintyp und lassen sich hier nicht ändern; welcher Typ welche Rolle hat, steht unter
 [Blöcke und Bausteintypen](/de/agenda/blocks/).
 :::
 

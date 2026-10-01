@@ -1,0 +1,230 @@
+---
+title: Conectar un asistente
+description: Conecta Claude, ChatGPT, Gemini y otros clientes MCP con GoodWorkshop, mediante OAuth sin token o con un token personal.
+sidebar:
+  order: 2
+---
+
+import { Tabs, TabItem } from '@astrojs/starlight/components'
+
+Hay dos formas de conectar un asistente de IA con GoodWorkshop:
+
+| Forma                 | Para quién                                                                                                                      | Qué necesitas                                                                |
+| --------------------- | ------------------------------------------------------------------------------------------------------------------------------- | ---------------------------------------------------------------------------- |
+| **OAuth** (sin token) | Claude en la web, en el escritorio y en la app, ChatGPT, Claude Code, Gemini CLI, Mistral Le Chat, Cursor, VS Code y muchos más | solo la URL del servidor; inicias sesión en el navegador y das tu aprobación |
+| **Token personal**    | Clientes que envían una cabecera fija: Claude Code, Claude Desktop, Gemini CLI, Codex, Langdock                                 | un token de **Conexión IA**                                                  |
+
+Si tu cliente admite OAuth, usa OAuth. Todo lo relativo a la conexión está en GoodWorkshop, en el menú de perfil arriba a la derecha, en **Conexión IA**.
+
+## La URL del servidor
+
+```text
+https://<tu-instalación>/api/mcp
+```
+
+En GoodWorkshop Cloud es:
+
+```text
+https://goodworkshop.org/api/mcp
+```
+
+En la página **Conexión IA**, la dirección de tu instalación aparece en **URL del servidor**, con un botón para copiarla.
+
+## Conectar con OAuth
+
+:::caution[Inicia sesión antes en el navegador]
+Inicia sesión en GoodWorkshop **primero** en el navegador en el que se abrirá el inicio de sesión. Si inicias sesión a mitad del proceso, después llegarás a la biblioteca en lugar de a la página de autorización y tendrás que volver a conectar desde el cliente.
+:::
+
+:::note[¿Instalación propia en una red corporativa?]
+Claude (web, escritorio, app) y ChatGPT se conectan desde la nube de su proveedor. Solo funciona si tu instalación es accesible desde internet por HTTPS: consulta [HTTPS y proxy inverso](/es/self-hosting/tls/). Claude Code y Gemini CLI se ejecutan en tu ordenador y también llegan a instalaciones dentro de una red corporativa.
+:::
+
+Los nombres de los menús en Claude y ChatGPT pueden variar ligeramente según el idioma y la versión.
+
+<Tabs syncKey="oauth-client">
+<TabItem label="Claude">
+
+Vale para Claude en la web, en el escritorio y en la app.
+
+1. En Claude, abre **Customize** → **Connectors**, haz clic en **+** y elige **Add custom connector**.
+2. Ponle un nombre, por ejemplo GoodWorkshop, y pega la URL del servidor. Deja vacío **Advanced settings**.
+3. Haz clic en **Add** y después en **Connect**.
+4. Inicia sesión en GoodWorkshop en el navegador y haz clic en **Permitir el acceso**.
+
+En Claude Team y Enterprise solo un Owner añade el conector, en **Organization settings** → **Connectors**. Los demás solo tienen que hacer clic en **Connect**. El plan gratuito permite un conector personalizado.
+
+</TabItem>
+<TabItem label="ChatGPT">
+
+1. En la web, activa el modo desarrollador en **Configuración** → **Apps** → **Configuración avanzada**. Está disponible en Plus, Pro, Business, Enterprise y Edu; en un espacio de trabajo puede que primero tenga que permitirlo un administrador.
+2. En **Apps**, crea una app nueva: nombre, URL del servidor, autenticación **OAuth**.
+3. Guarda y conecta.
+4. Inicia sesión en GoodWorkshop en el navegador y haz clic en **Permitir el acceso**.
+
+</TabItem>
+<TabItem label="Claude Code">
+
+Añade el servidor en el terminal **sin** cabecera:
+
+```bash
+claude mcp add --transport http goodworkshop https://goodworkshop.org/api/mcp
+```
+
+Después ejecuta `/mcp` en Claude Code, elige el servidor y **Authenticate**. Se abre el navegador; inicia sesión y haz clic en **Permitir el acceso**.
+
+</TabItem>
+<TabItem label="Gemini CLI">
+
+Añade el servidor en el terminal **sin** cabecera:
+
+```bash
+gemini mcp add --transport http goodworkshop https://goodworkshop.org/api/mcp
+```
+
+En la primera conexión el navegador se abre solo. Para volver a iniciar sesión más tarde, ejecuta `/mcp auth goodworkshop`.
+
+</TabItem>
+<TabItem label="Otros">
+
+Mistral Le Chat, Cursor, VS Code y otros:
+
+1. Introduce la URL del servidor.
+2. Elige OAuth como autenticación; a menudo el cliente lo detecta solo.
+3. Inicia sesión en el navegador y acepta.
+
+Si un cliente solo puede enviar cabeceras fijas, usa un token personal (ver más abajo).
+
+</TabItem>
+</Tabs>
+
+Si alojas GoodWorkshop tú mismo, sustituye `goodworkshop.org` en los comandos por tu propia dirección.
+
+### La página de autorización
+
+Durante el inicio de sesión, GoodWorkshop muestra la página **¿Permitir el acceso?**. Allí aparece qué cliente lo solicita, para qué cuenta y, en **El cliente podrá:**, qué puede hacer. Mediante OAuth son:
+
+- **Leer talleres**
+- **Escribir talleres**
+- **Leer tipos de bloque**
+
+Debajo dice: «Actúa como tú … y nunca puede hacer más de lo que puedes tú. La gestión de usuarios queda excluida.»
+
+Tienes dos opciones: **Permitir el acceso** o **Rechazar**. No se pueden desmarcar ámbitos sueltos: un cliente con la mitad de los permisos fallaría más tarde en un punto inesperado.
+
+### Terminar el acceso OAuth
+
+Desconecta el conector en el cliente. GoodWorkshop todavía no permite revocar un acceso OAuth.
+
+## Conectar con un token personal
+
+![La página Conexión IA con el comando listo para Claude Code (interfaz en inglés)](../../../../assets/mcp.png)
+
+### Crear un token
+
+1. En el menú de perfil, abre **Conexión IA**.
+2. Haz clic en **Crear un token**.
+3. En **¿Para qué es?**, escribe un nombre, por ejemplo «Claude Desktop».
+4. En **¿Qué puede hacer?**, elige los ámbitos (consulta la tabla de abajo). Vienen marcados **Leer talleres** y **Leer tipos de bloque**: con ellos el asistente puede leer, pero no cambiar nada. Si quieres que escriba agendas, marca **Escribir talleres**.
+5. Haz clic en **Crear un token**.
+
+:::danger[El token se muestra una sola vez]
+En **Tu nuevo token** aparece en texto claro, y justo después nunca más: lo que se guarda es solo un hash. Cópialo ahora. En ese momento, las instrucciones de **Conectar un cliente** ya están rellenadas con tu token y tu dirección. Quien tenga el token actúa en GoodWorkshop como tú: trátalo como una contraseña.
+:::
+
+Más adelante, las instrucciones muestran `gwp_…` en lugar del token. Pon ahí el tuyo.
+
+### Ámbitos de un token
+
+| Ámbito                       | Para qué                                                                                                  |
+| ---------------------------- | --------------------------------------------------------------------------------------------------------- |
+| **Leer talleres**            | leer la biblioteca, las jornadas, la papelera y la exportación; en Cloud, también la colección de métodos |
+| **Escribir talleres**        | crear, cambiar y eliminar carpetas, talleres, jornadas y bloques; adoptar métodos                         |
+| **Leer tipos de bloque**     | leer los tipos de bloque y sus campos: necesario para que el asistente rellene bien los bloques           |
+| **Escribir tipos de bloque** | se puede elegir, pero ahora mismo no lo usa ninguna herramienta                                           |
+| **Leer el espacio**          | se puede elegir, pero ahora mismo no lo usa ninguna herramienta                                           |
+
+Si a un token le falta un ámbito, la herramienta se lo indica al asistente. En ese caso, crea un token nuevo con el ámbito adecuado. La gestión de usuarios queda deliberadamente fuera de la selección.
+
+### Configurar el cliente
+
+<Tabs syncKey="token-client">
+<TabItem label="Claude Code">
+
+Una vez, en el terminal. A partir de ahí todos los proyectos conocen el servidor.
+
+```bash
+claude mcp add --transport http goodworkshop https://goodworkshop.org/api/mcp --header "Authorization: Bearer gwp_…"
+```
+
+</TabItem>
+<TabItem label="Claude Desktop">
+
+Añádelo al archivo de configuración y reinicia Claude Desktop. Si `"mcpServers"` ya existe, solo es nueva la parte interior.
+
+- macOS: `~/Library/Application Support/Claude/claude_desktop_config.json`
+- Windows: `%APPDATA%\Claude\claude_desktop_config.json`
+
+```json
+{
+  "mcpServers": {
+    "goodworkshop": {
+      "command": "npx",
+      "args": [
+        "-y",
+        "mcp-remote",
+        "https://goodworkshop.org/api/mcp",
+        "--header",
+        "Authorization:${GW_TOKEN}"
+      ],
+      "env": { "GW_TOKEN": "Bearer gwp_…" }
+    }
+  }
+}
+```
+
+Cópialo exactamente así: `Authorization:${GW_TOKEN}` sin espacio y la palabra `Bearer` en `env`. Con espacio, la cabecera se pierde por el camino y todas las llamadas se rechazan sin mensaje de error.
+
+</TabItem>
+<TabItem label="Gemini CLI">
+
+Una vez, en el terminal. La entrada acaba en `~/.gemini/settings.json`.
+
+```bash
+gemini mcp add --transport http --header "Authorization: Bearer gwp_…" goodworkshop https://goodworkshop.org/api/mcp
+```
+
+</TabItem>
+<TabItem label="Codex">
+
+Dos líneas en el terminal. Codex deja el token fuera de su archivo de configuración: la entrada solo nombra la variable de entorno.
+
+```bash
+export GW_TOKEN=gwp_…
+codex mcp add goodworkshop --url https://goodworkshop.org/api/mcp --bearer-token-env-var GW_TOKEN
+```
+
+Para que perdure, la primera línea va en la configuración de tu shell (`~/.zshrc` o `~/.bashrc`).
+
+</TabItem>
+<TabItem label="Langdock">
+
+1. **Ajustes** → **Integraciones** → **MCP** → **añadir una conexión**.
+2. Pega la URL del servidor.
+3. Autenticación: **API Key**, tipo de cabecera: **Authorization: Bearer**.
+4. Pega como clave el token desnudo, sin la palabra «Bearer»: Langdock la añade por su cuenta.
+5. **Test connection**, elige las herramientas, guarda.
+
+</TabItem>
+</Tabs>
+
+### Revocar un token
+
+En la lista de **Conexión IA** aparece cada token con su nombre, sus ámbitos y cuándo se usó por **última vez**. **Revocar** lo bloquea al instante. Solo puedes crear y gestionar tokens para ti; ni siquiera los administradores ven los tokens de los demás.
+
+## Véase también
+
+- [Planificar con el asistente de IA](/es/ai/introduction/)
+- [Referencia de herramientas](/es/ai/tools/)
+- [Ejemplos](/es/ai/examples/)
+- [Conexión IA – Solución de problemas](/es/troubleshooting/ai-connection/)
