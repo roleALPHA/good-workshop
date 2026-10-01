@@ -21,7 +21,7 @@ Die Dauer steht fett unter der Startzeit. Klick hinein und tippe eine neue. Das 
 | `1h30`, `1h 30m`, `1:30`            | 1 Stunde 30 Minuten               |
 | `1,5h`, `1.5h`, `1 Std`             | 1 Stunde 30 Minuten bzw. 1 Stunde |
 
-Enter oder ein Klick daneben übernimmt den Wert, Escape verwirft ihn. Was das Feld nicht eindeutig lesen kann, wird nicht geraten: Es springt auf den alten Wert zurück, und ein roter Rahmen warnt dich schon beim Tippen. Eine Dauer liegt zwischen 0 Minuten und 24 Stunden.
+Die Kurzformen gelten in jeder Sprache der Oberfläche, die ausgeschriebenen Wörter in der Sprache, in der du GoodWorkshop nutzt. Enter oder ein Klick daneben übernimmt den Wert, Escape verwirft ihn. Was das Feld nicht eindeutig lesen kann, wird nicht geraten: Es springt auf den alten Wert zurück, und ein roter Rahmen warnt dich schon beim Tippen. Eine Dauer liegt zwischen 0 Minuten und 24 Stunden.
 
 :::tip[Mit den Pfeiltasten]
 Im Dauerfeld verlängert Pfeil hoch um 5 Minuten, Pfeil runter verkürzt um 5. Mit gedrückter Umschalttaste sind es 15 Minuten. Der Wert wird dabei sofort übernommen.

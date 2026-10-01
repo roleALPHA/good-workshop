@@ -136,6 +136,26 @@ describe('the inline duration field', () => {
 
     expect(onCommit).not.toHaveBeenCalled()
   })
+
+  // The words a facilitator types are those of the language the app speaks.
+  // Until this test the field always parsed German, so "45 minutes" in the
+  // English interface was rejected and reverted without a word.
+  it.each([
+    ['en', 'Duration', '1 hour 30 minutes'],
+    ['fr', 'Durée', '1 heure 30 minutes'],
+    ['es', 'Duración', '1 hora 30 minutos'],
+    ['de', 'Dauer', '1 Stunde 30 Minuten'],
+  ] as const)('understands the words of %s', async (locale, label, typed) => {
+    const user = userEvent.setup()
+    const onCommit = vi.fn()
+    render(<DurationInput minutes={15} onCommit={onCommit} />, { locale })
+
+    const field = screen.getByRole('textbox', { name: label })
+    await user.clear(field)
+    await user.type(field, `${typed}{Enter}`)
+
+    expect(onCommit).toHaveBeenCalledExactlyOnceWith(90)
+  })
 })
 
 describe('the fields a screen reader announces', () => {

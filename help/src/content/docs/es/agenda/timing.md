@@ -15,13 +15,13 @@ Debajo de las pestañas de las jornadas está el campo **Inicio de la jornada**.
 
 La duración aparece en negrita debajo de la hora de inicio. Haz clic en ella y escribe una nueva. El campo entiende muchas formas de escribirla:
 
-| Escribes                 | Resultado                  |
-| ------------------------ | -------------------------- |
-| `45`, `45m`, `45 min`    | 45 minutos                 |
-| `1h30`, `1h 30m`, `1:30` | 1 hora 30 minutos          |
-| `1,5h`, `1.5h`, `1h`     | 1 hora 30 minutos o 1 hora |
+| Escribes                            | Resultado                  |
+| ----------------------------------- | -------------------------- |
+| `45`, `45m`, `45 min`, `45 minutos` | 45 minutos                 |
+| `1h30`, `1h 30m`, `1:30`            | 1 hora 30 minutos          |
+| `1,5h`, `1.5h`, `1 hora`            | 1 hora 30 minutos o 1 hora |
 
-Por ahora el campo no entiende palabras completas como `minutos` u `horas`: usa las abreviaturas `h` y `m` o `min`.
+Las formas cortas funcionan en todos los idiomas de la interfaz; el campo también entiende las palabras del idioma en que usas GoodWorkshop, como `horas` o `minutos`.
 
 Intro o un clic fuera acepta el valor, Esc lo descarta. Lo que el campo no puede leer sin ambigüedad no se adivina: vuelve al valor anterior, y un borde rojo te avisa ya mientras escribes. Una duración está entre 0 minutos y 24 horas.
 
