@@ -94,6 +94,26 @@ describe('the profile menu', () => {
     expect(link).toBeInTheDocument()
   })
 
+  it('links the help in the reader’s language, in a new tab', async () => {
+    await open()
+    const help = screen.getByRole('link', { name: /Hilfe/ })
+    expect(help).toHaveAttribute('href', 'https://doc.goodworkshop.org/de/')
+    expect(help).toHaveAttribute('target', '_blank')
+    expect(help).toHaveAttribute('rel', expect.stringContaining('noopener'))
+  })
+
+  it('offers the support form only where the edition has one', async () => {
+    await open()
+    expect(screen.queryByRole('link', { name: 'Support' })).not.toBeInTheDocument()
+  })
+
+  it('links the support form in the cloud', async () => {
+    const user = userEvent.setup()
+    render(<ProfileMenu name="Anna Berger" email="anna@example.com" isAdmin={false} hasSupport />)
+    await user.click(screen.getByRole('button', { name: 'Konto' }))
+    expect(screen.getByRole('link', { name: 'Support' })).toHaveAttribute('href', '/support')
+  })
+
   it('falls back to the address for somebody without a name', async () => {
     render(<ProfileMenu name="" email="neu@example.com" isAdmin={false} />)
     expect(screen.getByRole('button', { name: 'Konto' })).toHaveAttribute(

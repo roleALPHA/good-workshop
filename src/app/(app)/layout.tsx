@@ -74,6 +74,7 @@ export default async function AppLayout({ children }: { children: React.ReactNod
               email={session.email}
               isAdmin={session.tenantRole === 'admin'}
               hasBilling={edition.hasBilling}
+              hasSupport={edition.hasSupport}
             />
           </div>
         </header>

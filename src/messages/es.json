@@ -578,7 +578,8 @@
       "notYours": "Este passkey no pertenece a tu cuenta."
     },
     "setupFailed": "La instalación ha fallado. Los detalles están en el registro.",
-    "unauthenticated": "Inicia sesión, por favor."
+    "unauthenticated": "Inicia sesión, por favor.",
+    "supportUnavailable": "No se ha podido enviar tu solicitud en este momento. Escríbenos directamente a {email}."
   },
   "export": {
     "columns": {
@@ -793,7 +794,9 @@
       "planned": "Mantenimiento previsto el {from} hasta las {until}. GoodWorkshop puede no estar disponible un momento.",
       "running": "Mantenimiento en curso, previsto hasta las {until}."
     },
-    "discover": "Discover"
+    "discover": "Discover",
+    "help": "Ayuda",
+    "support": "Soporte"
   },
   "settings": {
     "intro": "Tu cuenta: nombre, idioma, seguridad y conexión IA.",
@@ -1503,5 +1506,18 @@
     "adoptIntoDay": "A un día de un taller existente",
     "adoptChooseDay": "Elegir un día",
     "adoptNoDays": "Ese taller no tiene días."
+  },
+  "support": {
+    "title": "Soporte",
+    "intro": "Escríbenos si algo no funciona o tienes una pregunta. La respuesta llega por correo a {email}.",
+    "helpFirst": "La ayuda ya responde a muchas preguntas:",
+    "helpLink": "Abrir la ayuda",
+    "subject": "Asunto",
+    "message": "Mensaje",
+    "messageHint": "¿Qué hiciste, qué pasó, qué esperabas? Enviamos automáticamente el espacio de trabajo, el rol, la versión y el idioma.",
+    "send": "Enviar solicitud",
+    "sending": "Enviando …",
+    "sent": "¡Gracias! Tu solicitud nos ha llegado como ticket n.º {number}. La respuesta llega por correo.",
+    "unconfigured": "El formulario no está disponible en este momento. Escríbenos directamente a {email}."
   }
 }

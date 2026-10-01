@@ -122,4 +122,13 @@ export type Edition = {
    * bundle that CI asserts is free of it.
    */
   readonly hasCatalog: boolean
+
+  /**
+   * Whether signed-in people can open a ticket with support from the app.
+   *
+   * The cloud's: the form sends to our helpdesk. A self-hosted installation is
+   * supported by whoever runs it, and a form that wrote to us from there would
+   * send their colleagues' questions to the wrong people.
+   */
+  readonly hasSupport: boolean
 }
