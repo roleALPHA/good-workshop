@@ -96,13 +96,13 @@ fija. Vuelve a iniciar sesión.
 
 ## Configurar una instalación nueva (instalación propia)
 
-| Problema                                       | Solución                                                                                                                                                           |
-| ---------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
-| No hay clave de instalación en el registro     | La clave aparece en el registro de `app`, no en el de `migrate`. Si no está ahí, reinicia `app`: `docker compose restart app` y después `docker compose logs app`. |
-| «La clave de instalación no es correcta.»      | La clave cambia con cada reinicio. Usa la **más reciente** del registro.                                                                                           |
-| «Zu viele Versuche. Bitte eine Minute warten.» | Espera un minuto.                                                                                                                                                  |
-| `/setup` redirige al inicio de sesión          | Ya hay un(a) administrador(a). Si se definió `GW_BOOTSTRAP_ADMIN_EMAIL`, el enlace de un solo uso está en `docker compose logs migrate`.                           |
-| Has iniciado sesión, pero no eres Admin        | `docker compose exec app node scripts/cli.mjs admin promote --email you@example.com`                                                                               |
+| Problema                                              | Solución                                                                                                                                                           |
+| ----------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
+| No hay clave de instalación en el registro            | La clave aparece en el registro de `app`, no en el de `migrate`. Si no está ahí, reinicia `app`: `docker compose restart app` y después `docker compose logs app`. |
+| «La clave de instalación no es correcta.»             | La clave cambia con cada reinicio. Usa la **más reciente** del registro.                                                                                           |
+| «Demasiados intentos. Vuelve a intentarlo más tarde.» | Espera un minuto.                                                                                                                                                  |
+| `/setup` redirige al inicio de sesión                 | Ya hay un(a) administrador(a). Si se definió `GW_BOOTSTRAP_ADMIN_EMAIL`, el enlace de un solo uso está en `docker compose logs migrate`.                           |
+| Has iniciado sesión, pero no eres Admin               | `docker compose exec app node scripts/cli.mjs admin promote --email you@example.com`                                                                               |
 
 Encontrarás más detalles en el README, en
 [Troubleshooting](https://github.com/roleALPHA/good-workshop/blob/main/README.md#troubleshooting).

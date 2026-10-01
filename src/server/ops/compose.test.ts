@@ -80,4 +80,15 @@ describe('Dockerfile', () => {
     const baseArg = dockerfile.match(/ARG NODE_VERSION=(.+)/)?.[1] ?? ''
     expect(baseArg).toMatch(/@sha256:[0-9a-f]{64}/)
   })
+
+  it('says in the README’s words why the proxy does not start without a hostname', () => {
+    // The README's troubleshooting table tells an operator to look for
+    // "GW_HOSTNAME must be set". The proxy printed the same thing in German, so
+    // the line somebody searched for never matched what was on their screen.
+    const raw = readFileSync(join(root, 'compose.yaml'), 'utf8')
+    const readme = readFileSync(join(root, 'README.md'), 'utf8')
+    expect(readme).toContain('"GW_HOSTNAME must be set"')
+    expect(raw).toContain('echo "GW_HOSTNAME must be set')
+    expect(raw).not.toMatch(/muss gesetzt sein|oeffentlich/)
+  })
 })

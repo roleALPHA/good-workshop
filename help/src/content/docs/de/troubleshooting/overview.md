@@ -47,7 +47,7 @@ findet. Kopier den Text, den du siehst, einfach in die Suche.
 | Symptom                                                                           | Seite                                                                                                                    |
 | --------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------ |
 | `GW_APP_URL must be set` beim Start                                               | [Installation](/de/self-hosting/installation/)                                                                           |
-| Caddy startet nicht, „GW_HOSTNAME muss gesetzt sein …“                            | [HTTPS und Reverse Proxy](/de/self-hosting/tls/)                                                                         |
+| Caddy startet nicht, „GW_HOSTNAME must be set …“                                  | [HTTPS und Reverse Proxy](/de/self-hosting/tls/)                                                                         |
 | Das Zertifikat wird nicht ausgestellt                                             | [HTTPS und Reverse Proxy](/de/self-hosting/tls/)                                                                         |
 | Kein Einrichtungsschlüssel im Log, oder „Der Einrichtungsschlüssel stimmt nicht.“ | [Anmeldung und Anmeldelink](/de/troubleshooting/sign-in/)                                                                |
 | `/api/health` antwortet 503 mit `database`                                        | Die Datenbank ist nicht erreichbar oder startet noch — kurz warten, siehe [Installation](/de/self-hosting/installation/) |

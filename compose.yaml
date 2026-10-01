@@ -233,25 +233,24 @@ services:
     profiles: [tls]
     image: caddy:2-alpine
     restart: unless-stopped
-    # `{$GW_HOSTNAME}` im Caddyfile ist Caddys eigene Substitution INNERHALB des
-    # gemounteten Files, keine Compose-Interpolation -- und Compose reicht .env
-    # nicht von sich aus in Container. Ohne diese Zeile hat der Site-Block keine
-    # Adresse, der Proxy kommt nicht hoch, und weil `app` nur an 127.0.0.1
-    # depends on it, the installation is unreachable from outside. The next move
-    # Betreibers ist dann HTTP ohne TLS.
+    # `{$GW_HOSTNAME}` in the Caddyfile is Caddy's own substitution INSIDE the
+    # mounted file, not Compose interpolation -- and Compose does not pass .env
+    # into containers by itself. Without this line the site block has no
+    # address, the proxy does not come up, and because `app` only listens on
+    # 127.0.0.1, the installation is unreachable from outside. The operator's
+    # next move would then be HTTP without TLS.
     environment:
       GW_HOSTNAME: ${GW_HOSTNAME:-}
     # Checked here rather than with `${GW_HOSTNAME:?}` above: Compose interpolates
-    # GANZE Datei beim Laden, auch Dienste, deren Profil gar nicht aktiv ist.
+    # the WHOLE file on load, including services whose profile is not active.
     # A required field at this spot would therefore have broken every
     # `docker compose up` without the tls profile -- and being able to start
     # without HTTPS is an explicitly supported route. This way it fails loudly,
-    # but only for those
-    # die den Proxy wirklich benutzen.
+    # but only for those who actually use the proxy.
     command: >-
       sh -c 'test -n "$$GW_HOSTNAME" || {
-               echo "GW_HOSTNAME muss gesetzt sein: der Hostname, auf den das TLS-Zertifikat lautet." >&2
-               echo "Er muss oeffentlich auf diesen Server aufloesen, sonst schlaegt die Ausstellung fehl." >&2
+               echo "GW_HOSTNAME must be set: the host name the TLS certificate is issued for." >&2
+               echo "It has to resolve publicly to this server, or issuing the certificate fails." >&2
                exit 1
              }
              exec caddy run --config /etc/caddy/Caddyfile --adapter caddyfile'

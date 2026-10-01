@@ -30,6 +30,7 @@ import { useTranslations } from 'next-intl'
 export function MembersTable({ members }: { members: MemberRow[] }) {
   const t = useTranslations('admin.members')
   const tStatus = useTranslations('enums.memberStatus')
+  const tErrors = useTranslations('errors')
   const tRole = useTranslations('enums.memberRole')
   const router = useRouter()
   const [error, setError] = useState<{ memberId: string; message: string } | null>(null)
@@ -50,7 +51,7 @@ export function MembersTable({ members }: { members: MemberRow[] }) {
     startTransition(async () => {
       const result = await fn()
       if (!result.ok) {
-        setError({ memberId, message: result.message ?? 'Das hat nicht geklappt.' })
+        setError({ memberId, message: result.message ?? tErrors('failed') })
         return
       }
       setError(null)

@@ -92,13 +92,13 @@ again.
 
 ## Setting up a new installation (self-hosted)
 
-| Problem                                        | Solution                                                                                                                                          |
-| ---------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------- |
-| No setup key in the log                        | The key is in the log of `app`, not of `migrate`. If it isn't there, restart `app`: `docker compose restart app`, then `docker compose logs app`. |
-| “That setup key is not correct.”               | The key changes at every restart. Use the **newest** one from the log.                                                                            |
-| “Zu viele Versuche. Bitte eine Minute warten.” | Wait a minute. (This message currently appears in German only; it means “Too many attempts. Please wait a minute.”)                               |
-| `/setup` redirects to the sign-in page         | There is already an administrator. If `GW_BOOTSTRAP_ADMIN_EMAIL` was set, the one-time link is in `docker compose logs migrate`.                  |
-| Signed in, but not an admin                    | `docker compose exec app node scripts/cli.mjs admin promote --email you@example.com`                                                              |
+| Problem                                      | Solution                                                                                                                                          |
+| -------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------- |
+| No setup key in the log                      | The key is in the log of `app`, not of `migrate`. If it isn't there, restart `app`: `docker compose restart app`, then `docker compose logs app`. |
+| “That setup key is not correct.”             | The key changes at every restart. Use the **newest** one from the log.                                                                            |
+| “Too many attempts. Please try again later.” | Wait a minute.                                                                                                                                    |
+| `/setup` redirects to the sign-in page       | There is already an administrator. If `GW_BOOTSTRAP_ADMIN_EMAIL` was set, the one-time link is in `docker compose logs migrate`.                  |
+| Signed in, but not an admin                  | `docker compose exec app node scripts/cli.mjs admin promote --email you@example.com`                                                              |
 
 This is covered in detail in the README under
 [Troubleshooting](https://github.com/roleALPHA/good-workshop/blob/main/README.md#troubleshooting).
