@@ -207,6 +207,15 @@ fixing, not the selector.
    moment the invitation is withdrawn
 10. Several days: a block parked on one day is brought into the next from the shared parking
     area and is gone from the first; a day is named, moved without a pointer and deleted
+11. Access between members (`e2e/access.workshop.spec.ts`): two ordinary members, each in a
+    browser and with an MCP token of their own, see no folder and no workshop nobody gave them —
+    every such address answers 404. A grant on a subfolder brings it and its workshops but not
+    the folder above, in the tree, the export and the sharing screen alike. A folder editor
+    works in the subtree but neither shares nor bins, a workshop shared on its own does not
+    reveal its folder, MCP lists what the library lists and files nothing elsewhere, and taking
+    the grant back takes it all away again. The rules are asserted a level down; what only this
+    level shows is that every surface asks them about the person actually signed in — the suite's
+    own session is an admin, who would pass every one of these checks for the wrong reason
 
 Flows whose feature does not exist yet are **not** anticipated as `test.fixme` stubs — they sit
 as a list in the header comment of `e2e/agenda.spec.ts` and arrive with their feature.

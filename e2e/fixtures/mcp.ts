@@ -8,11 +8,20 @@ import { expect, type APIRequestContext } from '@playwright/test'
  * neither failure looks like what it is.
  */
 
-let mcpToken: string | undefined
+const tokens = new Map<string, string>()
 
-/** One token for the whole run. Creating it shells out, so it is worth keeping. */
-export function tokenForMcp(): string {
-  mcpToken ??= /gwp_[A-Za-z0-9_-]+/.exec(
+/**
+ * One token per person for the whole run. Creating it shells out, so it is
+ * worth keeping.
+ *
+ * Without an address it is the signed-in admin's. A member's own token is how
+ * an access test asks the server what that member may do -- an admin's token
+ * would answer "everything" and prove nothing.
+ */
+export function tokenForMcp(email = process.env.E2E_EMAIL ?? 'e2e@example.test'): string {
+  const known = tokens.get(email)
+  if (known) return known
+  const token = /gwp_[A-Za-z0-9_-]+/.exec(
     execFileSync(
       'node',
       [
@@ -20,7 +29,7 @@ export function tokenForMcp(): string {
         'token',
         'create',
         '--email',
-        process.env.E2E_EMAIL ?? 'e2e@example.test',
+        email,
         '--name',
         'e2e',
         '--scopes',
@@ -29,8 +38,9 @@ export function tokenForMcp(): string {
       { encoding: 'utf8' },
     ),
   )?.[0]
-  if (!mcpToken) throw new Error('Kein MCP-Token aus der CLI')
-  return mcpToken
+  if (!token) throw new Error(`Kein MCP-Token aus der CLI für ${email}`)
+  tokens.set(email, token)
+  return token
 }
 
 /**
@@ -66,10 +76,11 @@ async function callOnce(
   name: string,
   args: Record<string, unknown>,
   address: string,
-): Promise<McpAnswer> {
+  token: string,
+): Promise<McpAnswer & { isError: boolean }> {
   const response = await request.post('/api/mcp', {
     headers: {
-      authorization: `Bearer ${tokenForMcp()}`,
+      authorization: `Bearer ${token}`,
       accept: 'application/json, text/event-stream',
       'x-forwarded-for': address,
     },
@@ -80,7 +91,7 @@ async function callOnce(
 
   // The transport is server-sent events, so the JSON sits behind a `data:` line.
   const payload = /^data: (.+)$/m.exec(body)
-  if (!payload) return { body: '', structured: {} }
+  if (!payload) return { body: '', structured: {}, isError: false }
 
   // Read the ids from structuredContent rather than from the human-readable
   // text: they are in both, but the prose carries them across an escaped
@@ -92,13 +103,10 @@ async function callOnce(
       isError?: boolean
     }
   }
-  // A tool that reports a problem still says so in words -- most often that the
-  // collaboration server is unreachable, which is worth reading rather than
-  // discovering as "the block never showed up".
-  expect(message.result?.isError, `${name}: ${body}`).toBeFalsy()
   return {
     body: message.result?.content?.[0]?.text ?? '',
     structured: message.result?.structuredContent ?? {},
+    isError: message.result?.isError === true,
   }
 }
 
@@ -116,8 +124,32 @@ export async function callMcpTool(
   name: string,
   args: Record<string, unknown>,
   address = mcpAddress(),
+  token = tokenForMcp(),
 ): Promise<McpAnswer> {
-  const first = await callOnce(request, name, args, address)
-  if (first.body !== '') return first
-  return callOnce(request, name, args, address)
+  let answer = await callOnce(request, name, args, address, token)
+  if (answer.body === '') answer = await callOnce(request, name, args, address, token)
+  // A tool that reports a problem still says so in words -- most often that the
+  // collaboration server is unreachable, which is worth reading rather than
+  // discovering as "the block never showed up".
+  expect(answer.isError, `${name}: ${answer.body}`).toBeFalsy()
+  return { body: answer.body, structured: answer.structured }
+}
+
+/**
+ * Calls a tool that is expected to refuse, and hands back what it said.
+ *
+ * Its own function rather than a flag on the one above, so a test that means
+ * "this must fail" cannot pass because the call happened to succeed.
+ */
+export async function refusedMcpTool(
+  request: APIRequestContext,
+  name: string,
+  args: Record<string, unknown>,
+  token: string,
+): Promise<string> {
+  const address = mcpAddress()
+  let answer = await callOnce(request, name, args, address, token)
+  if (answer.body === '') answer = await callOnce(request, name, args, address, token)
+  expect(answer.isError, `${name} should have been refused: ${answer.body}`).toBe(true)
+  return answer.body
 }
