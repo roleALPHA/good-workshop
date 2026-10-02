@@ -63,10 +63,12 @@ telling you that the address already exists.
 The trial lasts **14 days from confirmation**. During that time you can use everything without
 restriction, and you can invite colleagues too. Nothing that happens during the trial is charged.
 
-Below the header it says how many days are left, for example “Trial: 9 days left.” Under
+Below the header it says how many days are left, for example “Trial: 9 days left.” – until a
+payment method is on file; from then on the end of the trial is nothing to watch out for. Under
 **Billing** you see the exact day: **Trial until …**
 
-If you haven't added a payment method yet, we remind you by e-mail at the billing e-mail address:
+If you have added neither a payment method nor an unlimited 100% [voucher](/en/cloud/vouchers/),
+we remind you by e-mail at the billing e-mail address:
 four days and one day before the end.
 
 ## After the trial
@@ -74,6 +76,7 @@ four days and one day before the end.
 | You have …                 | Then …                                                                             |
 | -------------------------- | ---------------------------------------------------------------------------------- |
 | added a payment method     | everything continues without interruption. Billing starts at the end of the trial. |
+| an unlimited 100% voucher  | everything continues without interruption, without a card too.                     |
 | not added a payment method | the workspace becomes read-only: reading and exporting work, changing does not.    |
 
 A read-only workspace isn't lost. As soon as an admin clicks **Add payment method** under

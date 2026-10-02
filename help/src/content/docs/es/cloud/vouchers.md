@@ -37,9 +37,11 @@ El porcentaje y la duración dependen de cada cupón. Se fijan al canjearlo y ya
 después.
 
 :::tip
-Un cupón no sustituye al método de pago. Añádelo de todos modos antes de que termine la
-prueba; si no, el espacio de trabajo pasa después a solo lectura, incluso con un cupón del
-100 %.
+Solo un cupón del 100 % sin límite de tiempo sustituye al método de pago: entonces nunca hay
+nada que cobrar, la prueba pasa a **Activo** sin tarjeta y el aviso de la prueba desaparece.
+Cualquier otro cupón no lo sustituye, ni siquiera uno del 100 % durante tres meses. En ese caso,
+añade un método de pago antes de que termine la prueba; si no, el espacio de trabajo pasa a
+solo lectura.
 :::
 
 ## Cómo se cuentan los meses

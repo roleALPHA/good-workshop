@@ -37,9 +37,11 @@ Le pourcentage et la durée dépendent du bon. Ils sont fixés au moment où tu 
 changent plus ensuite.
 
 :::tip
-Un bon ne remplace pas le moyen de paiement. Enregistre-le quand même avant la fin de la
-période d'essai, sinon l'espace de travail passe ensuite en lecture seule – même avec un bon
-de 100 %.
+Seul un bon de 100 % sans limite de durée remplace le moyen de paiement : il n'y a alors jamais
+rien à prélever, la période d'essai passe en **Actif** sans carte, et l'avis sur la période
+d'essai disparaît. Tout autre bon ne le remplace pas – pas même un bon de 100 % pour trois mois.
+Enregistre alors un moyen de paiement avant la fin de la période d'essai, sinon l'espace de
+travail passe en lecture seule.
 :::
 
 ## Comment les mois sont comptés
