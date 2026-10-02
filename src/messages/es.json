@@ -985,7 +985,10 @@
       "deleteWarning": "¿Eliminar definitivamente «{title}» y su desarrollo? Los bloques apartados se conservan.",
       "deleteConfirm": "Eliminar definitivamente",
       "cancel": "Cancelar"
-    }
+    },
+    "rename": "Cambiar nombre",
+    "renameLabel": "Cambiar el nombre del taller {name}",
+    "renameField": "Nuevo nombre para {name}"
   },
   "oauth": {
     "title": "¿Permitir el acceso?",

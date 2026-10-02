@@ -28,9 +28,9 @@ workshop, it shows **Read only** and offers only the export.
 2. Click **New workshop** and enter the title. Above the field it says where it will be filed.
 3. Confirm with **Create** or the Enter key.
 
-The workshop opens right away, with its first day. It belongs to you. You set the workshop's
-title here; in the app itself it can't be renamed afterwards, but it can through the
-[AI assistant](/en/ai/tools/).
+The workshop opens right away, with its first day. It belongs to you. You can rename it later at
+the top of its page: click the pencil next to the title (**Rename workshop …**), type the new name
+and press Enter. Escape cancels. Everyone who can edit the workshop may do this.
 
 ## Create a folder
 

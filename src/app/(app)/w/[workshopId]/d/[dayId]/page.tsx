@@ -6,6 +6,7 @@ import { Users } from 'lucide-react'
 import { AgendaSurface } from '@/components/agenda/agenda-surface'
 import { TagEditor } from '@/components/agenda/tag-editor'
 import { ReadOnlyBadge } from '@/components/read-only-badge'
+import { WorkshopTitle } from '@/components/workshop/workshop-title'
 import { assertWorkshopAccess } from '@/domain/agenda/access'
 import { presenceHue } from '@/domain/collab/presence'
 import { loadDay } from '@/domain/agenda/repo'
@@ -82,7 +83,11 @@ export default async function DayPage({
               {t('backToLibrary')}
             </Link>
             <div className="mt-0.5 flex flex-wrap items-baseline gap-2">
-              <h1 className="text-2xl font-semibold tracking-tight">{data.title}</h1>
+              <WorkshopTitle
+                workshopId={workshopId}
+                title={data.title}
+                canRename={data.canUpdate}
+              />
               {/* Where the editor would have been, saying why it is not. */}
               {!data.canEdit && <ReadOnlyBadge />}
             </div>

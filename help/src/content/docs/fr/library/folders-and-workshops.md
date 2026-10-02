@@ -31,9 +31,10 @@ ne propose que l'export.
    rangé.
 3. Valide avec **Créer** ou la touche Entrée.
 
-L'atelier s'ouvre aussitôt, avec sa première journée. Il t'appartient. Le titre d'un atelier se
-définit ici ; dans l'application elle-même, il ne peut plus être renommé ensuite, mais c'est
-possible via l'[assistant IA](/fr/ai/tools/).
+L'atelier s'ouvre aussitôt, avec sa première journée. Il t'appartient. Tu peux le renommer plus tard
+en haut de sa page : clique sur le crayon à côté du titre (**Renommer l'atelier …**), saisis le
+nouveau nom et valide avec Entrée. Échap annule. Toute personne qui peut modifier l'atelier peut
+le faire.
 
 ## Créer un dossier
 
