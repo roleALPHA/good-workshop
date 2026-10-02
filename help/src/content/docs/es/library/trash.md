@@ -15,7 +15,7 @@ Haz clic en la biblioteca, en la fila del taller, en **Mover a la papelera**. El
 de la lista al instante. No se pide confirmación, porque no se pierde nada.
 
 Pueden mover un taller a la papelera su **Propietaria** y los **Admin**. Quien solo puede editar o
-leer un taller no puede tirarlo, tampoco a través de una carpeta compartida.
+leer un taller no puede tirarlo, tampoco a través de una carpeta compartida. Por eso la biblioteca no les muestra el botón.
 
 Mientras un taller está en la papelera, no se puede abrir y no aparece en la biblioteca.
 
@@ -23,7 +23,8 @@ Mientras un taller está en la papelera, no se puede abrir y no aparece en la bi
 
 El enlace **Papelera** está en la biblioteca, a la izquierda, debajo del árbol de carpetas. Ahí ves
 los talleres que te pertenecen o en los que participas directamente; los administradores ven todos
-los del espacio de trabajo. Lo último que se tiró aparece arriba, con la fecha («tirado el …»).
+los del espacio de trabajo. Lo último que se tiró aparece arriba, con la fecha («tirado el …»). En los talleres que solo editas, en lugar de los botones aparece
+«Solo quien es propietario del taller o un administrador puede restaurarlo.»
 
 Con **Volver a la biblioteca** regresas a la biblioteca.
 

@@ -179,7 +179,7 @@ export async function purgeWorkshopAction(raw: {
 }
 
 export async function loadTrash(): Promise<
-  ActionResult<{ id: string; title: string; deletedAt: string | null }[]>
+  ActionResult<{ id: string; title: string; deletedAt: string | null; canDelete: boolean }[]>
 > {
   return action(z.object({}), {}, async (tx, actor) => {
     const rows = await listTrashedWorkshops(tx, actor)
@@ -187,6 +187,7 @@ export async function loadTrash(): Promise<
       id: row.id,
       title: row.title,
       deletedAt: row.deletedAt ? row.deletedAt.toISOString() : null,
+      canDelete: row.canDelete,
     }))
   })
 }

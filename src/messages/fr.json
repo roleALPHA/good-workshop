@@ -616,7 +616,8 @@
       "purge": "Supprimer définitivement",
       "purgeWarning": "Cela supprime <b>{title}</b> avec toutes ses journées et tous ses blocs. Il n'y a pas de retour en arrière.",
       "purgeConfirmLabel": "Saisis le titre pour confirmer :",
-      "purgeConfirm": "Supprimer irréversiblement"
+      "purgeConfirm": "Supprimer irréversiblement",
+      "ownerOnly": "Seul le propriétaire de l'atelier ou un admin peut le restaurer."
     },
     "creating": "Création …",
     "dayCount": "{count, plural, one {# journée} many {# journées} other {# journées}}",

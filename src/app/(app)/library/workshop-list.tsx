@@ -262,7 +262,9 @@ export function WorkshopList({
                   </MoveControl>
                 )}
 
-                {canManage && (
+                {/* Not `canManage`: an editor may move a workshop but not throw it
+                    away, and the button used to end in a permission error. */}
+                {workshop.canDelete && (
                   <button
                     type="button"
                     onClick={() => trash(workshop.id, workshop.title)}

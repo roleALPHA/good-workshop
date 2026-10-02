@@ -619,7 +619,8 @@ declare const messages: {
       "purge": "Endgültig löschen",
       "purgeWarning": "Das entfernt <b>{title}</b> mit allen Tagen und Blöcken. Es gibt keinen Weg zurück.",
       "purgeConfirmLabel": "Zum Bestätigen den Titel eingeben:",
-      "purgeConfirm": "Unwiderruflich löschen"
+      "purgeConfirm": "Unwiderruflich löschen",
+      "ownerOnly": "Wiederherstellen kann nur, wem der Workshop gehört, oder ein Admin."
     },
     "creating": "Anlegen …",
     "dayCount": "{count, plural, one {# Tag} other {# Tage}}",

@@ -31,8 +31,10 @@ import {
 /**
  * The two guest roles are separate roles rather than `editor`/`viewer` reused.
  *
- * `editor` carries `workshop.update` -- renaming, tags, the bin, moving between
- * folders -- and a guest invited to one agenda has no business with any of it.
+ * `editor` carries `workshop.update` -- renaming, tags, moving between folders --
+ * and a guest invited to one agenda has no business with any of it. The bin is
+ * not part of it: throwing away, restoring and purging are `workshop.delete`,
+ * which only the owner and an admin hold.
  * Subtracting a capability from a role at the call site would put the rule in
  * the caller; a role of its own puts it in the table below, where the answer to
  * "what may a guest do" is one line.
@@ -76,6 +78,15 @@ const CAPABILITIES: Record<WorkshopRole, readonly Capability[]> = {
     'workshop.transfer',
     'workshop.delete',
   ],
+}
+
+/**
+ * Whether a role carries a capability, for lists that show what each row
+ * offers. The same table assertWorkshopAccess checks against, so a button and
+ * the action behind it cannot disagree about who may press it.
+ */
+export function roleCan(role: WorkshopRole, capability: Capability): boolean {
+  return CAPABILITIES[role].includes(capability)
 }
 
 declare const brand: unique symbol

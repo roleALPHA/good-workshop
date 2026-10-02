@@ -219,6 +219,8 @@ export function registerLibraryTools(server: McpServer, { actor }: Ctx): void {
           dayCount: w.dayCount,
           tags: w.tags.map((t) => t.name),
           role: w.role,
+          // Owner or admin: only they may bin it. An editor's trash_workshop fails.
+          canDelete: w.canDelete,
           updatedAt: w.updatedAt.toISOString(),
         }))
 
@@ -360,7 +362,9 @@ export function registerLibraryTools(server: McpServer, { actor }: Ctx): void {
     'list_trash',
     {
       title: 'List the bin',
-      description: 'The workshops in the bin, most recently binned first.',
+      description:
+        'The workshops in the bin, most recently binned first. canDelete says whether you may ' +
+        'restore or purge one: only its owner and an admin can.',
       inputSchema: {},
     },
     async () =>
@@ -371,9 +375,12 @@ export function registerLibraryTools(server: McpServer, { actor }: Ctx): void {
           id: row.id,
           title: row.title,
           deletedAt: row.deletedAt ? row.deletedAt.toISOString() : null,
+          canDelete: row.canDelete,
         }))
         if (workshops.length === 0) return ok('The bin is empty.', { workshops })
-        return ok(workshops.map((w) => `${w.id}  ${w.title} (binned ${w.deletedAt})`).join('\n'), {
+        const line = (w: (typeof workshops)[number]) =>
+          `${w.id}  ${w.title} (binned ${w.deletedAt}${w.canDelete ? '' : ', owner or admin only'})`
+        return ok(workshops.map(line).join('\n'), {
           workshops,
         })
       }),

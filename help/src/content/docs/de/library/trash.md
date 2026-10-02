@@ -16,7 +16,7 @@ verschwindet sofort aus der Liste. Es gibt keine Rückfrage, weil nichts verlore
 
 In den Papierkorb legen können die **Eigentümer:in** des Workshops und **Admins**. Wer einen
 Workshop nur bearbeiten oder lesen darf, kann ihn nicht wegwerfen – auch nicht über einen
-geteilten Ordner.
+geteilten Ordner. Bei ihnen zeigt die Bibliothek den Knopf deshalb gar nicht erst.
 
 Solange ein Workshop im Papierkorb liegt, lässt er sich nicht öffnen und taucht in der Bibliothek
 nicht auf.
@@ -25,7 +25,8 @@ nicht auf.
 
 Der Link **Papierkorb** steht in der Bibliothek links unter dem Ordnerbaum. Du siehst dort die
 Workshops, die dir gehören oder an denen du direkt beteiligt bist; Admins sehen alle des
-Workspaces. Das zuletzt Weggeworfene steht oben, mit dem Datum („weggeworfen am …“).
+Workspaces. Das zuletzt Weggeworfene steht oben, mit dem Datum („weggeworfen am …“). Bei Workshops, die du nur bearbeitest, stehen statt der
+Knöpfe die Worte „Wiederherstellen kann nur, wem der Workshop gehört, oder ein Admin.“
 
 Mit **Zurück zur Bibliothek** kommst du wieder in die Bibliothek.
 

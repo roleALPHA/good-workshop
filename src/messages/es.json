@@ -616,7 +616,8 @@
       "purge": "Eliminar definitivamente",
       "purgeWarning": "Esto elimina <b>{title}</b> con todas sus jornadas y bloques. No hay vuelta atrás.",
       "purgeConfirmLabel": "Escribe el título para confirmar:",
-      "purgeConfirm": "Eliminar irreversiblemente"
+      "purgeConfirm": "Eliminar irreversiblemente",
+      "ownerOnly": "Solo quien es propietario del taller o un administrador puede restaurarlo."
     },
     "creating": "Creando …",
     "dayCount": "{count, plural, one {# jornada} many {# jornadas} other {# jornadas}}",
