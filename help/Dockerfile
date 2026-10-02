@@ -11,6 +11,12 @@ RUN pnpm build
 # binary carried a dozen fixed-but-unshipped Go advisories that failed the
 # deployment's scan. The unprivileged variant runs as uid 101 on port 8080.
 FROM nginxinc/nginx-unprivileged:alpine
+# Alpine ships fixes faster than the nginx image is rebuilt: pcre2 had a fixed
+# HIGH advisory for days that the base image did not carry yet, and the
+# deployment's scan stopped on it. Upgrading here takes what Alpine has.
+USER root
+RUN apk upgrade --no-cache
+USER 101
 COPY nginx.conf /etc/nginx/conf.d/default.conf
 COPY --from=build /help/dist /usr/share/nginx/html
 EXPOSE 8080
