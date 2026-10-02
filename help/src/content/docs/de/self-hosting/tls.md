@@ -32,7 +32,7 @@ Das Profil startet zusätzlich einen Caddy, der die Ports 80 und 443 übernimmt 
 Zertifikat von Let's Encrypt holt. Dafür brauchst du:
 
 - `GW_HOSTNAME` in der `.env` — fehlt der Wert, startet Caddy nicht und meldet
-  „GW_HOSTNAME muss gesetzt sein: der Hostname, auf den das TLS-Zertifikat lautet.“
+  „GW_HOSTNAME must be set: the host name the TLS certificate is issued for.“
 - einen Hostnamen, der öffentlich auf diesen Server auflöst
 - freie Ports 80 und 443
 

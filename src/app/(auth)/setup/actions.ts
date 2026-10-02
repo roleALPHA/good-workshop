@@ -25,7 +25,7 @@ export type SetupResult = { ok: true; email: string; link?: string } | { ok: fal
 export async function claim(formData: FormData): Promise<SetupResult> {
   const caller = clientAddress(await headers())
   if (!attempts.take(caller)) {
-    return { ok: false, error: 'Zu viele Versuche. Bitte eine Minute warten.' }
+    return { ok: false, error: (await getTranslations('errors'))('tooManyRequests') }
   }
 
   try {

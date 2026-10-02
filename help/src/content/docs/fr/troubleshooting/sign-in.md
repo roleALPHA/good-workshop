@@ -97,13 +97,13 @@ durée maximale fixe. Reconnecte-toi.
 
 ## Mettre en route une nouvelle installation (auto-hébergement)
 
-| Problème                                         | Solution                                                                                                                                                                  |
-| ------------------------------------------------ | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| Pas de clé d'installation dans le journal        | La clé figure dans le journal de `app`, pas dans celui de `migrate`. Si elle n'y est pas, redémarre `app` : `docker compose restart app`, puis `docker compose logs app`. |
-| « La clé d'installation est incorrecte. »        | La clé change à chaque redémarrage. Prends la **plus récente** du journal.                                                                                                |
-| « Zu viele Versuche. Bitte eine Minute warten. » | Attends une minute.                                                                                                                                                       |
-| `/setup` redirige vers la connexion              | Il existe déjà une administratrice ou un administrateur. Si `GW_BOOTSTRAP_ADMIN_EMAIL` a été défini, le lien à usage unique figure dans `docker compose logs migrate`.    |
-| Connecté, mais pas admin                         | `docker compose exec app node scripts/cli.mjs admin promote --email you@example.com`                                                                                      |
+| Problème                                    | Solution                                                                                                                                                                  |
+| ------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| Pas de clé d'installation dans le journal   | La clé figure dans le journal de `app`, pas dans celui de `migrate`. Si elle n'y est pas, redémarre `app` : `docker compose restart app`, puis `docker compose logs app`. |
+| « La clé d'installation est incorrecte. »   | La clé change à chaque redémarrage. Prends la **plus récente** du journal.                                                                                                |
+| « Trop de tentatives. Réessaie plus tard. » | Attends une minute.                                                                                                                                                       |
+| `/setup` redirige vers la connexion         | Il existe déjà une administratrice ou un administrateur. Si `GW_BOOTSTRAP_ADMIN_EMAIL` a été défini, le lien à usage unique figure dans `docker compose logs migrate`.    |
+| Connecté, mais pas admin                    | `docker compose exec app node scripts/cli.mjs admin promote --email you@example.com`                                                                                      |
 
 Tout cela est détaillé dans le README, sous
 [Troubleshooting](https://github.com/roleALPHA/good-workshop/blob/main/README.md#troubleshooting).

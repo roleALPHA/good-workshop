@@ -96,13 +96,13 @@ Höchstdauer. Melde dich neu an.
 
 ## Neue Installation einrichten (selbst betrieben)
 
-| Problem                                        | Lösung                                                                                                                                                            |
-| ---------------------------------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| Kein Einrichtungsschlüssel im Log              | Der Schlüssel steht im Log von `app`, nicht von `migrate`. Steht er dort nicht, starte `app` neu: `docker compose restart app`, danach `docker compose logs app`. |
-| „Der Einrichtungsschlüssel stimmt nicht.“      | Der Schlüssel ändert sich bei jedem Neustart. Nimm den **neuesten** aus dem Log.                                                                                  |
-| „Zu viele Versuche. Bitte eine Minute warten.“ | Eine Minute warten.                                                                                                                                               |
-| `/setup` leitet auf die Anmeldung um           | Es gibt schon eine Administratorin. Wurde `GW_BOOTSTRAP_ADMIN_EMAIL` gesetzt, steht der einmalige Link in `docker compose logs migrate`.                          |
-| Angemeldet, aber kein Admin                    | `docker compose exec app node scripts/cli.mjs admin promote --email you@example.com`                                                                              |
+| Problem                                                   | Lösung                                                                                                                                                            |
+| --------------------------------------------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| Kein Einrichtungsschlüssel im Log                         | Der Schlüssel steht im Log von `app`, nicht von `migrate`. Steht er dort nicht, starte `app` neu: `docker compose restart app`, danach `docker compose logs app`. |
+| „Der Einrichtungsschlüssel stimmt nicht.“                 | Der Schlüssel ändert sich bei jedem Neustart. Nimm den **neuesten** aus dem Log.                                                                                  |
+| „Zu viele Versuche. Bitte versuch es später noch einmal.“ | Eine Minute warten.                                                                                                                                               |
+| `/setup` leitet auf die Anmeldung um                      | Es gibt schon eine Administratorin. Wurde `GW_BOOTSTRAP_ADMIN_EMAIL` gesetzt, steht der einmalige Link in `docker compose logs migrate`.                          |
+| Angemeldet, aber kein Admin                               | `docker compose exec app node scripts/cli.mjs admin promote --email you@example.com`                                                                              |
 
 Ausführlich steht das in der README unter
 [Troubleshooting](https://github.com/roleALPHA/good-workshop/blob/main/README.md#troubleshooting).

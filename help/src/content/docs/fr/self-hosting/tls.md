@@ -33,7 +33,7 @@ Le profil démarre en plus un Caddy qui prend les ports 80 et 443 et obtient aut
 certificat auprès de Let's Encrypt. Il te faut pour cela :
 
 - `GW_HOSTNAME` dans le `.env` — si la valeur manque, Caddy ne démarre pas et affiche
-  « GW_HOSTNAME muss gesetzt sein: der Hostname, auf den das TLS-Zertifikat lautet. »
+  « GW_HOSTNAME must be set: the host name the TLS certificate is issued for. »
 - un nom d'hôte qui résout publiquement vers ce serveur
 - les ports 80 et 443 libres
 
