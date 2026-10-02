@@ -89,11 +89,11 @@ durée maximale fixe. Reconnecte-toi.
 
 ## Invitation à un atelier
 
-| Message                                                                               | Signification                                                                                            |
-| ------------------------------------------------------------------------------------- | -------------------------------------------------------------------------------------------------------- |
-| « Cela ne correspond pas. Vérifiez l'adresse à laquelle l'invitation a été envoyée. » | L'adresse saisie n'est pas celle qui a été invitée.                                                      |
-| « Cette invitation n'est plus valable »                                               | Le lien a été retiré, a expiré ou n'existe pas. La personne qui t'a invité peut en envoyer une nouvelle. |
-| « Trop de tentatives. Attendez une minute puis réessayez. »                           | Trop de saisies en peu de temps.                                                                         |
+| Message                                                                              | Signification                                                                                            |
+| ------------------------------------------------------------------------------------ | -------------------------------------------------------------------------------------------------------- |
+| « Cela ne correspond pas. Vérifie l'adresse à laquelle l'invitation a été envoyée. » | L'adresse saisie n'est pas celle qui a été invitée.                                                      |
+| « Cette invitation n'est plus valable »                                              | Le lien a été retiré, a expiré ou n'existe pas. La personne qui t'a invité peut en envoyer une nouvelle. |
+| « Trop de tentatives. Attends une minute puis réessaie. »                            | Trop de saisies en peu de temps.                                                                         |
 
 ## Mettre en route une nouvelle installation (auto-hébergement)
 

@@ -14,7 +14,7 @@ Tout ce qui est décrit sur cette page se fait directement au-dessus de l'agenda
 ## Ajouter une journée
 
 1. Clique sur **Journée**, à droite des onglets.
-2. La nouvelle journée s'ajoute à la fin, s'appelle d'abord « Jour 2 », « Jour 3 » et ainsi de suite, et s'ouvre aussitôt.
+2. La nouvelle journée s'ajoute à la fin, s'appelle d'abord « Journée 2 », « Journée 3 » et ainsi de suite, et s'ouvre aussitôt.
 
 La nouvelle journée reprend le **Début de la journée** de la dernière journée existante. Si ton atelier commence à 08:30, la nouvelle journée commence donc aussi à 08:30. La toute première journée d'un atelier commence à 09:00.
 

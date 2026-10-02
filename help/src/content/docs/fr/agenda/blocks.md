@@ -36,7 +36,7 @@ Certains types affichent en plus un champ sous forme de petite étiquette dans l
 
 Sous chaque bloc figure **Plus de champs**. Un clic déplie les autres champs du type de bloc, **Moins** les replie. Un seul bloc est déplié à la fois, pour que l'agenda reste lisible. Les modifications sont enregistrées dès que tu quittes un champ.
 
-Chaque type a le champ **Notes d'animation**. Il est marqué « rien que pour toi » et n'apparaît pas dans la vue en lecture. À l'impression et à l'export Markdown, les notes ne sont incluses que si tu coches **Avec les notes de modération**. Quand un bloc a des notes, une petite icône à côté de **Plus de champs** le signale.
+Chaque type a le champ **Notes d'animation**. Il est marqué « rien que pour toi » et n'apparaît pas dans la vue en lecture. À l'impression et à l'export Markdown, les notes ne sont incluses que si tu coches **Avec les notes d'animation**. Quand un bloc a des notes, une petite icône à côté de **Plus de champs** le signale.
 
 ## Les types de blocs
 

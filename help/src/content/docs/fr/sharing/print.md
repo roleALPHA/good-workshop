@@ -12,7 +12,7 @@ Le jour J, tu veux souvent le déroulé sur papier : pour toi à la table d'anim
 1. Ouvre une journée de l'atelier.
 2. En haut à droite, choisis avec les deux cases ce qui est inclus :
    - **Tout l'atelier** – toutes les journées au lieu de la seule journée ouverte.
-   - **Avec les notes de modération** – tes notes sur les blocs.
+   - **Avec les notes d'animation** – tes notes sur les blocs.
 3. Clique sur **Imprimer**. La vue d'impression s'ouvre dans un nouvel onglet.
 
 Là, tu imprimes avec la commande d'impression de ton navigateur (Ctrl+P, sur Mac ⌘+P).
@@ -48,7 +48,7 @@ Les [sections](/fr/agenda/clusters-and-breakouts/) apparaissent comme des intert
 :::note[Ce qui n'est pas imprimé]
 
 - Les blocs [mis de côté](/fr/agenda/parking/) – ils ne figurent pas dans le planning.
-- Les notes d'animation, tant que **Avec les notes de modération** n'est pas cochée. La case est décochée à chaque ouverture de la page : le cas le plus fréquent est l'impression pour le groupe, et tes notes n'y ont pas leur place.
+- Les notes d'animation, tant que **Avec les notes d'animation** n'est pas cochée. La case est décochée à chaque ouverture de la page : le cas le plus fréquent est l'impression pour le groupe, et tes notes n'y ont pas leur place.
   :::
 
 ## Qui peut imprimer

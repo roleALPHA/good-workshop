@@ -983,7 +983,7 @@
     "untitled": "Workshop",
     "untitledDay": "Day",
     "you": "you",
-    "withNotes": "With facilitation notes",
+    "withNotes": "With facilitator notes",
     "day": {
       "add": "Add workshop day",
       "addShort": "Workshop day",
@@ -1221,7 +1221,7 @@
       },
       "room": {
         "title": "Built for the room, not only for the preparation",
-        "body": "The agenda works on a phone, survives bad wifi, and lets your co-facilitator edit the same day at the same time. Facilitation notes stay with you: the print view and the export leave them out by default, so the group gets the agenda and you keep the rest."
+        "body": "The agenda works on a phone, survives bad wifi, and lets your co-facilitator edit the same day at the same time. Facilitator notes stay with you: the print view and the export leave them out by default, so the group gets the agenda and you keep the rest."
       },
       "limitsTitle": "Where GoodWorkshop does less",
       "limitsBody": "GoodWorkshop's library is deliberately small. Discover holds a curated set of methods and ready-made workshop designs that we write and maintain ourselves: dozens, not hundreds, and no gallery of templates for every occasion. If what you want is the largest possible collection to browse, you are better served elsewhere. GoodWorkshop is also younger and smaller: fewer integrations, no team of thirty behind it. If what you want is an agenda that does the arithmetic, that belongs to you, that your AI can operate — and a handful of designs you can adopt into a workshop in one step — you are in the right place.",
@@ -1264,7 +1264,7 @@
         },
         "print": {
           "q": "Can I print or export the agenda?",
-          "a": "Yes, both. There is a print view for the room and a Markdown export for the handout and the documentation. Your facilitation notes stay out of both by default."
+          "a": "Yes, both. There is a print view for the room and a Markdown export for the handout and the documentation. Your facilitator notes stay out of both by default."
         },
         "mobile": {
           "q": "Does it work on a phone?",

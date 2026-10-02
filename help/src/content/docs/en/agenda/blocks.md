@@ -36,7 +36,7 @@ Some types also show a field as a small label in the **Additional info** column,
 
 Below every block is **More fields**. Clicking it expands the block type's remaining fields; **Fewer** collapses them again. Only one block is expanded at a time, so the agenda stays readable. Changes are saved as soon as you leave a field.
 
-Every type has the **Facilitator notes** field. It is marked “only for you” and doesn't appear in the read view. When printing and in the Markdown export, the notes are only included if you check **With facilitation notes**. If a block has notes, a small icon next to **More fields** shows it.
+Every type has the **Facilitator notes** field. It is marked “only for you” and doesn't appear in the read view. When printing and in the Markdown export, the notes are only included if you check **With facilitator notes**. If a block has notes, a small icon next to **More fields** shows it.
 
 ## The block types
 

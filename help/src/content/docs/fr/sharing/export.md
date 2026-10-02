@@ -12,20 +12,20 @@ Chaque agenda peut être téléchargé à tout moment sous forme de fichier Mark
 1. Ouvre une journée de l'atelier.
 2. En haut à droite, choisis avec les deux cases ce qui est inclus :
    - **Tout l'atelier** – toutes les journées dans un seul fichier au lieu de la seule journée ouverte.
-   - **Avec les notes de modération** – tes notes sur les blocs.
+   - **Avec les notes d'animation** – tes notes sur les blocs.
 3. Clique sur **Markdown**. Ton navigateur télécharge un fichier `.md` portant le nom de l'atelier.
 
 Les deux cases valent aussi pour [Imprimer](/fr/sharing/print/) – elles répondent à la même question : pour qui est cette copie ?
 
 :::caution[Les notes sont exclues par défaut]
-Les champs qu'un type de bloc marque comme privés – aujourd'hui les notes d'animation – ne figurent dans le fichier qu'avec **Avec les notes de modération**. La case est décochée à chaque ouverture. Ne transmets pas un fichier contenant des notes aux participants.
+Les champs qu'un type de bloc marque comme privés – aujourd'hui les notes d'animation – ne figurent dans le fichier qu'avec **Avec les notes d'animation**. La case est décochée à chaque ouverture. Ne transmets pas un fichier contenant des notes aux participants.
 :::
 
 ## Ce que contient le fichier
 
 **Au début, un en-tête** avec des informations pour les outils qui lisent les métadonnées Markdown : titre, date (pour plusieurs journées, une liste des dates) et durée totale. Pour tout l'atelier s'ajoutent le chemin du dossier, les [tags](/fr/library/tags/) et le nombre de journées.
 
-**Puis le titre** de l'atelier comme titre principal. Pour tout l'atelier, chaque journée suit sous son propre titre : son nom, à défaut sa date, à défaut « Jour 1 », « Jour 2 » …
+**Puis le titre** de l'atelier comme titre principal. Pour tout l'atelier, chaque journée suit sous son propre titre : son nom, à défaut sa date, à défaut « Journée 1 », « Journée 2 » …
 
 **Pour chaque journée, un résumé** : nom, date, début et fin ainsi que la répartition, par exemple « 5h 30m de contenu, 1h 15m de pauses ».
 

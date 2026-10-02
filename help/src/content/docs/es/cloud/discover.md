@@ -22,7 +22,7 @@ explorarlo.
 Solo hay un tipo de entrada. Una pieza corta con una jornada y pocos bloques está junto a un
 programa de varias jornadas. Cada entrada de la lista muestra:
 
-- cuántos días tiene, por ejemplo **1 día** o **3 días**,
+- cuántas jornadas tiene, por ejemplo **1 jornada** o **3 jornadas**,
 - cuánto dura,
 - para cuántas personas está pensada, por ejemplo **8–20 personas** o **cualquier número de
   personas**.
@@ -63,11 +63,11 @@ Con **Volver a Discover** regresas a la lista.
 
 En **Adoptar en tu espacio** eliges adónde va la entrada:
 
-| Destino                             | Qué ocurre                                                                                                                      |
-| ----------------------------------- | ------------------------------------------------------------------------------------------------------------------------------- |
-| **Como taller nuevo**               | Un taller nuevo con el nombre de la entrada y todas sus jornadas. Aparece en tu biblioteca.                                     |
-| **Añadir a un taller existente**    | Las jornadas de la entrada se colocan detrás de la última jornada del taller que elijas en **Elegir un taller**.                |
-| **A un día de un taller existente** | Los bloques van a una jornada que eliges en **Elegir un taller** y **Elegir un día**. Solo para entradas con una única jornada. |
+| Destino                                  | Qué ocurre                                                                                                                           |
+| ---------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------ |
+| **Como taller nuevo**                    | Un taller nuevo con el nombre de la entrada y todas sus jornadas. Aparece en tu biblioteca.                                          |
+| **Añadir a un taller existente**         | Las jornadas de la entrada se colocan detrás de la última jornada del taller que elijas en **Elegir un taller**.                     |
+| **A una jornada de un taller existente** | Los bloques van a una jornada que eliges en **Elegir un taller** y **Elegir una jornada**. Solo para entradas con una única jornada. |
 
 1. Elige el destino y, si hace falta, el taller y la jornada.
 2. Haz clic en **Adoptar**. El botón muestra **Adoptando …**
@@ -87,11 +87,11 @@ estructura por jornadas. Usa para ello **Como taller nuevo** o añádela a un ta
 Una entrada nunca falla por un solo bloque. Lo que no encaja del todo llega igualmente, y la
 página te dice qué:
 
-| Aviso                                             | Significado                                                                                                             |
-| ------------------------------------------------- | ----------------------------------------------------------------------------------------------------------------------- |
-| «… bloques llegaron como notas …»                 | Tu espacio de trabajo no tiene ese tipo de bloque. El bloque ha llegado como nota.                                      |
-| «… bloques llegaron sin su descripción.»          | Tu espacio de trabajo ha adaptado el tipo de bloque, y el texto no cabía.                                               |
-| «… días no se pudieron escribir y quedan vacíos.» | Estas jornadas existen, pero todavía no tienen bloques. Complétalas tú o vuelve a adoptar la entrada como taller nuevo. |
+| Aviso                                                 | Significado                                                                                                             |
+| ----------------------------------------------------- | ----------------------------------------------------------------------------------------------------------------------- |
+| «… bloques llegaron como notas …»                     | Tu espacio de trabajo no tiene ese tipo de bloque. El bloque ha llegado como nota.                                      |
+| «… bloques llegaron sin su descripción.»              | Tu espacio de trabajo ha adaptado el tipo de bloque, y el texto no cabía.                                               |
+| «… jornadas no se pudieron escribir y quedan vacías.» | Estas jornadas existen, pero todavía no tienen bloques. Complétalas tú o vuelve a adoptar la entrada como taller nuevo. |
 
 ## Con el asistente de IA
 

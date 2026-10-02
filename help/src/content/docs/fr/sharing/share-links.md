@@ -31,7 +31,7 @@ Si aucun envoi d'e-mails n'est configuré, GoodWorkshop affiche le lien directem
 2. Il saisit l'adresse e-mail à laquelle l'invitation a été envoyée et clique sur **Ouvrir le déroulé**.
 3. Il arrive sur la première journée de l'agenda.
 
-Un lien transféré ou oublié quelque part n'ouvre donc rien à lui seul. Après trop de tentatives échouées, le message est : « Trop de tentatives. Attendez une minute puis réessayez. »
+Un lien transféré ou oublié quelque part n'ouvre donc rien à lui seul. Après trop de tentatives échouées, le message est : « Trop de tentatives. Attends une minute puis réessaie. »
 
 ### Ce qu'un invité voit et peut faire
 
@@ -46,7 +46,7 @@ Un lien transféré ou oublié quelque part n'ouvre donc rien à lui seul. Aprè
 | Bibliothèque, dossiers, autres ateliers                           | non               | non                                 |
 | Choisir des membres de ton espace de travail comme responsables   | non               | non                                 |
 
-En haut, l'invité voit « Vous consultez ce déroulé en tant qu’invité. » ou « … et pouvez le modifier. » Qui peut seulement lire voit en plus le badge **Lecture seule**.
+En haut, l'invité voit « Tu consultes ce déroulé en tant qu’invité. » ou « … et tu peux le modifier. » Qui peut seulement lire voit en plus le badge **Lecture seule**.
 
 Si un invité modifie aussi, les autres le voient lors de la [modification à plusieurs](/fr/agenda/live-editing/) sous son adresse e-mail. Il voit avec leur nom les [responsables](/fr/agenda/responsible/) déjà saisis, mais pas la liste des membres de ton espace de travail.
 

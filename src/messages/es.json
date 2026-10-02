@@ -506,7 +506,7 @@
         "unknownModuleType": "Ese tipo de bloque no existe.",
         "unknownModuleTypeOptions": "Tipo de bloque desconocido «{key}». Disponibles: {available}",
         "descInvalid": "Valores inválidos: {issues}",
-        "lastDay": "Un taller necesita al menos un día. El último día no se puede eliminar."
+        "lastDay": "Un taller necesita al menos una jornada. La última jornada no se puede eliminar."
       },
       "oauth": {
         "noRedirectUri": "Este cliente no indicó una dirección de retorno válida.",
@@ -591,8 +591,8 @@
     "blockCount": "{count, plural, one {# bloque} many {# bloques} other {# bloques}}",
     "overlap": "⚠ Solapamiento",
     "details": "Detalles",
-    "dayNumber": "Día {n}",
-    "noDays": "Este taller aún no tiene ningún día.",
+    "dayNumber": "Jornada {n}",
+    "noDays": "Este taller aún no tiene ninguna jornada.",
     "split": "{content} de contenido, {breaks} de pausas",
     "yes": "sí",
     "no": "no",
@@ -977,17 +977,17 @@
     },
     "materials": "Material: {items}",
     "print": "Imprimir",
-    "scopeDay": "Este día",
+    "scopeDay": "Esta jornada",
     "scopeWorkshop": "Todo el taller",
     "someone": "Alguien",
     "untitled": "Taller",
     "untitledDay": "Jornada",
     "you": "tú",
-    "withNotes": "Con notas de moderación",
+    "withNotes": "Con notas de facilitación",
     "day": {
       "add": "Añadir jornada del taller",
       "addShort": "Jornada",
-      "newTitle": "Día {number, number}",
+      "newTitle": "Jornada {number, number}",
       "title": "Nombre de la jornada",
       "date": "Fecha de la jornada",
       "start": "Inicio de la jornada",
@@ -1036,7 +1036,7 @@
     },
     "home": {
       "title": "Planifica talleres — con una agenda que calcula sola.",
-      "lead": "GoodWorkshop es el planificador de talleres para facilitación y moderación: recorridos del día con horas, métodos y responsables, editados en directo entre varias personas y conectados con tu IA.",
+      "lead": "GoodWorkshop es el planificador de talleres para facilitación y moderación: recorridos de la jornada con horas, métodos y responsables, editados en directo entre varias personas y conectados con tu IA.",
       "cta": "Probar gratis 14 días",
       "ctaSecondary": "Ver precios",
       "featuresTitle": "Qué hace GoodWorkshop",
@@ -1046,7 +1046,7 @@
       },
       "together": {
         "title": "En equipo y en tiempo real",
-        "body": "Varias personas trabajan a la vez en el mismo día sin sobrescribirse."
+        "body": "Varias personas trabajan a la vez en la misma jornada sin sobrescribirse."
       },
       "ai": {
         "title": "Conectado con tu IA",
@@ -1064,9 +1064,9 @@
       "selfHostTitle": "¿Prefieres alojarlo tú?",
       "selfHostBody": "El código de GoodWorkshop es público. Si tienes tus propios servidores, lo instalas allí con Docker y no nos pagas nada, ni ahora ni después. La nube te quita de encima la operación, las actualizaciones y las copias de seguridad; esa es toda la diferencia.",
       "selfHostCta": "Verlo en GitHub",
-      "shotAgenda": "Un día de taller en GoodWorkshop: bloques con hora, duración, persona responsable y descripción, agrupados en secciones.",
+      "shotAgenda": "Una jornada de taller en GoodWorkshop: bloques con hora, duración, persona responsable y descripción, agrupados en secciones.",
       "shotLibrary": "La biblioteca: talleres en carpetas, con búsqueda y acciones rápidas.",
-      "shotPhone": "El mismo día de taller en el móvil, como tarjetas para seguir en la sala.",
+      "shotPhone": "La misma jornada de taller en el móvil, como tarjetas para seguir en la sala.",
       "shotsTitle": "Así se ve",
       "moreTitle": "Seguir leyendo",
       "moreMethods": "Las piezas de una agenda: quince métodos, para qué sirven y cuánto duran.",
@@ -1108,7 +1108,7 @@
       "notTranslated": "Este texto aún no está disponible en tu idioma. En cualquier caso, solo la versión alemana es vinculante."
     },
     "meta": {
-      "shareImageAlt": "Un día de taller en GoodWorkshop: bloques con hora, duración y persona responsable.",
+      "shareImageAlt": "Una jornada de taller en GoodWorkshop: bloques con hora, duración y persona responsable.",
       "home": {
         "title": "GoodWorkshop: planifica la agenda de tus talleres",
         "description": "El planificador de talleres para facilitación y moderación: una agenda cuyas horas se recalculan al mover un bloque, editada en directo entre varios, lista para imprimir y exportar. 14 días gratis."
@@ -1186,13 +1186,13 @@
     },
     "methods": {
       "title": "Métodos de facilitación: las piezas de una agenda",
-      "lead": "Un día de taller se compone de bloques, y cada bloque tiene un tipo. El tipo decide qué campos lo acompañan: la consigna en el trabajo en grupo, el procedimiento en la decisión, la pregunta de apertura en el check-in. Aquí están todas las piezas que trae GoodWorkshop: para qué sirven, cuánto suelen durar y en qué forma social.",
+      "lead": "Una jornada de taller se compone de bloques, y cada bloque tiene un tipo. El tipo decide qué campos lo acompañan: la consigna en el trabajo en grupo, el procedimiento en la decisión, la pregunta de apertura en el check-in. Aquí están todas las piezas que trae GoodWorkshop: para qué sirven, cuánto suelen durar y en qué forma social.",
       "durationLabel": "Duración habitual",
       "socialLabel": "Forma social",
-      "howTitle": "Cómo esto se convierte en un día",
-      "howBody": "El orden no es cuestión de gusto. Un día empieza con la llegada y termina con el cierre; en medio se alternan los bloques en los que se recibe con los bloques en los que se trabaja lo recibido. Una pausa a los noventa minutos, algo de movimiento después de comer y los próximos pasos antes del check-out. En GoodWorkshop mueves los bloques y todas las horas posteriores se recalculan; la comida, aun así, se queda donde está si la fijas a la hora.",
+      "howTitle": "Cómo esto se convierte en una jornada",
+      "howBody": "El orden no es cuestión de gusto. Una jornada empieza con la llegada y termina con el cierre; en medio se alternan los bloques en los que se recibe con los bloques en los que se trabaja lo recibido. Una pausa a los noventa minutos, algo de movimiento después de comer y los próximos pasos antes del check-out. En GoodWorkshop mueves los bloques y todas las horas posteriores se recalculan; la comida, aun así, se queda donde está si la fijas a la hora.",
       "ctaTitle": "Convertir las piezas en una agenda",
-      "ctaBody": "Crea el día, arrastra los bloques al orden que tienes en mente y deja que las horas se calculen solas. O describe a tu IA lo que planeas y deja que escriba el primer borrador.",
+      "ctaBody": "Crea la jornada, arrastra los bloques al orden que tienes en mente y deja que las horas se calculen solas. O describe a tu IA lo que planeas y deja que escriba el primer borrador.",
       "cta": "Probar 14 días gratis",
       "emptyTitle": "La colección se está escribiendo.",
       "emptyBody": "Los primeros métodos aparecerán aquí en cuanto estén listos.",
@@ -1221,7 +1221,7 @@
       },
       "room": {
         "title": "Hecho para la sala, no solo para la preparación",
-        "body": "La agenda funciona en el móvil, sobrevive a un wifi malo y permite que la co-facilitación edite el mismo día a la vez. Tus notas de facilitación se quedan contigo: la vista de impresión y la exportación las dejan fuera por defecto, para que el grupo reciba la agenda y tú conserves el resto."
+        "body": "La agenda funciona en el móvil, sobrevive a un wifi malo y permite que la co-facilitación edite la misma jornada a la vez. Tus notas de facilitación se quedan contigo: la vista de impresión y la exportación las dejan fuera por defecto, para que el grupo reciba la agenda y tú conserves el resto."
       },
       "limitsTitle": "Dónde GoodWorkshop puede menos",
       "limitsBody": "La biblioteca de GoodWorkshop es deliberadamente pequeña. Discover reúne una selección de métodos y diseños de taller listos que escribimos y mantenemos nosotros: docenas, no cientos, y ninguna galería de plantillas para cada ocasión. Si lo que buscas es la mayor colección posible para explorar, estarás mejor servida en otro sitio. GoodWorkshop también es más joven y más pequeño: menos integraciones, sin un equipo de treinta personas detrás. Si lo que buscas es una agenda que calcule, que sea tuya, que tu IA sepa manejar —y un puñado de diseños que adoptas en un solo paso—, estás en el sitio correcto.",
@@ -1252,11 +1252,11 @@
         },
         "ai": {
           "q": "¿Cómo funciona la conexión con la IA?",
-          "a": "GoodWorkshop es en sí mismo un servidor MCP: Model Context Protocol, la interfaz con la que los asistentes de IA manejan herramientas. Configuras la conexión una vez en los ajustes y, a partir de ahí, Claude, ChatGPT, Gemini y otros clientes pueden crear talleres, reescribir agendas, apartar bloques y mover días. La IA trabaja dentro de tu taller, no en una ventana de chat al lado."
+          "a": "GoodWorkshop es en sí mismo un servidor MCP: Model Context Protocol, la interfaz con la que los asistentes de IA manejan herramientas. Configuras la conexión una vez en los ajustes y, a partir de ahí, Claude, ChatGPT, Gemini y otros clientes pueden crear talleres, reescribir agendas, apartar bloques y mover jornadas. La IA trabaja dentro de tu taller, no en una ventana de chat al lado."
         },
         "collab": {
           "q": "¿Pueden trabajar varias personas a la vez?",
-          "a": "Sí. Varias personas editan el mismo día en directo sin sobrescribirse. Las clientas y la co-facilitación sin cuenta reciben un enlace, de solo lectura o de edición, según lo configures."
+          "a": "Sí. Varias personas editan la misma jornada en directo sin sobrescribirse. Las clientas y la co-facilitación sin cuenta reciben un enlace, de solo lectura o de edición, según lo configures."
         },
         "times": {
           "q": "¿Qué pasa cuando cambia una hora?",
@@ -1272,7 +1272,7 @@
         },
         "migrate": {
           "q": "Ya trabajo con otra herramienta. ¿Puedo cambiarme?",
-          "a": "No hay importación automática. El camino más rápido es la conexión con la IA: dale a tu asistente la agenda existente como texto y deja que cree el taller en GoodWorkshop. Para un solo día es cuestión de minutos."
+          "a": "No hay importación automática. El camino más rápido es la conexión con la IA: dale a tu asistente la agenda existente como texto y deja que cree el taller en GoodWorkshop. Para una sola jornada es cuestión de minutos."
         }
       },
       "ctaTitle": "¿Te queda alguna pregunta?",
@@ -1416,8 +1416,8 @@
       "addValue": "Añadir un valor",
       "backToTenants": "Volver a los espacios",
       "entries": "Entradas",
-      "blocksViaMcp": "Los días y los bloques se mantienen por MCP: un editor de días aquí sería un segundo editor de agenda, y el producto ya tiene uno bueno.",
-      "dayCount": "{count, plural, one {# día} many {# días} other {# días}}"
+      "blocksViaMcp": "Las jornadas y los bloques se mantienen por MCP: un editor de jornadas aquí sería un segundo editor de agenda, y el producto ya tiene uno bueno.",
+      "dayCount": "{count, plural, one {# jornada} many {# jornadas} other {# jornadas}}"
     },
     "tokens": {
       "title": "Acceso MCP",
@@ -1496,14 +1496,14 @@
     "searchLabel": "Buscar",
     "apply": "Aplicar",
     "more": "Cargar más",
-    "days": "{count, plural, one {# día} many {# días} other {# días}}",
+    "days": "{count, plural, one {# jornada} many {# jornadas} other {# jornadas}}",
     "peopleAny": "cualquier número de personas",
     "peopleFrom": "desde {min, number} personas",
     "peopleTo": "hasta {max, number} personas",
     "peopleRange": "{min, number}–{max, number} personas",
     "untranslated": "Este texto aún no está en tu idioma.",
     "back": "Volver a Discover",
-    "dayHeading": "Día {n, number}",
+    "dayHeading": "Jornada {n, number}",
     "parked": "Apartado",
     "adoptTitle": "Adoptar en tu espacio",
     "adoptNew": "Como taller nuevo",
@@ -1514,13 +1514,13 @@
     "adoptOpen": "Abrir el taller",
     "adoptDegraded": "{count, plural, one {# bloque llegó como nota, porque este espacio no tiene su tipo.} many {# bloques llegaron como notas, porque este espacio no tiene sus tipos.} other {# bloques llegaron como notas, porque este espacio no tiene sus tipos.}}",
     "adoptDropped": "{count, plural, one {# bloque llegó sin su descripción.} many {# bloques llegaron sin su descripción.} other {# bloques llegaron sin su descripción.}}",
-    "adoptDaysFailed": "{count, plural, one {# día no se pudo escribir y queda vacío.} many {# días no se pudieron escribir y quedan vacíos.} other {# días no se pudieron escribir y quedan vacíos.}}",
+    "adoptDaysFailed": "{count, plural, one {# jornada no se pudo escribir y queda vacía.} many {# jornadas no se pudieron escribir y quedan vacías.} other {# jornadas no se pudieron escribir y quedan vacías.}}",
     "adoptNoWorkshops": "Todavía no tienes ningún taller al que añadir algo.",
     "loading": "Cargando …",
     "loadFailed": "No se pudo cargar más. Inténtalo de nuevo.",
-    "adoptIntoDay": "A un día de un taller existente",
-    "adoptChooseDay": "Elegir un día",
-    "adoptNoDays": "Ese taller no tiene días."
+    "adoptIntoDay": "A una jornada de un taller existente",
+    "adoptChooseDay": "Elegir una jornada",
+    "adoptNoDays": "Ese taller no tiene jornadas."
   },
   "support": {
     "title": "Soporte",
