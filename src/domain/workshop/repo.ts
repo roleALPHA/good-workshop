@@ -1,10 +1,11 @@
 import { uuidv7 } from 'uuidv7'
 import { and, eq, isNotNull, isNull, sql } from 'drizzle-orm'
 import { memberIdOf, type Actor, type Tx } from '@/server/db'
-import { folder, member, workshop, workshopDay } from '@/server/db/schema'
+import { member, workshop, workshopDay } from '@/server/db/schema'
 import { keyAtEnd } from '@/domain/agenda/ordering'
 import { DomainError } from '@/domain/errors'
 import { type WorkshopAccess } from '@/domain/agenda/access'
+import { folderReachable } from '@/domain/workshop/folders'
 
 /**
  * The workshop itself: creating one, renaming it, moving it, and the three states
@@ -54,12 +55,10 @@ export async function createWorkshop(
   if (input.folderId) {
     // Named rather than left to the composite foreign key, whose violation
     // reaches a person -- or a model choosing an id -- as "the call failed".
-    const folders = await tx
-      .select({ id: folder.id })
-      .from(folder)
-      .where(eq(folder.id, input.folderId))
-      .limit(1)
-    if (!folders[0]) throw new WorkshopFolderError('folder.targetGone')
+    // And only a folder of theirs: one they cannot see is not there for them.
+    if (!(await folderReachable(tx, actor, input.folderId))) {
+      throw new WorkshopFolderError('folder.targetGone')
+    }
   }
 
   const siblings = await tx
@@ -147,15 +146,14 @@ export async function moveWorkshopToFolder(
   folderId: string | null,
 ): Promise<void> {
   if (folderId !== null) {
-    // RLS hides another tenant's folders, so "no row" covers both "gone" and
-    // "not yours" -- and it answers before the composite foreign key can fail
-    // in a way nobody can read.
-    const rows = await tx
-      .select({ id: folder.id })
-      .from(folder)
-      .where(eq(folder.id, folderId))
-      .limit(1)
-    if (!rows[0]) throw new WorkshopFolderError('folder.targetGone')
+    // RLS hides another tenant's folders and folderReachable the ones of this
+    // tenant the actor holds no role on, so "no row" covers "gone" and "not
+    // yours" -- and it answers before the composite foreign key can fail in a
+    // way nobody can read. Not yours matters beyond tidiness: a workshop moved
+    // into a shared folder is shared with its people by that move alone.
+    if (!(await folderReachable(tx, access.actor, folderId))) {
+      throw new WorkshopFolderError('folder.targetGone')
+    }
   }
 
   // No existence check on the workshop: assertWorkshopAccess already found the

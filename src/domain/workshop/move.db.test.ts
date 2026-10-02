@@ -62,10 +62,14 @@ async function makeWorkshop(title: string, owner: string, folderId: string | nul
   return id
 }
 
-/** The folder move is an admin's call, so every fixture folder is made as one. */
+/**
+ * Made by the owner of the workshops: a workshop can only be filed in a folder
+ * its mover holds a role on. Moving the folders themselves is still done as an
+ * admin below, which is whose call it is in the product.
+ */
 const admin = () => as(adminId, 'admin')
 const folderNamed = (name: string, parentId: string | null = null) =>
-  withTenant(admin(), (tx) => createFolder(tx, admin(), name, parentId))
+  withTenant(as(ownerId), (tx) => createFolder(tx, as(ownerId), name, parentId))
 
 const file = (workshopId: string, folderId: string | null, actor: Actor = as(ownerId)) =>
   withTenant(actor, async (tx) =>
@@ -78,7 +82,7 @@ const file = (workshopId: string, folderId: string | null, actor: Actor = as(own
 
 /** The ids of one sibling list, in the order listFolders returns them. */
 async function siblingOrder(parentId: string | null): Promise<string[]> {
-  const folders = await withTenant(admin(), (tx) => listFolders(tx))
+  const folders = await withTenant(admin(), (tx) => listFolders(tx, admin()))
   return folders.filter((node) => node.parentId === parentId).map((node) => node.id)
 }
 

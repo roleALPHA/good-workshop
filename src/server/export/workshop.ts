@@ -1,9 +1,10 @@
-import { eq, sql } from 'drizzle-orm'
+import { and, eq, sql } from 'drizzle-orm'
 import type { Tx } from '@/server/db'
 import type { WorkshopAccess } from '@/domain/agenda/access'
 import { loadDay } from '@/domain/agenda/repo'
 import { listDays } from '@/domain/workshop/days'
-import { workshop as workshopTable } from '@/server/db/schema'
+import { folder, workshop as workshopTable } from '@/server/db/schema'
+import { folderVisibleTo } from '@/domain/workshop/folders'
 import { renderWorkshopMarkdown, type ExportOptions, type WorkshopMeta } from './markdown'
 import type { DayDoc } from '@/domain/agenda/types'
 import type { Locale } from '@/i18n/config'
@@ -59,7 +60,7 @@ export async function loadWorkshopExport(
 
   const row = meta[0]
   const title = row?.title ?? 'Workshop'
-  const folderPath = row?.folderId ? await folderNames(tx, row.folderId) : []
+  const folderPath = row?.folderId ? await folderNames(tx, access, row.folderId) : []
 
   const days = await listDays(tx, access.workshopId)
   const docs = []
@@ -80,15 +81,23 @@ export async function loadWorkshopExport(
   }
 }
 
-/** The folders a workshop sits in, outermost first. */
-async function folderNames(tx: Tx, folderId: string): Promise<string[]> {
-  const rows = await tx.execute<{ name: string }>(sql`
-    select f.name
-      from folder pf
-      cross join lateral unnest(array_append(pf.ancestor_ids, pf.id)) with ordinality as u(fid, ord)
-      join folder f on f.id = u.fid
-     where pf.id = ${folderId}
-     order by u.ord
-  `)
-  return rows.rows.map((row) => row.name)
+/**
+ * The folders a workshop sits in, outermost first -- those the reader holds a
+ * role on.
+ *
+ * A workshop can be shared with somebody on its own while it sits in a folder
+ * of a colleague's, and an export travels further than any screen. So the path
+ * keeps only what the reader's own library would show: the part of it they
+ * were given, and nothing above that. A guest on a share link gets no path.
+ */
+async function folderNames(tx: Tx, access: WorkshopAccess, folderId: string): Promise<string[]> {
+  const rows = await tx
+    .select({
+      name: folder.name,
+      ord: sql<number>`array_position(array_append(pf.ancestor_ids, pf.id), ${folder.id})`,
+    })
+    .from(folder)
+    .innerJoin(sql`folder pf`, sql`${folder.id} = any(array_append(pf.ancestor_ids, pf.id))`)
+    .where(and(sql`pf.id = ${folderId}`, folderVisibleTo(access.actor)))
+  return rows.sort((a, b) => a.ord - b.ord).map((row) => row.name)
 }

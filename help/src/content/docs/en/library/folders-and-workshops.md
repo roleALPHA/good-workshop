@@ -22,6 +22,14 @@ are the folder – or **No folder** – and the actions **Export**, **Move to** 
 **Move to the bin**. On narrow screens the actions are icons only. If you may only read a
 workshop, it shows **Read only** and offers only the export.
 
+You only see folders you have access to: because you created them, because they – or a folder
+above them – are shared with you, or because you are an admin. If only a subfolder is shared with
+you, it sits at the top for you and the folder above it does not appear – not in the export
+either, and not on the **Access** page, which then says "via a folder above". If a workshop shared
+with you directly sits in a folder you have no access to, its row says
+**In a folder that is not yours**. You cannot move anything into such a folder or create folders
+in it.
+
 ## Create a workshop
 
 1. On the left, choose the folder the workshop should go in, or **All workshops** for none.

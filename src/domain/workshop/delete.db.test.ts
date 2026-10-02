@@ -257,7 +257,9 @@ describe('moving a folder', () => {
     await withTenant(as(adminId, 'admin'), (tx) => moveFolder(tx, child, null))
 
     expect(await pathOf(child)).toEqual([])
-    const folders = await withTenant(as(adminId, 'admin'), (tx) => listFolders(tx))
+    const folders = await withTenant(as(adminId, 'admin'), (tx) =>
+      listFolders(tx, as(adminId, 'admin')),
+    )
     expect(folders.find((f) => f.id === child)?.parentId).toBeNull()
   })
 
@@ -322,7 +324,9 @@ describe('deleting a folder', () => {
 
     // And the tree below it is still a tree: the descendant no longer claims a
     // parent that does not exist.
-    const folders = await withTenant(as(adminId, 'admin'), (tx) => listFolders(tx))
+    const folders = await withTenant(as(adminId, 'admin'), (tx) =>
+      listFolders(tx, as(adminId, 'admin')),
+    )
     expect(folders.find((f) => f.id === deep)?.parentId).toBe(outer)
 
     // The materialised path is read from the row rather than from FolderNode,

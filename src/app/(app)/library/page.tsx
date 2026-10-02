@@ -1,4 +1,5 @@
 import Link from 'next/link'
+import { notFound } from 'next/navigation'
 import { getTranslations } from 'next-intl/server'
 import { readSessionCached } from '@/server/auth/session'
 import { loadLibrary } from '@/server/actions/workshop'
@@ -49,6 +50,12 @@ export default async function LibraryPage({
   const t = await getTranslations('library')
   const { folders, tags, workshops, nextCursor } = result.data
   const filtered = Boolean(folder || tag || q)
+  // A folder in the address that is not in this reader's tree -- gone, or
+  // somebody else's -- is not shown by its id either. The list would only hold
+  // what they may see anyway, but the page would still be that folder's page,
+  // with "new folder here" offered into it.
+  const currentFolder = folder ? folders.find((node) => node.id === folder) : undefined
+  if (folder && !currentFolder) notFound()
 
   return (
     // One DndContext above both halves of the grid: a workshop dragged out of
@@ -71,7 +78,7 @@ export default async function LibraryPage({
         for -- and the library is where they start.
       */}
         <nav aria-label={t('navLabel')} className="min-w-0">
-          <FolderPanel current={folders.find((node) => node.id === folder)?.name ?? null}>
+          <FolderPanel current={currentFolder?.name ?? null}>
             <h2 className="mb-2 text-[12px] font-semibold tracking-wide text-[var(--fg-subtle)] uppercase">
               {t('folders')}
             </h2>
@@ -83,10 +90,7 @@ export default async function LibraryPage({
             />
             {!readOnly && (
               <div className="mt-2">
-                <CreateFolder
-                  parentId={folder ?? null}
-                  parentName={folders.find((node) => node.id === folder)?.name ?? null}
-                />
+                <CreateFolder parentId={folder ?? null} parentName={currentFolder?.name ?? null} />
               </div>
             )}
 
@@ -131,7 +135,7 @@ export default async function LibraryPage({
               {!readOnly && (
                 <CreateWorkshop
                   folderId={folder ?? null}
-                  folderName={folders.find((node) => node.id === folder)?.name ?? null}
+                  folderName={currentFolder?.name ?? null}
                 />
               )}
             </div>

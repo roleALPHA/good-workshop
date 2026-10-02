@@ -151,6 +151,26 @@ describe('filing a workshop from the list', () => {
   })
 
   /**
+   * Shared on its own, sitting in a folder of somebody else's: the folder is
+   * not in this reader's tree, so neither its name nor "no folder" is true.
+   * And "top level" has to stay a change the select can still make.
+   */
+  it('names no folder that is not the reader’s, and can still take it out', async () => {
+    moveWorkshopAction.mockResolvedValue({ ok: true, data: null })
+    show([workshop({ folderId: 'f-fremd', role: 'editor' })])
+
+    const row = within(rowFor('Strategie-Retreat'))
+    expect(row.getByText('In einem Ordner, der nicht deiner ist')).toBeInTheDocument()
+    expect(row.queryByText('Ohne Ordner')).not.toBeInTheDocument()
+
+    const select = await openMoveControl('Strategie-Retreat')
+    expect(select).toHaveValue('f-fremd')
+    await userEvent.selectOptions(select, '')
+
+    expect(moveWorkshopAction).toHaveBeenCalledWith({ workshopId: 'w-1', folderId: null })
+  })
+
+  /**
    * The server refuses it anyway -- a viewer has no workshop.update -- but a
    * control that always fails is worse than no control.
    */

@@ -113,4 +113,20 @@ describe('access inherited from a folder above', () => {
     expect(screen.queryByRole('combobox')).not.toBeInTheDocument()
     expect(screen.getByText('Hat Kunden angelegt')).toBeInTheDocument()
   })
+
+  /**
+   * The role is what the person holds here and stays; the folder it comes from
+   * is one the reader holds nothing on, and the library leaves it out for them.
+   */
+  it('does not name a folder above that is not the reader’s', () => {
+    list([], [person({ inherited: { role: 'editor', folderName: null } })])
+
+    expect(screen.getByText('Bearbeiten · über einen übergeordneten Ordner')).toBeInTheDocument()
+  })
+
+  it('says so for whoever made it, too', () => {
+    list([], [person({ inherited: { role: 'owner', folderName: null } })])
+
+    expect(screen.getByText('Hat einen übergeordneten Ordner angelegt')).toBeInTheDocument()
+  })
 })

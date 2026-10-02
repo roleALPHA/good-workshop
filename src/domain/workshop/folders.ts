@@ -1,8 +1,9 @@
 import { uuidv7 } from 'uuidv7'
-import { and, eq, isNull, ne, sql } from 'drizzle-orm'
+import { and, eq, isNull, ne, sql, type SQL } from 'drizzle-orm'
 import { type Actor, type Tx } from '@/server/db'
 import { folder, workshop } from '@/server/db/schema'
 import { sortFolderTree } from '@/domain/workshop/folder-order'
+import { folderReachSql } from '@/domain/workshop/folder-access'
 import { keyAtEnd, placeAfter } from '@/domain/agenda/ordering'
 import { DomainError } from '@/domain/errors'
 import { NotFoundError } from '@/domain/agenda/access'
@@ -35,7 +36,34 @@ export type FolderNode = {
   ancestorIds: string[]
 }
 
-export async function listFolders(tx: Tx): Promise<FolderNode[]> {
+/**
+ * The folders this actor holds a role on, as a predicate over `folder`.
+ *
+ * Holding a role is the whole test: having made the folder or one above it, or
+ * a grant on it or on one above it -- the same `folderReachSql` the library
+ * asks of a workshop's folder, so a folder and the workshops filed in it come
+ * and go together. An admin holds a role on every folder. A guest on a share
+ * link holds none: they reached one workshop, not a library.
+ *
+ * Undefined means "no filter", which is how drizzle's `and` reads it.
+ */
+export function folderVisibleTo(actor: Actor): SQL | undefined {
+  if (actor.share) return sql`false`
+  if (actor.tenantRole === 'admin') return undefined
+  return folderReachSql(folder.id, actor.memberId)
+}
+
+/**
+ * The folder tree as this actor may see it.
+ *
+ * A folder nobody gave you is not there -- not greyed out, not as a name on the
+ * way to the one you were given, because the name is already what it says
+ * about the work. A grant reaches downwards, so what is left is a set of whole
+ * subtrees; the top of each stands at the top level for this reader, with the
+ * path above it cut off, or the move menu would still carry ids of folders they
+ * cannot open.
+ */
+export async function listFolders(tx: Tx, actor: Actor): Promise<FolderNode[]> {
   const rows = await tx
     .select({
       id: folder.id,
@@ -44,11 +72,36 @@ export async function listFolders(tx: Tx): Promise<FolderNode[]> {
       ancestorIds: folder.ancestorIds,
     })
     .from(folder)
+    .where(folderVisibleTo(actor))
+
+  const visible = new Set(rows.map((row) => row.id))
+  const rooted = rows.map((row) => ({
+    ...row,
+    parentId: row.parentId !== null && visible.has(row.parentId) ? row.parentId : null,
+    ancestorIds: row.ancestorIds.filter((id) => visible.has(id)),
+  }))
 
   // Sorted into tree order in memory: folder trees are hundreds of rows, and a
   // recursive CTE here would buy nothing but a harder query to read. The
   // siblings come out alphabetical -- see folder-order.ts for why.
-  return sortFolderTree(rows)
+  return sortFolderTree(rooted)
+}
+
+/**
+ * Whether this actor may file something in `folderId`, answered as "is it
+ * there".
+ *
+ * One answer for "gone", "another tenant's" and "not yours", on purpose: the
+ * folder is not in their tree, and an error that told the three apart would
+ * tell them that a folder of that id exists.
+ */
+export async function folderReachable(tx: Tx, actor: Actor, folderId: string): Promise<boolean> {
+  const rows = await tx
+    .select({ id: folder.id })
+    .from(folder)
+    .where(and(eq(folder.id, folderId), folderVisibleTo(actor)))
+    .limit(1)
+  return rows.length > 0
 }
 
 export class FolderMoveError extends DomainError {}
@@ -282,10 +335,12 @@ export async function createFolder(
 ): Promise<string> {
   let ancestors: string[] = []
   if (parentId) {
+    // Only into a folder of theirs: whoever makes a folder owns it, and owning
+    // a corner of a tree you cannot see is a way into what sits around it.
     const parents = await tx
       .select({ ancestors: folder.ancestorIds })
       .from(folder)
-      .where(eq(folder.id, parentId))
+      .where(and(eq(folder.id, parentId), folderVisibleTo(actor)))
       .limit(1)
     if (!parents[0]) throw new NotFoundError()
     ancestors = [...parents[0].ancestors, parentId]
