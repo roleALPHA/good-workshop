@@ -23,6 +23,14 @@ Chaque ligne affiche le titre, les tags, le nombre de journées et le statut (pa
 icônes. Si tu n'as que le droit de lecture sur un atelier, il porte la mention **Lecture seule** et
 ne propose que l'export.
 
+Tu ne vois que les dossiers auxquels tu as accès : parce que tu les as créés, parce qu'ils – ou un
+dossier au-dessus – sont partagés avec toi, ou parce que tu es admin. Si seul un sous-dossier est
+partagé avec toi, il apparaît tout en haut chez toi, et le dossier au-dessus n'apparaît pas – ni
+dans l'export, ni sur la page **Accès**, qui indique alors « via un dossier parent ». Si un atelier
+partagé directement avec toi se trouve dans un dossier auquel tu n'as pas accès, sa ligne indique
+**Dans un dossier qui n’est pas le vôtre**. Tu ne peux rien déplacer dans un tel dossier ni y créer
+de dossier.
+
 ## Créer un atelier
 
 1. Choisis à gauche le dossier dans lequel l'atelier doit se trouver, ou **Tous les ateliers**

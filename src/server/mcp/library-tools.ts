@@ -80,13 +80,14 @@ export function registerLibraryTools(server: McpServer, { actor }: Ctx): void {
       title: 'List folders',
       description:
         'The folder tree, in display order: every folder directly below its parent, siblings alphabetical. ' +
-        '`depth` 0 is the top level; `parentId` names the folder above.',
+        '`depth` 0 is the top level; `parentId` names the folder above. ' +
+        'Only folders the member holds a role on are listed; one whose parent is not theirs stands at the top level.',
       inputSchema: {},
     },
     async () =>
       guarded(async () => {
         requireScope(actor, 'workshops:read')
-        const folders = await withTenant(actor, (tx) => listFolders(tx))
+        const folders = await withTenant(actor, (tx) => listFolders(tx, actor))
         if (folders.length === 0) return ok('No folders yet.', { folders: [] })
 
         return ok(folders.map((f) => `${'  '.repeat(f.depth)}${f.name} — id=${f.id}`).join('\n'), {

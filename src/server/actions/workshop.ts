@@ -307,7 +307,7 @@ export async function loadLibrary(
     async (tx, actor, input) => {
       const page = await listWorkshops(tx, actor, input)
       return {
-        folders: await listFolders(tx),
+        folders: await listFolders(tx, actor),
         tags: await listTags(tx),
         workshops: page.workshops,
         nextCursor: page.nextCursor,

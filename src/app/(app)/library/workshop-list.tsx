@@ -223,7 +223,9 @@ export function WorkshopList({
                     moves, and the only feedback is a live region. */}
                 <span className="mr-auto inline-flex min-w-0 items-center gap-1 text-[13px] text-[var(--fg-subtle)]">
                   <FolderInput aria-hidden className="size-3.5 shrink-0" />
-                  <span className="truncate">{folderName ?? t('noFolder')}</span>
+                  <span className="truncate">
+                    {folderName ?? (workshop.folderId ? t('otherFolder') : t('noFolder'))}
+                  </span>
                 </span>
 
                 {/* Not behind `canManage`: the contents belong to the
@@ -297,6 +299,18 @@ export function WorkshopList({
                     className="mt-0.5 block w-full rounded border border-[var(--border)] bg-[var(--surface)] px-2 py-2 text-[16px]"
                   >
                     <option value="">{t('topLevel')}</option>
+                    {/*
+                      A workshop shared on its own can sit in a folder that is
+                      not in this reader's tree. Without an entry for it the
+                      select would show "top level" -- and choosing that would
+                      be no change, so the one move out could not be made.
+                    */}
+                    {workshop.folderId &&
+                      !folders.some((node) => node.id === workshop.folderId) && (
+                        <option value={workshop.folderId} disabled>
+                          {t('otherFolder')}
+                        </option>
+                      )}
                     {folders.map((node) => (
                       <option key={node.id} value={node.id}>
                         {' '.repeat(node.depth * 2)}

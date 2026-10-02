@@ -234,6 +234,9 @@ describe('the access list of a subfolder', () => {
        values ($1, $2, $3, 'Projekt', 'a0', $4, array[$5::uuid, $3::uuid])`,
       [projectId, TENANT, childId, colleagueId, rootId],
     )
+    // So the reader holds a role on the folders above and may read their names
+    // -- folder-visibility.db.test.ts has the case where they do not.
+    await grant(creatorId, rootId, colleagueId, 'viewer')
 
     // The nearest folder decides: Acme, which creatorId made, before Kunden.
     expect(await entryFor(colleagueId, projectId, creatorId)).toEqual({

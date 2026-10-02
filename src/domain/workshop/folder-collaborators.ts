@@ -8,6 +8,7 @@ import {
   type FolderRole,
   type GrantableFolderRole,
 } from './folder-access'
+import { folderVisibleTo } from './folders'
 
 /**
  * Who may open everything in one folder.
@@ -86,7 +87,16 @@ export type FolderAccessEntry = {
    * having made it, or a grant on it. Null on a top folder, or when nothing
    * above names them.
    */
-  inherited: { role: 'owner' | GrantableFolderRole; folderId: string; folderName: string } | null
+  inherited: {
+    role: 'owner' | GrantableFolderRole
+    /**
+     * Null for a folder above that the READER holds no role on. The role still
+     * shows -- it is what the person has here, and the reader may share this
+     * folder -- but the folder it comes from is not in the reader's tree.
+     */
+    folderId: string | null
+    folderName: string | null
+  } | null
 }
 
 /**
@@ -114,7 +124,12 @@ export async function listFolderAccess(tx: Tx, access: FolderAccess): Promise<Fo
 
   const [folders, grants] = await Promise.all([
     tx
-      .select({ id: folder.id, name: folder.name, createdBy: folder.createdBy })
+      .select({
+        id: folder.id,
+        name: folder.name,
+        createdBy: folder.createdBy,
+        visible: sql<boolean>`coalesce(${folderVisibleTo(access.actor) ?? sql`true`}, false)`,
+      })
       .from(folder)
       .where(inArray(folder.id, path)),
     tx
@@ -146,7 +161,9 @@ export async function listFolderAccess(tx: Tx, access: FolderAccess): Promise<Fo
   for (const id of ancestors.slice().reverse()) {
     const above = byId.get(id)
     if (!above) continue
-    const from = { folderId: above.id, folderName: above.name }
+    const from = above.visible
+      ? { folderId: above.id, folderName: above.name }
+      : { folderId: null, folderName: null }
     if (above.createdBy) entryOf(above.createdBy).inherited ??= { role: 'owner', ...from }
     for (const row of grants) {
       if (row.folderId !== id) continue

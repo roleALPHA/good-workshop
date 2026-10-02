@@ -419,6 +419,18 @@ something, a viewer can widen the audience of a colleague's workshop — bounded
 level, but the circle grows without the owner acting. That is the price of folder-level sharing;
 the alternative was an admin in the loop for every addition.
 
+**A folder nobody gave you is not there.** The tree a member reads holds only folders they have
+a role on — made by them, or under a grant, or every folder for an admin — and it is the same
+`folderReachSql` the library asks of a workshop's folder, so a folder and what is filed in it
+come and go together. A grant reaches downwards, so what is left are whole subtrees; the top of
+each stands at the top level for that reader, with the path above it cut off rather than shown
+greyed out, because a folder's name already says something about the work. The same cut applies
+wherever a folder name travels: the export's path, the "via …" line of a sharing screen, the
+chip on a workshop that was shared on its own. And such a folder is not a target either —
+`folderReachable` in [`domain/workshop/folders.ts`](../src/domain/workshop/folders.ts) answers
+"gone" before a workshop is created or filed in it, or a folder made in it, because the move
+consequence above would otherwise let anybody share their own work with a stranger's team.
+
 **A share link for somebody with no account is the exception, and it is not one.** A client, an
 external co-trainer or a commissioning manager gets one agenda by e-mail — and that does not
 cross the boundary the rule protects, for four reasons that are each load-bearing rather than

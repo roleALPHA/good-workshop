@@ -23,6 +23,14 @@ Cada fila muestra el título, las etiquetas, el número de jornadas y el estado 
 **Mover a** y **Mover a la papelera**. En pantallas estrechas, las acciones son solo iconos. Si
 solo puedes leer un taller, lleva **Solo lectura** y solo ofrece la exportación.
 
+Solo ves las carpetas a las que tienes acceso: porque las creaste, porque están compartidas
+contigo (ellas o una carpeta superior) o porque eres administrador. Si solo se ha compartido
+contigo una subcarpeta, para ti aparece arriba del todo y la carpeta superior no se muestra, ni
+en la exportación ni en la página **Acceso**, que entonces dice «a través de una carpeta superior».
+Si un taller compartido directamente contigo está en una carpeta a la que no tienes acceso, su
+fila dice **En una carpeta que no es tuya**. No puedes mover nada a esa carpeta ni crear carpetas
+en ella.
+
 ## Crear un taller
 
 1. Elige a la izquierda la carpeta en la que debe estar el taller, o **Todos los talleres** para

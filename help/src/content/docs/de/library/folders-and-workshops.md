@@ -21,6 +21,14 @@ Darunter stehen der Ordner – oder **Ohne Ordner** – und die Aktionen **Expor
 **Verschieben nach** und **In den Papierkorb**. Auf schmalen Bildschirmen sind die Aktionen nur
 Symbole. Darfst du einen Workshop nur lesen, trägt er **Nur Lesen** und bietet nur den Export an.
 
+Ordner siehst du nur, wenn du Zugriff auf sie hast: weil du sie angelegt hast, weil sie – oder ein
+Ordner darüber – mit dir geteilt sind, oder weil du Admin bist. Ist dir nur ein Unterordner
+freigegeben, steht er bei dir ganz oben, und der Ordner darüber erscheint nicht – auch nicht im
+Export und nicht auf der Seite **Zugriff**, wo es dann „über einen übergeordneten Ordner“ heißt.
+Liegt ein Workshop, der direkt mit dir geteilt ist, in einem Ordner ohne deinen Zugriff, steht in
+der Zeile **In einem Ordner, der nicht deiner ist**. In einen solchen Ordner kannst du nichts
+verschieben und darin keine Ordner anlegen.
+
 ## Einen Workshop anlegen
 
 1. Wähl links den Ordner, in dem der Workshop liegen soll, oder **Alle Workshops** für keinen.

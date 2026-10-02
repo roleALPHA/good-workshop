@@ -32,8 +32,11 @@ export type FolderSharingView = {
   people: (MemberRow & {
     /** What they hold on this folder itself. */
     access: 'creator' | GrantableFolderRole | 'none'
-    /** What a folder above gives them, and which one. Null when nothing does. */
-    inherited: { role: 'owner' | GrantableFolderRole; folderName: string } | null
+    /**
+     * What a folder above gives them, and which one. Null when nothing does;
+     * `folderName` null when the reader holds no role on that folder.
+     */
+    inherited: { role: 'owner' | GrantableFolderRole; folderName: string | null } | null
   })[]
 }
 

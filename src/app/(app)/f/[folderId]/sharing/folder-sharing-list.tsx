@@ -59,14 +59,21 @@ export function FolderSharingList({
     <ul className="divide-y divide-[var(--border)] border-y border-[var(--border)]">
       {people.map((person) => {
         const { inherited } = person
-        const inheritedLabel = inherited
-          ? inherited.role === 'owner'
-            ? t('folderCreatorAbove', { folder: inherited.folderName })
-            : t('folderInherited', {
-                role: tAccess(inherited.role),
-                folder: inherited.folderName,
-              })
-          : null
+        // Without a name when the folder above is not the reader's: the line
+        // explains where the role comes from, and naming a folder they cannot
+        // open would show it to them here after the library leaves it out.
+        const inheritedLabel = !inherited
+          ? null
+          : inherited.folderName === null
+            ? inherited.role === 'owner'
+              ? t('folderCreatorAboveHidden')
+              : t('folderInheritedHidden', { role: tAccess(inherited.role) })
+            : inherited.role === 'owner'
+              ? t('folderCreatorAbove', { folder: inherited.folderName })
+              : t('folderInherited', {
+                  role: tAccess(inherited.role),
+                  folder: inherited.folderName,
+                })
         // Whoever made a folder above holds this one from there, and no grant
         // here could take that away -- unless they have one of their own.
         const fixed =
