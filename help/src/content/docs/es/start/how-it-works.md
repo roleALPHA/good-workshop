@@ -23,13 +23,13 @@ Biblioteca                 todo lo de tu espacio de trabajo
 
 ## Los niveles
 
-| Nivel          | Qué es                                                                                                                                       | Dónde lo editas                                           |
-| -------------- | -------------------------------------------------------------------------------------------------------------------------------------------- | --------------------------------------------------------- |
-| **Biblioteca** | Todos los talleres que puedes ver. Los administradores ven todos los del espacio de trabajo.                                                 | [Carpetas y talleres](/es/library/folders-and-workshops/) |
-| **Carpeta**    | Para ordenar, no para poseer: las carpetas pertenecen al espacio de trabajo, no a una persona. Un taller está como mucho en una.             | Columna **Carpetas** de la biblioteca                     |
-| **Taller**     | Lo que planificas. Pertenece a la persona que lo creó, lleva etiquetas y tiene sus apartados.                                                | Cabecera de la página del taller                          |
-| **Jornada**    | Una jornada de taller con su propio comienzo, su propia fecha y su propia agenda. Un taller siempre tiene al menos una.                      | [Jornadas](/es/agenda/days/)                              |
-| **Bloque**     | Un punto del programa: check-in, aporte, trabajo en grupo, pausa. El tipo determina el color, la duración habitual y los campos adicionales. | [Bloques y tipos de bloque](/es/agenda/blocks/)           |
+| Nivel          | Qué es                                                                                                                                                                 | Dónde lo editas                                           |
+| -------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------- | --------------------------------------------------------- |
+| **Biblioteca** | Todos los talleres que puedes ver. Los administradores ven todos los del espacio de trabajo.                                                                           | [Carpetas y talleres](/es/library/folders-and-workshops/) |
+| **Carpeta**    | Para ordenar, no para poseer: las carpetas pertenecen al espacio de trabajo, no a una persona. Ves aquellas a las que tienes acceso. Un taller está como mucho en una. | Columna **Carpetas** de la biblioteca                     |
+| **Taller**     | Lo que planificas. Pertenece a la persona que lo creó, lleva etiquetas y tiene sus apartados.                                                                          | Cabecera de la página del taller                          |
+| **Jornada**    | Una jornada de taller con su propio comienzo, su propia fecha y su propia agenda. Un taller siempre tiene al menos una.                                                | [Jornadas](/es/agenda/days/)                              |
+| **Bloque**     | Un punto del programa: check-in, aporte, trabajo en grupo, pausa. El tipo determina el color, la duración habitual y los campos adicionales.                           | [Bloques y tipos de bloque](/es/agenda/blocks/)           |
 
 :::caution[Jornadas y etiquetas]
 En la interfaz alemana, la misma palabra («Tag») significa tanto una jornada de taller como una

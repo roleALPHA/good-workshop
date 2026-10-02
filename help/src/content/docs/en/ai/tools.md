@@ -31,7 +31,7 @@ Your own rights on the workshop always apply on top: what you may only read, the
 
 | Tool            | What it does                                                                            | Important parameters                      | Scope |
 | --------------- | --------------------------------------------------------------------------------------- | ----------------------------------------- | ----- |
-| `list_folders`  | Returns the folder tree in display order.                                               | –                                         | R     |
+| `list_folders`  | Returns the folder tree in display order – only the folders you have access to.         | –                                         | R     |
 | `create_folder` | Creates a folder, at the top or inside another folder. Names are unique among siblings. | `name`, `parentId`                        | W     |
 | `move_folder`   | Moves a folder with its contents. Workspace admins only.                                | `folderId`, `parentId` (null = top level) | W     |
 | `delete_folder` | Deletes a folder. Subfolders and workshops in it move up one level. Admins only.        | `folderId`                                | W     |
@@ -49,6 +49,8 @@ Your own rights on the workshop always apply on top: what you may only read, the
 | `export_workshop`   | Returns the whole workshop as one Markdown document, all days in order – the same as the [Markdown export](/en/sharing/export/). Facilitator notes only on request. | `workshopId`, `flavor` (`agenda` = table, `outline` = headings and text), `locale` (`de`, `en`, `fr`, `es`), `notes` | R     |
 
 `move_workshop`, `rename_workshop` and `set_workshop_tags` need at least **Edit** on the workshop.
+
+Only a folder you have access to works as a target (`folderId`, `parentId`); any other counts as not there. This applies to `create_folder`, `create_workshop` and `move_workshop`.
 
 ## Bin
 

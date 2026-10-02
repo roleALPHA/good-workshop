@@ -23,7 +23,7 @@ Fields that a block type marks as private – currently the facilitator notes �
 
 ## What's in the file
 
-**At the top, a header section** with information for tools that read Markdown metadata: title, date (a list of dates for several days) and total duration. For the whole workshop, the folder path, the [tags](/en/library/tags/) and the number of days are added.
+**At the top, a header section** with information for tools that read Markdown metadata: title, date (a list of dates for several days) and total duration. For the whole workshop, the folder path (only the folders you have access to), the [tags](/en/library/tags/) and the number of days are added.
 
 **Then the title** of the workshop as a heading. For the whole workshop, each day follows under its own heading: its name, otherwise its date, otherwise “Day 1”, “Day 2” …
 

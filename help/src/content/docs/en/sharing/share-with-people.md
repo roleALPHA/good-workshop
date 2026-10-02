@@ -46,8 +46,10 @@ A share on a folder applies to everything in it: to subfolders and also to works
 2. Open the folder's menu (the three dots) and choose **Access**.
 3. In the person's row, choose the level.
 
+Anyone without access to a folder does not see it – not in the library, not in the export, not through an [AI assistant](/en/ai/introduction/). If you share only a subfolder, it sits at the top for that person, and the folder above stays hidden from them.
+
 :::caution[Moving means sharing]
-A workshop you move into a shared folder is thereby shared – with everyone who has access to the folder. Check the folder's shares before you put anything confidential in it.
+A workshop you move into a shared folder is thereby shared – with everyone who has access to the folder. Check the folder's shares before you put anything confidential in it. You can only move things into folders you have access to yourself – the same goes for creating workshops and subfolders.
 :::
 
 ### Who may grant what in a folder
@@ -67,7 +69,7 @@ Whoever created a folder keeps it; in the list, that person shows **Created it**
 
 ### Inherited shares
 
-If someone has access through a parent folder, the list says so, for example “Read · via Clients”. The rules:
+If someone has access through a parent folder, the list says so, for example “Read · via Clients”. If you have no access to that parent folder yourself, the list does not name it and says “Read · via a folder above” instead. The rules:
 
 - **The nearest folder decides.** A share directly on this folder beats the inherited one. That way a subtree can be shared for editing and a folder inside it only for reading.
 - If you remove the share here again, the person falls back to the inherited one, not to **No access**.

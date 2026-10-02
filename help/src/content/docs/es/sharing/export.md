@@ -23,7 +23,7 @@ Los campos que un tipo de bloque marca como privados (hoy, las notas de facilita
 
 ## Qué contiene el archivo
 
-**Al principio, una cabecera** con datos para herramientas que leen metadatos de Markdown: título, fecha (con varias jornadas, una lista de fechas) y duración total. Con el taller entero se añaden la ruta de carpetas, las [etiquetas](/es/library/tags/) y el número de jornadas.
+**Al principio, una cabecera** con datos para herramientas que leen metadatos de Markdown: título, fecha (con varias jornadas, una lista de fechas) y duración total. Con el taller entero se añaden la ruta de carpetas (solo las carpetas a las que tienes acceso), las [etiquetas](/es/library/tags/) y el número de jornadas.
 
 **Después, el título** del taller como encabezado. Con el taller entero, cada jornada va bajo su propio encabezado: su nombre, si no su fecha, y si no «Jornada 1», «Jornada 2»…
 

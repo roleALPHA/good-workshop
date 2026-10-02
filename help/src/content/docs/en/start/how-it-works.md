@@ -23,13 +23,13 @@ Library                    everything in your workspace
 
 ## The levels
 
-| Level        | What it is                                                                                                             | Where you edit it                                           |
-| ------------ | ---------------------------------------------------------------------------------------------------------------------- | ----------------------------------------------------------- |
-| **Library**  | All workshops you may see. Admins see all of them in the workspace.                                                    | [Folders and workshops](/en/library/folders-and-workshops/) |
-| **Folder**   | For sorting, not owning: folders belong to the workspace, not to a person. A workshop sits in at most one.             | **Folders** column in the library                           |
-| **Workshop** | The thing you plan. It belongs to the person who created it, carries tags and has a parking area.                      | Top of the workshop page                                    |
-| **Day**      | A workshop day with its own start, its own date and its own agenda. A workshop always has at least one.                | [Days](/en/agenda/days/)                                    |
-| **Block**    | One agenda item: check-in, input, group work, break. The type sets the color, the usual duration and the extra fields. | [Blocks and block types](/en/agenda/blocks/)                |
+| Level        | What it is                                                                                                                                      | Where you edit it                                           |
+| ------------ | ----------------------------------------------------------------------------------------------------------------------------------------------- | ----------------------------------------------------------- |
+| **Library**  | All workshops you may see. Admins see all of them in the workspace.                                                                             | [Folders and workshops](/en/library/folders-and-workshops/) |
+| **Folder**   | For sorting, not owning: folders belong to the workspace, not to a person. You see the ones you have access to. A workshop sits in at most one. | **Folders** column in the library                           |
+| **Workshop** | The thing you plan. It belongs to the person who created it, carries tags and has a parking area.                                               | Top of the workshop page                                    |
+| **Day**      | A workshop day with its own start, its own date and its own agenda. A workshop always has at least one.                                         | [Days](/en/agenda/days/)                                    |
+| **Block**    | One agenda item: check-in, input, group work, break. The type sets the color, the usual duration and the extra fields.                          | [Blocks and block types](/en/agenda/blocks/)                |
 
 :::caution[Days and tags]
 In the German interface, the same word (“Tag”) means both a workshop day and a keyword on the
