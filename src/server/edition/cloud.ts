@@ -64,14 +64,26 @@ export const cloudEdition: Edition = {
 
   workspaceNotice: async (tenantId) => {
     const result = await withTenantOnly(tenantId, (tx) =>
-      tx.execute(sql`select state, trial_ends_at, delete_after from tenant_lifecycle`),
+      tx.execute(sql`
+        select l.state, l.trial_ends_at, l.delete_after,
+               (b.payment_method_ready or app.voucher_free_for_good(l.tenant_id)) as carried
+          from tenant_lifecycle l left join billing_account b using (tenant_id)
+      `),
     )
     const row = (
       result as unknown as {
-        rows: { state: string; trial_ends_at: string | null; delete_after: string | null }[]
+        rows: {
+          state: string
+          trial_ends_at: string | null
+          delete_after: string | null
+          carried: boolean | null
+        }[]
       }
     ).rows[0]
     if (!row || row.state === 'active') return null
+    // A trial that ends in 'active' by itself has nothing to warn about: the
+    // same rule the worker applies when it ends (src/cloud/billing/lifecycle.ts).
+    if (row.state === 'trial' && row.carried) return null
     return {
       state: row.state as 'trial' | 'read_only' | 'payment_blocked' | 'paused' | 'deleting',
       trialEndsAt: row.trial_ends_at ? new Date(row.trial_ends_at) : null,

@@ -29,6 +29,7 @@ import {
 const ops = new pg.Client({ connectionString: process.env.OPS_DATABASE_URL })
 const tenants: string[] = []
 const identities: string[] = []
+const vouchers: string[] = []
 
 const options = (now: Date): RunOptions => ({
   now,
@@ -80,6 +81,7 @@ beforeAll(async () => {
 afterAll(async () => {
   for (const table of [
     'billing_period',
+    'voucher_redemption',
     'billing_account',
     'tax_evidence',
     'vat_check',
@@ -87,6 +89,7 @@ afterAll(async () => {
   ]) {
     await ops.query(`delete from ${table} where tenant_id = any($1::uuid[])`, [tenants])
   }
+  await ops.query('delete from voucher where id = any($1::uuid[])', [vouchers])
   await ops.query('delete from tenant where id = any($1::uuid[])', [tenants])
   await ops.query('delete from identity where id = any($1::uuid[])', [identities])
   await ops.end()
@@ -234,6 +237,45 @@ describe('the payment method', () => {
       [tenantId],
     )
     expect(rows[0].payment_customer_ref).toBe(`cus-${tenantId.slice(0, 8)}`)
+  })
+})
+
+/** A voucher redeemed straight into the tables, as app.cloud_redeem_voucher records it. */
+async function redeemed(tenantId: string, percent: number, durationMonths: number | null) {
+  const { rows } = await ops.query(
+    `insert into voucher (code, percent, duration_months) values ($1, $2, $3) returning id`,
+    [`T-${randomUUID().slice(0, 8).toUpperCase()}`, percent, durationMonths],
+  )
+  vouchers.push(rows[0].id)
+  await ops.query(
+    `insert into voucher_redemption (tenant_id, voucher_id, code, percent, duration_months, redeemed_month)
+     select $1, id, code, percent, duration_months, '2026-01-01' from voucher where id = $2`,
+    [tenantId, rows[0].id],
+  )
+}
+
+describe('the trial notice under the header', () => {
+  it('is shown while nothing would carry the workspace past the trial', async () => {
+    const { tenantId } = await workspace('trial')
+    expect(await edition.workspaceNotice(tenantId)).toMatchObject({ state: 'trial' })
+
+    // A voucher that ends one day leaves a month to pay for, and no card to pay it with.
+    await redeemed(tenantId, 100, 3)
+    expect(await edition.workspaceNotice(tenantId)).toMatchObject({ state: 'trial' })
+  })
+
+  it('is gone once a payment method is on file', async () => {
+    const { tenantId } = await workspace('trial')
+    await ops.query('update billing_account set payment_method_ready = true where tenant_id = $1', [
+      tenantId,
+    ])
+    expect(await edition.workspaceNotice(tenantId)).toBeNull()
+  })
+
+  it('is gone with a voucher that makes the workspace free for good', async () => {
+    const { tenantId } = await workspace('trial')
+    await redeemed(tenantId, 100, null)
+    expect(await edition.workspaceNotice(tenantId)).toBeNull()
   })
 })
 

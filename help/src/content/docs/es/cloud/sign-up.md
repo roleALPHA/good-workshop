@@ -65,10 +65,13 @@ avisándote de que la dirección ya existe.
 La prueba dura **14 días desde la confirmación**. Durante ese tiempo puedes usarlo todo, sin
 limitaciones, e invitar también a tus colegas. Lo que ocurra durante la prueba no se factura.
 
-Debajo de la barra superior se indica cuántos días quedan, por ejemplo «Prueba: quedan 9 días.»
+Debajo de la barra superior se indica cuántos días quedan, por ejemplo «Prueba: quedan 9 días.»,
+hasta que hay un método de pago registrado; a partir de ahí, el final de la prueba ya no es algo
+a lo que haya que prestar atención.
 En **Facturación** aparece el día exacto: **Prueba hasta el …**
 
-Si todavía no has añadido un método de pago, te lo recordamos por correo en el correo de
+Si no has añadido ni un método de pago ni un [cupón](/es/cloud/vouchers/) del 100 % sin límite
+de tiempo, te lo recordamos por correo en el correo de
 facturación: cuatro días y un día antes del final.
 
 ## Después de la prueba
@@ -76,6 +79,7 @@ facturación: cuatro días y un día antes del final.
 | Si …                                 | Entonces …                                                                              |
 | ------------------------------------ | --------------------------------------------------------------------------------------- |
 | has añadido un método de pago        | todo sigue sin interrupción. Se factura a partir del final de la prueba.                |
+| tienes un cupón del 100 % sin límite | todo sigue sin interrupción, también sin tarjeta.                                       |
 | no has añadido ningún método de pago | el espacio de trabajo pasa a solo lectura: se puede leer y exportar, pero no modificar. |
 
 Un espacio de trabajo en solo lectura no está perdido. En cuanto un administrador hace clic en

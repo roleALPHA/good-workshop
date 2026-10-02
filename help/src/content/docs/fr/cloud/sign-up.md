@@ -67,18 +67,22 @@ La période d'essai dure **14 jours à compter de la confirmation**. Pendant ce 
 tout utiliser, sans restriction, et inviter aussi tes collègues. Rien de ce qui se passe
 pendant la période d'essai n'est facturé.
 
-Sous l'en-tête, tu vois combien de jours il reste, par exemple « Essai : encore 9 jours. »
+Sous l'en-tête, tu vois combien de jours il reste, par exemple « Essai : encore 9 jours. » –
+jusqu'à ce qu'un moyen de paiement soit enregistré ; la fin de l'essai n'est alors plus rien à
+surveiller.
 Sous **Facturation**, la date exacte est indiquée : **Essai jusqu’au …**
 
-Si tu n'as pas encore enregistré de moyen de paiement, nous te le rappelons par e-mail à
+Si tu n'as enregistré ni moyen de paiement ni [bon](/fr/cloud/vouchers/) de 100 % sans limite de
+durée, nous te le rappelons par e-mail à
 l'adresse e-mail de facturation : quatre jours et un jour avant la fin.
 
 ## Après la période d'essai
 
-| Tu as …                             | Alors …                                                                                     |
-| ----------------------------------- | ------------------------------------------------------------------------------------------- |
-| enregistré un moyen de paiement     | tout continue sans interruption. La facturation commence à la fin de la période d'essai.    |
-| pas enregistré de moyen de paiement | l'espace de travail passe en lecture seule : lecture et export possibles, modification non. |
+| Tu as …                              | Alors …                                                                                     |
+| ------------------------------------ | ------------------------------------------------------------------------------------------- |
+| enregistré un moyen de paiement      | tout continue sans interruption. La facturation commence à la fin de la période d'essai.    |
+| un bon de 100 % sans limite de durée | tout continue sans interruption, même sans carte.                                           |
+| pas enregistré de moyen de paiement  | l'espace de travail passe en lecture seule : lecture et export possibles, modification non. |
 
 Un espace de travail en lecture seule n'est pas perdu. Dès qu'un admin clique sous
 **Facturation** sur **Ajouter un moyen de paiement** et enregistre une carte, tout reprend.

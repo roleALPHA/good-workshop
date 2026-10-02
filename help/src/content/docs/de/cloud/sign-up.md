@@ -67,18 +67,22 @@ Die Testphase dauert **14 Tage ab der Bestätigung**. In dieser Zeit kannst du a
 ohne Einschränkung, und lädst auch Kolleginnen und Kollegen ein. Was in der Testphase
 passiert, wird nicht berechnet.
 
-Unter der Kopfzeile steht, wie viele Tage noch übrig sind, etwa „Testphase: noch 9 Tage.“
+Unter der Kopfzeile steht, wie viele Tage noch übrig sind, etwa „Testphase: noch 9 Tage.“ – bis
+eine Zahlungsmethode hinterlegt ist; dann ist das Ende der Testphase nichts mehr, worauf man
+achten muss.
 Unter **Abrechnung** steht der genaue Tag: **Testphase bis …**
 
-Hast du noch keine Zahlungsmethode hinterlegt, erinnern wir dich per Mail an die
+Hast du weder eine Zahlungsmethode noch einen unbefristeten [Gutschein](/de/cloud/vouchers/) über
+100 % hinterlegt, erinnern wir dich per Mail an die
 Rechnungs-E-Mail: vier Tage und einen Tag vor dem Ende.
 
 ## Nach der Testphase
 
-| Du hast …                        | Dann …                                                                         |
-| -------------------------------- | ------------------------------------------------------------------------------ |
-| eine Zahlungsmethode hinterlegt  | geht es ohne Unterbrechung weiter. Abgerechnet wird ab dem Ende der Testphase. |
-| keine Zahlungsmethode hinterlegt | wird der Workspace schreibgeschützt: Lesen und Exportieren geht, Ändern nicht. |
+| Du hast …                                | Dann …                                                                         |
+| ---------------------------------------- | ------------------------------------------------------------------------------ |
+| eine Zahlungsmethode hinterlegt          | geht es ohne Unterbrechung weiter. Abgerechnet wird ab dem Ende der Testphase. |
+| einen unbefristeten Gutschein über 100 % | geht es ohne Unterbrechung weiter, auch ohne Karte.                            |
+| keine Zahlungsmethode hinterlegt         | wird der Workspace schreibgeschützt: Lesen und Exportieren geht, Ändern nicht. |
 
 Ein schreibgeschützter Workspace ist nicht verloren. Sobald ein Admin unter **Abrechnung** auf
 **Zahlungsmethode hinterlegen** klickt und eine Karte hinterlegt, geht es weiter.

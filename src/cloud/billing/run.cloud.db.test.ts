@@ -733,6 +733,44 @@ describe('the trial', () => {
     )
   })
 
+  it('ends active without a card when a voucher makes the workspace free for good', async () => {
+    const free = await tenant({ state: 'trial', trialEndsAt: '2026-04-01T00:00:00Z' })
+    const forAWhile = await tenant({ state: 'trial', trialEndsAt: '2026-04-01T00:00:00Z' })
+    const halfOff = await tenant({ state: 'trial', trialEndsAt: '2026-04-01T00:00:00Z' })
+    await fixture.redeem(free, (await fixture.voucher({ percent: 100 })).id, MARCH)
+    await fixture.redeem(
+      forAWhile,
+      (await fixture.voucher({ percent: 100, durationMonths: 3 })).id,
+      MARCH,
+    )
+    await fixture.redeem(halfOff, (await fixture.voucher({ percent: 50 })).id, MARCH)
+
+    await trialTransitions(ops, options())
+
+    const { rows } = await ops.query(
+      'select tenant_id, state from tenant_lifecycle where tenant_id = any($1::uuid[])',
+      [[free, forAWhile, halfOff]],
+    )
+    // Only the one with nothing ever to charge: the others owe money one day,
+    // and then a card has to be there.
+    expect(Object.fromEntries(rows.map((r) => [r.tenant_id, r.state]))).toEqual({
+      [free]: 'active',
+      [forAWhile]: 'read_only',
+      [halfOff]: 'read_only',
+    })
+    const freeEmail = `billing-${free.slice(0, 8)}@example.test`
+    expect(notices.filter((n) => n.to === freeEmail)).toEqual([])
+  })
+
+  it('sends no reminders to a workspace that is free for good', async () => {
+    const id = await tenant({ state: 'trial', trialEndsAt: '2026-04-05T08:00:00Z' })
+    await fixture.redeem(id, (await fixture.voucher({ percent: 100 })).id, MARCH)
+    await trialTransitions(ops, options())
+
+    const email = `billing-${id.slice(0, 8)}@example.test`
+    expect(notices.filter((n) => n.to === email)).toEqual([])
+  })
+
   it('is unlocked by adding a payment method, which also counts as evidence of the country', async () => {
     const id = await tenant({
       state: 'read_only',

@@ -36,9 +36,11 @@ Die Prozentzahl und die Laufzeit hängen vom jeweiligen Gutschein ab. Sie werden
 festgehalten und ändern sich danach nicht mehr.
 
 :::tip
-Ein Gutschein ersetzt nicht die Zahlungsmethode. Hinterleg sie trotzdem vor dem Ende der
-Testphase, sonst wird der Workspace danach schreibgeschützt – auch mit einem Gutschein über
-100 %.
+Nur ein unbefristeter Gutschein über 100 % ersetzt die Zahlungsmethode: Dann gibt es nie etwas
+abzubuchen, die Testphase geht ohne Karte in **Aktiv** über, und der Hinweis zur Testphase
+verschwindet. Jeder andere Gutschein ersetzt sie nicht – auch einer über 100 % für drei Monate
+nicht. Hinterleg dann vor dem Ende der Testphase eine Zahlungsmethode, sonst wird der Workspace
+schreibgeschützt.
 :::
 
 ## Wie die Monate gezählt werden

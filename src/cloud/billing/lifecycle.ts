@@ -55,8 +55,9 @@ export async function contractTransitions(db: Db, options: RunOptions) {
 
 export async function trialTransitions(db: Db, options: RunOptions) {
   const { rows } = await db.query(
-    `select l.tenant_id, l.trial_ends_at, b.payment_method_ready, b.billing_email, b.locale,
-            b.reminders_sent
+    `select l.tenant_id, l.trial_ends_at, b.billing_email, b.locale, b.reminders_sent,
+            -- A card, or a voucher that means there is never anything to charge.
+            (b.payment_method_ready or app.voucher_free_for_good(l.tenant_id)) as carried
        from tenant_lifecycle l join billing_account b on b.tenant_id = l.tenant_id
       where l.state = 'trial' and l.trial_ends_at is not null`,
   )
@@ -65,7 +66,7 @@ export async function trialTransitions(db: Db, options: RunOptions) {
     const left = tenant.trial_ends_at.getTime() - options.now.getTime()
 
     if (left <= 0) {
-      const next = tenant.payment_method_ready ? 'active' : 'read_only'
+      const next = tenant.carried ? 'active' : 'read_only'
       const moved = await db.query(
         `update tenant_lifecycle set state = $2, updated_at = now()
           where tenant_id = $1 and state = 'trial' returning tenant_id`,
@@ -82,7 +83,7 @@ export async function trialTransitions(db: Db, options: RunOptions) {
       continue
     }
 
-    if (tenant.payment_method_ready) continue
+    if (tenant.carried) continue
     for (const reminder of REMINDERS) {
       if (left > reminder.days * DAY || tenant.reminders_sent.includes(reminder.key)) continue
       const marked = await db.query(

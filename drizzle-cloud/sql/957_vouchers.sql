@@ -18,6 +18,23 @@ as $$
       or (select count(*) from billing_period where voucher_redemption_id = p_redemption) < p_duration;
 $$;
 
+-- Whether a workspace is free for good: a voucher of 100 % without an end.
+-- It stands in for the payment method -- a trial ends active without a card,
+-- and nobody is reminded to add one -- because there is never anything to
+-- charge. A voucher that runs out does not: the month after it needs a card.
+--
+-- Security invoker on purpose: the application sees only its own redemption
+-- through the policy, so it cannot ask about another workspace.
+create or replace function app.voucher_free_for_good(p_tenant uuid)
+returns boolean
+language sql
+stable
+set search_path = pg_catalog, public
+as $$
+  select exists (select 1 from voucher_redemption
+                  where tenant_id = p_tenant and percent = 100 and duration_months is null);
+$$;
+
 -- Redeems a code for the caller's workspace. Admins only.
 --
 -- The refusals are message keys, in the order a customer can do something

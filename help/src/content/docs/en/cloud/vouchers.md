@@ -36,8 +36,10 @@ The percentage and the duration depend on the particular voucher. They're record
 redeem it and don't change afterwards.
 
 :::tip
-A voucher doesn't replace the payment method. Add one anyway before the trial ends, otherwise the
-workspace becomes read-only afterwards – even with a 100% voucher.
+Only an unlimited 100% voucher replaces the payment method: there is then never anything to
+charge, the trial turns into **Active** without a card, and the trial notice disappears. Any
+other voucher doesn't replace it – not even a 100% voucher for three months. Add a payment
+method before the trial ends then, otherwise the workspace becomes read-only.
 :::
 
 ## How the months are counted
