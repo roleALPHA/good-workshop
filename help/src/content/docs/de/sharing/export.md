@@ -23,7 +23,7 @@ Felder, die ein Bausteintyp als privat kennzeichnet – heute die Moderationsnot
 
 ## Was in der Datei steht
 
-**Am Anfang ein Kopfbereich** mit Angaben für Werkzeuge, die Markdown-Metadaten lesen: Titel, Datum (bei mehreren Tagen eine Liste der Daten) und Gesamtdauer. Beim ganzen Workshop kommen der Ordnerpfad, die [Schlagwörter](/de/library/tags/) und die Zahl der Tage dazu.
+**Am Anfang ein Kopfbereich** mit Angaben für Werkzeuge, die Markdown-Metadaten lesen: Titel, Datum (bei mehreren Tagen eine Liste der Daten) und Gesamtdauer. Beim ganzen Workshop kommen der Ordnerpfad (nur die Ordner, auf die du Zugriff hast), die [Schlagwörter](/de/library/tags/) und die Zahl der Tage dazu.
 
 **Dann der Titel** des Workshops als Überschrift. Beim ganzen Workshop folgt jeder Tag unter einer eigenen Überschrift: seinem Namen, sonst seinem Datum, sonst „Tag 1“, „Tag 2“ …
 

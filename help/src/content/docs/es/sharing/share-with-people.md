@@ -46,8 +46,10 @@ Un permiso sobre una carpeta vale para todo lo que contiene: para las subcarpeta
 2. Abre el menú de la carpeta (los tres puntos) y elige **Acceso**.
 3. En la fila de la persona, elige el nivel.
 
+Quien no tiene acceso a una carpeta no la ve: ni en la biblioteca, ni en la exportación, ni a través de un [asistente de IA](/es/ai/introduction/). Si solo compartes una subcarpeta, para esa persona aparece arriba del todo y la carpeta superior le queda oculta.
+
 :::caution[Mover es compartir]
-Un taller que mueves a una carpeta compartida queda compartido con todas las personas que tienen acceso a la carpeta. Revisa los permisos de la carpeta antes de meter algo confidencial.
+Un taller que mueves a una carpeta compartida queda compartido con todas las personas que tienen acceso a la carpeta. Revisa los permisos de la carpeta antes de meter algo confidencial. Solo puedes mover a carpetas a las que tú mismo tienes acceso; lo mismo vale para crear talleres y subcarpetas.
 :::
 
 ### Quién puede asignar qué en la carpeta
@@ -67,7 +69,7 @@ Quien creó una carpeta la conserva; en la lista, junto a esa persona, pone **La
 
 ### Permisos heredados
 
-Si alguien tiene acceso a través de una carpeta superior, la lista lo indica, por ejemplo «Leer · a través de Clientes». Se aplica lo siguiente:
+Si alguien tiene acceso a través de una carpeta superior, la lista lo indica, por ejemplo «Leer · a través de Clientes». Si tú no tienes acceso a esa carpeta superior, la lista no la nombra y en su lugar dice «Leer · a través de una carpeta superior». Se aplica lo siguiente:
 
 - **Decide la carpeta más cercana.** Un permiso directamente sobre esta carpeta prevalece sobre el heredado. Así, una rama puede estar compartida para editar y una carpeta dentro de ella solo para leer.
 - Si quitas aquí el permiso, la persona vuelve al heredado, no a **Sin acceso**.

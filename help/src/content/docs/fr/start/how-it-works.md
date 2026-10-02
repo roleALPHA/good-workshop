@@ -23,13 +23,13 @@ Bibliothèque               tout ce qui est dans ton espace de travail
 
 ## Les niveaux
 
-| Niveau           | Ce que c'est                                                                                                                                         | Où tu le modifies                                          |
-| ---------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------- | ---------------------------------------------------------- |
-| **Bibliothèque** | Tous les ateliers que tu as le droit de voir. Les admins voient tous ceux de l'espace de travail.                                                    | [Dossiers et ateliers](/fr/library/folders-and-workshops/) |
-| **Dossier**      | Pour trier, pas pour posséder : les dossiers appartiennent à l'espace de travail, pas à une personne. Un atelier est dans un au plus.                | Colonne **Dossiers** dans la bibliothèque                  |
-| **Atelier**      | Ce que tu planifies. Il appartient à la personne qui l'a créé, porte des tags et a sa zone de blocs mis de côté.                                     | En-tête de la page de l'atelier                            |
-| **Journée**      | Une journée d'atelier avec son propre début, sa propre date et son propre agenda. Un atelier en a toujours au moins une.                             | [Journées](/fr/agenda/days/)                               |
-| **Bloc**         | Un point du programme : check-in, apport, travail en groupe, pause. Le type détermine la couleur, la durée habituelle et les champs supplémentaires. | [Blocs et types de blocs](/fr/agenda/blocks/)              |
+| Niveau           | Ce que c'est                                                                                                                                                             | Où tu le modifies                                          |
+| ---------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------ | ---------------------------------------------------------- |
+| **Bibliothèque** | Tous les ateliers que tu as le droit de voir. Les admins voient tous ceux de l'espace de travail.                                                                        | [Dossiers et ateliers](/fr/library/folders-and-workshops/) |
+| **Dossier**      | Pour trier, pas pour posséder : les dossiers appartiennent à l'espace de travail, pas à une personne. Tu vois ceux auxquels tu as accès. Un atelier est dans un au plus. | Colonne **Dossiers** dans la bibliothèque                  |
+| **Atelier**      | Ce que tu planifies. Il appartient à la personne qui l'a créé, porte des tags et a sa zone de blocs mis de côté.                                                         | En-tête de la page de l'atelier                            |
+| **Journée**      | Une journée d'atelier avec son propre début, sa propre date et son propre agenda. Un atelier en a toujours au moins une.                                                 | [Journées](/fr/agenda/days/)                               |
+| **Bloc**         | Un point du programme : check-in, apport, travail en groupe, pause. Le type détermine la couleur, la durée habituelle et les champs supplémentaires.                     | [Blocs et types de blocs](/fr/agenda/blocks/)              |
 
 :::caution[« Tag » ne veut pas dire « journée »]
 Dans GoodWorkshop, un **tag** est un mot-clé attaché à l'atelier (le champ **+ tag** sous le

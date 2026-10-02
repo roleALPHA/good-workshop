@@ -31,7 +31,7 @@ S'y ajoutent toujours tes propres droits sur l'atelier : ce que tu peux seulemen
 
 | Outil           | Ce qu'il fait                                                                                                | Paramètres importants                            | Périmètre |
 | --------------- | ------------------------------------------------------------------------------------------------------------ | ------------------------------------------------ | --------- |
-| `list_folders`  | Renvoie l'arborescence des dossiers dans l'ordre d'affichage.                                                | –                                                | L         |
+| `list_folders`  | Renvoie l'arborescence des dossiers dans l'ordre d'affichage – uniquement les dossiers auxquels tu as accès. | –                                                | L         |
 | `create_folder` | Crée un dossier, à la racine ou dans un autre dossier. Les noms sont uniques entre dossiers voisins.         | `name`, `parentId`                               | E         |
 | `move_folder`   | Déplace un dossier avec son contenu. Réservé aux admins de l'espace de travail.                              | `folderId`, `parentId` (null = niveau supérieur) | E         |
 | `delete_folder` | Supprime un dossier. Les sous-dossiers et ateliers qu'il contient remontent d'un niveau. Réservé aux admins. | `folderId`                                       | E         |
@@ -49,6 +49,8 @@ S'y ajoutent toujours tes propres droits sur l'atelier : ce que tu peux seulemen
 | `export_workshop`   | Renvoie tout l'atelier sous forme d'un document Markdown, toutes les journées dans l'ordre – comme l'[export Markdown](/fr/sharing/export/). Notes d'animation uniquement sur demande. | `workshopId`, `flavor` (`agenda` = tableau, `outline` = titres et texte), `locale` (`de`, `en`, `fr`, `es`), `notes` | L         |
 
 `move_workshop`, `rename_workshop` et `set_workshop_tags` exigent au moins le droit **Modifier** sur l'atelier.
+
+Seul un dossier auquel tu as accès peut servir de cible (`folderId`, `parentId`) ; tout autre est considéré comme inexistant. Cela concerne `create_folder`, `create_workshop` et `move_workshop`.
 
 ## Corbeille
 

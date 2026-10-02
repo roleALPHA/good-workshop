@@ -23,7 +23,7 @@ Les champs qu'un type de bloc marque comme privés – aujourd'hui les notes d'a
 
 ## Ce que contient le fichier
 
-**Au début, un en-tête** avec des informations pour les outils qui lisent les métadonnées Markdown : titre, date (pour plusieurs journées, une liste des dates) et durée totale. Pour tout l'atelier s'ajoutent le chemin du dossier, les [tags](/fr/library/tags/) et le nombre de journées.
+**Au début, un en-tête** avec des informations pour les outils qui lisent les métadonnées Markdown : titre, date (pour plusieurs journées, une liste des dates) et durée totale. Pour tout l'atelier s'ajoutent le chemin du dossier (uniquement les dossiers auxquels tu as accès), les [tags](/fr/library/tags/) et le nombre de journées.
 
 **Puis le titre** de l'atelier comme titre principal. Pour tout l'atelier, chaque journée suit sous son propre titre : son nom, à défaut sa date, à défaut « Journée 1 », « Journée 2 » …
 

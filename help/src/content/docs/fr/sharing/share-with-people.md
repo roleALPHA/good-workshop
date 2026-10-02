@@ -46,8 +46,10 @@ Un accès partagé sur un dossier vaut pour tout ce qu'il contient : les sous-do
 2. Ouvre le menu du dossier (les trois points) et choisis **Accès**.
 3. Dans la ligne de la personne, choisis le niveau.
 
+Une personne qui n'a pas accès à un dossier ne le voit pas – ni dans la bibliothèque, ni dans l'export, ni via un [assistant IA](/fr/ai/introduction/). Si tu ne partages qu'un sous-dossier, il apparaît tout en haut chez cette personne, et le dossier au-dessus lui reste caché.
+
 :::caution[Déplacer, c'est partager]
-Un atelier que tu déplaces dans un dossier partagé est de ce fait partagé – avec toutes les personnes qui ont accès au dossier. Vérifie les accès du dossier avant d'y ranger quelque chose de confidentiel.
+Un atelier que tu déplaces dans un dossier partagé est de ce fait partagé – avec toutes les personnes qui ont accès au dossier. Vérifie les accès du dossier avant d'y ranger quelque chose de confidentiel. Tu ne peux déplacer que dans des dossiers auxquels tu as toi-même accès – il en va de même pour créer des ateliers et des sous-dossiers.
 :::
 
 ### Qui peut attribuer quoi dans un dossier
@@ -67,7 +69,7 @@ Qui a créé un dossier le conserve ; dans la liste, cette personne porte la men
 
 ### Accès hérités
 
-Si quelqu'un a accès via un dossier parent, la liste l'indique, par exemple « Lire · via Clients ». Les règles :
+Si quelqu'un a accès via un dossier parent, la liste l'indique, par exemple « Lire · via Clients ». Si tu n'as pas toi-même accès à ce dossier parent, la liste ne le nomme pas et indique à la place « Lire · via un dossier parent ». Les règles :
 
 - **Le dossier le plus proche décide.** Un accès partagé directement sur ce dossier l'emporte sur l'accès hérité. Ainsi, une arborescence peut être partagée en modification et un dossier à l'intérieur seulement en lecture.
 - Si tu retires l'accès ici, la personne retombe sur l'accès hérité, et non sur **Aucun accès**.

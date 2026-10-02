@@ -31,7 +31,7 @@ Además, siempre se aplican tus propios permisos sobre el taller: lo que tú sol
 
 | Herramienta     | Qué hace                                                                                                         | Parámetros importantes                         | Ámbito |
 | --------------- | ---------------------------------------------------------------------------------------------------------------- | ---------------------------------------------- | ------ |
-| `list_folders`  | Devuelve el árbol de carpetas en el orden en que se muestra.                                                     | –                                              | L      |
+| `list_folders`  | Devuelve el árbol de carpetas en el orden en que se muestra, solo las carpetas a las que tienes acceso.          | –                                              | L      |
 | `create_folder` | Crea una carpeta, en el nivel superior o dentro de otra carpeta. Los nombres son únicos entre carpetas hermanas. | `name`, `parentId`                             | S      |
 | `move_folder`   | Mueve una carpeta con todo su contenido. Solo para administradores del espacio de trabajo.                       | `folderId`, `parentId` (null = nivel superior) | S      |
 | `delete_folder` | Elimina una carpeta. Las subcarpetas y los talleres que contiene suben un nivel. Solo para administradores.      | `folderId`                                     | S      |
@@ -49,6 +49,8 @@ Además, siempre se aplican tus propios permisos sobre el taller: lo que tú sol
 | `export_workshop`   | Devuelve el taller completo como un único documento Markdown, todas las jornadas en orden: lo mismo que la [exportación a Markdown](/es/sharing/export/). Notas de facilitación solo si se piden. | `workshopId`, `flavor` (`agenda` = tabla, `outline` = títulos y texto), `locale` (`de`, `en`, `fr`, `es`), `notes` | L      |
 
 `move_workshop`, `rename_workshop` y `set_workshop_tags` necesitan al menos **Editar** sobre el taller.
+
+Solo sirve como destino (`folderId`, `parentId`) una carpeta a la que tienes acceso; cualquier otra cuenta como inexistente. Afecta a `create_folder`, `create_workshop` y `move_workshop`.
 
 ## Papelera
 

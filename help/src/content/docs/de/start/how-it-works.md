@@ -23,13 +23,13 @@ Bibliothek                 alles in deinem Workspace
 
 ## Die Ebenen
 
-| Ebene          | Was sie ist                                                                                                         | Wo du sie bearbeitest                                      |
-| -------------- | ------------------------------------------------------------------------------------------------------------------- | ---------------------------------------------------------- |
-| **Bibliothek** | Alle Workshops, die du sehen darfst. Admins sehen alle im Workspace.                                                | [Ordner und Workshops](/de/library/folders-and-workshops/) |
-| **Ordner**     | Sortieren, nicht besitzen: Ordner gehören dem Workspace, nicht einer Person. Ein Workshop liegt in höchstens einem. | Spalte **Ordner** in der Bibliothek                        |
-| **Workshop**   | Das, was du planst. Er gehört der Person, die ihn angelegt hat, trägt Tags und hat einen Parkplatz.                 | Kopf der Workshop-Seite                                    |
-| **Tag**        | Ein Workshoptag mit eigenem Beginn, eigenem Datum und eigener Agenda. Ein Workshop hat immer mindestens einen.      | [Tage](/de/agenda/days/)                                   |
-| **Block**      | Ein Programmpunkt: Check-in, Impuls, Gruppenarbeit, Pause. Der Typ bestimmt Farbe, übliche Dauer und Zusatzfelder.  | [Blöcke und Bausteintypen](/de/agenda/blocks/)             |
+| Ebene          | Was sie ist                                                                                                                                                 | Wo du sie bearbeitest                                      |
+| -------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------- | ---------------------------------------------------------- |
+| **Bibliothek** | Alle Workshops, die du sehen darfst. Admins sehen alle im Workspace.                                                                                        | [Ordner und Workshops](/de/library/folders-and-workshops/) |
+| **Ordner**     | Sortieren, nicht besitzen: Ordner gehören dem Workspace, nicht einer Person. Du siehst die, auf die du Zugriff hast. Ein Workshop liegt in höchstens einem. | Spalte **Ordner** in der Bibliothek                        |
+| **Workshop**   | Das, was du planst. Er gehört der Person, die ihn angelegt hat, trägt Tags und hat einen Parkplatz.                                                         | Kopf der Workshop-Seite                                    |
+| **Tag**        | Ein Workshoptag mit eigenem Beginn, eigenem Datum und eigener Agenda. Ein Workshop hat immer mindestens einen.                                              | [Tage](/de/agenda/days/)                                   |
+| **Block**      | Ein Programmpunkt: Check-in, Impuls, Gruppenarbeit, Pause. Der Typ bestimmt Farbe, übliche Dauer und Zusatzfelder.                                          | [Blöcke und Bausteintypen](/de/agenda/blocks/)             |
 
 :::caution[„Tag“ heißt zweierlei]
 Ein **Tag** ist in GoodWorkshop sowohl ein Workshoptag als auch ein Schlagwort am Workshop (das

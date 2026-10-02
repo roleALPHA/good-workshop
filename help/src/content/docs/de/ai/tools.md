@@ -31,7 +31,7 @@ Zusätzlich gelten immer deine eigenen Rechte am Workshop: Was du nur lesen darf
 
 | Werkzeug        | Was es tut                                                                                        | Wichtige Parameter                            | Bereich |
 | --------------- | ------------------------------------------------------------------------------------------------- | --------------------------------------------- | ------- |
-| `list_folders`  | Liefert den Ordnerbaum in Anzeigereihenfolge.                                                     | –                                             | L       |
+| `list_folders`  | Liefert den Ordnerbaum in Anzeigereihenfolge – nur die Ordner, auf die du Zugriff hast.           | –                                             | L       |
 | `create_folder` | Legt einen Ordner an, oben oder in einem anderen Ordner. Namen sind unter Geschwistern eindeutig. | `name`, `parentId`                            | S       |
 | `move_folder`   | Verschiebt einen Ordner samt Inhalt. Nur für Admins des Arbeitsbereichs.                          | `folderId`, `parentId` (null = oberste Ebene) | S       |
 | `delete_folder` | Löscht einen Ordner. Unterordner und Workshops darin rücken eine Ebene hoch. Nur für Admins.      | `folderId`                                    | S       |
@@ -49,6 +49,8 @@ Zusätzlich gelten immer deine eigenen Rechte am Workshop: Was du nur lesen darf
 | `export_workshop`   | Liefert den ganzen Workshop als ein Markdown-Dokument, alle Tage in Reihenfolge – dasselbe wie der [Markdown-Export](/de/sharing/export/). Moderationsnotizen nur auf Wunsch. | `workshopId`, `flavor` (`agenda` = Tabelle, `outline` = Überschriften und Text), `locale` (`de`, `en`, `fr`, `es`), `notes` | L       |
 
 `move_workshop`, `rename_workshop` und `set_workshop_tags` brauchen mindestens **Bearbeiten** am Workshop.
+
+Als Ziel (`folderId`, `parentId`) taugt nur ein Ordner, auf den du Zugriff hast; jeder andere gilt als nicht vorhanden. Das betrifft `create_folder`, `create_workshop` und `move_workshop`.
 
 ## Papierkorb
 

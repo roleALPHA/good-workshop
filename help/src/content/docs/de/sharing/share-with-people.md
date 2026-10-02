@@ -46,8 +46,10 @@ Eine Freigabe auf einem Ordner gilt für alles darin: für Unterordner und auch 
 2. Öffne beim Ordner das Menü (die drei Punkte) und wähle **Zugriff**.
 3. Wähle in der Zeile der Person die Stufe.
 
+Wer keinen Zugriff auf einen Ordner hat, sieht ihn nicht – weder in der Bibliothek noch im Export noch über einen [KI-Assistenten](/de/ai/introduction/). Teilst du nur einen Unterordner, steht er bei der Person ganz oben, und der Ordner darüber bleibt ihr verborgen.
+
 :::caution[Verschieben heißt teilen]
-Ein Workshop, den du in einen geteilten Ordner verschiebst, ist damit geteilt – mit allen, die Zugriff auf den Ordner haben. Prüfe die Freigaben des Ordners, bevor du etwas Vertrauliches hineinlegst.
+Ein Workshop, den du in einen geteilten Ordner verschiebst, ist damit geteilt – mit allen, die Zugriff auf den Ordner haben. Prüfe die Freigaben des Ordners, bevor du etwas Vertrauliches hineinlegst. Verschieben kannst du nur in Ordner, auf die du selbst Zugriff hast – dasselbe gilt fürs Anlegen von Workshops und Unterordnern.
 :::
 
 ### Wer im Ordner was vergeben darf
@@ -67,7 +69,7 @@ Wer einen Ordner angelegt hat, behält ihn; in der Liste steht bei dieser Person
 
 ### Geerbte Freigaben
 
-Hat jemand Zugriff über einen übergeordneten Ordner, steht das in der Liste, etwa „Lesen · über Kunden“. Es gilt:
+Hat jemand Zugriff über einen übergeordneten Ordner, steht das in der Liste, etwa „Lesen · über Kunden“. Hast du selbst keinen Zugriff auf diesen übergeordneten Ordner, nennt die Liste ihn nicht und schreibt stattdessen „Lesen · über einen übergeordneten Ordner“. Es gilt:
 
 - **Der nächste Ordner entscheidet.** Eine Freigabe direkt auf diesem Ordner schlägt die geerbte. So kann ein Teilbaum zum Bearbeiten geteilt sein und ein Ordner darin nur zum Lesen.
 - Nimmst du die Freigabe hier wieder weg, fällt die Person auf die geerbte zurück, nicht auf **Kein Zugriff**.
