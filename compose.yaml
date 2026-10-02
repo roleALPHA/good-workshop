@@ -60,8 +60,8 @@ x-migrate-db: &migrate-db
 
 services:
   # Runs once and exits. Creates missing role passwords into the volume that db,
-  # migrate and app read them from -- and does not touch existing ones
-  # an, damit ein Neustart keine laufende Installation aussperrt.
+  # migrate and app read them from -- and does not touch existing ones, so that
+  # a restart never locks out a running installation.
   secrets:
     image: ghcr.io/rolealpha/good-workshop:${GW_VERSION:?GW_VERSION must be set -- a moving tag is not a deployment}
     restart: 'no'
@@ -70,8 +70,8 @@ services:
     # one thing and exits; app and migrate keep running as `node`.
     user: '0:0'
     command: ['node', 'scripts/db-secrets.mjs']
-    # Der einzige Ort, an dem alle vier zusammenliegen -- in einem Container,
-    # der Sekunden lebt und nichts aus dem Netz annimmt.
+    # The one place where all of them lie together -- in a container that lives
+    # for seconds and accepts nothing from the network.
     volumes:
       - secret_postgres:/run/db-secrets/postgres
       - secret_gw_owner:/run/db-secrets/gw_owner
@@ -86,14 +86,14 @@ services:
       POSTGRES_DB: goodworkshop
       POSTGRES_USER: postgres
       # From the file, not from the environment: POSTGRES_PASSWORD would show up in
-      # `docker inspect`. Der Entrypoint verlangt eines von beiden, sonst
-      # initialisiert er die Datenbank gar nicht erst.
+      # `docker inspect`. The entrypoint demands one of the two, or it does not
+      # initialise the database at all.
       POSTGRES_PASSWORD_FILE: /run/db-secrets/postgres/password
       # `peer` for the local socket INSIDE the container -- that is the route
       # `scripts/backup.sh` takes, and the reason for its `-u postgres`: over
       # this socket the user name decides. Over TCP the default scram-sha-256
-      # applies, and without a published port the network
-      # dieses Stacks die einzige Herkunft, aus der jemand es versuchen kann.
+      # applies, and without a published port this stack's network is the only
+      # place anybody can try it from.
       POSTGRES_INITDB_ARGS: '--auth-local=peer'
     volumes:
       - pgdata:/var/lib/postgresql/data
@@ -107,18 +107,18 @@ services:
       secrets:
         condition: service_completed_successfully
 
-  # Runs once and exits. `app` starts only once this has
-  # erfolgreich durch ist -- ein Rolling Deploy mit ausstehender Migration
-  # liefert damit gar nichts erst aus.
+  # Runs once and exits. `app` starts only once this has finished
+  # successfully -- so a rolling deploy with a pending migration ships nothing
+  # at all.
   migrate:
     image: ghcr.io/rolealpha/good-workshop:${GW_VERSION:?GW_VERSION must be set -- a moving tag is not a deployment}
     restart: 'no'
-    # Vier Schritte, und die Reihenfolge ist die Aussage: preflight liest nur und
-    # bricht ab, BEVOR migrate die erste Zeile anfasst. Eine Migration, die an
-    # den vorhandenen Daten scheitert, tut das sonst mittendrin -- mit einem
-    # nackten Postgres-Fehler, einem `app`, das wegen
-    # service_completed_successfully gar nicht erst startet, und ohne ein Wort
-    # dazu, welche Zeilen gemeint sind.
+    # Four steps, and the order is the point: preflight only reads, and stops
+    # BEFORE migrate touches the first row. A migration that fails on the
+    # existing data would otherwise do so halfway through -- with a bare
+    # Postgres error, an `app` that never starts because of
+    # service_completed_successfully, and not a word about which rows are
+    # meant.
     command: >-
       sh -c "node scripts/db-bootstrap.mjs &&
              node scripts/preflight.mjs &&
@@ -127,7 +127,7 @@ services:
     environment:
       <<: *migrate-db
       GW_APP_URL: ${GW_APP_URL:?GW_APP_URL must be set}
-      # Legt beim allerersten Lauf einen Admin an und druckt einen einmaligen
+      # On the very first run, creates an admin and prints a one-time
       # sign-in link to stdout -- independently of the mail configuration.
       GW_BOOTSTRAP_ADMIN_EMAIL: ${GW_BOOTSTRAP_ADMIN_EMAIL:-}
       GW_BOOTSTRAP_ADMIN_FIRST_NAME: ${GW_BOOTSTRAP_ADMIN_FIRST_NAME:-}
@@ -157,43 +157,43 @@ services:
       # `docker logs` could have one issued for any address. A decision one
       # makes, not one that happens because nothing was said.
       GW_MAIL_TRANSPORT: ${GW_MAIL_TRANSPORT:-}
-      # Entweder die URL direkt -- oder, besser, SMTP_URL_FILE auf ein Docker
-      # Secret. Eine Environment-Variable mit Passwort steht in `docker
-      # inspect`, in /proc/<pid>/environ und in jedem Core-Dump; ein Secret
-      # liegt auf einem tmpfs und nur im Dateisystem des Containers.
+      # Either the URL itself -- or, better, SMTP_URL_FILE pointing at a Docker
+      # secret. An environment variable with a password shows up in `docker
+      # inspect`, in /proc/<pid>/environ and in every core dump; a secret lives
+      # on a tmpfs and only in the container's file system.
       SMTP_URL: ${SMTP_URL:-}
       SMTP_URL_FILE: ${SMTP_URL_FILE:-}
       SMTP_FROM: ${SMTP_FROM:-}
-      # Microsoft Graph statt SMTP. Viele Microsoft-365-Mandanten haben SMTP
-      # AUTH abgeschaltet -- dort ist das nicht die bequemere, sondern die
+      # Microsoft Graph instead of SMTP. Many Microsoft 365 tenants have SMTP
+      # AUTH switched off -- there this is not the more convenient way but the
       # only possibility. The secret is better given as GW_GRAPH_CLIENT_SECRET_FILE
-      # aus einer Datei, aus demselben Grund wie bei SMTP_URL_FILE.
+      # from a file, for the same reason as SMTP_URL_FILE.
       GW_GRAPH_TENANT_ID: ${GW_GRAPH_TENANT_ID:-}
       GW_GRAPH_CLIENT_ID: ${GW_GRAPH_CLIENT_ID:-}
       GW_GRAPH_CLIENT_SECRET: ${GW_GRAPH_CLIENT_SECRET:-}
       GW_GRAPH_CLIENT_SECRET_FILE: ${GW_GRAPH_CLIENT_SECRET_FILE:-}
       GW_GRAPH_SENDER: ${GW_GRAPH_SENDER:-}
-      # Der Tag, der laut .env laufen soll -- derselbe Wert, der oben das Image
-      # picks. Without this line /api/health reports the ARG value from the
-      # Dockerfile (`dev` bei einem selbst gebauten Image), und die eine Frage,
-      # the endpoint exists for -- which revision is running here -- becomes
-      # falsch beantwortet.
+      # The tag the .env says should run -- the same value that picks the image
+      # above. Without this line /api/health reports the ARG value from the
+      # Dockerfile (`dev` for a self-built image), and the one question the
+      # endpoint exists for -- which revision is running here -- is answered
+      # wrongly.
       GW_VERSION: ${GW_VERSION}
       GW_COLLAB_PORT: '3001'
-      # Standen in .env.example und in der README, erreichten den Container aber
-      # nicht: eine dokumentierte Variable, die nirgends ankommt, ist eine
-      # instructions that lead nowhere. `check-docs.mjs` checks that now.
+      # These were in .env.example and in the README but never reached the
+      # container: a documented variable that arrives nowhere is an instruction
+      # that leads nowhere. `check-docs.mjs` checks that now.
       # Decrypts the credentials entered in the interface. Without a value the
-      # file from the volume is used; anybody who would rather keep the key
-      # selbst verwaltet, setzt GW_SECRET_KEY in der .env.
+      # file from the volume is used; anybody who would rather manage the key
+      # themselves sets GW_SECRET_KEY in the .env.
       GW_SECRET_KEY: ${GW_SECRET_KEY:-}
       GW_SECRET_KEY_FILE: ${GW_SECRET_KEY_FILE:-/run/db-secrets/app/secret-key}
       GW_COLLAB_URL: ${GW_COLLAB_URL:-}
       GW_COLLAB_INTERNAL_URL: ${GW_COLLAB_INTERNAL_URL:-}
-      # Ohne diesen Wert antwortet /api/health nur mit "ok" bzw. "unhealthy"
-      # and which check failed -- the endpoint faces the internet. Set it and
-      # `x-ops-token` additionally returns the version,
-      # Migrationsstand und den Treiberfehler im Klartext.
+      # Without this value /api/health answers only "ok" or "unhealthy" and
+      # which check failed -- the endpoint faces the internet. Set it and
+      # `x-ops-token` additionally returns the version, the migration state and
+      # the driver error in plain text.
       GW_OPS_TOKEN: ${GW_OPS_TOKEN:-}
       # How many proxies stand in front of the application. Throttling and logs only.
       GW_TRUSTED_PROXIES: ${GW_TRUSTED_PROXIES:-1}
@@ -205,8 +205,8 @@ services:
       # Off by default. `1` only together with the override from the README
       # ("Automatic updates"): it hands this container the migration roles too.
       GW_MIGRATE_ON_START: ${GW_MIGRATE_ON_START:-}
-    # EINS. Der Web-Container kennt das Passwort von gw_app und von keiner
-    # anderen Rolle -- das ist der "zwei Anker"-Punkt von oben, in Dateiform.
+    # ONE. The web container knows the password of gw_app and of no other
+    # role -- that is the "two anchors" point from above, in file form.
     # Were the superuser secret here too, the whole wall would be worth one line.
     #
     # Plus the application key: it decrypts the credentials an administrator
@@ -215,12 +215,12 @@ services:
     volumes:
       - secret_gw_app:/run/db-secrets/gw_app:ro
       - secret_app:/run/db-secrets/app:ro
-    # Nur an 127.0.0.1, nie an 0.0.0.0: ohne den Proxy davor ist nichts
-    # erreichbar, auch bei falsch stehender Firewall nicht.
+    # Only on 127.0.0.1, never on 0.0.0.0: without the proxy in front nothing is
+    # reachable, not even with a misconfigured firewall.
     #
-    # Zwei Ports: die Anwendung, und der Kollaborations-Dienst. Der zweite
-    # existiert, weil Next aus einem Route-Handler kein WebSocket-Upgrade
-    # from a route handler -- but it runs in the same container, from the same image.
+    # Two ports: the application, and the collaboration service. The second
+    # exists because Next cannot do a WebSocket upgrade from a route handler --
+    # but it runs in the same container, from the same image.
     ports:
       - '127.0.0.1:${GW_PORT:-3000}:3000'
       - '127.0.0.1:${GW_COLLAB_PORT:-3001}:3001'
@@ -228,7 +228,7 @@ services:
       migrate:
         condition: service_completed_successfully
 
-  # Automatisches HTTPS. Ohne das keine Passkeys -- siehe oben.
+  # Automatic HTTPS. Without it, no passkeys -- see above.
   caddy:
     profiles: [tls]
     image: caddy:2-alpine
@@ -269,7 +269,7 @@ services:
 
 volumes:
   pgdata:
-  # Ein Volume je Rolle, damit ein Dienst nur das bekommt, was er braucht.
+  # One volume per role, so that a service gets only what it needs.
   secret_postgres:
   secret_gw_owner:
   secret_gw_app:
