@@ -371,6 +371,40 @@ describe('ending the contract to the end of the month', () => {
     expect(rows[0].delete_after).not.toBeNull()
   })
 
+  // Taking the deletion back used to restore the state and keep the ended
+  // contract, so the next run, ten minutes later, scheduled the deletion again.
+  it('stays taken back when the deletion that followed it is withdrawn', async () => {
+    const { tenantId, admin } = await workspace()
+    const endsOn = await requestCancellation(admin)
+
+    const mine = `rechnung-${tenantId.slice(0, 8)}@example.test`
+    const notices: string[] = []
+    const run = (now: Date) =>
+      contractTransitions(ops, {
+        ...options(now),
+        notify: async (notice) => {
+          if (notice.to === mine) notices.push(notice.kind)
+        },
+      })
+
+    await run(new Date(endsOn.getTime() + 2 * 86_400_000))
+    await cancelWorkspaceDeletion(admin)
+    await run(new Date(endsOn.getTime() + 2 * 86_400_000 + 10 * 60_000))
+
+    expect(notices).toEqual(['contract_ended'])
+    const { rows } = await ops.query(
+      `select state, delete_after, cancellation_requested_at, contract_ends_on
+         from tenant_lifecycle where tenant_id = $1`,
+      [tenantId],
+    )
+    expect(rows[0]).toEqual({
+      state: 'active',
+      delete_after: null,
+      cancellation_requested_at: null,
+      contract_ends_on: null,
+    })
+  })
+
   it('does nothing while the last day is still ahead', async () => {
     const { tenantId, admin } = await workspace()
     const endsOn = await requestCancellation(admin)

@@ -80,7 +80,7 @@ respecto.
 | **Solo lectura**      | «se puede leer y exportar, pero no modificar.»   | La prueba terminó sin método de pago, o una factura no se pudo cobrar ni siquiera tras los reintentos.  | Tras la prueba: añadir un método de pago. Con una factura pendiente: resolver el pago; recibirás un recordatorio con plazo. |
 | bloqueado             | «… bloqueado por una factura pendiente.»         | Tras el recordatorio de pago no llegó ningún pago en 14 días. Exportar sigue siendo posible.            | En cuanto llega el pago, todo continúa por sí solo.                                                                         |
 | **En pausa**          | «El contenido se puede leer, pero no modificar.» | Hemos detenido el espacio de trabajo.                                                                   | Escribe al [soporte](/es/troubleshooting/support/).                                                                         |
-| **Se eliminará el …** | «… se eliminará el …»                            | Se ha solicitado la eliminación o el contrato ha terminado. Leer y exportar es posible hasta esa fecha. | Una eliminación solicitada se puede anular hasta entonces.                                                                  |
+| **Se eliminará el …** | «… se eliminará el …»                            | Se ha solicitado la eliminación o el contrato ha terminado. Leer y exportar es posible hasta esa fecha. | Hasta entonces, **Anular eliminación** la detiene, también tras una rescisión.                                              |
 
 :::tip
 También en solo lectura, bloqueado o antes de la eliminación puedes
@@ -97,7 +97,9 @@ El contrato se puede rescindir al final de cada mes natural.
 Hasta fin de mes seguís trabajando con normalidad, y el último mes se factura de forma
 habitual. Después el espacio de trabajo pasa a solo lectura (estado **Se eliminará el …**);
 durante 30 días todos los talleres se pueden seguir exportando y luego se eliminan los
-contenidos. Hasta fin de mes puedes retirar la rescisión con **Retirar la rescisión**.
+contenidos. Hasta fin de mes puedes retirar la rescisión con **Retirar la rescisión**, y después
+con **Anular eliminación**: el espacio de trabajo sigue entonces como si no hubieras rescindido. Un
+[cupón](/es/cloud/vouchers/) no cambia nada de esto: decide qué se cobra, no si el contrato sigue.
 
 ## Eliminar el espacio de trabajo de inmediato
 

@@ -75,7 +75,7 @@ The status is shown under **Billing**; below the header, everyone sees a notice 
 | **Read-only**            | “reading and exporting work, changing does not.” | The trial ended without a payment method, or an invoice couldn't be collected even after the retries. | After the trial: add a payment method. With an unpaid invoice: sort out the payment; you'll get a reminder with a deadline. |
 | blocked                  | “… blocked over an unpaid invoice.”              | No payment arrived within 14 days of the payment reminder. Exporting still works.                     | As soon as the payment arrives, everything continues by itself.                                                             |
 | **Paused**               | “Content can be read but not changed.”           | We have put the workspace on hold.                                                                    | Write to [Support](/en/troubleshooting/support/).                                                                           |
-| **Will be deleted on …** | “… will be deleted on ….”                        | Deletion requested or contract ended. Reading and exporting work until that date.                     | A requested deletion can be taken back until then.                                                                          |
+| **Will be deleted on …** | “… will be deleted on ….”                        | Deletion requested or contract ended. Reading and exporting work until that date.                     | Until then **Take back deletion** stops it, after a cancellation too.                                                       |
 
 :::tip
 Even when read-only, blocked or about to be deleted, you can
@@ -92,7 +92,10 @@ The contract can be ended at the end of any calendar month.
 Until the end of the month you keep working normally, and the last month is invoiced as usual.
 After that the workspace becomes read-only (status **Will be deleted on …**); for 30 days all
 workshops can still be exported, then the contents are deleted. Until the end of the month you
-can take back the cancellation with **Withdraw the cancellation**.
+can take back the cancellation with **Withdraw the cancellation**, afterwards with
+**Take back deletion** – the workspace then carries on as if you had not cancelled. A
+[voucher](/en/cloud/vouchers/) changes none of this: it decides what is charged, not whether the
+contract runs.
 
 ## Delete the workspace right away
 

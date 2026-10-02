@@ -79,7 +79,7 @@ Unter **Abrechnung** steht der Status; unter der Kopfzeile sehen alle einen Hinw
 | **Schreibgeschützt**   | „Lesen und Exportieren geht, Ändern nicht.“     | Die Testphase ist ohne Zahlungsmethode abgelaufen, oder eine Rechnung ließ sich auch nach den Wiederholungen nicht einziehen. | Nach der Testphase: Zahlungsmethode hinterlegen. Bei offener Rechnung: Zahlung klären, du bekommst eine Erinnerung mit Frist. |
 | gesperrt               | „… wegen einer offenen Zahlung gesperrt.“       | Nach der Zahlungserinnerung kam binnen 14 Tagen keine Zahlung. Exportieren geht weiterhin.                                    | Sobald die Zahlung eingeht, geht es von selbst weiter.                                                                        |
 | **Pausiert**           | „Inhalte lassen sich lesen, aber nicht ändern.“ | Wir haben den Workspace angehalten.                                                                                           | Schreib dem [Support](/de/troubleshooting/support/).                                                                          |
-| **Wird am … gelöscht** | „… wird am … gelöscht.“                         | Löschung beantragt oder Vertrag beendet. Lesen und Exportieren geht bis zum Datum.                                            | Eine beantragte Löschung lässt sich bis dahin zurücknehmen.                                                                   |
+| **Wird am … gelöscht** | „… wird am … gelöscht.“                         | Löschung beantragt oder Vertrag beendet. Lesen und Exportieren geht bis zum Datum.                                            | Bis dahin lässt sich das mit **Löschung zurücknehmen** abbrechen, auch nach einer Kündigung.                                  |
 
 :::tip
 Auch schreibgeschützt, gesperrt oder vor der Löschung kannst du deine Workshops
@@ -96,7 +96,9 @@ Der Vertrag lässt sich zum Ende jedes Kalendermonats kündigen.
 Bis zum Monatsende arbeitet ihr normal weiter, der letzte Monat wird regulär abgerechnet.
 Danach wird der Workspace schreibgeschützt (Status **Wird am … gelöscht**); 30 Tage lang lassen
 sich alle Workshops noch exportieren, dann werden die Inhalte gelöscht. Bis zum Monatsende
-nimmst du die Kündigung mit **Kündigung zurücknehmen** zurück.
+nimmst du die Kündigung mit **Kündigung zurücknehmen** zurück, danach mit **Löschung zurücknehmen** –
+der Workspace läuft dann weiter, als hättest du nicht gekündigt. Ein [Gutschein](/de/cloud/vouchers/)
+ändert daran nichts: Er bestimmt, was berechnet wird, nicht ob der Vertrag läuft.
 
 ## Den Workspace sofort löschen
 
