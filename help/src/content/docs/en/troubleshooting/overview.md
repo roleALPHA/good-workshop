@@ -31,7 +31,7 @@ Just copy the text you see into the search.
 | Error on the **Allow access?** page                                    | [AI connection](/en/troubleshooting/ai-connection/) |
 | `This token does not have the "…" scope.`                              | [AI connection](/en/troubleshooting/ai-connection/) |
 | `The call failed. The operator can find the cause in the server log …` | [AI connection](/en/troubleshooting/ai-connection/) |
-| Revoking OAuth access                                                  | [Known issues](/en/troubleshooting/known-issues/)   |
+| Revoking OAuth access                                                  | [AI connection](/en/troubleshooting/ai-connection/) |
 
 ## Working in the agenda
 

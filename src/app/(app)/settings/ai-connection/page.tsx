@@ -1,7 +1,8 @@
 import { SCOPES } from '@/domain/tenant/tokens'
 import { authConfig } from '@/server/auth/config'
 import { getTranslations } from 'next-intl/server'
-import { loadTokens } from '@/server/actions/tokens'
+import { loadConnections, loadTokens } from '@/server/actions/tokens'
+import { ConnectionList } from './connection-list'
 import { OAuthGuide } from './oauth-guide'
 import { TokenList } from './token-list'
 
@@ -15,7 +16,11 @@ export const dynamic = 'force-dynamic'
  * is not a power a tenant admin needs, so there is no screen for it.
  */
 export default async function AiConnectionPage() {
-  const [result, t] = await Promise.all([loadTokens(), getTranslations('settings.tokens')])
+  const [result, connections, t] = await Promise.all([
+    loadTokens(),
+    loadConnections(),
+    getTranslations('settings.tokens'),
+  ])
 
   return (
     <div className="max-w-2xl">
@@ -29,6 +34,10 @@ export default async function AiConnectionPage() {
           {result.message}
         </p>
       )}
+
+      {/* What the consent screen promises: access given over OAuth can be
+          taken back here. Above the guide, whose last line points to it. */}
+      {connections.ok && <ConnectionList initial={connections.data} />}
 
       {/* Outside the token list's success branch on purpose: connecting over
           OAuth needs no token, so a failure to load tokens is no reason to

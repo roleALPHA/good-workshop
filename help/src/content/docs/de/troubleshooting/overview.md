@@ -23,15 +23,15 @@ findet. Kopier den Text, den du siehst, einfach in die Suche.
 
 ## KI-Assistent
 
-| Symptom                                                                | Seite                                                  |
-| ---------------------------------------------------------------------- | ------------------------------------------------------ |
-| Claude oder ChatGPT erreichen den Server nicht                         | [KI-Verbindung](/de/troubleshooting/ai-connection/)    |
-| HTTP 401 mit `invalid_token`                                           | [KI-Verbindung](/de/troubleshooting/ai-connection/)    |
-| HTTP 429 mit `rate_limited`                                            | [KI-Verbindung](/de/troubleshooting/ai-connection/)    |
-| Fehler auf der Seite **Zugriff erlauben?**                             | [KI-Verbindung](/de/troubleshooting/ai-connection/)    |
-| `This token does not have the "…" scope.`                              | [KI-Verbindung](/de/troubleshooting/ai-connection/)    |
-| `The call failed. The operator can find the cause in the server log …` | [KI-Verbindung](/de/troubleshooting/ai-connection/)    |
-| Einen OAuth-Zugang zurückziehen                                        | [Bekannte Probleme](/de/troubleshooting/known-issues/) |
+| Symptom                                                                | Seite                                               |
+| ---------------------------------------------------------------------- | --------------------------------------------------- |
+| Claude oder ChatGPT erreichen den Server nicht                         | [KI-Verbindung](/de/troubleshooting/ai-connection/) |
+| HTTP 401 mit `invalid_token`                                           | [KI-Verbindung](/de/troubleshooting/ai-connection/) |
+| HTTP 429 mit `rate_limited`                                            | [KI-Verbindung](/de/troubleshooting/ai-connection/) |
+| Fehler auf der Seite **Zugriff erlauben?**                             | [KI-Verbindung](/de/troubleshooting/ai-connection/) |
+| `This token does not have the "…" scope.`                              | [KI-Verbindung](/de/troubleshooting/ai-connection/) |
+| `The call failed. The operator can find the cause in the server log …` | [KI-Verbindung](/de/troubleshooting/ai-connection/) |
+| Einen OAuth-Zugang zurückziehen                                        | [KI-Verbindung](/de/troubleshooting/ai-connection/) |
 
 ## Arbeiten in der Agenda
 

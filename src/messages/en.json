@@ -907,10 +907,21 @@
         "geminiStep": "Add it in the terminal without a header. The browser opens by itself on the first connection; to sign in again later, run /mcp auth goodworkshop.",
         "other": "Other clients",
         "otherStep": "Mistral Le Chat, Cursor, VS Code and others: enter the server URL, choose OAuth as authentication (clients often detect it themselves), sign in in the browser and consent. If a client can only send fixed headers, use a token above.",
-        "revoke": "Ending access: disconnect the connector in the client. GoodWorkshop itself cannot yet revoke OAuth access.",
+        "revoke": "Ending access: click “Revoke access” under “Connected clients” above. The client loses it at once and has to connect again.",
         "labelsNote": "Menu names in Claude and ChatGPT may differ slightly by language and version.",
         "copyClaudeCode": "Copy command for Claude Code",
         "copyGemini": "Copy command for Gemini CLI"
+      },
+      "connections": {
+        "title": "Connected clients",
+        "intro": "Clients you connected over OAuth. They act on your behalf until you revoke their access.",
+        "empty": "No client connected over OAuth yet.",
+        "since": "connected on {date}",
+        "lastUsed": "last used on {date}",
+        "neverUsed": "not used yet",
+        "revoke": "Revoke access",
+        "revokeLabel": "Revoke access for {name}",
+        "revoked": "{name} no longer has access."
       }
     },
     "deleteAccount": {

@@ -23,15 +23,15 @@ de arriba los encuentre. Copia sin más el texto que ves en la búsqueda.
 
 ## Asistente de IA
 
-| Síntoma                                                                | Página                                                   |
-| ---------------------------------------------------------------------- | -------------------------------------------------------- |
-| Claude o ChatGPT no llegan al servidor                                 | [Conexión IA](/es/troubleshooting/ai-connection/)        |
-| HTTP 401 con `invalid_token`                                           | [Conexión IA](/es/troubleshooting/ai-connection/)        |
-| HTTP 429 con `rate_limited`                                            | [Conexión IA](/es/troubleshooting/ai-connection/)        |
-| Error en la página **¿Permitir el acceso?**                            | [Conexión IA](/es/troubleshooting/ai-connection/)        |
-| `This token does not have the "…" scope.`                              | [Conexión IA](/es/troubleshooting/ai-connection/)        |
-| `The call failed. The operator can find the cause in the server log …` | [Conexión IA](/es/troubleshooting/ai-connection/)        |
-| Revocar un acceso OAuth                                                | [Problemas conocidos](/es/troubleshooting/known-issues/) |
+| Síntoma                                                                | Página                                            |
+| ---------------------------------------------------------------------- | ------------------------------------------------- |
+| Claude o ChatGPT no llegan al servidor                                 | [Conexión IA](/es/troubleshooting/ai-connection/) |
+| HTTP 401 con `invalid_token`                                           | [Conexión IA](/es/troubleshooting/ai-connection/) |
+| HTTP 429 con `rate_limited`                                            | [Conexión IA](/es/troubleshooting/ai-connection/) |
+| Error en la página **¿Permitir el acceso?**                            | [Conexión IA](/es/troubleshooting/ai-connection/) |
+| `This token does not have the "…" scope.`                              | [Conexión IA](/es/troubleshooting/ai-connection/) |
+| `The call failed. The operator can find the cause in the server log …` | [Conexión IA](/es/troubleshooting/ai-connection/) |
+| Revocar un acceso OAuth                                                | [Conexión IA](/es/troubleshooting/ai-connection/) |
 
 ## Trabajar en la agenda
 

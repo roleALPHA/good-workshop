@@ -3,6 +3,7 @@
 import { revalidatePath } from 'next/cache'
 import { z } from 'zod'
 import { SCOPES, createToken, listTokens, revokeToken, type TokenRow } from '@/domain/tenant/tokens'
+import { listConnections, revokeConnection, type Connection } from '@/domain/oauth/connections'
 import { action, type ActionResult } from './context'
 
 export async function loadTokens(): Promise<ActionResult<TokenRow[]>> {
@@ -38,6 +39,30 @@ export async function revokeTokenAction(raw: { id: string }): Promise<ActionResu
     raw,
     async (tx, actor, input) => {
       await revokeToken(tx, actor, input.id)
+      return null
+    },
+  )
+
+  if (result.ok) revalidatePath('/settings/ai-connection')
+  return result
+}
+
+export async function loadConnections(): Promise<ActionResult<Connection[]>> {
+  return action(z.object({}), {}, (tx, actor) => listConnections(tx, actor))
+}
+
+/**
+ * Ends every live token of one OAuth client for the signed-in person. What the
+ * consent screen promises: access can be taken back here, at once.
+ */
+export async function revokeConnectionAction(raw: {
+  clientId: string
+}): Promise<ActionResult<null>> {
+  const result = await action(
+    z.object({ clientId: z.string().uuid() }),
+    raw,
+    async (tx, actor, input) => {
+      await revokeConnection(tx, actor, input.clientId)
       return null
     },
   )

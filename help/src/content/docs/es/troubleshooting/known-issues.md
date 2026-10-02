@@ -11,13 +11,6 @@ errores que no aparecen aquí se comunican a través del [Soporte](/es/troublesh
 
 ## Para todos
 
-### Un acceso OAuth no se puede revocar en GoodWorkshop
-
-Si conectas Claude, ChatGPT u otro cliente por OAuth, por ahora el acceso solo termina cuando
-desconectas el conector en el cliente. La página de autorización menciona los ajustes de
-**Conexión IA**, pero allí todavía no hay ningún botón para los accesos OAuth. Los tokens se
-revocan allí con **Revocar**. Consulta [Conexión IA](/es/troubleshooting/ai-connection/).
-
 ### Después de iniciar sesión no se vuelve a la página de autorización
 
 Si no has iniciado sesión cuando un cliente te envía a la autorización, inicias sesión y acabas en

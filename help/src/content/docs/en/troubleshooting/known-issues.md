@@ -11,13 +11,6 @@ here you report via [Support](/en/troubleshooting/support/).
 
 ## For everyone
 
-### OAuth access can't be revoked in GoodWorkshop
-
-If you connect Claude, ChatGPT or another client over OAuth, the access currently only ends when
-you disconnect the connector in the client. The consent page does mention the settings under
-**AI Connection**, but there is no button for OAuth access there yet. You revoke tokens there with
-**Revoke**. See [AI connection](/en/troubleshooting/ai-connection/).
-
 ### After signing in, you don't get back to the consent page
 
 If you're not signed in when a client sends you to the consent page, you sign in and land in the

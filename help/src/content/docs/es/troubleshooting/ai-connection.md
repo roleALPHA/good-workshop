@@ -90,9 +90,8 @@ Es intencionado y no se puede habilitar.
 
 ## Terminar el acceso
 
-Un token se revoca en **Conexión IA** con **Revocar**. Un acceso OAuth se termina desconectando el
-conector en el cliente — en GoodWorkshop todavía no se puede revocar; consulta
-[Problemas conocidos](/es/troubleshooting/known-issues/).
+Un token lo revocas en **Conexión IA** con **Revocar**. Un acceso OAuth lo terminas ahí mismo, en
+**Clientes conectados**, con **Retirar el acceso**; deja de funcionar con la siguiente petición.
 
 ## Más información
 

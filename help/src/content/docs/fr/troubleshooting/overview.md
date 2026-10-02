@@ -23,15 +23,15 @@ recherche en haut les trouve. Copie simplement le texte que tu vois dans la rech
 
 ## Assistant IA
 
-| Symptôme                                                               | Page                                                  |
-| ---------------------------------------------------------------------- | ----------------------------------------------------- |
-| Claude ou ChatGPT n'atteignent pas le serveur                          | [Connexion IA](/fr/troubleshooting/ai-connection/)    |
-| HTTP 401 avec `invalid_token`                                          | [Connexion IA](/fr/troubleshooting/ai-connection/)    |
-| HTTP 429 avec `rate_limited`                                           | [Connexion IA](/fr/troubleshooting/ai-connection/)    |
-| Erreur sur la page **Autoriser l'accès ?**                             | [Connexion IA](/fr/troubleshooting/ai-connection/)    |
-| `This token does not have the "…" scope.`                              | [Connexion IA](/fr/troubleshooting/ai-connection/)    |
-| `The call failed. The operator can find the cause in the server log …` | [Connexion IA](/fr/troubleshooting/ai-connection/)    |
-| Révoquer un accès OAuth                                                | [Problèmes connus](/fr/troubleshooting/known-issues/) |
+| Symptôme                                                               | Page                                               |
+| ---------------------------------------------------------------------- | -------------------------------------------------- |
+| Claude ou ChatGPT n'atteignent pas le serveur                          | [Connexion IA](/fr/troubleshooting/ai-connection/) |
+| HTTP 401 avec `invalid_token`                                          | [Connexion IA](/fr/troubleshooting/ai-connection/) |
+| HTTP 429 avec `rate_limited`                                           | [Connexion IA](/fr/troubleshooting/ai-connection/) |
+| Erreur sur la page **Autoriser l'accès ?**                             | [Connexion IA](/fr/troubleshooting/ai-connection/) |
+| `This token does not have the "…" scope.`                              | [Connexion IA](/fr/troubleshooting/ai-connection/) |
+| `The call failed. The operator can find the cause in the server log …` | [Connexion IA](/fr/troubleshooting/ai-connection/) |
+| Révoquer un accès OAuth                                                | [Connexion IA](/fr/troubleshooting/ai-connection/) |
 
 ## Travailler dans l'agenda
 

@@ -89,9 +89,8 @@ C'est voulu et ne peut pas être débloqué.
 
 ## Mettre fin à un accès
 
-Tu révoques un jeton sous **Connexion IA** avec **Révoquer**. Pour mettre fin à un accès OAuth, tu
-déconnectes le connecteur dans le client — GoodWorkshop ne permet pas encore de le révoquer
-lui-même, voir [Problèmes connus](/fr/troubleshooting/known-issues/).
+Tu révoques un jeton sous **Connexion IA** avec **Révoquer**. Tu mets fin à un accès OAuth au même
+endroit, sous **Clients connectés**, avec **Retirer l’accès** ; il cesse de fonctionner dès la requête suivante.
 
 ## Pour aller plus loin
 
