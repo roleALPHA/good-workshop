@@ -134,6 +134,10 @@ begin
          state_before = null,
          deletion_requested_at = null,
          delete_after = null,
+         -- A deletion that followed an ended contract takes the contract back
+         -- with it; otherwise the next run finds it ended and deletes again.
+         cancellation_requested_at = null,
+         contract_ends_on = null,
          updated_at = now()
    where tenant_id = p_tenant and state = 'deleting';
 

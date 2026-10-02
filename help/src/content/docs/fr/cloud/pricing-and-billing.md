@@ -82,7 +82,7 @@ correspondant.
 | **Lecture seule**      | « lecture et export possibles, modification non. » | La période d'essai s'est terminée sans moyen de paiement, ou une facture n'a pas pu être prélevée même après les nouvelles tentatives. | Après la période d'essai : enregistrer un moyen de paiement. En cas de facture impayée : régler le paiement, tu reçois un rappel avec un délai. |
 | bloqué                 | « … bloqué en raison d'une facture impayée. »      | Aucun paiement n'est arrivé dans les 14 jours suivant le rappel de paiement. L'export reste possible.                                  | Dès que le paiement arrive, tout reprend de lui-même.                                                                                           |
 | **En pause**           | « Le contenu peut être lu mais pas modifié. »      | Nous avons suspendu l'espace de travail.                                                                                               | Écris au [Support](/fr/troubleshooting/support/).                                                                                               |
-| **Sera supprimé le …** | « … sera supprimé le … »                           | Suppression demandée ou contrat terminé. Lecture et export possibles jusqu'à cette date.                                               | Une suppression demandée peut être annulée d'ici là.                                                                                            |
+| **Sera supprimé le …** | « … sera supprimé le … »                           | Suppression demandée ou contrat terminé. Lecture et export possibles jusqu'à cette date.                                               | D'ici là, **Annuler la suppression** l'arrête, même après une résiliation.                                                                      |
 
 :::tip
 Même en lecture seule, bloqué ou avant la suppression, tu peux
@@ -100,7 +100,9 @@ Jusqu'à la fin du mois, vous continuez à travailler normalement, et le dernier
 facturé normalement. Ensuite, l'espace de travail passe en lecture seule (statut
 **Sera supprimé le …**) ; pendant 30 jours, tous les ateliers restent exportables, puis les
 contenus sont supprimés. Jusqu'à la fin du mois, tu peux annuler la résiliation avec
-**Retirer la résiliation**.
+**Retirer la résiliation**, ensuite avec **Annuler la suppression** – l'espace de travail continue
+alors comme si tu n'avais pas résilié. Un [bon](/fr/cloud/vouchers/) n'y change rien : il décide de
+ce qui est facturé, pas de la durée du contrat.
 
 ## Supprimer l'espace de travail immédiatement
 
