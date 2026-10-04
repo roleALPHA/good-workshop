@@ -59,6 +59,9 @@
       "fromEnvironment": "from the environment",
       "transportLegend": "How should mail be sent?",
       "transport": {
+        "platform": "Send through GoodWorkshop",
+        "platformHint": "Mail comes from {sender}. Nothing to set up.",
+        "platformHintNoSender": "Nothing to set up.",
         "graph": "Microsoft Graph",
         "graphHint": "For Microsoft 365 without SMTP AUTH.",
         "smtp": "SMTP",
@@ -68,6 +71,7 @@
         "none": "No delivery",
         "noneHint": "Sign-in links only exist through the command line."
       },
+      "ownNote": "With your own delivery, sign-in links and invitations come from your address. If it fails, the mail goes through GoodWorkshop instead — and this page says when and why.",
       "graphIntro": "You need an app registration in Entra ID with the <b>application permission</b> <code>Mail.Send</code> and admin consent.",
       "graphTenantId": "Directory or tenant ID",
       "graphClientId": "Application ID",
@@ -75,9 +79,11 @@
       "graphSender": "Sender mailbox",
       "smtpUrl": "SMTP URL",
       "smtpUrlHint": "Something like smtps://user:password@relay.example.com:465",
+      "smtpUrlHintCloud": "For example smtps://user:password@mail.example.com:465 — ports 465 and 587 only, servers with a public address only.",
       "smtpFrom": "Sender address",
       "secretStored": "stored — leave empty to keep it",
       "saved": "Saved.",
+      "fallbackNotice": "On {at} your own delivery failed ({error}). The mail went through GoodWorkshop instead. This notice disappears the next time you save.",
       "testTitle": "Send a test message",
       "testIntro": "Whether a relay works shows when something is sent. Otherwise the first attempt is somebody's sign-in link — and a failure then looks like a broken account.",
       "testTo": "To",
@@ -452,7 +458,12 @@
       "mail": {
         "noSmtpUrl": "Transport SMTP, but no SMTP URL is configured — neither in the environment nor in the settings.",
         "transportNone": "Transport “no delivery”: no mail can be sent. Use `node scripts/cli.mjs login-link --email …` or pick a transport in the settings.",
-        "graphMissing": "Transport Microsoft Graph, but {field} is missing."
+        "graphMissing": "Transport Microsoft Graph, but {field} is missing.",
+        "transportNotOffered": "This delivery method is not available here.",
+        "smtpUrlInvalid": "That is not an SMTP URL. It starts with smtp:// or smtps://.",
+        "smtpPortNotAllowed": "Only ports 465 (smtps) and 587 (STARTTLS) are possible.",
+        "smtpHostNotPublic": "This server has no public address. Mail is only sent through servers on the internet, not through private or local addresses.",
+        "smtpHostUnknown": "This server name does not exist."
       },
       "member": {
         "adminOnly": "Only tenant admins may manage members.",

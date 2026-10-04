@@ -6,8 +6,9 @@ sidebar:
 ---
 
 GoodWorkshop envoie les liens de connexion et les invitations par e-mail. Sans envoi d'e-mails, seules
-les personnes qui ont déjà un [passkey](/fr/account/passkeys/) peuvent entrer. Tu as surtout besoin de
-cette page si tu héberges GoodWorkshop toi-même.
+les personnes qui ont déjà un [passkey](/fr/account/passkeys/) peuvent entrer. Si tu héberges
+GoodWorkshop toi-même, c'est ici que tu le configures. Dans GoodWorkshop Cloud, il est déjà configuré,
+et tu peux utiliser le tien à la place – voir [Dans GoodWorkshop Cloud](#dans-goodworkshop-cloud).
 
 Ouvre le menu du compte en haut à droite et choisis, sous **Administration**, l'entrée **Envoi d'e-mails**.
 
@@ -17,7 +18,7 @@ Seuls les admins configurent l'envoi d'e-mails.
 
 ## Choisir la méthode
 
-Sous **Comment les e-mails doivent-ils être envoyés ?**, quatre possibilités s'offrent à toi :
+En auto-hébergement, quatre possibilités s'offrent à toi sous **Comment les e-mails doivent-ils être envoyés ?** :
 
 | Méthode                               | Pour quoi                                                                    |
 | ------------------------------------- | ---------------------------------------------------------------------------- |
@@ -30,6 +31,32 @@ Sous **Comment les e-mails doivent-ils être envoyés ?**, quatre possibilités 
 **Écrire dans le journal du serveur** est prévu pour les débuts ou une installation de test. Qui peut lire le
 journal peut entrer dans n'importe quel compte.
 :::
+
+## Dans GoodWorkshop Cloud
+
+Dans le cloud, l'envoi d'e-mails est configuré dès le départ. Sous **Comment les e-mails
+doivent-ils être envoyés ?**, trois possibilités s'offrent à toi :
+
+| Méthode                      | Pour quoi                                                                          |
+| ---------------------------- | ---------------------------------------------------------------------------------- |
+| **Envoyer via GoodWorkshop** | Par défaut. Les e-mails partent de `no-reply@goodworkshop.org`, rien à configurer. |
+| **Microsoft Graph**          | Ton propre Microsoft 365, configuré comme décrit plus bas.                         |
+| **SMTP**                     | Ton propre relais de messagerie, configuré comme décrit plus bas.                  |
+
+Avec ton propre envoi, les liens de connexion et les invitations de ton espace de travail partent de
+ton adresse. Dans le cloud, SMTP a deux limites : uniquement les ports 465 (`smtps://`) et 587
+(STARTTLS), et uniquement des serveurs à adresse publique. La page n'accepte pas un serveur sur un
+réseau privé ou local.
+
+:::note
+Si ton propre envoi échoue, l'e-mail passe par GoodWorkshop à la place – un relais en panne ne
+bloque ainsi personne. La page **Envoi d'e-mails** indique alors quand et avec quelle erreur. Le
+message disparaît au prochain **Enregistrer**. Le message de test ne prend pas ce détour, pour que
+tu voies l'erreur.
+:::
+
+Pour revenir à l'envoi via GoodWorkshop, choisis **Envoyer via GoodWorkshop** puis
+**Enregistrer**. Ce que tu as saisi pour ton propre envoi reste enregistré.
 
 ## Configurer SMTP
 
@@ -64,7 +91,7 @@ conserver ». Si tu le laisses vide, la valeur enregistrée est conservée.
 
 ## Valeurs issues de l'environnement
 
-Si tu héberges GoodWorkshop toi-même, tu peux aussi définir l'envoi d'e-mails dans le `.env` de l'installation.
+Si tu héberges GoodWorkshop toi-même, tu peux aussi définir l'envoi d'e-mails dans le `.env` de l'installation. Le cloud n'a pas de telles valeurs ; rien n'y verrouille tes champs.
 Ces valeurs sont prioritaires. La page affiche ces champs verrouillés, avec la
 mention **depuis l'environnement** ; ils ne peuvent être modifiés que sur le serveur.
 

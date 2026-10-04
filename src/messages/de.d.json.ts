@@ -62,6 +62,9 @@ declare const messages: {
       "fromEnvironment": "aus der Umgebung",
       "transportLegend": "Wie sollen Mails verschickt werden?",
       "transport": {
+        "platform": "Über GoodWorkshop versenden",
+        "platformHint": "Mails kommen von {sender}. Nichts einzurichten.",
+        "platformHintNoSender": "Nichts einzurichten.",
         "graph": "Microsoft Graph",
         "graphHint": "Für Microsoft 365 ohne SMTP AUTH.",
         "smtp": "SMTP",
@@ -71,6 +74,7 @@ declare const messages: {
         "none": "Kein Versand",
         "noneHint": "Anmeldelinks gibt es nur über die Kommandozeile."
       },
+      "ownNote": "Mit eigenem Versand kommen Anmeldelinks und Einladungen von deiner Adresse. Schlägt er fehl, geht die Mail über GoodWorkshop — und hier steht, wann und warum.",
       "graphIntro": "Gebraucht wird eine App-Registrierung in Entra ID mit der <b>Anwendungsberechtigung</b> <code>Mail.Send</code> samt Administratorzustimmung.",
       "graphTenantId": "Verzeichnis- oder Mandant-ID",
       "graphClientId": "Anwendungs-ID",
@@ -78,9 +82,11 @@ declare const messages: {
       "graphSender": "Absenderpostfach",
       "smtpUrl": "SMTP-URL",
       "smtpUrlHint": "Etwa smtps://benutzer:passwort@relay.example.com:465",
+      "smtpUrlHintCloud": "Etwa smtps://benutzer:passwort@mail.example.com:465 — nur die Ports 465 und 587, nur Server mit öffentlicher Adresse.",
       "smtpFrom": "Absenderadresse",
       "secretStored": "gespeichert — leer lassen, um ihn zu behalten",
       "saved": "Gespeichert.",
+      "fallbackNotice": "Am {at} ist dein eigener Versand fehlgeschlagen ({error}). Die Mail ging stattdessen über GoodWorkshop. Der Hinweis verschwindet beim nächsten Speichern.",
       "testTitle": "Testnachricht schicken",
       "testIntro": "Ob ein Relay funktioniert, zeigt sich beim Verschicken. Sonst ist der erste Versuch der Anmeldelink von jemandem — und ein Fehler sieht dann aus wie ein kaputtes Konto.",
       "testTo": "An",
@@ -455,7 +461,12 @@ declare const messages: {
       "mail": {
         "noSmtpUrl": "Transport SMTP, aber keine SMTP-URL konfiguriert — weder in der Umgebung noch in den Einstellungen.",
         "transportNone": "Transport „kein Versand“: es kann keine Mail verschickt werden. Nimm `node scripts/cli.mjs login-link --email …` oder wähle einen Transport in den Einstellungen.",
-        "graphMissing": "Transport Microsoft Graph, aber {field} fehlt."
+        "graphMissing": "Transport Microsoft Graph, aber {field} fehlt.",
+        "transportNotOffered": "Diesen Versandweg gibt es hier nicht.",
+        "smtpUrlInvalid": "Das ist keine SMTP-URL. Sie beginnt mit smtp:// oder smtps://.",
+        "smtpPortNotAllowed": "Nur die Ports 465 (smtps) und 587 (STARTTLS) sind möglich.",
+        "smtpHostNotPublic": "Dieser Server hat keine öffentliche Adresse. Verschickt wird nur über Server im Internet, nicht über private oder lokale Adressen.",
+        "smtpHostUnknown": "Diesen Servernamen gibt es nicht."
       },
       "member": {
         "adminOnly": "Nur Tenant-Admins dürfen Mitglieder verwalten.",

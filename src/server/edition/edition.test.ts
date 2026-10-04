@@ -39,6 +39,12 @@ describe('the community edition', () => {
     expect(communityEdition.hasSupport).toBe(false)
   })
 
+  it('lets the environment win over the mail form, as it always has', () => {
+    // Whoever runs a self-hosted install fills in both, and a form that
+    // pretended to override the .env would be ignored without a word.
+    expect(communityEdition.mailPolicy).toBe('environment-wins')
+  })
+
   /**
    * The banners the cloud grew: a price or terms change six weeks ahead, and a
    * maintenance window for the installation. A self-hosted installation has

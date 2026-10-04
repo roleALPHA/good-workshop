@@ -6,8 +6,9 @@ sidebar:
 ---
 
 GoodWorkshop envía los enlaces de acceso y las invitaciones por correo. Sin envío de correo, solo
-entra quien ya tiene un [passkey](/es/account/passkeys/). Necesitarás esta página sobre todo si
-alojas GoodWorkshop por tu cuenta.
+entra quien ya tiene un [passkey](/es/account/passkeys/). Si alojas GoodWorkshop por tu cuenta,
+lo configuras aquí. En GoodWorkshop Cloud ya está configurado, y puedes usar el tuyo en su lugar –
+consulta [En GoodWorkshop Cloud](#en-goodworkshop-cloud).
 
 Abre el menú de la cuenta arriba a la derecha y, en **Administración**, elige
 **Envío de correo**.
@@ -18,7 +19,7 @@ Solo los administradores configuran el envío de correo.
 
 ## Elegir la vía
 
-En **¿Cómo se debe enviar el correo?** hay cuatro opciones:
+En una instalación propia, **¿Cómo se debe enviar el correo?** ofrece cuatro opciones:
 
 | Vía                                      | Para qué                                                             |
 | ---------------------------------------- | -------------------------------------------------------------------- |
@@ -31,6 +32,31 @@ En **¿Cómo se debe enviar el correo?** hay cuatro opciones:
 **Escribir en el registro del servidor** está pensado para empezar o para una instalación de
 prueba. Quien pueda leer el registro entra en cualquier cuenta.
 :::
+
+## En GoodWorkshop Cloud
+
+En la nube, el envío de correo está configurado desde el principio. En **¿Cómo se debe enviar el
+correo?** hay tres opciones:
+
+| Vía                                 | Para qué                                                                                   |
+| ----------------------------------- | ------------------------------------------------------------------------------------------ |
+| **Enviar a través de GoodWorkshop** | Predeterminada. El correo sale de `no-reply@goodworkshop.org`, no hay nada que configurar. |
+| **Microsoft Graph**                 | Tu propio Microsoft 365, configurado como se describe abajo.                               |
+| **SMTP**                            | Tu propio relé de correo, configurado como se describe abajo.                              |
+
+Con tu propio envío, los enlaces de acceso y las invitaciones de tu espacio de trabajo salen de tu
+dirección. En la nube, SMTP tiene dos límites: solo los puertos 465 (`smtps://`) y 587 (STARTTLS), y
+solo servidores con dirección pública. La página no acepta un servidor en una red privada o local.
+
+:::note
+Si tu propio envío falla, el correo sale por GoodWorkshop en su lugar – así un relé roto no deja
+fuera a nadie. La página **Envío de correo** indica entonces cuándo y con qué error. El aviso
+desaparece la próxima vez que pulses **Guardar**. El mensaje de prueba no toma este desvío, para
+que veas el error.
+:::
+
+Para volver a enviar a través de GoodWorkshop, elige **Enviar a través de GoodWorkshop** y
+**Guardar**. Lo que introdujiste para tu propio envío sigue guardado.
 
 ## Configurar SMTP
 
@@ -66,7 +92,7 @@ Si lo dejas vacío, se conserva el valor guardado.
 ## Valores del entorno
 
 Quien aloja GoodWorkshop por su cuenta también puede definir el envío de correo en el `.env` de
-la instalación. Esos valores tienen prioridad. La página muestra esos campos bloqueados y con la
+la instalación. Esos valores tienen prioridad. En la nube no existen; allí nada bloquea tus campos. La página muestra esos campos bloqueados y con la
 indicación **del entorno**; solo se pueden cambiar en el servidor.
 
 | Variable                                                                                | Campo                                        |

@@ -44,6 +44,9 @@ Pour installer toi-même, consulte [Installation](/fr/self-hosting/installation/
   tu reprends en une seule étape dans tes ateliers.
 - **Support.** Dans le menu Compte, **Support** ouvre un formulaire qui crée directement un
   ticket chez nous.
+- **Envoi d'e-mails sans configuration.** Les liens de connexion et les invitations partent de
+  `no-reply@goodworkshop.org`. Si tu le souhaites, ton espace de travail les envoie via ton propre
+  Microsoft 365 ou SMTP, voir [Envoi d'e-mails](/fr/account/mail/).
 
 Tout le reste – bibliothèque, agenda, partage, impression, export et connexion IA – fonctionne
 de la même façon dans les deux versions.

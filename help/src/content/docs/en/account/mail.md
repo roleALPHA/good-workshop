@@ -6,8 +6,9 @@ sidebar:
 ---
 
 GoodWorkshop sends sign-in links and invitations by e-mail. Without mail delivery, only people
-who already have a [passkey](/en/account/passkeys/) can get in. You'll mostly need this page if
-you run GoodWorkshop yourself.
+who already have a [passkey](/en/account/passkeys/) can get in. If you run GoodWorkshop yourself,
+you set it up here. In the GoodWorkshop Cloud it is already set up, and you can use your own
+instead – see [In the GoodWorkshop Cloud](#in-the-goodworkshop-cloud).
 
 Open the account menu at the top right and choose **Mail delivery** under **Administration**.
 
@@ -17,7 +18,7 @@ Only admins set up mail delivery.
 
 ## Choose the way
 
-Under **How should mail be sent?** there are four options:
+Self-hosted, there are four options under **How should mail be sent?**:
 
 | Way                         | What for                                               |
 | --------------------------- | ------------------------------------------------------ |
@@ -30,6 +31,30 @@ Under **How should mail be sent?** there are four options:
 **Write to the server log** is meant for getting started or for a test installation. Anybody
 who can read the log can get into any account.
 :::
+
+## In the GoodWorkshop Cloud
+
+In the cloud, mail delivery is set up from the start. Under **How should mail be sent?** there are
+three options:
+
+| Way                           | What for                                                                     |
+| ----------------------------- | ---------------------------------------------------------------------------- |
+| **Send through GoodWorkshop** | The default. Mail comes from `no-reply@goodworkshop.org`, nothing to set up. |
+| **Microsoft Graph**           | Your own Microsoft 365, set up as described below.                           |
+| **SMTP**                      | Your own mail relay, set up as described below.                              |
+
+With your own delivery, your workspace's sign-in links and invitations come from your address. In
+the cloud, SMTP has two limits: ports 465 (`smtps://`) and 587 (STARTTLS) only, and servers with a
+public address only. The page does not accept a server on a private or local network.
+
+:::note
+If your own delivery fails, the mail goes through GoodWorkshop instead – so a broken relay locks
+nobody out. The **Mail delivery** page then says when and with which error. The notice disappears
+the next time you **Save**. The test message does not take this detour, so that you see the error.
+:::
+
+To go back to sending through GoodWorkshop, choose **Send through GoodWorkshop** and **Save**.
+What you entered for your own delivery stays stored.
 
 ## Set up SMTP
 
@@ -64,7 +89,7 @@ stored value is kept.
 
 ## Values from the environment
 
-If you run GoodWorkshop yourself, you can also set mail delivery in the installation's `.env`.
+If you run GoodWorkshop yourself, you can also set mail delivery in the installation's `.env`. The cloud has no such values; nothing locks your fields there.
 These values take precedence. The page shows such fields locked and with the note
 **from the environment**; they can only be changed on the server.
 

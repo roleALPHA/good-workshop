@@ -32,6 +32,7 @@ export const communityEdition: Edition = {
   // installation has nobody to curate it and nothing to curate from.
   hasCatalog: false,
   hasSupport: false,
+  mailPolicy: 'environment-wins',
 }
 
 /** What `@gw/edition` resolves to in a community build. */

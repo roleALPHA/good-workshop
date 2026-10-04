@@ -8,10 +8,14 @@ import {
   applyMailSettings,
   describeMailSettings,
   mailSettingsInput,
+  mailSettingsProblem,
   readStoredMail,
   writeStoredMail,
 } from '@/server/settings/mail-settings'
 import { mailConfigFor } from '@/server/auth/mail'
+import { smtpTarget } from '@/server/auth/smtp-target'
+import { edition } from '@/server/edition'
+import type { Actor } from '@/server/db/actor'
 import { DomainError } from '@/domain/errors'
 import { currentActor, fail, failRelayed, toResult, type ActionResult } from './context'
 import { getLocale } from 'next-intl/server'
@@ -31,6 +35,11 @@ import { translator } from '@/i18n/translator'
  * current value, so blank is what an operator submits when they changed the
  * sender address and nothing else -- treating that as "delete" would break
  * mail for an edit that never mentioned it.
+ *
+ * In the cloud the form is a customer's, not the operator's: it offers the
+ * platform's mail or the workspace's own, never the server log, and an SMTP URL
+ * is checked before it is stored (see smtp-target.ts) -- and again before every
+ * send, because a name can resolve differently tomorrow.
  */
 
 export type MailSettingsView = ReturnType<typeof describeMailSettings>
@@ -41,8 +50,7 @@ export async function loadMailSettings(): Promise<ActionResult<MailSettingsView>
 
   try {
     assertTenantAdmin(actor)
-    const stored = await withTenant(actor, (tx) => readStoredMail(tx, actor.tenantId))
-    return { ok: true, data: describeMailSettings(stored, await mailConfigFor(actor.tenantId)) }
+    return { ok: true, data: await currentView(actor) }
   } catch (error) {
     return toResult(error)
   }
@@ -68,14 +76,19 @@ export async function saveMailSettings(
   try {
     assertTenantAdmin(actor)
 
+    const problem = mailSettingsProblem(parsed.data, edition.mailPolicy)
+    if (problem) throw new DomainError(problem)
+    if (edition.mailPolicy === 'tenant-or-platform' && parsed.data.smtpUrl) {
+      await smtpTarget(parsed.data.smtpUrl)
+    }
+
     await withTenant(actor, async (tx) => {
       const stored = await readStoredMail(tx, actor.tenantId)
       await writeStoredMail(tx, actor.tenantId, applyMailSettings(stored, parsed.data))
     })
 
     revalidatePath('/admin/mail')
-    const stored = await withTenant(actor, (tx) => readStoredMail(tx, actor.tenantId))
-    return { ok: true, data: describeMailSettings(stored, await mailConfigFor(actor.tenantId)) }
+    return { ok: true, data: await currentView(actor) }
   } catch (error) {
     return toResult(error)
   }
@@ -101,11 +114,13 @@ export async function sendTestMail(formData: FormData): Promise<ActionResult<str
   try {
     assertTenantAdmin(actor)
 
-    const { sendMail } = await import('@/server/auth/mail')
+    const { sendMailWithoutFallback } = await import('@/server/auth/mail')
     // The admin who pressed the button is the recipient, so their language is
     // the right one -- unlike an invitation, where the reader is somebody else.
     const t = translator(await getLocale(), 'mail.test')
-    await sendMail(
+    // Without the fallback: a test that quietly succeeded through the platform
+    // would report a relay as working that just failed.
+    await sendMailWithoutFallback(
       {
         to,
         subject: t('subject'),
@@ -122,6 +137,11 @@ export async function sendTestMail(formData: FormData): Promise<ActionResult<str
     if (error instanceof DomainError) return toResult(error)
     return failRelayed('failed', message(error))
   }
+}
+
+async function currentView(actor: Actor) {
+  const stored = await withTenant(actor, (tx) => readStoredMail(tx, actor.tenantId))
+  return describeMailSettings(stored, await mailConfigFor(actor.tenantId), edition.mailPolicy)
 }
 
 function str(value: FormDataEntryValue | null): string | undefined {

@@ -1,4 +1,5 @@
 import type { Tx } from '@/server/db'
+import type { MailPolicy } from '@/server/settings/mail-settings'
 
 /**
  * The questions whose answer depends on how many tenants an installation has.
@@ -131,4 +132,14 @@ export type Edition = {
    * send their colleagues' questions to the wrong people.
    */
   readonly hasSupport: boolean
+
+  /**
+   * Whose mail a tenant's mail is.
+   *
+   * Self-hosted, the environment belongs to the person who also fills in the
+   * form, and it wins field by field. In the cloud it belongs to the platform:
+   * a workspace sends as itself once it has set that up, and as GoodWorkshop
+   * until then. See src/server/settings/mail-settings.ts.
+   */
+  readonly mailPolicy: MailPolicy
 }

@@ -59,6 +59,9 @@
       "fromEnvironment": "depuis l'environnement",
       "transportLegend": "Comment les e-mails doivent-ils être envoyés ?",
       "transport": {
+        "platform": "Envoyer via GoodWorkshop",
+        "platformHint": "Les e-mails partent de {sender}. Rien à configurer.",
+        "platformHintNoSender": "Rien à configurer.",
         "graph": "Microsoft Graph",
         "graphHint": "Pour Microsoft 365 sans SMTP AUTH.",
         "smtp": "SMTP",
@@ -68,6 +71,7 @@
         "none": "Pas d'envoi",
         "noneHint": "Les liens de connexion ne s'obtiennent qu'en ligne de commande."
       },
+      "ownNote": "Avec ton propre envoi, les liens de connexion et les invitations partent de ton adresse. S'il échoue, l'e-mail passe par GoodWorkshop — et cette page indique quand et pourquoi.",
       "graphIntro": "Il faut un enregistrement d'application dans Entra ID avec l'<b>autorisation d'application</b> <code>Mail.Send</code> et le consentement administrateur.",
       "graphTenantId": "ID d'annuaire ou de locataire",
       "graphClientId": "ID d'application",
@@ -75,9 +79,11 @@
       "graphSender": "Boîte d'expédition",
       "smtpUrl": "URL SMTP",
       "smtpUrlHint": "Par exemple smtps://utilisateur:motdepasse@relay.example.com:465",
+      "smtpUrlHintCloud": "Par exemple smtps://utilisateur:motdepasse@mail.example.com:465 — uniquement les ports 465 et 587, uniquement des serveurs à adresse publique.",
       "smtpFrom": "Adresse d'expéditeur",
       "secretStored": "enregistré — laisse vide pour le conserver",
       "saved": "Enregistré.",
+      "fallbackNotice": "Le {at}, ton propre envoi a échoué ({error}). L'e-mail est passé par GoodWorkshop à la place. Ce message disparaît au prochain enregistrement.",
       "testTitle": "Envoyer un message de test",
       "testIntro": "Le fonctionnement d'un relais se voit à l'envoi. Sinon, le premier essai est le lien de connexion de quelqu'un — et une panne ressemble alors à un compte cassé.",
       "testTo": "À",
@@ -452,7 +458,12 @@
       "mail": {
         "noSmtpUrl": "Transport SMTP, mais aucune URL SMTP configurée — ni dans l'environnement ni dans les réglages.",
         "transportNone": "Transport « pas d'envoi » : aucun e-mail ne peut partir. Utilise `node scripts/cli.mjs login-link --email …` ou choisis un transport dans les réglages.",
-        "graphMissing": "Transport Microsoft Graph, mais {field} manque."
+        "graphMissing": "Transport Microsoft Graph, mais {field} manque.",
+        "transportNotOffered": "Ce mode d'envoi n'est pas disponible ici.",
+        "smtpUrlInvalid": "Ce n'est pas une URL SMTP. Elle commence par smtp:// ou smtps://.",
+        "smtpPortNotAllowed": "Seuls les ports 465 (smtps) et 587 (STARTTLS) sont possibles.",
+        "smtpHostNotPublic": "Ce serveur n'a pas d'adresse publique. L'envoi passe uniquement par des serveurs sur Internet, pas par des adresses privées ou locales.",
+        "smtpHostUnknown": "Ce nom de serveur n'existe pas."
       },
       "member": {
         "adminOnly": "Seuls les admins de l'espace peuvent gérer les membres.",
