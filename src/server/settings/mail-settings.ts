@@ -2,6 +2,7 @@ import { eq } from 'drizzle-orm'
 import { z } from 'zod'
 import type { Tx } from '@/server/db'
 import { tenant } from '@/server/db/schema'
+import type { DomainErrorKey } from '@/domain/errors'
 import { decryptSecret, encryptSecret } from './secretbox'
 
 /**
@@ -21,10 +22,24 @@ import { decryptSecret, encryptSecret } from './secretbox'
  *
  * The two credentials are encrypted (see secretbox.ts); everything else is
  * plain, because a sender address in a backup harms nobody.
+ *
+ * IN THE CLOUD THE ENVIRONMENT IS SOMEBODY ELSE'S. There it configures the
+ * platform's own mail, and a workspace is a customer, not the operator: the
+ * rule above would lock every customer's form to our relay and show them our
+ * app registration. So the edition decides (`MailPolicy`): self-hosted, the
+ * environment wins field by field; in the cloud a workspace either has mail of
+ * its own -- taken from its row alone -- or sends as the platform.
  */
 
 export const MAIL_TRANSPORTS = ['smtp', 'graph', 'console', 'none'] as const
 export type MailTransport = (typeof MAIL_TRANSPORTS)[number]
+
+/** How a tenant's stored settings meet the environment; see the top of this file. */
+export type MailPolicy = 'environment-wins' | 'tenant-or-platform'
+
+/** What a cloud workspace picks to say "send as GoodWorkshop". Never stored:
+ *  it is the absence of a transport of its own. */
+export const PLATFORM_CHOICE = 'platform'
 
 /** What an operator may set. Secrets are write-only from the form's side: the
  *  stored value is never sent back to the browser, only whether there is one. */
@@ -32,7 +47,7 @@ export const mailSettingsInput = z.object({
   // Optional because the form locks the radio buttons when GW_MAIL_TRANSPORT is
   // set, and a disabled input is not submitted. Required, it rejected every save
   // on exactly the installation the README describes.
-  transport: z.enum(MAIL_TRANSPORTS).optional(),
+  transport: z.enum([...MAIL_TRANSPORTS, PLATFORM_CHOICE]).optional(),
   smtpUrl: z.string().trim().max(2000).optional(),
   smtpFrom: z.string().trim().max(320).optional(),
   graphTenantId: z.string().trim().max(200).optional(),
@@ -54,6 +69,12 @@ export type MailConfig = {
   graphSender?: string
   /** Which fields the environment dictates, so the form can say so. */
   fromEnvironment: string[]
+  /**
+   * Whose mail this is. `tenant`: a cloud workspace's own, which may fall back
+   * to the platform when it fails. `platform`: GoodWorkshop sending as itself.
+   * `installation`: a self-hosted install, environment and form merged.
+   */
+  owner: 'tenant' | 'platform' | 'installation'
 }
 
 const SECRET_FIELDS = ['smtpUrl', 'graphClientSecret'] as const
@@ -70,6 +91,9 @@ const storedMail = z
     graphClientId: z.string().optional(),
     graphClientSecret: z.object({ enc: z.string() }).optional(),
     graphSender: z.string().optional(),
+    /** The last time this workspace's own mail failed and the platform's went
+     *  instead. Kept until the next save, so the admin page can say so. */
+    lastFallback: z.object({ at: z.string(), error: z.string() }).optional(),
   })
   .partial()
 
@@ -149,6 +173,60 @@ export function resolveMailConfig(stored: StoredMail, env: MailEnv): MailConfig 
     graphClientSecret: secret('graphClientSecret', env.GW_GRAPH_CLIENT_SECRET),
     graphSender: pick('graphSender', env.GW_GRAPH_SENDER, stored.graphSender),
     fromEnvironment,
+    owner: 'installation',
+  }
+}
+
+/**
+ * The configuration a tenant's mail goes out with, under the edition's policy.
+ *
+ * Only `smtp` and `graph` count as mail of a workspace's own. A cloud row may
+ * still say `console` or `none` from before this existed, and neither is
+ * something a customer can mean: one prints their sign-in links into our log,
+ * the other locks them out.
+ */
+export function resolveTenantMail(
+  stored: StoredMail,
+  env: MailEnv,
+  policy: MailPolicy,
+): MailConfig {
+  if (policy === 'environment-wins') return resolveMailConfig(stored, env)
+
+  if (stored.transport === 'smtp' || stored.transport === 'graph') {
+    // `{}`, not `env`: a field the workspace left empty stays empty. Filling it
+    // from the platform would let a workspace send through our registration.
+    return { ...resolveMailConfig(stored, {}), owner: 'tenant' }
+  }
+  return { ...resolveMailConfig({}, env), owner: 'platform' }
+}
+
+/** Why a submission does not fit this edition, or null. A translation key. */
+export function mailSettingsProblem(
+  input: MailSettingsInput,
+  policy: MailPolicy,
+): DomainErrorKey | null {
+  if (policy === 'tenant-or-platform') {
+    return input.transport === 'console' || input.transport === 'none'
+      ? 'mail.transportNotOffered'
+      : null
+  }
+  return input.transport === PLATFORM_CHOICE ? 'mail.transportNotOffered' : null
+}
+
+/**
+ * Notes that a workspace's own mail failed and the platform's went instead.
+ *
+ * One line and short: the text came from somebody else's relay and ends up on
+ * a page, and a 2 KB stack of SMTP dialogue helps nobody there.
+ */
+export function recordMailFallback(stored: StoredMail, at: Date, error: string): StoredMail {
+  const line = error.replace(/\r|\n|\u2028|\u2029/g, ' ').trim()
+  return {
+    ...stored,
+    lastFallback: {
+      at: at.toISOString(),
+      error: line.length > 300 ? `${line.slice(0, 299)}…` : line,
+    },
   }
 }
 
@@ -168,7 +246,14 @@ function smtpUrlFromEnv(env: MailEnv): string | undefined {
  * explicit action.
  */
 export function applyMailSettings(stored: StoredMail, input: MailSettingsInput): StoredMail {
-  const next: StoredMail = { ...stored, transport: input.transport ?? stored.transport }
+  const next: StoredMail = {
+    ...stored,
+    transport:
+      input.transport === PLATFORM_CHOICE ? undefined : (input.transport ?? stored.transport),
+  }
+  // Saving is what an admin does after reading about the failure; the notice
+  // has done its job, and the next failure writes a new one.
+  delete next.lastFallback
 
   for (const field of ['smtpFrom', 'graphTenantId', 'graphClientId', 'graphSender'] as const) {
     const value = input[field]
@@ -197,16 +282,37 @@ export async function writeStoredMail(tx: Tx, tenantId: string, mail: StoredMail
     .where(eq(tenant.id, tenantId))
 }
 
-/** What the form may show: never a credential, only whether one is stored. */
-export function describeMailSettings(stored: StoredMail, config: MailConfig) {
+/**
+ * What the form may show: never a credential, only whether one is stored.
+ *
+ * A cloud workspace sending as the platform sees the platform's sender address
+ * and nothing else of it. The fields below show what the workspace itself
+ * typed, so switching to its own mail starts from that, not from our ids.
+ */
+export function describeMailSettings(
+  stored: StoredMail,
+  config: MailConfig,
+  policy: MailPolicy = 'environment-wins',
+) {
+  const asPlatform = config.owner === 'platform'
+  const shown = asPlatform ? resolveMailConfig(stored, {}) : config
   return {
-    transport: config.transport,
-    smtpFrom: config.smtpFrom ?? '',
-    graphTenantId: config.graphTenantId ?? '',
-    graphClientId: config.graphClientId ?? '',
-    graphSender: config.graphSender ?? '',
-    hasSmtpUrl: Boolean(stored.smtpUrl || config.smtpUrl),
-    hasGraphClientSecret: Boolean(stored.graphClientSecret || config.graphClientSecret),
-    fromEnvironment: config.fromEnvironment,
+    policy,
+    transport: asPlatform ? PLATFORM_CHOICE : config.transport,
+    platformSender: asPlatform ? (senderOf(config) ?? '') : '',
+    smtpFrom: shown.smtpFrom ?? '',
+    graphTenantId: shown.graphTenantId ?? '',
+    graphClientId: shown.graphClientId ?? '',
+    graphSender: shown.graphSender ?? '',
+    hasSmtpUrl: Boolean(stored.smtpUrl || shown.smtpUrl),
+    hasGraphClientSecret: Boolean(stored.graphClientSecret || shown.graphClientSecret),
+    fromEnvironment: shown.fromEnvironment,
+    lastFallback: stored.lastFallback ?? null,
   }
+}
+
+function senderOf(config: MailConfig): string | undefined {
+  if (config.transport === 'graph') return config.graphSender
+  if (config.transport === 'smtp') return config.smtpFrom
+  return undefined
 }

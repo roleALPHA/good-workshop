@@ -6,8 +6,9 @@ sidebar:
 ---
 
 GoodWorkshop verschickt Anmeldelinks und Einladungen per E-Mail. Ohne Mailversand kommt nur
-hinein, wer schon einen [Passkey](/de/account/passkeys/) hat. Diese Seite brauchst du vor
-allem, wenn du GoodWorkshop selbst betreibst.
+hinein, wer schon einen [Passkey](/de/account/passkeys/) hat. Betreibst du GoodWorkshop selbst,
+richtest du ihn hier ein. In der GoodWorkshop Cloud ist er schon eingerichtet, und du kannst
+stattdessen deinen eigenen nehmen – siehe [In der GoodWorkshop Cloud](#in-der-goodworkshop-cloud).
 
 Öffne oben rechts das Kontomenü und wähle unter **Verwaltung** den Eintrag **Mailversand**.
 
@@ -17,7 +18,7 @@ Den Mailversand richten nur Admins ein.
 
 ## Den Weg wählen
 
-Unter **Wie sollen Mails verschickt werden?** stehen vier Möglichkeiten:
+Selbst betrieben stehen unter **Wie sollen Mails verschickt werden?** vier Möglichkeiten:
 
 | Weg                             | Wofür                                                 |
 | ------------------------------- | ----------------------------------------------------- |
@@ -30,6 +31,32 @@ Unter **Wie sollen Mails verschickt werden?** stehen vier Möglichkeiten:
 **In das Server-Log schreiben** ist für den Anfang oder eine Testinstallation gedacht. Wer das
 Log lesen kann, kommt in jedes Konto.
 :::
+
+## In der GoodWorkshop Cloud
+
+In der Cloud ist der Mailversand von Anfang an eingerichtet. Unter **Wie sollen Mails verschickt
+werden?** stehen drei Möglichkeiten:
+
+| Weg                             | Wofür                                                                                  |
+| ------------------------------- | -------------------------------------------------------------------------------------- |
+| **Über GoodWorkshop versenden** | Voreingestellt. Mails kommen von `no-reply@goodworkshop.org`, nichts ist einzurichten. |
+| **Microsoft Graph**             | Dein eigenes Microsoft 365, eingerichtet wie unten beschrieben.                        |
+| **SMTP**                        | Dein eigenes Mailrelay, eingerichtet wie unten beschrieben.                            |
+
+Mit eigenem Versand kommen Anmeldelinks und Einladungen deines Workspaces von deiner Adresse. Für
+SMTP gelten in der Cloud zwei Grenzen: nur die Ports 465 (`smtps://`) und 587 (STARTTLS), und nur
+Server mit öffentlicher Adresse. Einen Server in einem privaten oder lokalen Netz nimmt die Seite
+nicht an.
+
+:::note
+Schlägt dein eigener Versand fehl, geht die Mail stattdessen über GoodWorkshop – ein kaputtes Relay
+sperrt so niemanden aus. Auf der Seite **Mailversand** steht dann, wann und mit welchem Fehler. Der
+Hinweis verschwindet beim nächsten **Speichern**. Die Testnachricht nimmt diesen Umweg nicht,
+damit du den Fehler siehst.
+:::
+
+Zurück zum Versand über GoodWorkshop kommst du mit **Über GoodWorkshop versenden** und
+**Speichern**. Was du für den eigenen Versand eingetragen hast, bleibt dabei gespeichert.
 
 ## SMTP einrichten
 
@@ -65,7 +92,7 @@ behalten“. Lässt du es leer, bleibt der gespeicherte Wert erhalten.
 ## Werte aus der Umgebung
 
 Wer GoodWorkshop selbst betreibt, kann den Mailversand auch in der `.env` der Installation
-festlegen. Diese Werte haben Vorrang. Die Seite zeigt solche Felder gesperrt und mit dem
+festlegen. Diese Werte haben Vorrang. In der Cloud gibt es das nicht; dort sperrt nichts deine Felder. Die Seite zeigt solche Felder gesperrt und mit dem
 Zusatz **aus der Umgebung**; ändern lassen sie sich nur auf dem Server.
 
 | Variable                                                                                | Feld                                            |

@@ -108,6 +108,12 @@ export const DOMAIN_ERROR_KEYS = [
   'mail.noSmtpUrl',
   'mail.transportNone',
   'mail.graphMissing',
+  // A cloud workspace's own relay: where our server will not connect to
+  'mail.transportNotOffered',
+  'mail.smtpUrlInvalid',
+  'mail.smtpPortNotAllowed',
+  'mail.smtpHostNotPublic',
+  'mail.smtpHostUnknown',
   // A workspace that may not change its content (cloud: read-only, paused, deleting)
   'workspace.readOnly',
   // Live collaboration

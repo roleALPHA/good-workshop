@@ -126,6 +126,45 @@ describe('sending through Graph', () => {
     expect(tokenCalls(fetchMock)).toHaveLength(1)
   })
 
+  it('keeps one token per app registration, not one for the whole process', async () => {
+    // In the cloud every workspace may bring its own registration. One shared
+    // slot would hand the token of whoever sent first to everybody after.
+    const fetchMock = vi
+      .fn()
+      .mockResolvedValueOnce(ok({ access_token: 'token-a', expires_in: 3600 }))
+      .mockResolvedValueOnce(new Response('', { status: 202 }))
+      .mockResolvedValueOnce(ok({ access_token: 'token-b', expires_in: 3600 }))
+      .mockResolvedValueOnce(new Response('', { status: 202 }))
+    vi.stubGlobal('fetch', fetchMock)
+
+    const { sendMail } = await load()
+    await sendMail(MAIL, TENANT)
+    process.env.GW_GRAPH_CLIENT_ID = 'another-client'
+    await sendMail(MAIL, TENANT)
+
+    expect(tokenCalls(fetchMock)).toHaveLength(2)
+    expect(callsOf(fetchMock)[3]![1].headers.authorization).toBe('Bearer token-b')
+  })
+
+  it('does not hand a cached token to somebody who only knows the ids', async () => {
+    // Tenant and application id are no secret -- they were on the form. Who
+    // types them in with a wrong secret must meet Microsoft, not our cache.
+    const fetchMock = vi
+      .fn()
+      .mockResolvedValueOnce(ok({ access_token: 'token-a', expires_in: 3600 }))
+      .mockResolvedValueOnce(new Response('', { status: 202 }))
+      .mockResolvedValueOnce(
+        new Response(JSON.stringify({ error: 'invalid_client' }), { status: 401 }),
+      )
+    vi.stubGlobal('fetch', fetchMock)
+
+    const { sendMail } = await load()
+    await sendMail(MAIL, TENANT)
+    process.env.GW_GRAPH_CLIENT_SECRET = 'guessed'
+    await expect(sendMail(MAIL, TENANT)).rejects.toThrow(/credentials: 401/)
+    expect(tokenCalls(fetchMock)).toHaveLength(2)
+  })
+
   it('asks again once the token is close to expiring', async () => {
     const fetchMock = vi
       .fn()

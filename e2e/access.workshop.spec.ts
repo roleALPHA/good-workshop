@@ -268,6 +268,13 @@ test('a member has no administration', async () => {
   await expect(lea.page.getByRole('alert').filter({ hasText: 'Admins' })).toBeVisible()
   await expect(lea.page.getByRole('button', { name: 'Mitglied einladen' })).toHaveCount(0)
   await expect(lea.page.getByText(mo.email)).toHaveCount(0)
+
+  // Mail delivery holds the workspace's relay credentials, in the cloud its
+  // own: a member sees the refusal, not the form and not the sender.
+  await lea.page.goto('/admin/mail')
+  await expect(lea.page.getByRole('alert').filter({ hasText: 'Admins' })).toBeVisible()
+  await expect(lea.page.getByText('Wie sollen Mails verschickt werden?')).toHaveCount(0)
+  await expect(lea.page.getByRole('button', { name: 'Schicken' })).toHaveCount(0)
 })
 
 test('taking the grant back takes the folder and its workshops with it', async () => {

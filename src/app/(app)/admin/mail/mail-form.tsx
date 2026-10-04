@@ -6,18 +6,28 @@ import {
   sendTestMail,
   type MailSettingsView,
 } from '@/server/actions/mail-settings'
-import { useTranslations } from 'next-intl'
+import { useFormatter, useTranslations } from 'next-intl'
 
 const field =
   'mt-1 w-full rounded border border-[var(--border)] bg-[var(--surface)] px-3 py-2 text-[15px] disabled:opacity-60'
 
-/** Values only: the label and the hint for each live in the catalog. */
-const TRANSPORTS = ['graph', 'smtp', 'console', 'none'] as const
+/**
+ * Values only: the label and the hint for each live in the catalog.
+ *
+ * A cloud workspace is offered the platform's mail or its own, never the
+ * server log or no delivery: the log is ours, and no delivery would lock the
+ * workspace out. A self-hosted install has no platform to send through.
+ */
+const TRANSPORTS = {
+  'environment-wins': ['graph', 'smtp', 'console', 'none'],
+  'tenant-or-platform': ['platform', 'graph', 'smtp'],
+} as const
 
 export function MailForm({ initial }: { initial: MailSettingsView }) {
   const t = useTranslations('admin.mail')
   const tc = useTranslations('common')
   const tTransport = useTranslations('admin.mail.transport')
+  const format = useFormatter()
   const [view, setView] = useState(initial)
   const [transport, setTransport] = useState<string>(initial.transport)
   const [saved, setSaved] = useState(false)
@@ -28,6 +38,14 @@ export function MailForm({ initial }: { initial: MailSettingsView }) {
   /** A field the environment dictates is shown, not hidden -- and not editable,
    *  because a form that accepts a value it will ignore is worse than a lock. */
   const fixed = (name: string) => view.fromEnvironment.includes(name)
+  const cloud = view.policy === 'tenant-or-platform'
+
+  function hint(option: (typeof TRANSPORTS)[keyof typeof TRANSPORTS][number]) {
+    if (option !== 'platform') return tTransport(`${option}Hint`)
+    return view.platformSender
+      ? tTransport('platformHint', { sender: view.platformSender })
+      : tTransport('platformHintNoSender')
+  }
 
   async function save(formData: FormData) {
     setPending(true)
@@ -64,6 +82,18 @@ export function MailForm({ initial }: { initial: MailSettingsView }) {
 
   return (
     <>
+      {view.lastFallback && (
+        <p
+          role="status"
+          className="mt-4 rounded border border-[var(--border)] bg-[var(--surface)] px-3 py-2 text-[14px] text-[var(--warn-fg)]"
+        >
+          {t('fallbackNotice', {
+            at: format.dateTime(new Date(view.lastFallback.at), 'short'),
+            error: view.lastFallback.error,
+          })}
+        </p>
+      )}
+
       {view.fromEnvironment.length > 0 && (
         <p className="mt-4 rounded border border-[var(--border)] bg-[var(--surface)] px-3 py-2 text-[14px] text-[var(--fg-muted)]">
           {t.rich('fromEnvironmentNotice', { code: (chunks) => <code>{chunks}</code> })}
@@ -74,7 +104,7 @@ export function MailForm({ initial }: { initial: MailSettingsView }) {
         <fieldset>
           <legend className="text-[14px] font-medium">{t('transportLegend')}</legend>
           <div className="mt-2 space-y-2">
-            {TRANSPORTS.map((option) => (
+            {TRANSPORTS[view.policy].map((option) => (
               <label key={option} className="flex gap-3">
                 <input
                   type="radio"
@@ -87,14 +117,16 @@ export function MailForm({ initial }: { initial: MailSettingsView }) {
                 />
                 <span>
                   <span className="text-[15px] font-medium">{tTransport(option)}</span>
-                  <span className="block text-[13px] text-[var(--fg-subtle)]">
-                    {tTransport(`${option}Hint`)}
-                  </span>
+                  <span className="block text-[13px] text-[var(--fg-subtle)]">{hint(option)}</span>
                 </span>
               </label>
             ))}
           </div>
         </fieldset>
+
+        {cloud && (transport === 'graph' || transport === 'smtp') && (
+          <p className="text-[13px] text-[var(--fg-subtle)]">{t('ownNote')}</p>
+        )}
 
         {transport === 'graph' && (
           <div className="space-y-4 border-l-2 border-[var(--border)] pl-4">
@@ -136,7 +168,7 @@ export function MailForm({ initial }: { initial: MailSettingsView }) {
             <Secret
               name="smtpUrl"
               label={t('smtpUrl')}
-              hint={t('smtpUrlHint')}
+              hint={cloud ? t('smtpUrlHintCloud') : t('smtpUrlHint')}
               stored={view.hasSmtpUrl}
               disabled={fixed('smtpUrl')}
             />

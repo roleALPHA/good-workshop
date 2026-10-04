@@ -24,6 +24,9 @@ Revisa por orden:
 3. **Espera un poco.** Por dirección salen como máximo cinco enlaces cada 15 minutos. Las peticiones
    adicionales se descartan sin aviso.
 4. **Instalación propia:** ¿hay algún envío de correo configurado? Consulta más abajo.
+5. **Nube con envío propio:** si **Envío de correo** muestra un aviso de que tu propio envío falló,
+   el enlace salió de `no-reply@goodworkshop.org` en su lugar. Busca también esa dirección y
+   comprueba tus ajustes con el mensaje de prueba. Consulta [Envío de correo](/es/account/mail/).
 
 ### Instalación propia: sin envío de correo
 

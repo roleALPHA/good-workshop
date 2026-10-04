@@ -24,6 +24,9 @@ Vérifie dans l'ordre :
 3. **Attends un peu.** Au maximum cinq liens partent par adresse en 15 minutes. Les demandes
    suivantes sont ignorées sans message.
 4. **Auto-hébergement :** l'envoi d'e-mails est-il seulement configuré ? Voir plus bas.
+5. **Cloud avec ton propre envoi :** si **Envoi d'e-mails** indique que ton propre envoi a échoué,
+   le lien est parti de `no-reply@goodworkshop.org` à la place. Cherche aussi cette adresse, et
+   vérifie tes réglages avec le message de test. Voir [Envoi d'e-mails](/fr/account/mail/).
 
 ### Auto-hébergement : pas d'envoi d'e-mails
 

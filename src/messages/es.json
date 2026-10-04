@@ -59,6 +59,9 @@
       "fromEnvironment": "del entorno",
       "transportLegend": "¿Cómo se debe enviar el correo?",
       "transport": {
+        "platform": "Enviar a través de GoodWorkshop",
+        "platformHint": "El correo sale de {sender}. No hay nada que configurar.",
+        "platformHintNoSender": "No hay nada que configurar.",
         "graph": "Microsoft Graph",
         "graphHint": "Para Microsoft 365 sin SMTP AUTH.",
         "smtp": "SMTP",
@@ -68,6 +71,7 @@
         "none": "Sin envío",
         "noneHint": "Los enlaces de acceso solo se obtienen por línea de comandos."
       },
+      "ownNote": "Con tu propio envío, los enlaces de acceso y las invitaciones salen de tu dirección. Si falla, el correo pasa por GoodWorkshop — y esta página dice cuándo y por qué.",
       "graphIntro": "Hace falta un registro de aplicación en Entra ID con el <b>permiso de aplicación</b> <code>Mail.Send</code> y el consentimiento del administrador.",
       "graphTenantId": "ID de directorio o de inquilino",
       "graphClientId": "ID de aplicación",
@@ -75,9 +79,11 @@
       "graphSender": "Buzón remitente",
       "smtpUrl": "URL de SMTP",
       "smtpUrlHint": "Por ejemplo smtps://usuario:contrasena@relay.example.com:465",
+      "smtpUrlHintCloud": "Por ejemplo smtps://usuario:contraseña@mail.example.com:465 — solo los puertos 465 y 587, solo servidores con dirección pública.",
       "smtpFrom": "Dirección del remitente",
       "secretStored": "guardado — déjalo vacío para conservarlo",
       "saved": "Guardado.",
+      "fallbackNotice": "El {at} falló tu propio envío ({error}). El correo salió por GoodWorkshop en su lugar. Este aviso desaparece la próxima vez que guardes.",
       "testTitle": "Enviar un mensaje de prueba",
       "testIntro": "Si un relé funciona se ve al enviar. Si no, el primer intento es el enlace de acceso de alguien — y un fallo parece entonces una cuenta rota.",
       "testTo": "Para",
@@ -452,7 +458,12 @@
       "mail": {
         "noSmtpUrl": "Transporte SMTP, pero no hay ninguna URL de SMTP configurada — ni en el entorno ni en los ajustes.",
         "transportNone": "Transporte «sin envío»: no se puede enviar ningún correo. Usa `node scripts/cli.mjs login-link --email …` o elige un transporte en los ajustes.",
-        "graphMissing": "Transporte Microsoft Graph, pero falta {field}."
+        "graphMissing": "Transporte Microsoft Graph, pero falta {field}.",
+        "transportNotOffered": "Esta forma de envío no está disponible aquí.",
+        "smtpUrlInvalid": "Eso no es una URL de SMTP. Empieza por smtp:// o smtps://.",
+        "smtpPortNotAllowed": "Solo son posibles los puertos 465 (smtps) y 587 (STARTTLS).",
+        "smtpHostNotPublic": "Este servidor no tiene dirección pública. Solo se envía a través de servidores en internet, no de direcciones privadas o locales.",
+        "smtpHostUnknown": "Este nombre de servidor no existe."
       },
       "member": {
         "adminOnly": "Solo los administradores del espacio pueden gestionar miembros.",

@@ -23,6 +23,9 @@ Go through these in order:
 3. **Wait a moment.** At most five links go out per address in 15 minutes. Further requests are
    silently dropped.
 4. **Self-hosted:** Is mail delivery set up at all? See below.
+5. **Cloud with your own delivery:** If **Mail delivery** shows a notice that your own delivery
+   failed, the link came from `no-reply@goodworkshop.org` instead. Look for that address too, and
+   check your settings with the test message. See [Mail delivery](/en/account/mail/).
 
 ### Self-hosted: no mail delivery
 

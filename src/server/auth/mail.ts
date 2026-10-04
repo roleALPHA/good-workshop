@@ -1,6 +1,17 @@
+import { createHash } from 'node:crypto'
 import { readFileSync } from 'node:fs'
 import { withTenantOnly } from '@/server/db'
-import { readStoredMail, resolveMailConfig, type MailConfig } from '@/server/settings/mail-settings'
+import { edition } from '@/server/edition'
+import {
+  readStoredMail,
+  recordMailFallback,
+  resolveMailConfig,
+  resolveTenantMail,
+  writeStoredMail,
+  type MailConfig,
+  type MailEnv,
+} from '@/server/settings/mail-settings'
+import { smtpTarget } from './smtp-target'
 import { authConfig } from './config'
 import type { Locale } from '@/i18n/config'
 import { translator } from '@/i18n/translator'
@@ -23,8 +34,9 @@ import { ATTRIBUTION_TEXT } from '@/lib/attribution'
 export type Mail = { to: string; subject: string; text: string }
 
 /**
- * The configuration in force for a tenant: what the environment sets, filled up
- * with what an admin configured in the browser.
+ * The configuration in force for a tenant. Self-hosted: what the environment
+ * sets, filled up with what an admin configured in the browser. In the cloud:
+ * the workspace's own mail, or the platform's -- see resolveTenantMail.
  *
  * Read per send rather than cached. Mail is not a hot path -- a login link, an
  * invitation -- and the alternative is an operator changing the relay and
@@ -35,15 +47,18 @@ export type Mail = { to: string; subject: string; text: string }
  */
 export async function mailConfigFor(tenantId: string): Promise<MailConfig> {
   const stored = await withTenantOnly(tenantId, (tx) => readStoredMail(tx, tenantId))
+  return resolveTenantMail(stored, mailEnv(), edition.mailPolicy)
+}
 
-  return resolveMailConfig(stored, {
+function mailEnv(): MailEnv {
+  return {
     ...process.env,
     SMTP_URL: fromFileOrValue(process.env.SMTP_URL_FILE, process.env.SMTP_URL),
     GW_GRAPH_CLIENT_SECRET: fromFileOrValue(
       process.env.GW_GRAPH_CLIENT_SECRET_FILE,
       process.env.GW_GRAPH_CLIENT_SECRET,
     ),
-  })
+  }
 }
 
 function fromFileOrValue(file: string | undefined, value: string | undefined) {
@@ -53,7 +68,39 @@ function fromFileOrValue(file: string | undefined, value: string | undefined) {
 
 const oneLine = (value: string) => value.replace(/\r|\n|\u2028|\u2029/g, '')
 
+/**
+ * Sends as the tenant. A cloud workspace whose own mail fails sends as the
+ * platform instead.
+ *
+ * WHY A FALLBACK. Sign-in links go this way, and a broken relay would otherwise
+ * lock the whole workspace out -- the admin who could repair it included. WHY
+ * IT IS WRITTEN DOWN. A fallback nobody hears about is a broken configuration
+ * that looks like a working one; the admin page shows the last failure until
+ * the next save.
+ */
 export async function sendMail(mail: Mail, tenantId: string): Promise<void> {
+  const config = await mailConfigFor(tenantId)
+  if (config.owner !== 'tenant') return deliver(mail, config)
+
+  try {
+    await deliver(mail, config)
+  } catch (error) {
+    const reason = error instanceof Error ? error.message : String(error)
+    // The workspace, not the mail: its text carries a sign-in link.
+    console.warn(`Mail of tenant ${tenantId} failed, sending as the platform instead: ${reason}`)
+    await withTenantOnly(tenantId, async (tx) => {
+      const stored = await readStoredMail(tx, tenantId)
+      await writeStoredMail(tx, tenantId, recordMailFallback(stored, new Date(), reason))
+    }).catch((recordError: unknown) => {
+      console.warn(`Could not record the mail fallback of tenant ${tenantId}:`, recordError)
+    })
+    await deliver(mail, platformMailConfig())
+  }
+}
+
+/** The test message: the one send whose failure is the answer, so it never
+ *  falls back. */
+export async function sendMailWithoutFallback(mail: Mail, tenantId: string): Promise<void> {
   await deliver(mail, await mailConfigFor(tenantId))
 }
 
@@ -69,17 +116,7 @@ export async function sendMail(mail: Mail, tenantId: string): Promise<void> {
  */
 export function platformMailConfig(): MailConfig {
   // An empty object, not a tenant's row: nothing here is configured in a browser.
-  return resolveMailConfig(
-    {},
-    {
-      ...process.env,
-      SMTP_URL: fromFileOrValue(process.env.SMTP_URL_FILE, process.env.SMTP_URL),
-      GW_GRAPH_CLIENT_SECRET: fromFileOrValue(
-        process.env.GW_GRAPH_CLIENT_SECRET_FILE,
-        process.env.GW_GRAPH_CLIENT_SECRET,
-      ),
-    },
-  )
+  return { ...resolveMailConfig({}, mailEnv()), owner: 'platform' }
 }
 
 /** Mail the platform sends as itself: the operator console's sign-in links. */
@@ -114,7 +151,19 @@ async function deliver(mail: Mail, config: MailConfig): Promise<void> {
         throw new MailConfigError('mail.noSmtpUrl')
       }
       const { createTransport } = await import('nodemailer')
-      await createTransport(config.smtpUrl).sendMail({
+      // A cloud workspace's relay is a customer's URL our server connects to;
+      // see smtp-target.ts. Short timeouts, because a sign-in link waits on it
+      // and falls back to the platform only once it gives up.
+      const transport =
+        config.owner === 'tenant'
+          ? createTransport({
+              ...(await smtpTarget(config.smtpUrl)),
+              connectionTimeout: 10_000,
+              greetingTimeout: 10_000,
+              socketTimeout: 20_000,
+            })
+          : createTransport(config.smtpUrl)
+      await transport.sendMail({
         from: config.smtpFrom ?? 'goodworkshop@localhost',
         to: mail.to,
         subject: mail.subject,
@@ -145,7 +194,10 @@ async function deliver(mail: Mail, config: MailConfig): Promise<void> {
  * in an image that ships to other people's servers.
  */
 async function sendViaGraph(mail: Mail, config: MailConfig): Promise<void> {
-  const sender = required(config.graphSender, 'the sender mailbox (GW_GRAPH_SENDER)')
+  const sender = required(
+    config.graphSender,
+    label(config, 'the sender mailbox', 'GW_GRAPH_SENDER'),
+  )
 
   const response = await fetch(
     `https://graph.microsoft.com/v1.0/users/${encodeURIComponent(sender)}/sendMail`,
@@ -173,25 +225,40 @@ async function sendViaGraph(mail: Mail, config: MailConfig): Promise<void> {
   }
 }
 
-/** Cached until shortly before it expires -- a token is good for about an hour,
- *  and fetching one per mail costs a round trip on every login attempt. */
-let cachedToken: { value: string; expiresAt: number } | undefined
+/**
+ * Cached until shortly before it expires -- a token is good for about an hour,
+ * and fetching one per mail costs a round trip on every login attempt.
+ *
+ * One per app registration AND secret. In the cloud each workspace may bring
+ * its own registration, and tenant and application id are no secret: keyed on
+ * those two alone, anybody who typed ours in with any secret at all would send
+ * on our token as any mailbox it may send as.
+ */
+const cachedTokens = new Map<string, { value: string; expiresAt: number }>()
 
 async function graphToken(config: MailConfig): Promise<string> {
-  if (cachedToken && Date.now() < cachedToken.expiresAt) return cachedToken.value
+  const tenant = required(config.graphTenantId, label(config, 'the tenant', 'GW_GRAPH_TENANT_ID'))
+  const clientId = required(
+    config.graphClientId,
+    label(config, 'the application id', 'GW_GRAPH_CLIENT_ID'),
+  )
+  const clientSecret = required(
+    config.graphClientSecret,
+    label(config, 'the client secret', 'GW_GRAPH_CLIENT_SECRET'),
+  )
+  const key = createHash('sha256').update(`${tenant}\n${clientId}\n${clientSecret}`).digest('hex')
 
-  const tenant = required(config.graphTenantId, 'the tenant (GW_GRAPH_TENANT_ID)')
+  const cached = cachedTokens.get(key)
+  if (cached && Date.now() < cached.expiresAt) return cached.value
+
   const response = await fetch(
     `https://login.microsoftonline.com/${encodeURIComponent(tenant)}/oauth2/v2.0/token`,
     {
       method: 'POST',
       headers: { 'content-type': 'application/x-www-form-urlencoded' },
       body: new URLSearchParams({
-        client_id: required(config.graphClientId, 'the application id (GW_GRAPH_CLIENT_ID)'),
-        client_secret: required(
-          config.graphClientSecret,
-          'the client secret (GW_GRAPH_CLIENT_SECRET)',
-        ),
+        client_id: clientId,
+        client_secret: clientSecret,
         scope: 'https://graph.microsoft.com/.default',
         grant_type: 'client_credentials',
       }),
@@ -209,11 +276,11 @@ async function graphToken(config: MailConfig): Promise<string> {
 
   // A minute of headroom, so a token cannot expire between this check and the
   // request that uses it.
-  cachedToken = {
+  cachedTokens.set(key, {
     value: token.access_token,
     expiresAt: Date.now() + Math.max((token.expires_in ?? 3600) - 60, 30) * 1000,
-  }
-  return cachedToken.value
+  })
+  return token.access_token
 }
 
 /**
@@ -242,34 +309,40 @@ async function graphError(response: Response): Promise<string> {
 }
 
 /**
- * A value the transport cannot work without.
- *
- * Named in the message the way an operator sees it -- the form label and the
- * environment variable -- because it is now configurable in two places and
- * "GW_GRAPH_SENDER is not set" would be misleading for somebody who has never
- * touched a .env.
- */
-/**
  * A misconfiguration, not a relay failure.
  *
- * These three reach the admin screen verbatim -- which is the point of that
+ * These reach the admin screen verbatim -- which is the point of that
  * screen -- so they are ours to say, in the reader's language. What is NOT
  * translated is what the relay itself answers ("535 authentication failed");
  * see failRelayed in src/server/actions/context.ts.
  *
- * The `field` argument stays English: it names an environment variable.
+ * The `field` argument stays English: it names a field, and on a self-hosted
+ * install the environment variable behind it.
  */
 export class MailConfigError extends DomainError {}
 
-function required(value: string | undefined, label: string): string {
-  if (!value) throw new MailConfigError('mail.graphMissing', { field: label })
+/**
+ * A value the transport cannot work without.
+ *
+ * Named in the message the way an operator sees it -- the form label and the
+ * environment variable -- because it is configurable in two places and
+ * "GW_GRAPH_SENDER is not set" would be misleading for somebody who has never
+ * touched a .env. A cloud workspace has never seen our environment at all, so
+ * it gets the field alone.
+ */
+function required(value: string | undefined, field: string): string {
+  if (!value) throw new MailConfigError('mail.graphMissing', { field })
   return value
+}
+
+function label(config: MailConfig, field: string, variable: string): string {
+  return config.owner === 'tenant' ? field : `${field} (${variable})`
 }
 
 /** Test seam: the token outlives a single call by design, which would otherwise
  *  leak between test cases. */
 export function resetGraphTokenCache(): void {
-  cachedToken = undefined
+  cachedTokens.clear()
 }
 
 /**

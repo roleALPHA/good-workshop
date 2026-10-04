@@ -44,6 +44,9 @@ How to install it yourself is described under [Installation](/en/self-hosting/in
   adopt into your workshops in one step.
 - **Support.** In the account menu, **Support** opens a form that creates a ticket directly with
   us.
+- **Mail without setup.** Sign-in links and invitations come from `no-reply@goodworkshop.org`. If
+  you like, your workspace sends them through your own Microsoft 365 or SMTP instead, see
+  [Mail delivery](/en/account/mail/).
 
 Everything else – library, agenda, sharing, printing, export and the AI connection – works the
 same in both editions.

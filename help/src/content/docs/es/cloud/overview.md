@@ -44,6 +44,9 @@ Cómo instalarlo tú mismo se explica en [Instalación](/es/self-hosting/install
   adoptas en tus talleres en un solo paso.
 - **Soporte.** En el menú de la cuenta, **Soporte** abre un formulario que crea un ticket
   directamente con nosotros.
+- **Correo sin configuración.** Los enlaces de acceso y las invitaciones salen de
+  `no-reply@goodworkshop.org`. Si quieres, tu espacio de trabajo los envía a través de tu propio
+  Microsoft 365 o SMTP, consulta [Envío de correo](/es/account/mail/).
 
 Todo lo demás (biblioteca, agenda, compartir, imprimir, exportar y la conexión con la IA)
 funciona igual en ambas versiones.

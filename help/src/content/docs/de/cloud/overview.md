@@ -44,6 +44,9 @@ Wie du selbst installierst, steht unter [Installation](/de/self-hosting/installa
   einem Schritt in deine Workshops übernimmst.
 - **Support.** Im Kontomenü öffnet **Support** ein Formular, das direkt bei uns ein Ticket
   anlegt.
+- **Mailversand ohne Einrichtung.** Anmeldelinks und Einladungen kommen von
+  `no-reply@goodworkshop.org`. Auf Wunsch verschickt dein Workspace sie über dein eigenes
+  Microsoft 365 oder SMTP, siehe [Mailversand](/de/account/mail/).
 
 Alles andere – Bibliothek, Agenda, Teilen, Drucken, Export und die KI-Anbindung – funktioniert
 in beiden Fassungen gleich.

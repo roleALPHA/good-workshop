@@ -24,6 +24,10 @@ Geh der Reihe nach durch:
 3. **Kurz warten.** Pro Adresse gehen in 15 Minuten höchstens fünf Links hinaus. Weitere Anfragen
    werden still verworfen.
 4. **Selbst betrieben:** Ist überhaupt ein Mailversand eingerichtet? Siehe unten.
+5. **Cloud mit eigenem Versand:** Steht unter **Mailversand** ein Hinweis, dass dein eigener
+   Versand fehlgeschlagen ist, kam der Link stattdessen von `no-reply@goodworkshop.org`. Such auch
+   nach dieser Adresse, und prüf deine Einstellungen mit der Testnachricht. Siehe
+   [Mailversand](/de/account/mail/).
 
 ### Selbst betrieben: kein Mailversand
 
