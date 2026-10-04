@@ -1,0 +1,10 @@
+# Known advisories without a fixed version, accepted for a limited time.
+#
+# Each entry says why it does not reach anything we ship, and expires: when it
+# runs out, the check is red again and somebody looks whether a fix exists.
+# An entry is never extended without reading the advisory again.
+
+[[IgnoredVulns]]
+id = "GHSA-vfj7-8cjw-p6xm"
+ignoreUntil = 2026-11-04T00:00:00Z
+reason = "braces <= 3.0.3, no fixed release yet. Only via eslint-config-next (devDependency); not in the standalone build or the image, and the glob patterns it expands are our own."
