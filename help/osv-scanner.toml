@@ -1,0 +1,12 @@
+# Known advisories without a fixed version, accepted for a limited time.
+# See ../osv-scanner.toml for the rules; this file covers help/pnpm-lock.yaml.
+
+[[IgnoredVulns]]
+id = "GHSA-vfj7-8cjw-p6xm"
+ignoreUntil = 2026-11-04T00:00:00Z
+reason = "braces <= 3.0.3, no fixed release yet. Build-time only: the help image copies the static dist into nginx and ships no node_modules."
+
+[[IgnoredVulns]]
+id = "GHSA-ch52-4w7c-c8xp"
+ignoreUntil = 2026-11-04T00:00:00Z
+reason = "http-cache-semantics <= 4.2.0, no fixed release yet. Pulled in by astro at build time; the help site is static files behind nginx, with no shared HTTP cache in Node at runtime."
