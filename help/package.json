@@ -23,6 +23,9 @@
     "onlyBuiltDependencies": [
       "esbuild",
       "sharp"
-    ]
+    ],
+    "overrides": {
+      "postcss-nested": "^7.0.2"
+    }
   }
 }
