@@ -244,6 +244,11 @@ test.describe('the day view on a phone', () => {
       '1',
     )
     await expect(row.getByRole('button', { name: /verschieben$/ })).toHaveCSS('opacity', '1')
+    // The "+" between two rows, too: under a mouse it waits for the pointer,
+    // under a finger there is no pointer to wait for.
+    await expect(
+      page.getByRole('button', { name: 'Nach „Agenda & Spielregeln“ einfügen' }),
+    ).toHaveCSS('opacity', '1')
   })
 
   /**

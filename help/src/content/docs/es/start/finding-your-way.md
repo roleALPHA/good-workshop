@@ -58,6 +58,7 @@ Un clic en un taller abre su primera jornada. De arriba abajo:
 4. La cabecera de la jornada: comienzo y fin, contenido, pausas y número de bloques; después
    **Añadir una nota sobre la jornada** y la leyenda de colores de los tipos de bloque.
 5. La agenda en tres columnas: **Hora**, **Título y descripción** e **Información adicional**.
+   Si pasas el ratón por el borde entre dos filas, aparece un «+» para insertar justo ahí.
 6. Debajo de la agenda, **Añadir un bloque**, **Añadir sección** y **Añadir breakout**; después
    el **Fin** de la jornada.
 7. Abajo del todo, los apartados: **Apartados**, con los bloques que no cuentan para el tiempo.

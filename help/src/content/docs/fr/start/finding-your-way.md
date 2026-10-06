@@ -59,6 +59,8 @@ Un clic sur un atelier ouvre sa première journée. De haut en bas :
 4. L'en-tête de la journée : début et fin, contenu, pauses et nombre de blocs, puis
    **Ajouter une note sur la journée** et la légende des couleurs des types de blocs.
 5. L'agenda en trois colonnes : **Heure**, **Titre et description** et **Infos complémentaires**.
+   Quand tu places la souris sur la limite entre deux lignes, un « + » apparaît pour insérer à
+   cet endroit.
 6. Sous l'agenda, **Ajouter un bloc**, **Ajouter une section** et **Ajouter un breakout**, puis la
    **Fin** de la journée.
 7. Tout en bas, les blocs mis de côté : **De côté**, avec les blocs qui ne comptent pas dans le

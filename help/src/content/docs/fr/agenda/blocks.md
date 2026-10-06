@@ -15,6 +15,14 @@ Un bloc est une ligne du déroulé : un check-in, un apport, une pause. Chaque b
 
 Le nouveau bloc se place à la fin de la journée, porte le nom de son type et en reprend la durée par défaut. Dans un breakout, chaque volet a son propre bouton **Ajouter un bloc**, qui place le bloc directement dans ce volet.
 
+### Insérer entre deux lignes
+
+Si le bloc ne doit pas aller à la fin, place la souris sur la limite entre deux lignes. Une ligne avec un « + » y apparaît. Un clic dessus ouvre le choix exactement à cet endroit : **Bloc**, **Section** et **Breakout**. **Annuler** ou Échap le referme.
+
+- Entre deux blocs d'une section, le nouveau bloc arrive dans cette section. Seul **Bloc** y est proposé, car les sections ne s'imbriquent pas.
+- Sous le dernier bloc d'une section, un **Bloc** va encore dans la section, une **Section** ou un **Breakout** juste après elle.
+- Sur le téléphone, le « + » est toujours visible. Au clavier, tu l'atteins avec Tab.
+
 :::caution[Le type se choisit une fois pour toutes]
 Tu ne peux plus changer le type d'un bloc par la suite. Si tu t'es trompé, supprime le bloc et recrée-le avec le bon type.
 :::

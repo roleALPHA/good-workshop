@@ -1,4 +1,5 @@
 import { z } from 'zod'
+import type * as Y from 'yjs'
 import { uuidv7 } from 'uuidv7'
 import type { McpServer } from '@modelcontextprotocol/sdk/server/mcp.js'
 import { NotFoundError } from '@/domain/agenda/access'
@@ -52,7 +53,7 @@ export function registerDayBlockTools(server: McpServer, ctx: Ctx): void {
     {
       title: 'Add a block',
       description:
-        'Appends a single block to the end of the day or of a cluster. ' +
+        'Adds a single block to the day or to a cluster -- at the end, or behind `afterId`. ' +
         'Use apply_agenda for whole agendas. `clusterId` may name a section or a STRAND of a ' +
         'breakout -- never the breakout itself, which holds strands and nothing else.',
       inputSchema: {
@@ -62,10 +63,20 @@ export function registerDayBlockTools(server: McpServer, ctx: Ctx): void {
         title: z.string().optional(),
         durationMinutes: Duration.optional(),
         clusterId: Id.nullable().default(null),
+        afterId: AfterId,
         expectedVersion: Version,
       },
     },
-    async ({ workshopId, dayId, typeKey, title, durationMinutes, clusterId, expectedVersion }) =>
+    async ({
+      workshopId,
+      dayId,
+      typeKey,
+      title,
+      durationMinutes,
+      clusterId,
+      afterId,
+      expectedVersion,
+    }) =>
       guarded(async () => {
         requireScope(actor, 'workshops:write')
         const types = await preflight(workshopId, expectedVersion, (tx) => readTypes(tx))
@@ -80,10 +91,12 @@ export function registerDayBlockTools(server: McpServer, ctx: Ctx): void {
           const parent = clusterId === null ? null : blocksOf(doc).get(clusterId)
           if (clusterId !== null && !parent) return 'missingParent' as const
           if (parent && modeOf(parent) === 'parallel') return 'breakoutParent' as const
+          if (!isSibling(doc, afterId, clusterId)) return 'strayAnchor' as const
 
           addModuleBlock(doc, id, {
             ...moduleFrom({ typeKey, title, durationMinutes }, types),
             parentId: clusterId,
+            afterId,
           })
           return 'ok' as const
         })
@@ -99,6 +112,7 @@ export function registerDayBlockTools(server: McpServer, ctx: Ctx): void {
               'breakout itself -- pick one of the strands from get_workshop.',
           )
         }
+        if (result === 'strayAnchor') return fail(strayAnchor(afterId, clusterId))
 
         await record('module.create', workshopId, { moduleId: id, typeKey })
         return ok(`Block created: ${id}`, { id, contentVersion: contentVersion.toString() })
@@ -110,7 +124,8 @@ export function registerDayBlockTools(server: McpServer, ctx: Ctx): void {
     {
       title: 'Add a cluster or a breakout',
       description:
-        'Appends a cluster -- a titled section that groups blocks -- to the end of the day. ' +
+        'Adds a cluster -- a titled section that groups blocks -- to the day, at the end or ' +
+        'behind `afterId`. ' +
         'With mode=parallel it is a BREAKOUT instead: a section whose children are strands that ' +
         'all run at the same time, each in its own room. A strand is itself a cluster, added ' +
         'with parentClusterId pointing at the breakout; the blocks then hang on the strand, not ' +
@@ -135,10 +150,11 @@ export function registerDayBlockTools(server: McpServer, ctx: Ctx): void {
             'Makes this cluster a strand of that breakout. The id must name a cluster with ' +
               'mode=parallel. A strand is always sequential and cannot hold another cluster.',
           ),
+        afterId: AfterId,
         expectedVersion: Version,
       },
     },
-    async ({ workshopId, dayId, title, color, mode, parentClusterId, expectedVersion }) =>
+    async ({ workshopId, dayId, title, color, mode, parentClusterId, afterId, expectedVersion }) =>
       guarded(async () => {
         requireScope(actor, 'workshops:write')
         await preflight(workshopId, expectedVersion)
@@ -157,7 +173,14 @@ export function registerDayBlockTools(server: McpServer, ctx: Ctx): void {
               return 'notABreakout' as const
             }
           }
-          addClusterBlock(doc, id, { title, color: color ?? null, mode, parentId: parentClusterId })
+          if (!isSibling(doc, afterId, parentClusterId)) return 'strayAnchor' as const
+          addClusterBlock(doc, id, {
+            title,
+            color: color ?? null,
+            mode,
+            parentId: parentClusterId,
+            afterId,
+          })
           return 'ok' as const
         })
 
@@ -178,6 +201,7 @@ export function registerDayBlockTools(server: McpServer, ctx: Ctx): void {
               'a strand. Put blocks into it with add_module instead.',
           )
         }
+        if (result === 'strayAnchor') return fail(strayAnchor(afterId, parentClusterId))
 
         await record('cluster.create', workshopId, { clusterId: id, mode, parentClusterId })
         return ok(mode === 'parallel' ? `Breakout created: ${id}` : `Cluster created: ${id}`, {
@@ -349,5 +373,31 @@ export function registerDayBlockTools(server: McpServer, ctx: Ctx): void {
         await record('module.delete', workshopId, { moduleId, removed: result })
         return ok(`Deleted (${result}).`, { contentVersion: contentVersion.toString() })
       }),
+  )
+}
+
+/**
+ * Where something new goes among its siblings -- the same anchor move_module
+ * takes, so "add here" and "move here" mean one thing to a model.
+ */
+const AfterId = Id.nullable()
+  .optional()
+  .describe(
+    'Leave out to append at the end. null puts it first. Otherwise the id of the sibling -- ' +
+      'a block or cluster with the same parent -- it should land after.',
+  )
+
+/** An anchor that is absent, null, or really among the siblings it is meant to sit between. */
+function isSibling(doc: Y.Doc, afterId: string | null | undefined, parentId: string | null) {
+  if (afterId === undefined || afterId === null) return true
+  const anchor = blocksOf(doc).get(afterId)
+  return anchor !== undefined && ((anchor.get('parentId') as string | null) ?? null) === parentId
+}
+
+function strayAnchor(afterId: string | null | undefined, parentId: string | null): string {
+  return (
+    `${afterId} is not a sibling ${parentId === null ? 'at day level' : `in cluster ${parentId}`}` +
+    ' -- afterId names a block or cluster with the same parent. Read the day again with ' +
+    'get_workshop.'
   )
 }

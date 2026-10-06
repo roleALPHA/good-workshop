@@ -15,6 +15,14 @@ Un bloque es una fila del desarrollo: un check-in, un aporte, una pausa. Cada bl
 
 El nuevo bloque queda al final de la jornada, se llama como su tipo y tiene su duración predeterminada. En un breakout, cada grupo tiene su propio botón **Añadir un bloque**, que coloca el bloque directamente en ese grupo.
 
+### Insertar entre dos filas
+
+Si el bloque no debe ir al final, pasa el ratón por el borde entre dos filas. Allí aparece una línea con un «+». Al hacer clic se abre la elección justo en ese lugar: **Bloque**, **Sección** y **Breakout**. **Cancelar** o Escape la cierra de nuevo.
+
+- Entre dos bloques de una sección, el nuevo bloque queda en esa sección. Allí solo se ofrece **Bloque**, porque las secciones no se pueden meter unas dentro de otras.
+- Debajo del último bloque de una sección, un **Bloque** todavía entra en la sección; una **Sección** o un **Breakout** va justo después de ella.
+- En el móvil el «+» se ve siempre. Con el teclado llegas a él con Tab.
+
 :::caution[El tipo se elige una sola vez]
 El tipo de bloque no se puede cambiar después. Si te has equivocado, elimina el bloque y vuelve a crearlo con el tipo correcto.
 :::

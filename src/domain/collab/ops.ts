@@ -41,7 +41,15 @@ export type NewModuleBlock = {
   /** Straight onto the shelf -- a block arriving from another day's parking area. */
   parked?: boolean
   responsible?: Responsible[]
+  afterId?: AfterId
 }
+
+/**
+ * Where a new block goes among its siblings: left out, at the end; null, at the
+ * top; otherwise behind that sibling. The same anchor a move takes, so "insert
+ * here" and "drag here" cannot disagree about what a position means.
+ */
+export type AfterId = string | null | undefined
 
 /**
  * Everything a block takes with it to another day.
@@ -67,11 +75,14 @@ export type NewClusterBlock = {
   mode?: ClusterMode
   /** The breakout this becomes a strand of. A breakout itself sits on the day. */
   parentId?: string | null
+  afterId?: AfterId
 }
 
 export type NewBreakout = {
   title: string
   color?: string | null
+  /** Where the breakout goes on the day. Its strands always start a list of their own. */
+  afterId?: AfterId
   /** The strands, in the order they stand next to each other. */
   strands: { id: string; title: string }[]
 }
@@ -134,27 +145,26 @@ export function patchBlock(doc: Y.Doc, blockId: string, patch: BlockPatch): bool
   return true
 }
 
-/** Appends a module to the end of the day, or of a cluster. */
+/** Adds a module to the day or a cluster -- at the end, or behind `afterId`. */
 export function addModuleBlock(doc: Y.Doc, id: string, input: NewModuleBlock): void {
   const blocks = blocksOf(doc)
   const parentId = input.parentId ?? null
 
   doc.transact(() => {
-    blocks.set(
-      id,
-      buildBlock({
-        kind: 'module',
-        parentId,
-        position: keyAtEnd(siblings(blocks, parentId)),
-        title: input.title,
-        moduleTypeId: input.moduleTypeId,
-        durationMinutes: input.durationMinutes,
-        pinnedStartMinute: input.pinnedStartMinute ?? null,
-        desc: input.desc ?? {},
-        parked: input.parked,
-        responsible: input.responsible,
-      }),
-    )
+    const block = buildBlock({
+      kind: 'module',
+      parentId,
+      position: 'a0',
+      title: input.title,
+      moduleTypeId: input.moduleTypeId,
+      durationMinutes: input.durationMinutes,
+      pinnedStartMinute: input.pinnedStartMinute ?? null,
+      desc: input.desc ?? {},
+      parked: input.parked,
+      responsible: input.responsible,
+    })
+    placeNew(blocks, block, parentId, input.afterId)
+    blocks.set(id, block)
   })
 }
 
@@ -188,7 +198,8 @@ export function parkedModules(doc: Y.Doc): (ModuleSnapshot & { id: string })[] {
 }
 
 /**
- * Appends a cluster: a section on the day, a breakout, or a strand of one.
+ * Adds a cluster: a section on the day, a breakout, or a strand of one -- at
+ * the end of its sibling list, or behind `afterId`.
  *
  * `mode` is always written, even 'sequential'. Absence stays valid for
  * documents from before breakouts; new ones say what they are.
@@ -211,7 +222,7 @@ export function addClusterBlock(doc: Y.Doc, id: string, input: NewClusterBlock):
     // the breakout it names.
     const target = allowedParent(blocks, { id, kind: 'cluster', mode }, input.parentId ?? null)
     block.set('parentId', target.parentId)
-    block.set('position', keyAtEnd(siblings(blocks, target.parentId)))
+    placeNew(blocks, block, target.parentId, input.afterId)
     blocks.set(id, block)
   })
 }
@@ -228,7 +239,12 @@ export function addBreakoutBlock(doc: Y.Doc, id: string, input: NewBreakout): vo
   // Nested transacts are folded into the outer one by Yjs, so the strands and
   // their breakout reach everybody else as a single change.
   doc.transact(() => {
-    addClusterBlock(doc, id, { title: input.title, color: input.color ?? null, mode: 'parallel' })
+    addClusterBlock(doc, id, {
+      title: input.title,
+      color: input.color ?? null,
+      mode: 'parallel',
+      afterId: input.afterId,
+    })
     for (const strand of input.strands) {
       addClusterBlock(doc, strand.id, { title: strand.title, mode: 'sequential', parentId: id })
     }
@@ -379,6 +395,24 @@ export function applyPlacement(
   }
   const slot = placement.rebalance.find((row) => row.id === '')
   if (slot) moving.set('position', slot.position)
+}
+
+/**
+ * Gives a block that is not in the document yet its sort key.
+ *
+ * Left out means the end, and stays the cheap path every append took before
+ * there was a position to ask for. Anything else goes through `placeAfter`,
+ * including the redistribution once keys between two neighbours grow long.
+ */
+function placeNew(
+  blocks: Y.Map<Y.Map<unknown>>,
+  block: Y.Map<unknown>,
+  parentId: string | null,
+  afterId: AfterId,
+): void {
+  const list = siblings(blocks, parentId)
+  if (afterId === undefined) block.set('position', keyAtEnd(list))
+  else applyPlacement(blocks, block, placeAfter(list, afterId))
 }
 
 function buildBlock(fields: Record<string, unknown>): Y.Map<unknown> {

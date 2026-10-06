@@ -164,6 +164,7 @@ export function useCollabDocument(initial: DayDoc, target: CollabTarget): Agenda
             title: block.title,
             durationMinutes: block.durationMinutes,
             parentId: block.clusterId ?? null,
+            afterId: block.afterId,
           }),
         ),
       addCluster: (section: NewSection) => {
@@ -179,6 +180,7 @@ export function useCollabDocument(initial: DayDoc, target: CollabTarget): Agenda
         withDoc((d) =>
           addBreakout(d, id, {
             title: breakout.title,
+            afterId: breakout.afterId,
             strands: breakout.strands.map((strand) => ({ id: uuidv7(), title: strand.title })),
           }),
         )

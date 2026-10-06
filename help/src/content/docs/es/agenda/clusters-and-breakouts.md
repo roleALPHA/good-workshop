@@ -24,6 +24,8 @@ Una sección reúne bloques que tienen lugar uno tras otro. Su cabecera muestra 
 2. La sección aparece al final de la jornada como **Nueva sección**. El nombre ya está seleccionado, así que puedes empezar a escribir directamente.
 3. Arrastra dentro los bloques que le corresponden (ver más abajo).
 
+Para que la sección quede directamente en su sitio, usa el «+» de la línea entre dos filas y elige **Sección** – consulta [Bloques y tipos de bloque](/es/agenda/blocks/). Debajo del último bloque de una sección, la nueva sección queda justo después de ella.
+
 ### Nombre y color
 
 Haz clic en el nombre para cambiarlo (**Nombre de la sección**). A la derecha de la cabecera eliges en **Color de la sección** un color de la paleta, o **Sin color**. El color solo tiñe la cabecera; los bloques conservan el color de su tipo de bloque.
@@ -49,6 +51,8 @@ La cabecera lo dice con palabras, por ejemplo **3 grupos, a la vez · grupo más
 3. Cambia el nombre del breakout y de los grupos (**Nombre del breakout**, **Nombre del grupo**).
 4. Llena cada grupo con su propio botón **Añadir un bloque**.
 5. Añade más grupos con **Añadir grupo**, al final de las columnas.
+
+Igual que una sección, un breakout también se puede crear directamente en su sitio con el «+» entre dos filas, eligiendo **Breakout**.
 
 El breakout y cada grupo tienen su propio color (**Color del breakout**, **Color del grupo**). Un grupo sin bloques muestra **Aún no hay ningún bloque.**
 

@@ -108,3 +108,46 @@ function renumber(doc: DayDoc, rows: ReturnType<typeof toProjectionRows>): DayDo
 
   return { ...doc, clusters, modules }
 }
+
+/**
+ * Gives a block that was just appended its place behind `afterId`.
+ *
+ * The local counterpart of `placeAfter` in the shared ops: null puts it first,
+ * an anchor that is not among the siblings leaves it at the end. Only the one
+ * sibling list is renumbered -- at day level that list holds sections and
+ * blocks together, as in `renumber`. Parked blocks keep their slot in it: they
+ * are out of the schedule, not out of the order they come back to.
+ */
+export function insertLocally(
+  doc: DayDoc,
+  id: string,
+  parentId: string | null,
+  afterId: string | null,
+): DayDoc {
+  const list = [
+    ...doc.clusters
+      .filter((c) => c.parentClusterId === parentId)
+      .map((c) => ({ id: c.id, order: c.order })),
+    ...doc.modules
+      .filter((m) => m.clusterId === parentId)
+      .map((m) => ({ id: m.id, order: m.order })),
+  ]
+    .filter((s) => s.id !== id)
+    .sort((a, b) => a.order - b.order || a.id.localeCompare(b.id))
+    .map((s) => s.id)
+
+  const anchor = afterId === null ? -1 : list.indexOf(afterId)
+  const at = afterId !== null && anchor === -1 ? list.length : anchor + 1
+  list.splice(at, 0, id)
+
+  const order = new Map(list.map((sibling, index) => [sibling, index]))
+  return {
+    ...doc,
+    clusters: doc.clusters.map((c) =>
+      order.has(c.id) && c.parentClusterId === parentId ? { ...c, order: order.get(c.id)! } : c,
+    ),
+    modules: doc.modules.map((m) =>
+      order.has(m.id) && m.clusterId === parentId ? { ...m, order: order.get(m.id)! } : m,
+    ),
+  }
+}

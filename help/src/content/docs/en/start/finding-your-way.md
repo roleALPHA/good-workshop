@@ -57,7 +57,8 @@ Clicking a workshop opens its first day. From top to bottom:
    open day, the arrows for reordering and **Delete workshop day**.
 4. The day header: start and end, content, breaks and number of blocks, then
    **Add a note about the day** and the color legend of the block types.
-5. The agenda in three columns: **Time**, **Title and description** and **Additional info**.
+5. The agenda in three columns: **Time**, **Title and description** and **Additional info**. When
+   you move the mouse onto the border between two rows, a “+” appears for inserting right there.
 6. Below the agenda **Add a block**, **Add section** and **Add breakout**, then the day's
    **End**.
 7. At the very bottom, the parking area: **Parked**, with the blocks that don't count toward

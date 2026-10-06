@@ -1,7 +1,7 @@
 import { describe, expect, it } from 'vitest'
 import type { DayDoc } from '@/domain/agenda/types'
 import { flattenDay } from './flatten'
-import { applyMove } from './move'
+import { applyMove, insertLocally } from './move'
 import { getProjection, rowsForDrag, toProjectionRows } from './projection'
 import { MODULE_TYPES_BY_ID } from './fixtures/module-types'
 
@@ -308,5 +308,77 @@ describe('applyMove / breakouts', () => {
       .sort((a, b) => a.order - b.order)
       .map((c) => c.id)
     expect(strands).toEqual(['s2', 's1'])
+  })
+})
+
+describe('insertLocally', () => {
+  /** A fresh module as the hook appends it, before it has been given a place. */
+  const withNew = (d: DayDoc, id: string, clusterId: string | null): DayDoc => ({
+    ...d,
+    modules: [
+      ...d.modules,
+      { ...d.modules[0]!, id, title: id, clusterId, order: Number.MAX_SAFE_INTEGER },
+    ],
+  })
+
+  it('puts a block behind the anchor, sections and blocks sharing one count', () => {
+    const d = doc(
+      [['k', 1]],
+      [
+        ['a', 0, null],
+        ['b', 2, null],
+      ],
+    )
+    expect(shape(insertLocally(withNew(d, 'n', null), 'n', null, 'k'))).toEqual([
+      'a',
+      'k',
+      'n',
+      'b',
+    ])
+  })
+
+  it('puts a block at the top for afterId null', () => {
+    const d = doc(
+      [],
+      [
+        ['a', 0, null],
+        ['b', 1, null],
+      ],
+    )
+    expect(shape(insertLocally(withNew(d, 'n', null), 'n', null, null))).toEqual(['n', 'a', 'b'])
+  })
+
+  it('places inside a section without touching the day', () => {
+    const d = doc(
+      [['k', 0]],
+      [
+        ['x', 0, 'k'],
+        ['y', 1, 'k'],
+        ['b', 1, null],
+      ],
+    )
+    expect(shape(insertLocally(withNew(d, 'n', 'k'), 'n', 'k', 'x'))).toEqual([
+      'k',
+      '  x',
+      '  n',
+      '  y',
+      'b',
+    ])
+  })
+
+  it('leaves the new block at the end when the anchor is gone', () => {
+    const d = doc([], [['a', 0, null]])
+    expect(shape(insertLocally(withNew(d, 'n', null), 'n', null, 'weg'))).toEqual(['a', 'n'])
+  })
+
+  it('places a section between two blocks', () => {
+    const d = doc(
+      [['k', 99]],
+      [
+        ['a', 0, null],
+        ['b', 1, null],
+      ],
+    )
+    expect(shape(insertLocally(d, 'k', null, 'a'))).toEqual(['a', 'k', 'b'])
   })
 })
