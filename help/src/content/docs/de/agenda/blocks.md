@@ -15,6 +15,14 @@ Ein Block ist eine Zeile im Ablauf: ein Check-in, ein Impuls, eine Pause. Jeder 
 
 Der neue Block steht am Ende des Tages, heißt wie sein Typ und hat dessen Standarddauer. In einem Breakout hat jeder Strang einen eigenen **Block hinzufügen**-Knopf, der den Block direkt in diesen Strang legt.
 
+### Zwischen zwei Zeilen einfügen
+
+Soll der Block nicht ans Ende, fahr mit der Maus auf die Grenze zwischen zwei Zeilen. Dort erscheint eine Linie mit einem „+“. Ein Klick darauf öffnet die Auswahl genau an dieser Stelle: **Block**, **Abschnitt** und **Breakout**. **Abbrechen** oder Escape schließt sie wieder.
+
+- Zwischen zwei Blöcken eines Abschnitts landet der neue Block in diesem Abschnitt. Dort gibt es nur **Block**, denn Abschnitte lassen sich nicht ineinander legen.
+- Unter dem letzten Block eines Abschnitts kommt ein **Block** noch in den Abschnitt, ein **Abschnitt** oder **Breakout** direkt dahinter.
+- Auf dem Handy ist das „+“ immer zu sehen. Mit der Tastatur erreichst du es mit Tab.
+
 :::caution[Den Typ wählst du einmal]
 Den Bausteintyp eines Blocks kannst du später nicht mehr ändern. Hast du dich vertan, lösch den Block und leg ihn mit dem richtigen Typ neu an.
 :::

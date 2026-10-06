@@ -24,6 +24,8 @@ A section groups blocks that take place one after another. Its header row shows 
 2. The section appears at the end of the day as **New section**. The name is already selected, so you can start typing right away.
 3. Drag in the blocks that belong to it (see below).
 
+To put the section in the right place straight away, use the “+” on the line between two rows and pick **Section** there – see [Blocks and block types](/en/agenda/blocks/). Below the last block of a section, the new section goes directly after it.
+
 ### Name and color
 
 Click the name to change it (**Name of the section**). On the right of the header row, under **Colour of the section**, pick a color from the palette, or **No colour**. The color only tints the header row; the blocks keep the color of their block type.
@@ -49,6 +51,8 @@ The header row says this in words, for example **3 strands, at the same time · 
 3. Rename the breakout and the strands (**Breakout name**, **Strand name**).
 4. Fill each strand using its own **Add a block** button.
 5. More groups are added with **Add strand** at the end of the columns.
+
+Like a section, a breakout can also be created right where it belongs via the “+” between two rows, with **Breakout**.
 
 The breakout and the strands each have their own color (**Breakout colour**, **Strand colour**). A strand without blocks shows **No block yet.**
 

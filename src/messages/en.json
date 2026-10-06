@@ -197,6 +197,16 @@
     "addBlock": "Add a block",
     "addDayNote": "Add a note about the day",
     "addTag": "Add a tag",
+    "insert": {
+      "atStart": "Insert at the start",
+      "after": "Insert after “{title}”",
+      "group": "Choose what goes after “{title}”",
+      "groupStart": "Choose what goes at the start",
+      "block": "Block",
+      "section": "Section",
+      "breakout": "Breakout",
+      "cancel": "Cancel"
+    },
     "blockCount": "{count, plural, one {# block} other {# blocks}}",
     "breaks": "{duration} breaks",
     "buffer": "Buffer",

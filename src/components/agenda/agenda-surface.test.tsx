@@ -256,6 +256,84 @@ describe('the agenda as a whole', () => {
     expect(screen.queryByRole('group', { name: 'Neuer Abschnitt' })).not.toBeInTheDocument()
   })
 
+  describe('inserting between two rows', () => {
+    const before = (a: Element, b: Element) =>
+      Boolean(a.compareDocumentPosition(b) & Node.DOCUMENT_POSITION_FOLLOWING)
+
+    const openLine = async (anchor: string) => {
+      await userEvent.click(screen.getByRole('button', { name: `Nach „${anchor}“ einfügen` }))
+      return within(screen.getByRole('group', { name: `Einfügen nach „${anchor}“` }))
+    }
+
+    const pickType = async (panel: ReturnType<typeof within>, type: RegExp) => {
+      await userEvent.click(panel.getByRole('button', { name: 'Block' }))
+      await userEvent.click(panel.getByRole('button', { name: type }))
+    }
+
+    it('puts a block between two day-level rows rather than at the end', async () => {
+      renderEditor()
+      await pickType(await openLine('Druckpunkte'), /^Energizer/)
+
+      const added = block('Energizer')
+      expect(before(block('Druckpunkte'), added)).toBe(true)
+      expect(before(added, screen.getByRole('group', { name: 'Zielbild erarbeiten' }))).toBe(true)
+      // Spent: the panel closes once the block is there.
+      expect(screen.queryByRole('group', { name: 'Einfügen nach „Druckpunkte“' })).toBeNull()
+    })
+
+    it('puts a block between two blocks of a section, and offers no section there', async () => {
+      renderEditor()
+      const panel = await openLine('Check-in & Start')
+      expect(panel.queryByRole('button', { name: 'Abschnitt' })).toBeNull()
+      await pickType(panel, /^Energizer/)
+
+      const added = block('Energizer')
+      expect(before(block('Check-in & Start'), added)).toBe(true)
+      expect(before(added, block('Agenda & Spielregeln'))).toBe(true)
+    })
+
+    it('under the last block of a section adds the next section after it', async () => {
+      renderEditor()
+      const panel = await openLine('Energizer: Zwei Wahrheiten')
+      await userEvent.click(panel.getByRole('button', { name: 'Abschnitt' }))
+
+      const section = screen.getByRole('group', { name: 'Neuer Abschnitt' })
+      expect(within(section).getByRole('textbox', { name: 'Name des Abschnitts' })).toHaveFocus()
+      expect(before(block('Energizer: Zwei Wahrheiten'), section)).toBe(true)
+      expect(before(section, block('Druckpunkte'))).toBe(true)
+    })
+
+    it('adds a breakout at the very top', async () => {
+      renderEditor()
+      await userEvent.click(screen.getByRole('button', { name: 'Am Anfang einfügen' }))
+      await userEvent.click(
+        within(screen.getByRole('group', { name: 'Am Anfang einfügen' })).getByRole('button', {
+          name: 'Breakout',
+        }),
+      )
+
+      const breakout = screen.getByRole('group', { name: 'Neuer Breakout' })
+      expect(before(breakout, screen.getByRole('group', { name: 'Ankommen & Rahmen' }))).toBe(true)
+    })
+
+    it('closes on Escape and hands the focus back to the line', async () => {
+      renderEditor()
+      await openLine('Druckpunkte')
+      await userEvent.keyboard('{Escape}')
+
+      expect(screen.queryByRole('group', { name: 'Einfügen nach „Druckpunkte“' })).toBeNull()
+      expect(screen.getByRole('button', { name: 'Nach „Druckpunkte“ einfügen' })).toHaveFocus()
+    })
+
+    it('keeps one line open at a time', async () => {
+      renderEditor()
+      await openLine('Druckpunkte')
+      await openLine('Mittagessen')
+
+      expect(screen.queryByRole('group', { name: 'Einfügen nach „Druckpunkte“' })).toBeNull()
+    })
+  })
+
   it('offers the description directly below the title instead of in the detail panel', () => {
     renderEditor()
     const row = within(block('Check-in & Start'))
@@ -307,6 +385,7 @@ describe('the agenda as a whole', () => {
       ).not.toBeInTheDocument()
       expect(screen.queryByRole('button', { name: 'Block hinzufügen' })).not.toBeInTheDocument()
       expect(screen.queryByRole('button', { name: 'Abschnitt hinzufügen' })).not.toBeInTheDocument()
+      expect(screen.queryAllByRole('button', { name: /einfügen$/ })).toHaveLength(0)
       expect(
         within(screen.getByRole('group', { name: 'Ankommen & Rahmen' })).queryAllByRole('combobox'),
       ).toHaveLength(0)

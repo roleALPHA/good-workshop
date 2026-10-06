@@ -24,6 +24,8 @@ Ein Abschnitt fasst Blöcke zusammen, die nacheinander stattfinden. Seine Kopfze
 2. Der Abschnitt erscheint am Ende des Tages als **Neuer Abschnitt**. Der Name ist schon markiert, du kannst also gleich lostippen.
 3. Zieh die Blöcke hinein, die dazugehören (siehe unten).
 
+Soll der Abschnitt gleich an der richtigen Stelle stehen, nimm das „+“ auf der Linie zwischen zwei Zeilen und dort **Abschnitt** – siehe [Blöcke und Bausteintypen](/de/agenda/blocks/). Unter dem letzten Block eines Abschnitts kommt der neue Abschnitt direkt hinter ihn.
+
 ### Name und Farbe
 
 Klick auf den Namen, um ihn zu ändern (**Name des Abschnitts**). Rechts in der Kopfzeile wählst du unter **Farbe des Abschnitts** eine Farbe aus der Palette, oder **Ohne Farbe**. Die Farbe färbt nur die Kopfzeile; die Blöcke behalten die Farbe ihres Bausteintyps.
@@ -49,6 +51,8 @@ Die Kopfzeile sagt das in Worten, etwa **3 Stränge, gleichzeitig · längster S
 3. Benenne Breakout und Stränge um (**Name des Breakouts**, **Name des Strangs**).
 4. Füll jeden Strang über seinen eigenen Knopf **Block hinzufügen**.
 5. Weitere Gruppen kommen mit **Strang hinzufügen** am Ende der Spalten dazu.
+
+Wie ein Abschnitt lässt sich auch ein Breakout über das „+“ zwischen zwei Zeilen direkt an seiner Stelle anlegen, mit **Breakout**.
 
 Breakout und Stränge haben jeweils eine eigene Farbe (**Farbe des Breakouts**, **Farbe des Strangs**). Ein Strang ohne Blöcke zeigt **Noch kein Block.**
 

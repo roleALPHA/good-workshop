@@ -6,7 +6,7 @@ import type { ModuleTypeDto } from '@/domain/agenda/types'
 import { BlockTypeList } from './block-type-list'
 import { useTranslations } from 'next-intl'
 
-const dashed =
+export const dashed =
   'inline-flex items-center gap-1.5 rounded border border-dashed border-[var(--border-strong)] px-3 py-2 text-[15px] text-[var(--fg-muted)] hover:border-[var(--brand-ring)] hover:text-[var(--fg)]'
 
 /**

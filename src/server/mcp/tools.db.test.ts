@@ -467,6 +467,50 @@ describe('days', () => {
 })
 
 describe('blocks', () => {
+  it('adds a block or a section at a position, and says so when the anchor is elsewhere', async () => {
+    const { must, call } = await connect(me)
+    const { data } = await must('create_workshop', { title: unique('Einfügen') })
+    const workshopId = data.workshopId as string
+    const dayId = data.dayId as string
+
+    const a = await must('add_module', { workshopId, dayId, typeKey: 'break', title: 'A' })
+    await must('add_module', { workshopId, dayId, typeKey: 'break', title: 'B' })
+    const section = await must('add_cluster', {
+      workshopId,
+      dayId,
+      title: 'Mitte',
+      afterId: a.data.id,
+    })
+    await must('add_module', { workshopId, dayId, typeKey: 'break', title: 'Null', afterId: null })
+    const inside = await must('add_module', {
+      workshopId,
+      dayId,
+      typeKey: 'break',
+      title: 'Drin',
+      clusterId: section.data.id,
+    })
+
+    const read = await must('get_workshop', { workshopId, dayId })
+    const dayLevel = (
+      read.data.blocks as { parentId: string | null; order: number; title: string }[]
+    )
+      .filter((b) => b.parentId === null)
+      .sort((x, y) => x.order - y.order)
+      .map((b) => b.title)
+    expect(dayLevel).toEqual(['Null', 'A', 'Mitte', 'B'])
+
+    // An anchor in another list is a misunderstanding, not a place: appending
+    // would look like it worked and leave the block where nobody asked.
+    const elsewhere = await call('add_module', {
+      workshopId,
+      dayId,
+      typeKey: 'break',
+      afterId: inside.data.id,
+    })
+    expect(elsewhere.isError).toBe(true)
+    expect(elsewhere.text).toContain('not a sibling')
+  })
+
   it('edits what the day editor edits', async () => {
     const { must, call } = await connect(me)
     const { data } = await must('create_workshop', { title: unique('Blöcke') })

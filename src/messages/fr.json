@@ -197,6 +197,16 @@
     "addBlock": "Ajouter un bloc",
     "addDayNote": "Ajouter une note sur la journée",
     "addTag": "Ajouter un tag",
+    "insert": {
+      "atStart": "Insérer au début",
+      "after": "Insérer après « {title} »",
+      "group": "Choisir quoi insérer après « {title} »",
+      "groupStart": "Choisir quoi insérer au début",
+      "block": "Bloc",
+      "section": "Section",
+      "breakout": "Breakout",
+      "cancel": "Annuler"
+    },
     "blockCount": "{count, plural, one {# bloc} many {# blocs} other {# blocs}}",
     "breaks": "{duration} de pauses",
     "buffer": "Marge",

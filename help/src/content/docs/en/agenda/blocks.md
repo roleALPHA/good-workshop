@@ -15,6 +15,14 @@ A block is one row in the schedule: a check-in, an input, a break. Every block h
 
 The new block sits at the end of the day, is named after its type and has that type's default duration. In a breakout, each strand has its own **Add a block** button, which puts the block straight into that strand.
 
+### Insert between two rows
+
+If the block shouldn't go at the end, move the mouse onto the border between two rows. A line with a “+” appears there. Clicking it opens the choice right at that spot: **Block**, **Section** and **Breakout**. **Cancel** or Escape closes it again.
+
+- Between two blocks of a section, the new block lands in that section. Only **Block** is offered there, because sections can't be put inside each other.
+- Below the last block of a section, a **Block** still goes into the section, while a **Section** or **Breakout** goes directly after it.
+- On a phone the “+” is always visible. With the keyboard you reach it with Tab.
+
 :::caution[You choose the type once]
 You can't change a block's type later. If you picked the wrong one, delete the block and create it again with the right type.
 :::

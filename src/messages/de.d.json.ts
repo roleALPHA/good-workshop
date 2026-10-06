@@ -200,6 +200,16 @@ declare const messages: {
     "addBlock": "Block hinzufügen",
     "addDayNote": "Notiz zum Tag hinzufügen",
     "addTag": "Tag hinzufügen",
+    "insert": {
+      "atStart": "Am Anfang einfügen",
+      "after": "Nach „{title}“ einfügen",
+      "group": "Einfügen nach „{title}“",
+      "groupStart": "Am Anfang einfügen",
+      "block": "Block",
+      "section": "Abschnitt",
+      "breakout": "Breakout",
+      "cancel": "Abbrechen"
+    },
     "blockCount": "{count, plural, one {# Block} other {# Blöcke}}",
     "breaks": "{duration} Pausen",
     "buffer": "Puffer",

@@ -11,6 +11,7 @@ import {
   patchBlock,
   removeBlock,
   setDayFields,
+  siblings,
 } from './ops'
 
 /**
@@ -53,6 +54,98 @@ describe('addModuleBlock', () => {
     add(doc, 'b', 'Draußen')
     expect(order(doc, 'k')).toEqual(['Drin'])
     expect(order(doc)).toEqual(['Draußen'])
+  })
+})
+
+describe('adding at a position', () => {
+  // Sections and day-level blocks share one sibling list, so the ids are read
+  // off that list rather than off the modules alone.
+  const level = (doc: Y.Doc, parentId: string | null = null) =>
+    siblings(blocksOf(doc), parentId).map((s) => s.id)
+
+  const addAfter = (
+    doc: Y.Doc,
+    id: string,
+    afterId: string | null,
+    parentId: string | null = null,
+  ) =>
+    addModuleBlock(doc, id, {
+      moduleTypeId: 't',
+      title: id,
+      durationMinutes: 30,
+      parentId,
+      afterId,
+    })
+
+  it('puts a block behind the named sibling', () => {
+    const doc = emptyDay()
+    add(doc, 'a', 'A')
+    add(doc, 'c', 'C')
+    addAfter(doc, 'b', 'a')
+    expect(level(doc)).toEqual(['a', 'b', 'c'])
+  })
+
+  it('puts a block at the top for afterId null, and at the end when it is left out', () => {
+    const doc = emptyDay()
+    add(doc, 'b', 'B')
+    addAfter(doc, 'a', null)
+    add(doc, 'c', 'C')
+    expect(level(doc)).toEqual(['a', 'b', 'c'])
+  })
+
+  it('places a block inside a section', () => {
+    const doc = emptyDay()
+    addClusterBlock(doc, 'k', { title: 'Warm-up' })
+    add(doc, 'x', 'X', 'k')
+    add(doc, 'z', 'Z', 'k')
+    addAfter(doc, 'y', 'x', 'k')
+    addAfter(doc, 'w', null, 'k')
+    expect(level(doc, 'k')).toEqual(['w', 'x', 'y', 'z'])
+  })
+
+  it('appends when the anchor is gone, like a move does', () => {
+    const doc = emptyDay()
+    add(doc, 'a', 'A')
+    addAfter(doc, 'b', 'weg')
+    expect(level(doc)).toEqual(['a', 'b'])
+  })
+
+  it('puts a section between two day-level blocks', () => {
+    const doc = emptyDay()
+    add(doc, 'a', 'A')
+    add(doc, 'b', 'B')
+    addClusterBlock(doc, 'k', { title: 'Mitte', afterId: 'a' })
+    expect(level(doc)).toEqual(['a', 'k', 'b'])
+  })
+
+  it('puts a breakout at the named place and its strands in their own list', () => {
+    const doc = emptyDay()
+    add(doc, 'a', 'A')
+    add(doc, 'b', 'B')
+    addBreakoutBlock(doc, 'bo', {
+      title: 'Räume',
+      afterId: null,
+      strands: [
+        { id: 's1', title: 'Eins' },
+        { id: 's2', title: 'Zwei' },
+      ],
+    })
+    expect(level(doc)).toEqual(['bo', 'a', 'b'])
+    expect(level(doc, 'bo')).toEqual(['s1', 's2'])
+  })
+
+  it('keeps working once the keys between two neighbours have grown long', () => {
+    // Fifty inserts behind the same anchor force the sibling list to be
+    // redistributed; the new block must still get the slot it asked for.
+    const doc = emptyDay()
+    add(doc, 'a', 'A')
+    add(doc, 'z', 'Z')
+    for (let i = 0; i < 60; i++) addAfter(doc, `n${i}`, 'a')
+    const ids = level(doc)
+    expect(ids[0]).toBe('a')
+    expect(ids[1]).toBe('n59')
+    expect(ids.at(-1)).toBe('z')
+    expect(ids).toHaveLength(62)
   })
 })
 

@@ -3,6 +3,7 @@
 import { useCallback, useMemo, useState } from 'react'
 import type { DayDoc } from '@/domain/agenda/types'
 import type {
+  AfterId,
   AgendaDocument,
   ClusterPatch,
   DayPatch,
@@ -12,7 +13,7 @@ import type {
   NewSection,
   Peer,
 } from './document'
-import { applyMove } from './move'
+import { applyMove, insertLocally } from './move'
 import type { Projection } from './projection'
 import { removeFromDay } from './remove'
 
@@ -73,32 +74,44 @@ export function useLocalDocument(initial: DayDoc): AgendaDocument {
    */
 
   const addModule = useCallback((block: NewBlock) => {
-    setDoc((current) => ({
-      ...current,
-      modules: [
-        ...current.modules,
+    const id = `local-${crypto.randomUUID()}`
+    setDoc((current) =>
+      placed(
         {
-          id: `local-${crypto.randomUUID()}`,
-          clusterId: block.clusterId ?? null,
-          moduleTypeId: block.moduleTypeId,
-          title: block.title,
-          durationMinutes: block.durationMinutes,
-          pinnedStartMinute: null,
-          desc: {},
-          parked: false,
-          responsible: [],
-          order: Number.MAX_SAFE_INTEGER,
+          ...current,
+          modules: [
+            ...current.modules,
+            {
+              id,
+              clusterId: block.clusterId ?? null,
+              moduleTypeId: block.moduleTypeId,
+              title: block.title,
+              durationMinutes: block.durationMinutes,
+              pinnedStartMinute: null,
+              desc: {},
+              parked: false,
+              responsible: [],
+              order: Number.MAX_SAFE_INTEGER,
+            },
+          ],
         },
-      ],
-    }))
+        id,
+        block.clusterId ?? null,
+        block.afterId,
+      ),
+    )
   }, [])
 
   const addCluster = useCallback((section: NewSection) => {
     const id = `local-${crypto.randomUUID()}`
-    setDoc((current) => ({
-      ...current,
-      clusters: [...current.clusters, newCluster(id, section, current)],
-    }))
+    setDoc((current) =>
+      placed(
+        { ...current, clusters: [...current.clusters, newCluster(id, section, current)] },
+        id,
+        section.parentId ?? null,
+        section.afterId,
+      ),
+    )
     return id
   }, [])
 
@@ -124,7 +137,7 @@ export function useLocalDocument(initial: DayDoc): AgendaDocument {
           order: index,
         })
       })
-      return { ...current, clusters }
+      return placed({ ...current, clusters }, id, null, breakout.afterId)
     })
     return id
   }, [])
@@ -165,6 +178,11 @@ export function useLocalDocument(initial: DayDoc): AgendaDocument {
       removeModule,
     ],
   )
+}
+
+/** Appended stays appended; an anchor, or null for the top, moves it into place. */
+function placed(doc: DayDoc, id: string, parentId: string | null, afterId: AfterId): DayDoc {
+  return afterId === undefined ? doc : insertLocally(doc, id, parentId, afterId)
 }
 
 /** One frozen array, so it never re-renders anything by identity. */

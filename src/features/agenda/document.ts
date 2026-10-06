@@ -56,7 +56,15 @@ export type NewBlock = {
    * breakout.
    */
   clusterId?: string | null
+  afterId?: AfterId
 }
+
+/**
+ * Where among its siblings something new goes. Left out: at the end, which is
+ * what the buttons below the agenda do. Null: first. Otherwise behind that
+ * sibling -- what the line between two rows does.
+ */
+export type AfterId = string | null | undefined
 
 /**
  * A new section. The title comes from the caller rather than from a default in
@@ -70,6 +78,7 @@ export type NewSection = {
   mode?: ClusterMode
   /** The breakout this becomes a strand of. A breakout itself sits on the day. */
   parentId?: string | null
+  afterId?: AfterId
 }
 
 /**
@@ -82,6 +91,8 @@ export type NewSection = {
 export type NewBreakout = {
   title: string
   strands: { title: string }[]
+  /** Where the breakout goes on the day. */
+  afterId?: AfterId
 }
 
 /**

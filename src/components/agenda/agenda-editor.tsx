@@ -1,6 +1,6 @@
 'use client'
 
-import { useMemo, useState } from 'react'
+import { Fragment, useMemo, useState } from 'react'
 import { DndContext, DragOverlay, MeasuringStrategy } from '@dnd-kit/core'
 import { restrictToWindowEdges } from '@dnd-kit/modifiers'
 import { SortableContext, verticalListSortingStrategy } from '@dnd-kit/sortable'
@@ -10,6 +10,7 @@ import { computeSchedule } from '@/domain/schedule/computeSchedule'
 import { formatDuration } from '@/features/agenda/duration'
 import { flattenDay, toScheduleItems, withGapRows } from '@/features/agenda/flatten'
 import { groupBreakouts } from '@/features/agenda/group-rows'
+import { insertSlot } from '@/features/agenda/insert-slot'
 import { descendants, toProjectionRows } from '@/features/agenda/projection'
 import type { AgendaDocument, Peer } from '@/features/agenda/document'
 import type { ParkedElsewhere } from '@/features/agenda/days'
@@ -21,6 +22,7 @@ import { EndOfDay, HeaderRow } from './agenda-rows'
 import { EditorBreakout } from './editor-breakout'
 import { EditorRow, type RowContext } from './editor-row'
 import { BlockPicker } from './block-picker'
+import { InsertLine } from './insert-line'
 import { DayHeader } from './day-header'
 import { LiveRegion } from './live-region'
 import { ParkingArea } from './parking'
@@ -71,6 +73,9 @@ export function AgendaEditor({
   // The section added a moment ago, so its name can take the cursor. Only ever
   // set by the button that creates one, and cleared as soon as focus lands.
   const [newSectionId, setNewSectionId] = useState<string | null>(null)
+  // Which line between two rows has its choice open, by slot key. One at a
+  // time, like the expanded row: two open choices are two half-made decisions.
+  const [openSlot, setOpenSlot] = useState<string | null>(null)
 
   const { activeId, projection, sortableIds, sensors, liveMessage, handlers } = useAgendaDrag({
     doc,
@@ -140,6 +145,74 @@ export function AgendaEditor({
     agenda.setFocus(null)
   }
 
+  /**
+   * The three ways to add something, shared by the buttons below the agenda
+   * and the lines between its rows. Without a place they append, as the
+   * buttons always did; a line hands in where it stands.
+   */
+  const types = Object.values(doc.moduleTypes)
+
+  const addBlock = (
+    typeKey: string,
+    where?: { parentId: string | null; afterId: string | null },
+  ) => {
+    const type = types.find((t) => t.key === typeKey)
+    if (!type) return
+    agenda.addModule({
+      moduleTypeId: type.id,
+      title: type.name,
+      durationMinutes: type.defaultDurationMinutes,
+      clusterId: where?.parentId,
+      afterId: where?.afterId,
+    })
+  }
+
+  const addSection = (afterId?: string | null) =>
+    setNewSectionId(agenda.addCluster({ title: t('section.newTitle'), afterId }))
+
+  const addBreakout = (afterId?: string | null) =>
+    setNewSectionId(
+      // Two strands to start with: a breakout with one is not one, and with
+      // none it is an empty raster that explains nothing.
+      agenda.addBreakout({
+        title: t('breakout.newTitle'),
+        afterId,
+        strands: [
+          { title: `${t('breakout.newTrackTitle')} 1` },
+          { title: `${t('breakout.newTrackTitle')} 2` },
+        ],
+      }),
+    )
+
+  /** The line under a row, or above the first one. None while something is dragged. */
+  const lineAfter = (rowId: string | null) => {
+    if (activeId) return null
+    const slot = insertSlot(rows, rowId)
+    if (!slot) return null
+    const anchor = rows.find((r) => r.id === slot.anchor)
+    const section = slot.section
+    return (
+      <InsertLine
+        key={`insert-${slot.key}`}
+        slot={slot}
+        anchorTitle={
+          anchor?.kind === 'cluster'
+            ? anchor.cluster.title
+            : anchor?.kind === 'module'
+              ? anchor.module.title
+              : null
+        }
+        open={openSlot === slot.key}
+        onOpen={() => setOpenSlot(slot.key)}
+        onClose={() => setOpenSlot((current) => (current === slot.key ? null : current))}
+        types={types}
+        onAdd={(typeKey) => addBlock(typeKey, slot.block)}
+        onAddSection={section ? () => addSection(section.afterId) : undefined}
+        onAddBreakout={section ? () => addBreakout(section.afterId) : undefined}
+      />
+    )
+  }
+
   const rowContext: RowContext = {
     agenda,
     schedule,
@@ -186,45 +259,32 @@ export function AgendaEditor({
 
         <SortableContext items={sortableIds} strategy={verticalListSortingStrategy}>
           <div className="border-t border-[var(--border)] md:border-t-0">
+            {nodes.length > 0 && lineAfter(null)}
             {nodes.map((node) =>
               node.kind === 'row' ? (
                 // A dragged container's children are hidden for the duration of
                 // the drag; they are travelling with it.
                 activeId && insideActive.has(node.row.id) && node.row.id !== activeId ? null : (
-                  <EditorRow key={node.row.id} row={node.row} ctx={rowContext} />
+                  <Fragment key={node.row.id}>
+                    <EditorRow row={node.row} ctx={rowContext} />
+                    {lineAfter(node.row.id)}
+                  </Fragment>
                 )
               ) : (
-                <EditorBreakout key={node.id} node={node} ctx={rowContext} />
+                <Fragment key={node.id}>
+                  <EditorBreakout node={node} ctx={rowContext} />
+                  {lineAfter(node.id)}
+                </Fragment>
               ),
             )}
           </div>
         </SortableContext>
 
         <BlockPicker
-          types={Object.values(doc.moduleTypes)}
-          onAddSection={() => setNewSectionId(agenda.addCluster({ title: t('section.newTitle') }))}
-          onAddBreakout={() =>
-            setNewSectionId(
-              // Two strands to start with: a breakout with one is not one, and
-              // with none it is an empty raster that explains nothing.
-              agenda.addBreakout({
-                title: t('breakout.newTitle'),
-                strands: [
-                  { title: `${t('breakout.newTrackTitle')} 1` },
-                  { title: `${t('breakout.newTrackTitle')} 2` },
-                ],
-              }),
-            )
-          }
-          onAdd={(typeKey) => {
-            const type = Object.values(doc.moduleTypes).find((t) => t.key === typeKey)
-            if (!type) return
-            agenda.addModule({
-              moduleTypeId: type.id,
-              title: type.name,
-              durationMinutes: type.defaultDurationMinutes,
-            })
-          }}
+          types={types}
+          onAddSection={() => addSection()}
+          onAddBreakout={() => addBreakout()}
+          onAdd={(typeKey) => addBlock(typeKey)}
         />
 
         <EndOfDay schedule={schedule} targetEndMinute={doc.targetEndMinute} />

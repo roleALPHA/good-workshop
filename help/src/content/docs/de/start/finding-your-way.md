@@ -57,7 +57,9 @@ Ein Klick auf einen Workshop öffnet seinen ersten Tag. Von oben nach unten:
    offenen Tags, die Pfeile zum Umsortieren und **Workshoptag löschen**.
 4. Die Kopfzeile des Tags: Beginn und Ende, Inhalt, Pausen und Zahl der Blöcke, dann
    **Notiz zum Tag hinzufügen** und die Farblegende der Blocktypen.
-5. Die Agenda in drei Spalten: **Zeit**, **Titel und Beschreibung** und **Zusatzinfo**.
+5. Die Agenda in drei Spalten: **Zeit**, **Titel und Beschreibung** und **Zusatzinfo**. Fährst
+   du mit der Maus auf die Grenze zwischen zwei Zeilen, erscheint ein „+“ zum Einfügen an dieser
+   Stelle.
 6. Unter der Agenda **Block hinzufügen**, **Abschnitt hinzufügen** und **Breakout hinzufügen**,
    dann das **Ende** des Tags.
 7. Ganz unten der Parkplatz: **Geparkt** mit den Blöcken, die nicht zur Zeit zählen.

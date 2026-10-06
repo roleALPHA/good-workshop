@@ -110,6 +110,8 @@ test('invites a colleague, shares a workshop, and edits it together', async ({ p
 
   // And deliberately NOT `connected()`: there is no document to join.
   await expect(second.page.getByRole('button', { name: 'Block hinzufügen' })).toHaveCount(0)
+  // Nor the lines between the rows, though there are rows to stand between.
+  await expect(second.page.getByRole('button', { name: /einfügen$/ })).toHaveCount(0)
   await expect(second.page.getByRole('region', { name: /^Agenda/ })).not.toHaveAttribute(
     'data-save-state',
     'live',

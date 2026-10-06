@@ -24,6 +24,8 @@ Une section regroupe des blocs qui se déroulent l'un après l'autre. Son en-tê
 2. La section apparaît à la fin de la journée sous le nom **Nouvelle section**. Le nom est déjà sélectionné, tu peux donc taper directement.
 3. Fais-y glisser les blocs qui en font partie (voir plus bas).
 
+Pour placer la section directement au bon endroit, prends le « + » sur la ligne entre deux lignes du déroulé et choisis **Section** – voir [Blocs et types de blocs](/fr/agenda/blocks/). Sous le dernier bloc d'une section, la nouvelle section se place juste après elle.
+
 ### Nom et couleur
 
 Clique sur le nom pour le modifier (**Nom de la section**). À droite dans l'en-tête, choisis sous **Couleur de la section** une couleur de la palette, ou **Sans couleur**. La couleur ne colore que l'en-tête ; les blocs gardent la couleur de leur type.
@@ -49,6 +51,8 @@ L'en-tête le dit en toutes lettres, par exemple **3 volets, en même temps · v
 3. Renomme le breakout et les volets (**Nom du breakout**, **Nom du volet**).
 4. Remplis chaque volet avec son propre bouton **Ajouter un bloc**.
 5. Ajoute d'autres groupes avec **Ajouter un volet**, à la fin des colonnes.
+
+Comme une section, un breakout peut aussi être créé directement à sa place via le « + » entre deux lignes, avec **Breakout**.
 
 Le breakout et les volets ont chacun leur propre couleur (**Couleur du breakout**, **Couleur du volet**). Un volet sans bloc affiche **Aucun bloc pour l’instant.**
 

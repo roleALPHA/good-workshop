@@ -471,6 +471,69 @@ test.describe('inline editing in the day view', () => {
     await expect.poll(() => bar(after)).not.toBe(before)
   })
 
+  test('inserts a block between two rows, and it stays there', async ({ page }) => {
+    const plus = agenda(page).getByRole('button', { name: 'Nach „Druckpunkte“ einfügen' })
+    // Waits for the pointer, and answers it. Not toBeVisible: Playwright counts
+    // an opacity-0 element as visible.
+    await expect(plus).toHaveCSS('opacity', '0')
+    await plus.hover()
+    await expect(plus).toHaveCSS('opacity', '1')
+    await plus.click()
+
+    const panel = agenda(page).getByRole('group', { name: 'Einfügen nach „Druckpunkte“' })
+    await panel.getByRole('button', { name: 'Block', exact: true }).click()
+    await panel.getByLabel('Blocktyp suchen').fill('Puffer')
+    await panel
+      .getByRole('button', { name: /Puffer/ })
+      .first()
+      .click()
+    await expect(block(page, 'Puffer')).toBeVisible()
+
+    const behindDruckpunkte = async () => {
+      const titles = await titlesInOrder(page)
+      return titles[titles.indexOf('Druckpunkte') + 1]
+    }
+    expect(await behindDruckpunkte()).toBe('Puffer')
+
+    await page.reload()
+    await expect.poll(behindDruckpunkte).toBe('Puffer')
+  })
+
+  test('inserts the next section under the last block of one, from the keyboard', async ({
+    page,
+  }) => {
+    const plus = agenda(page).getByRole('button', {
+      name: 'Nach „Energizer: Zwei Wahrheiten“ einfügen',
+    })
+    await plus.focus()
+    await expect(plus).toHaveCSS('opacity', '1')
+    await page.keyboard.press('Enter')
+
+    // The first choice takes the focus; the section is one Tab further.
+    const panel = agenda(page).getByRole('group', {
+      name: 'Einfügen nach „Energizer: Zwei Wahrheiten“',
+    })
+    await expect(panel.getByRole('button', { name: 'Block', exact: true })).toBeFocused()
+    await page.keyboard.press('Tab')
+    await expect(panel.getByRole('button', { name: 'Abschnitt', exact: true })).toBeFocused()
+    await page.keyboard.press('Enter')
+
+    const name = agenda(page).getByLabel('Name des Abschnitts').nth(1)
+    await expect(name).toBeFocused()
+    await name.fill('Zwischenteil')
+    await name.press('Enter')
+
+    // After the section it was opened under, before the block that followed it.
+    await expect(section_(page, 'Zwischenteil')).toBeVisible()
+    const top = async (row: Locator) => (await row.boundingBox())!.y
+    expect(await top(section_(page, 'Zwischenteil'))).toBeGreaterThan(
+      await top(block(page, 'Energizer: Zwei Wahrheiten')),
+    )
+    expect(await top(section_(page, 'Zwischenteil'))).toBeLessThan(
+      await top(block(page, 'Druckpunkte')),
+    )
+  })
+
   test('fills a freshly created section from the keyboard', async ({ page }) => {
     // The section arrives empty on purpose -- nothing is swept into it. This
     // is the answer to "and how do blocks get in", without a pointer.
