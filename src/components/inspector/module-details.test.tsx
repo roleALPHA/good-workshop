@@ -187,3 +187,61 @@ describe('the module detail fields', () => {
     expect(screen.queryByText(/Beamer/)).not.toBeInTheDocument()
   })
 })
+
+/**
+ * The panel and the row share one `desc`, and the panel must not hand back the
+ * row's half of it from memory.
+ *
+ * A field left invalid keeps the panel dirty, and a dirty panel stops adopting
+ * what arrives from the document. When it finally committed, it wrote its
+ * whole copy -- including the description as it was before somebody changed
+ * it in the row. That was the second way a writer's description "did not
+ * stick".
+ */
+describe('a panel holding an edit while the row changes the description', () => {
+  const shared = {
+    ...type,
+    id: 'mt-shared',
+    schemaVersion: 1,
+    jsonSchema: {
+      type: 'object',
+      additionalProperties: false,
+      properties: {
+        description: { type: 'string', title: 'Beschreibung' },
+        notiz: { type: 'string', title: 'Notiz', minLength: 5 },
+      },
+    },
+  }
+
+  it('commits its own field on top of the description the row wrote meanwhile', async () => {
+    const user = userEvent.setup()
+    const onChange = vi.fn()
+    const { rerender } = render(
+      <ModuleDetails
+        module={moduleWith({ description: 'Alt' })}
+        type={shared}
+        onChange={onChange}
+      />,
+    )
+
+    // Too short: refused, and the panel stays dirty.
+    await user.type(screen.getByLabelText('Notiz'), 'kurz')
+    await leaveThePanel(user)
+    expect(onChange).not.toHaveBeenCalled()
+
+    // Meanwhile the row writes a new description into the document.
+    rerender(
+      <ModuleDetails
+        module={moduleWith({ description: 'Neu' })}
+        type={shared}
+        onChange={onChange}
+      />,
+    )
+
+    await user.clear(screen.getByLabelText('Notiz'))
+    await user.type(screen.getByLabelText('Notiz'), 'lang genug')
+    await leaveThePanel(user)
+
+    expect(onChange).toHaveBeenLastCalledWith({ description: 'Neu', notiz: 'lang genug' })
+  })
+})

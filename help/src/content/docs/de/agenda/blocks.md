@@ -29,13 +29,13 @@ Den Bausteintyp eines Blocks kannst du später nicht mehr ändern. Hast du dich 
 
 ## Was in einer Zeile steht
 
-Die Agenda hat drei Spalten: **Zeit**, **Titel und Beschreibung** und **Zusatzinfo**. Auf dem Handy werden daraus Karten, bearbeitbar ist dort trotzdem alles Wesentliche.
+Die Agenda hat drei Spalten: **Zeit**, **Titel und Beschreibung** und **Zusatzinfo**. Auf dem Handy werden daraus Karten, bearbeitbar ist dort trotzdem alles.
 
 - **Zeit:** die berechnete Startzeit und darunter die Dauer. Wie du sie änderst oder eine Uhrzeit fixierst, steht unter [Dauer und Startzeiten](/de/agenda/timing/).
 - **Sozialform:** unter der Zeit, per **Sozialform wählen** (etwa **Plenum**, **Kleingruppen** oder **Einzelarbeit**).
 - **Titel:** direkt anklicken und tippen. Enter oder ein Klick daneben speichert, Escape verwirft. Ein leerer Titel wird nicht übernommen.
 - **Verantwortlich:** unter dem Titel, siehe [Verantwortliche](/de/agenda/responsible/).
-- **Beschreibung:** darunter. Auf breiten Bildschirmen bearbeitest du sie direkt in der Zeile; auf schmaleren wird sie nur angezeigt.
+- **Beschreibung:** darunter. Du bearbeitest sie direkt in der Zeile, auf jeder Bildschirmbreite. Enter speichert, Umschalt+Enter beginnt eine neue Zeile.
 - **Material:** in der Spalte **Zusatzinfo** über **+ Material**. Jeden Eintrag mit Enter bestätigen.
 
 Einige Typen zeigen zusätzlich ein Feld als kleines Etikett in der Spalte **Zusatzinfo**, zum Beispiel die vortragende Person oder das Ergebnis einer Gruppenarbeit.

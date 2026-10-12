@@ -29,13 +29,13 @@ El tipo de bloque no se puede cambiar después. Si te has equivocado, elimina el
 
 ## Qué hay en una fila
 
-La agenda tiene tres columnas: **Hora**, **Título y descripción** e **Información adicional**. En el móvil se convierten en tarjetas, y aun así todo lo esencial se puede editar.
+La agenda tiene tres columnas: **Hora**, **Título y descripción** e **Información adicional**. En el móvil se convierten en tarjetas, y aun así todo se puede editar.
 
 - **Hora:** la hora de inicio calculada y, debajo, la duración. Cómo cambiarla o fijar una hora se explica en [Duración y horas de inicio](/es/agenda/timing/).
 - **Formato:** debajo de la hora, con **Elegir la forma de participación** (por ejemplo **Plenario**, **Grupos pequeños** o **Individual**).
 - **Título:** haz clic directamente y escribe. Intro o un clic fuera guarda, Esc descarta. Un título vacío no se acepta.
 - **Responsable:** debajo del título; consulta [Responsables](/es/agenda/responsible/).
-- **Descripción:** debajo. En pantallas anchas la editas directamente en la fila; en las más estrechas solo se muestra.
+- **Descripción:** debajo. La editas directamente en la fila, en cualquier ancho de pantalla. Intro guarda, Mayús+Intro empieza una línea nueva.
 - **Material:** en la columna **Información adicional**, con **+ material**. Confirma cada entrada con Intro.
 
 Algunos tipos muestran además un campo como pequeña etiqueta en la columna **Información adicional**, por ejemplo la persona que presenta o el resultado de un trabajo en grupo.
