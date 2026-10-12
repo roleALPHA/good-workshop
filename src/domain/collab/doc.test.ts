@@ -3,6 +3,7 @@ import { describe, expect, it } from 'vitest'
 import { createDemoDay } from '@/features/agenda/fixtures/day-fixture'
 import { MODULE_TYPES_BY_ID } from '@/features/agenda/fixtures/module-types'
 import { blocksOf, readBlocks, seedFromDayDoc, toDayDoc } from './doc'
+import { patchBlock, snapshotModule } from './ops'
 import { flattenDay } from '@/features/agenda/flatten'
 
 /**
@@ -303,5 +304,60 @@ describe('readBlocks: values the database will actually accept', () => {
     // The guard must not become a quiet rewriter of legitimate data.
     const [block] = readBlocks(docWith({ position: 'Zz09', durationMinutes: 45 }))
     expect(block).toMatchObject({ position: 'Zz09', durationMinutes: 45 })
+  })
+})
+
+/**
+ * The fields of one block, written one at a time.
+ *
+ * `desc` used to be ONE value in the block's map: description, social form,
+ * material and every field behind "Mehr Felder" together. Two people changing
+ * two of them at the same time wrote two whole objects, and the later one
+ * silently undid the other. Per-field locks only help if a field is also what
+ * gets written -- otherwise holding the description protects nothing against
+ * somebody saving the social form beside it.
+ */
+describe('fields of a block, written one at a time', () => {
+  const descOf = (doc: Y.Doc, id: string) => read(doc).modules.find((m) => m.id === id)!.desc
+
+  it('keeps both when two people change two fields of one block at once', () => {
+    const { a, b } = twoClients()
+    const before = descOf(a, 'm-5')
+
+    patchBlock(a, 'm-5', { descFields: { description: 'Von A' } })
+    patchBlock(b, 'm-5', { descFields: { participation: 'pairs' } })
+    sync(a, b)
+
+    for (const doc of [a, b]) {
+      expect(descOf(doc, 'm-5')).toEqual({
+        ...before,
+        description: 'Von A',
+        participation: 'pairs',
+      })
+    }
+  })
+
+  it('clears a field the stored description still carries', () => {
+    const { a } = twoClients()
+    patchBlock(a, 'm-5', { descFields: { description: 'Weg damit' } })
+    patchBlock(a, 'm-5', { descFields: { description: undefined } })
+
+    expect(descOf(a, 'm-5')).not.toHaveProperty('description')
+  })
+
+  it('hands the materialiser and a move to another day the merged fields', () => {
+    const { a } = twoClients()
+    patchBlock(a, 'm-5', { descFields: { participation: 'pairs' } })
+
+    expect(readBlocks(a).find((row) => row.id === 'm-5')!.desc.participation).toBe('pairs')
+    expect(snapshotModule(a, 'm-5')!.desc.participation).toBe('pairs')
+  })
+
+  it('lets a whole replacement -- what MCP sends -- win over earlier single fields', () => {
+    const { a } = twoClients()
+    patchBlock(a, 'm-5', { descFields: { participation: 'pairs' } })
+    patchBlock(a, 'm-5', { desc: { description: 'Neu und nur das' } })
+
+    expect(descOf(a, 'm-5')).toEqual({ description: 'Neu und nur das' })
   })
 })

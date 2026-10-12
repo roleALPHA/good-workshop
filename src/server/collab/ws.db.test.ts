@@ -160,12 +160,12 @@ const MESSAGE_SYNC = 0
 /** A minimal y-websocket client: enough protocol to sync, nothing more. */
 async function connect(
   headers: Record<string, string> = { cookie },
-  target: { workshop?: string; day?: string } = {},
+  target: { workshop?: string; day?: string; port?: number; autoPong?: boolean } = {},
 ) {
   const doc = new Y.Doc()
   const ws = new WebSocket(
-    `ws://127.0.0.1:${PORT}/collab?workshop=${target.workshop ?? workshopId}&day=${target.day ?? dayId}`,
-    { headers },
+    `ws://127.0.0.1:${target.port ?? PORT}/collab?workshop=${target.workshop ?? workshopId}&day=${target.day ?? dayId}`,
+    { headers, autoPong: target.autoPong ?? true },
   )
 
   await new Promise<void>((resolve, reject) => {
@@ -583,5 +583,49 @@ describe('the collaboration socket', () => {
     await expect(
       connect({ cookie: await guestCookie('editor', victimWorkshopId) }),
     ).rejects.toThrow(/401/)
+  })
+})
+
+/**
+ * A connection that vanished without saying goodbye -- a laptop lid shut, a
+ * phone asleep, wifi gone. Nothing arrives to close the socket, so without a
+ * heartbeat the server kept it open until TCP gave up, which can take far
+ * longer than anyone waits. Its presence stayed with it, and since presence
+ * now also locks the field somebody is typing in, that field stayed locked.
+ */
+describe('the heartbeat', () => {
+  const HEARTBEAT_PORT = PORT + 50
+  let beating: { close: () => Promise<void> }
+
+  beforeAll(async () => {
+    beating = startCollabServer({
+      port: HEARTBEAT_PORT,
+      host: '127.0.0.1',
+      timings: { persistDebounceMs: 50, materializeDebounceMs: 200, emptyGraceMs: 200 },
+      heartbeatMs: 150,
+      notifications: false,
+    })
+    await settle(300)
+  })
+
+  afterAll(async () => {
+    await beating.close()
+  })
+
+  it('drops a connection that stops answering, and keeps one that answers', async () => {
+    const silent = await connect({ cookie }, { port: HEARTBEAT_PORT, autoPong: false })
+    const alive = await connect({ cookie }, { port: HEARTBEAT_PORT })
+
+    const dropped = new Promise<'dropped'>((resolve) =>
+      silent.ws.once('close', () => resolve('dropped')),
+    )
+    const timeout = new Promise<'still open'>((resolve) =>
+      setTimeout(() => resolve('still open'), 1500),
+    )
+
+    await expect(Promise.race([dropped, timeout])).resolves.toBe('dropped')
+    expect(alive.ws.readyState).toBe(WebSocket.OPEN)
+
+    alive.close()
   })
 })

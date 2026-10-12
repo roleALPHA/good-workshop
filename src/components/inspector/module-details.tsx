@@ -7,6 +7,7 @@ import { ROW_FIELDS, isVisible, parseSchema } from '@/domain/moduleType/profile'
 import { validateModuleDesc, type FieldError } from '@/domain/moduleType/validate'
 import type { Translate } from '@/i18n/translator'
 import { Field } from './fields'
+import { LockField } from '@/components/agenda/field-lock'
 
 /**
  * A module's type-specific fields, edited inline inside its own row.
@@ -197,13 +198,22 @@ export function ModuleDetails({ module: mod, type, onChange }: ModuleDetailsProp
             </h4>
             <div className="grid grid-cols-12 gap-x-3 gap-y-4">
               {visible.map((field) => (
-                <Field
+                // `contents`, so the field stays an item of the twelve-column
+                // grid; the fieldset only has to be its ancestor to disable it.
+                <LockField
                   key={field.key}
-                  field={field}
-                  value={values[field.key]}
-                  error={errors[field.key]}
-                  onChange={(value) => update(field.key, value)}
-                />
+                  blockId={mod.id}
+                  field={`desc.${field.key}`}
+                  className="contents"
+                  noteClassName="col-span-12"
+                >
+                  <Field
+                    field={field}
+                    value={values[field.key]}
+                    error={errors[field.key]}
+                    onChange={(value) => update(field.key, value)}
+                  />
+                </LockField>
               ))}
             </div>
           </section>

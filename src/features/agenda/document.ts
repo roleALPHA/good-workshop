@@ -18,6 +18,11 @@ export type ModulePatch = {
   durationMinutes?: number
   pinnedStartMinute?: number | null
   desc?: Record<string, unknown>
+  /**
+   * Single fields of the description; `undefined` clears one. What the editor
+   * sends, so two people in two fields of one block keep both changes.
+   */
+  descFields?: Record<string, unknown>
   /** Set aside, or brought back. See ModuleDto.parked. */
   parked?: boolean
   /** The whole list of who answers for the block. */
@@ -113,6 +118,8 @@ export type Peer = {
   kind: 'person' | 'model'
   /** The block they are editing right now, if any. */
   focusedBlockId: string | null
+  /** The field they are typing in, which nobody else may enter meanwhile. */
+  editing: { blockId: string; field: string; since: number } | null
 }
 
 export type AgendaDocument = {
@@ -137,8 +144,16 @@ export type AgendaDocument = {
   status: DocumentStatus
   /** Who else is here. Empty when nothing is shared. */
   peers: Peer[]
-  /** Tells the others which block this person is in. */
-  setFocus: (blockId: string | null) => void
+  /**
+   * Tells the others which block this person is in, and which field. The
+   * field is claimed: nobody else can enter it until this person leaves it.
+   */
+  setFocus: (blockId: string | null, field: string | null) => void
+  /**
+   * Fields somebody else holds, by `lockKey(blockId, field)`. Empty when
+   * nothing is shared.
+   */
+  locks: ReadonlyMap<string, Peer>
 }
 
 export type DocumentStatus =

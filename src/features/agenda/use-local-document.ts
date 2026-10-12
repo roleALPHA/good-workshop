@@ -39,13 +39,27 @@ export function useLocalDocument(initial: DayDoc): AgendaDocument {
     // Spreading the patch as-is would wipe a description every time somebody
     // adjusted a duration -- the callers build a full-shaped patch object and
     // leave the untouched keys undefined.
+    const { descFields, ...rest } = patch
     const changes = Object.fromEntries(
-      Object.entries(patch).filter(([, value]) => value !== undefined),
+      Object.entries(rest).filter(([, value]) => value !== undefined),
     )
 
     setDoc((current) => ({
       ...current,
-      modules: current.modules.map((m) => (m.id === moduleId ? { ...m, ...changes } : m)),
+      modules: current.modules.map((m) => {
+        if (m.id !== moduleId) return m
+        const next = { ...m, ...changes }
+        if (descFields) {
+          // Here undefined DOES mean "clear": the field was named on purpose.
+          const desc = { ...next.desc }
+          for (const [key, value] of Object.entries(descFields)) {
+            if (value === undefined) delete desc[key]
+            else desc[key] = value
+          }
+          next.desc = desc
+        }
+        return next
+      }),
     }))
   }, [])
 
@@ -165,6 +179,7 @@ export function useLocalDocument(initial: DayDoc): AgendaDocument {
       // Nothing is shared, so nobody is here and there is nothing to announce.
       peers: NOBODY,
       setFocus: () => {},
+      locks: NO_LOCKS,
     }),
     [
       doc,
@@ -187,6 +202,7 @@ function placed(doc: DayDoc, id: string, parentId: string | null, afterId: After
 
 /** One frozen array, so it never re-renders anything by identity. */
 const NOBODY: Peer[] = []
+const NO_LOCKS: ReadonlyMap<string, Peer> = new Map()
 
 /**
  * The next free sort key at day level, where clusters and loose blocks share

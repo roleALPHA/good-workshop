@@ -327,6 +327,7 @@
       "addBlockToTrack": "Add block to {title}",
       "addTrackTo": "Add strand to {title}"
     },
+    "fieldLocked": "{name} is typing",
     "presenceModel": "AI assistant",
     "presenceEditing": "is editing this block"
   },

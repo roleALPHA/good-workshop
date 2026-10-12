@@ -10,6 +10,7 @@ const peer = (over: Partial<Peer> = {}): Peer => ({
   hue: 250,
   kind: 'person',
   focusedBlockId: null,
+  editing: null,
   ...over,
 })
 
@@ -82,6 +83,7 @@ describe('a participant that is not a person', () => {
     hue: 292,
     kind: 'model' as const,
     focusedBlockId: null,
+    editing: null,
   }
 
   it('is named in the reader’s language, not the one the server sent', () => {

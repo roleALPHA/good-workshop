@@ -97,6 +97,7 @@ export function BreakoutRow({
             titleId={titleId}
             title={cluster.title}
             color={cluster.color}
+            blockId={cluster.id}
             editing={
               editing && {
                 onTitleChange: editing.onTitleChange,

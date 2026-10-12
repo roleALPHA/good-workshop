@@ -23,3 +23,23 @@ export function setDescField(
 export function stringList(value: unknown): string[] {
   return Array.isArray(value) ? value.filter((v): v is string => typeof v === 'string') : []
 }
+
+/**
+ * The fields that differ between two descriptions, a removed one as
+ * `undefined`.
+ *
+ * What the editor writes, rather than the whole object it was handed: written
+ * whole, two people in two fields of one block overwrote each other. Compared
+ * by value, because rich text and lists arrive as fresh objects on every
+ * render.
+ */
+export function descChanges(
+  before: Record<string, unknown>,
+  after: Record<string, unknown>,
+): Record<string, unknown> {
+  const out: Record<string, unknown> = {}
+  for (const key of new Set([...Object.keys(before), ...Object.keys(after)])) {
+    if (JSON.stringify(before[key]) !== JSON.stringify(after[key])) out[key] = after[key]
+  }
+  return out
+}

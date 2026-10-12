@@ -205,8 +205,10 @@ test('a folder editor works in the subtree, but neither shares nor bins', async 
  * that is how it was reported -- and at two widths, the phone and the narrow
  * desktop window that is the more common way to land below the breakpoint.
  */
+const PAUSE = `Pause ${run}`
+
 test('a folder editor edits a block’s description at every width', async () => {
-  const title = `Pause ${run}`
+  const title = PAUSE
   await callMcpTool(api, 'add_module', {
     workshopId: workshops.acme.id,
     dayId: workshops.acme.day,
@@ -247,6 +249,49 @@ test('a folder editor edits a block’s description at every width', async () =>
       .toBe(text)
   }
   await mo.page.setViewportSize({ width: 1280, height: 720 })
+})
+
+/**
+ * One person per field. While somebody types in a field, everybody else sees
+ * it as theirs and cannot enter it -- and when that person's browser goes away,
+ * the field is free again without anybody having to do anything. The vanished
+ * case without a goodbye (lid shut, network gone) is the server's heartbeat,
+ * asserted in src/server/collab/ws.db.test.ts.
+ */
+test('a field somebody is typing in is locked for the others, and freed when they leave', async ({
+  browser,
+}) => {
+  const description = (page: Page) =>
+    page
+      .getByRole('article', { name: PAUSE })
+      .getByRole('textbox', { name: 'Beschreibung', exact: true })
+  const live = (page: Page) =>
+    expect(page.getByRole('region', { name: /^Agenda/ })).toHaveAttribute('data-save-state', 'live')
+
+  const writerContext = await browser.newContext({ storageState: STORAGE_STATE })
+  const writer = await writerContext.newPage()
+  await writer.goto(dayUrl(workshops.acme))
+  await live(writer)
+  await mo.page.goto(dayUrl(workshops.acme))
+  await live(mo.page)
+
+  await description(writer).click()
+  await description(writer).pressSequentially('Ich schreibe')
+
+  await expect(description(mo.page)).toBeDisabled()
+  await expect(
+    mo.page.getByRole('article', { name: PAUSE }).getByText(/schreibt gerade$/),
+  ).toBeVisible()
+  // Only that field: the title of the same block stays Mo's to change.
+  await expect(
+    mo.page.getByRole('article', { name: PAUSE }).getByRole('textbox', { name: 'Titel' }),
+  ).toBeEnabled()
+
+  // The writer's browser goes away without leaving the field first.
+  await writerContext.close()
+
+  await expect(description(mo.page)).toBeEnabled({ timeout: 10_000 })
+  await expect(mo.page.getByText(/schreibt gerade$/)).toHaveCount(0)
 })
 
 test('the sharing screen does not name a folder above that the reader cannot see', async () => {

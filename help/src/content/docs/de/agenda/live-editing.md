@@ -34,10 +34,23 @@ Solange etwas noch unterwegs ist, steht unter der Agenda kurz **Wird gespeichert
 
 Ihr könnt gleichzeitig an verschiedenen Blöcken arbeiten, ohne euch in die Quere zu kommen. Auch zwei Personen, die gleichzeitig verschiedene Blöcke verschieben, stören sich nicht.
 
-Am selben Block werden **Titel**, **Dauer**, fixierte Startzeit und **Verantwortlich** getrennt gespeichert. Ändert die eine den Titel und der andere die Dauer, bleiben beide Änderungen erhalten.
+Am selben Block wird jedes Feld für sich gespeichert: **Titel**, **Dauer**, fixierte Startzeit, **Verantwortlich**, die Beschreibung, die **Sozialform**, das Material und jedes Feld unter **Mehr Felder**. Ändert die eine die Beschreibung und der andere die Sozialform, bleiben beide Änderungen erhalten.
 
-:::caution[Dasselbe Feld: die letzte Änderung gewinnt]
-Ändern zwei Personen dasselbe Feld, bleibt die Änderung, die zuletzt ankommt. Die Beschreibung, die **Sozialform**, das Material und alle Felder unter **Mehr Felder** eines Blocks werden dabei zusammen gespeichert. Bearbeitet ihr gleichzeitig zwei dieser Felder am selben Block, kann eine Änderung die andere überschreiben. Sprecht euch ab, wer welchen Block übernimmt. Der farbige Rahmen zeigt dir, wo jemand gerade tippt.
+### Ein Feld, eine Person
+
+Solange jemand in einem Feld schreibt, gehört es dieser Person. Bei allen anderen ist es gesperrt und farbig umrandet, darunter steht zum Beispiel „Mira schreibt gerade“. Die übrigen Felder desselben Blocks bleiben frei. Das gilt auch für den Namen eines Abschnitts und die **Notiz zum Tag**.
+
+Frei wird das Feld wieder,
+
+- sobald die Person es verlässt,
+- nach 30 Sekunden ohne Tastendruck – was sie bis dahin geschrieben hat, wird gespeichert,
+- sobald sie den Tab oder den Browser schließt,
+- spätestens nach etwa 20 Sekunden, wenn ihre Verbindung ohne Abmeldung abreißt, etwa weil der Laptop zugeklappt wird oder das WLAN weg ist.
+
+Klicken zwei Personen im selben Moment in dasselbe Feld, bekommt es die, die zuerst da war. Bei der anderen wird es gesperrt.
+
+:::caution[Der KI-Assistent hält sich nicht an Sperren]
+Ändert der [KI-Assistent](/de/ai/introduction/) ein Feld, in dem gerade jemand schreibt, ersetzt seine Änderung den Text, der noch nicht gespeichert ist.
 :::
 
 Es gibt kein Rückgängig. Was jemand löscht, ist für alle weg. Wer unsicher ist, parkt lieber, siehe [Parkplatz](/de/agenda/parking/).

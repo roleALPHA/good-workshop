@@ -4,6 +4,7 @@ import type { ScheduleEntry } from '@/domain/schedule/types'
 import { formatDuration, formatTime } from '@/features/agenda/duration'
 import { cn } from '@/lib/cn'
 import { DurationInput, PinControl } from './inline-inputs'
+import { LockField } from './field-lock'
 import { useLocale, useTranslations } from 'next-intl'
 
 /**
@@ -36,6 +37,8 @@ export function TimeCell({
     onPinChange?: (minute: number | null) => void
     /** What the block starts at today, which is what pinning adopts. */
     pinnedStartMinute?: number | null
+    /** The block whose duration this is, so the field can be held and locked. */
+    blockId?: string
   }
   /** Sits under the time on a wide screen, beside it on a phone. */
   children?: ReactNode
@@ -95,7 +98,13 @@ export function TimeCell({
       </span>
       {showDuration &&
         (editing?.onDurationChange ? (
-          <DurationInput minutes={entry.durationMinutes} onCommit={editing.onDurationChange} />
+          editing.blockId ? (
+            <LockField blockId={editing.blockId} field="durationMinutes">
+              <DurationInput minutes={entry.durationMinutes} onCommit={editing.onDurationChange} />
+            </LockField>
+          ) : (
+            <DurationInput minutes={entry.durationMinutes} onCommit={editing.onDurationChange} />
+          )
         ) : (
           <span className="text-[15px] font-semibold text-[var(--fg)]">
             {formatDuration(entry.durationMinutes)}
