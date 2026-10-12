@@ -16,7 +16,7 @@ import { useTranslations } from 'next-intl'
  * memorised the palette, precisely nothing.
  */
 
-const hueStyle = (hue: number) => ({ '--peer-hue': String(hue) }) as CSSProperties
+export const hueStyle = (hue: number) => ({ '--peer-hue': String(hue) }) as CSSProperties
 
 /**
  * What to call this participant, honestly, including when it is not a person.
@@ -28,7 +28,7 @@ const hueStyle = (hue: number) => ({ '--peer-hue': String(hue) }) as CSSProperti
  * document. The client knows both the language and `kind`, so it says it
  * itself; the transmitted name stays as the fallback for anything else.
  */
-function describe(peer: Peer, t: ReturnType<typeof useTranslations<'agenda'>>): string {
+export function describe(peer: Peer, t: ReturnType<typeof useTranslations<'agenda'>>): string {
   return peer.kind === 'model' ? t('presenceModel') : peer.name
 }
 

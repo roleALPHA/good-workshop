@@ -3,6 +3,7 @@ import type { ReactNode } from 'react'
 import type { CategoryColor } from '@/lib/category-colors'
 import { ColorSelect } from './color-select'
 import { TitleInput } from './inline-inputs'
+import { LockField } from './field-lock'
 
 /**
  * The three things every container has: a name, a colour, and a way out.
@@ -22,6 +23,8 @@ export type ChromeEditing = {
 
 export type ClusterChromeProps = {
   titleId: string
+  /** The container's id, under which its name is held and locked. */
+  blockId: string
   title: string
   color: CategoryColor | null
   editing?: ChromeEditing
@@ -43,6 +46,7 @@ export type ClusterChromeProps = {
 
 export function ClusterChrome({
   titleId,
+  blockId,
   title,
   color,
   editing,
@@ -59,18 +63,21 @@ export function ClusterChrome({
         // Inside the heading, not beside it: the row's accessible name is
         // computed from the heading, and an embedded field still answers
         // for it -- which is what the e2e suite looks a section up by.
-        <Heading
-          id={titleId}
-          className="min-w-0 grow basis-full break-words md:min-w-40 md:basis-0"
-        >
-          <TitleInput
-            value={title}
-            onCommit={editing.onTitleChange}
-            label={labels.title}
-            className="text-[15px] text-[var(--cat-fg)]"
-            autoFocus={editing.autoFocusTitle}
-          />
-        </Heading>
+        // `contents`: the heading stays the flex item it was laid out as.
+        <LockField blockId={blockId} field="title" className="contents" noteClassName="basis-full">
+          <Heading
+            id={titleId}
+            className="min-w-0 grow basis-full break-words md:min-w-40 md:basis-0"
+          >
+            <TitleInput
+              value={title}
+              onCommit={editing.onTitleChange}
+              label={labels.title}
+              className="text-[15px] text-[var(--cat-fg)]"
+              autoFocus={editing.autoFocusTitle}
+            />
+          </Heading>
+        </LockField>
       ) : (
         <Heading
           id={titleId}

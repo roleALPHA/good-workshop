@@ -259,6 +259,22 @@ survive.
 read the relational tables and know nothing about a CRDT. A materialiser writes the state
 back; `collab_state.materialized_up_to` says how far behind the tables are.
 
+**A block's fields are written one at a time.** Every field of a block is its own key in the
+block's Y.Map — the type-specific ones as `desc.<field>` beside the stored `desc` object, which
+stays as the base so no document needed migrating. `desc` used to be written whole, and two
+people in two fields of one block then wrote two whole objects; the later one silently undid the
+other. MCP's `desc` still means "replace the description", and clears the field keys with it.
+
+**One person per field.** Whoever is in a field claims it in the room's presence
+(`editing: { blockId, field, since }`); everybody else's editor shows it locked
+(`domain/collab/locks.ts`, `components/agenda/field-lock.tsx`). The lock lives in presence and
+nowhere else, because presence goes with the connection: a field left, a tab closed, 30 seconds
+without a keystroke (the field is saved and blurred) — and a socket that vanished without a
+close frame, which the server's heartbeat ends within twenty seconds (ping every ten, terminate
+on no answer). A lock in a table would need somebody to remove it, and the case that matters is
+the one where nobody is left to. The locks are advisory: browsers hold back, the server does not
+check updates against claims, and an MCP write does not take part.
+
 **A day has exactly one write path.** The materialiser writes the document into the tables and
 deletes anything there that the document does not know about — otherwise deletions could not
 be transferred. Which makes every second write path onto the same day a silent data loss:

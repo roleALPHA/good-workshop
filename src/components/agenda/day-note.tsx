@@ -3,6 +3,7 @@
 import { useEffect, useRef, useState } from 'react'
 import type { DayDoc } from '@/domain/agenda/types'
 import { useTranslations } from 'next-intl'
+import { LockField } from './field-lock'
 
 /**
  * What belongs to the DAY rather than to any one block: the room, how to get
@@ -63,7 +64,8 @@ export function DayNote({
   }
 
   return (
-    <div className="mt-3">
+    // Held under "day", which is no block: the note belongs to the day itself.
+    <LockField blockId="day" field="note" className="mt-3">
       <label htmlFor="day-note" className="text-[13px] text-[var(--fg-subtle)]">
         {t('dayNote')}
       </label>
@@ -83,6 +85,6 @@ export function DayNote({
         }}
         className="mt-1 w-full rounded border border-[var(--border)] bg-[var(--surface)] px-3 py-2 text-[15px] pointer-coarse:text-[16px]"
       />
-    </div>
+    </LockField>
   )
 }

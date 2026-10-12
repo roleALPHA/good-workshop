@@ -327,6 +327,7 @@
       "addBlockToTrack": "Añadir bloque a {title}",
       "addTrackTo": "Añadir grupo a {title}"
     },
+    "fieldLocked": "{name} está escribiendo",
     "presenceModel": "Asistente de IA",
     "presenceEditing": "está editando este bloque"
   },

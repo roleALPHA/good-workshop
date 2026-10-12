@@ -1,6 +1,6 @@
 'use client'
 
-import { Fragment, useMemo, useState } from 'react'
+import { Fragment, useEffect, useMemo, useRef, useState } from 'react'
 import { DndContext, DragOverlay, MeasuringStrategy } from '@dnd-kit/core'
 import { restrictToWindowEdges } from '@dnd-kit/modifiers'
 import { SortableContext, verticalListSortingStrategy } from '@dnd-kit/sortable'
@@ -27,7 +27,11 @@ import { DayHeader } from './day-header'
 import { LiveRegion } from './live-region'
 import { ParkingArea } from './parking'
 import { PresenceBar } from './presence'
+import { FieldLockProvider } from './field-lock'
 import { SaveStatus } from './save-status'
+
+/** Thirty seconds without a keystroke, and a held field is saved and given back. */
+const IDLE_MS = 30_000
 
 /**
  * The interactive agenda.
@@ -48,8 +52,11 @@ export function AgendaEditor({
   onBringHere,
   parkingError,
   people,
+  idleMs = IDLE_MS,
 }: {
   document: AgendaDocument
+  /** How long a field is held without a keystroke. A prop so a test need not wait 30 seconds. */
+  idleMs?: number
   /** Members who can be put in charge of a block. Absent for a guest. */
   people?: AssignablePerson[]
   /** What is parked on the other days of the workshop. */
@@ -130,9 +137,16 @@ export function AgendaEditor({
    * one that forgot would be invisible to everyone else.
    */
   const reportFocus = (event: React.FocusEvent<HTMLElement>) => {
-    const row = (event.target as HTMLElement).closest('[data-block-id]')
+    const target = event.target as HTMLElement
+    const row = target.closest('[data-block-id]')
     const id = row?.getAttribute('data-block-id') ?? null
-    agenda.setFocus(id)
+    // The field, if focus landed in one, claimed under the block its LockField
+    // names -- the day note has no row to read one from.
+    const lock = target.closest<HTMLElement>('[data-field]')
+    const field = lock?.dataset.field ?? null
+    agenda.setFocus(lock?.dataset.lockBlock ?? id, field)
+    if (field) armIdle()
+    else disarmIdle()
     // Spent the moment the cursor arrives. Left standing, a remount during a
     // later drag would yank the focus back into a name nobody is editing.
     if (id !== null && id === newSectionId) setNewSectionId(null)
@@ -142,8 +156,39 @@ export function AgendaEditor({
     // Only when focus left the table altogether: moving between two fields of
     // the same row would otherwise blink the mark off and on.
     if (event.currentTarget.contains(event.relatedTarget)) return
-    agenda.setFocus(null)
+    disarmIdle()
+    agenda.setFocus(null, null)
   }
+
+  /**
+   * Gives a field back after `idleMs` without a keystroke.
+   *
+   * A held field is locked for everybody else, and a cursor left standing over
+   * lunch would hold it for as long as the tab stays open. Blurring is the
+   * whole release: it commits the field the way leaving it always does, and
+   * the focus handler above then drops the claim. Nothing is thrown away.
+   */
+  const idleTimer = useRef<ReturnType<typeof setTimeout> | null>(null)
+  const regionRef = useRef<HTMLElement | null>(null)
+  const disarmIdle = () => {
+    if (idleTimer.current) clearTimeout(idleTimer.current)
+    idleTimer.current = null
+  }
+  const armIdle = () => {
+    disarmIdle()
+    idleTimer.current = setTimeout(() => {
+      idleTimer.current = null
+      const active = document.activeElement
+      if (
+        active instanceof HTMLElement &&
+        regionRef.current?.contains(active) &&
+        active.closest('[data-field]')
+      ) {
+        active.blur()
+      }
+    }, idleMs)
+  }
+  useEffect(() => disarmIdle, [])
 
   /**
    * The three ways to add something, shared by the buttons below the agenda
@@ -246,50 +291,56 @@ export function AgendaEditor({
         // watching the corner of the screen -- has one honest signal instead of
         // guessing from a message that only appears when something is wrong.
         data-save-state={agenda.status.kind}
+        ref={regionRef}
         onFocusCapture={reportFocus}
         onBlurCapture={clearFocus}
+        // Any keystroke or edit in a field restarts the clock; see armIdle.
+        onKeyDownCapture={() => idleTimer.current && armIdle()}
+        onInputCapture={() => idleTimer.current && armIdle()}
       >
-        <DayHeader
-          doc={doc}
-          schedule={schedule}
-          onDescChange={(desc) => agenda.patchDay({ desc })}
-        />
-        <PresenceBar peers={agenda.peers} />
-        <HeaderRow />
+        <FieldLockProvider value={agenda.locks}>
+          <DayHeader
+            doc={doc}
+            schedule={schedule}
+            onDescChange={(desc) => agenda.patchDay({ desc })}
+          />
+          <PresenceBar peers={agenda.peers} />
+          <HeaderRow />
 
-        <SortableContext items={sortableIds} strategy={verticalListSortingStrategy}>
-          <div className="border-t border-[var(--border)] md:border-t-0">
-            {nodes.length > 0 && lineAfter(null)}
-            {nodes.map((node) =>
-              node.kind === 'row' ? (
-                // A dragged container's children are hidden for the duration of
-                // the drag; they are travelling with it.
-                activeId && insideActive.has(node.row.id) && node.row.id !== activeId ? null : (
-                  <Fragment key={node.row.id}>
-                    <EditorRow row={node.row} ctx={rowContext} />
-                    {lineAfter(node.row.id)}
+          <SortableContext items={sortableIds} strategy={verticalListSortingStrategy}>
+            <div className="border-t border-[var(--border)] md:border-t-0">
+              {nodes.length > 0 && lineAfter(null)}
+              {nodes.map((node) =>
+                node.kind === 'row' ? (
+                  // A dragged container's children are hidden for the duration of
+                  // the drag; they are travelling with it.
+                  activeId && insideActive.has(node.row.id) && node.row.id !== activeId ? null : (
+                    <Fragment key={node.row.id}>
+                      <EditorRow row={node.row} ctx={rowContext} />
+                      {lineAfter(node.row.id)}
+                    </Fragment>
+                  )
+                ) : (
+                  <Fragment key={node.id}>
+                    <EditorBreakout node={node} ctx={rowContext} />
+                    {lineAfter(node.id)}
                   </Fragment>
-                )
-              ) : (
-                <Fragment key={node.id}>
-                  <EditorBreakout node={node} ctx={rowContext} />
-                  {lineAfter(node.id)}
-                </Fragment>
-              ),
-            )}
-          </div>
-        </SortableContext>
+                ),
+              )}
+            </div>
+          </SortableContext>
 
-        <BlockPicker
-          types={types}
-          onAddSection={() => addSection()}
-          onAddBreakout={() => addBreakout()}
-          onAdd={(typeKey) => addBlock(typeKey)}
-        />
+          <BlockPicker
+            types={types}
+            onAddSection={() => addSection()}
+            onAddBreakout={() => addBreakout()}
+            onAdd={(typeKey) => addBlock(typeKey)}
+          />
 
-        <EndOfDay schedule={schedule} targetEndMinute={doc.targetEndMinute} />
-        <SaveStatus status={agenda.status} />
-        <LiveRegion message={liveMessage} />
+          <EndOfDay schedule={schedule} targetEndMinute={doc.targetEndMinute} />
+          <SaveStatus status={agenda.status} />
+          <LiveRegion message={liveMessage} />
+        </FieldLockProvider>
       </section>
 
       {/* `pointerEvents: 'none'` for the same reason the library's overlay has

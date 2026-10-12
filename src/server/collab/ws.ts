@@ -73,7 +73,20 @@ export type CollabServerOptions = {
    * prove the timer and the per-message check work without it.
    */
   notifications?: boolean
+  /**
+   * How often every socket is pinged. One that has not answered the previous
+   * ping by the next one is terminated, so a vanished client is gone after at
+   * most twice this. See `heartbeat` below.
+   */
+  heartbeatMs?: number
 }
+
+/**
+ * Ten seconds: a dead connection is noticed within twenty. Long enough that a
+ * browser tab throttled in the background still answers -- pongs are sent by
+ * the network stack, not by page scripts, so throttling does not delay them.
+ */
+const DEFAULT_HEARTBEAT_MS = 10_000
 
 type Joined = { room: Room; connection: Connection; participant: Participant; leave: () => void }
 
@@ -114,6 +127,8 @@ export function startCollabServer(options: CollabServerOptions) {
   // without doing anything the protocol forbids. The frame limit bounds one
   // message; limits.ts bounds how many, and how large the document gets.
   const wss = new WebSocketServer({ noServer: true, maxPayload: MAX_FRAME_BYTES })
+  /** Sockets that answered the last ping. See the heartbeat below. */
+  const answered = new WeakSet<WebSocket>()
 
   http.on('upgrade', (request, socket, head) => {
     void (async () => {
@@ -145,6 +160,8 @@ export function startCollabServer(options: CollabServerOptions) {
       }
 
       wss.handleUpgrade(request, socket, head, (ws) => {
+        answered.add(ws)
+        ws.on('pong', () => answered.add(ws))
         // A failure in here used to be an unhandled rejection and an open,
         // silent socket: the client waited for a sync that was never coming
         // and blamed the network. Close it and say why.
@@ -158,6 +175,32 @@ export function startCollabServer(options: CollabServerOptions) {
       reject(socket, 500, 'Interner Fehler.')
     })
   })
+
+  /**
+   * Ends connections that vanished without closing.
+   *
+   * A laptop shut, a phone asleep, wifi gone: no close frame arrives, and the
+   * socket stays open on this side until TCP gives up -- minutes, sometimes
+   * far longer. Its presence stayed in the room for that whole time, and
+   * presence is also what locks the field somebody is typing in. A lock that
+   * outlives its holder by an unbounded time is worse than no lock.
+   *
+   * Terminating fires the socket's own 'close', which leaves the room and
+   * clears the presence -- the same path as a tab closed properly.
+   */
+  // `wss.clients` is filled by handleUpgrade; the pong listener is attached
+  // there too, because with `noServer` no 'connection' event is emitted.
+  const heartbeat = setInterval(() => {
+    for (const ws of wss.clients) {
+      if (!answered.has(ws)) {
+        ws.terminate()
+        continue
+      }
+      answered.delete(ws)
+      ws.ping()
+    }
+  }, options.heartbeatMs ?? DEFAULT_HEARTBEAT_MS)
+  heartbeat.unref()
 
   // The fallback: every socket whose last check is older than the interval is
   // checked again, whether or not anything was heard from Postgres.
@@ -186,6 +229,7 @@ export function startCollabServer(options: CollabServerOptions) {
 
   return {
     close: async () => {
+      clearInterval(heartbeat)
       if (sweeper) clearInterval(sweeper)
       if (nudge) clearTimeout(nudge)
       await listener?.close()

@@ -34,10 +34,23 @@ Tant que quelque chose est encore en cours de transmission, **Enregistrement …
 
 Vous pouvez travailler en même temps sur des blocs différents sans vous gêner. Deux personnes qui déplacent en même temps des blocs différents ne se dérangent pas non plus.
 
-Sur un même bloc, le **Titre**, la **Durée**, l'heure de début fixée et **Responsable** sont enregistrés séparément. Si l'une modifie le titre et l'autre la durée, les deux modifications sont conservées.
+Sur un même bloc, chaque champ est enregistré séparément : le **Titre**, la **Durée**, l'heure de début fixée, **Responsable**, la description, le **Format**, le matériel et chaque champ sous **Plus de champs**. Si l'une modifie la description et l'autre le format, les deux modifications sont conservées.
 
-:::caution[Même champ : la dernière modification l'emporte]
-Si deux personnes modifient le même champ, c'est la modification arrivée en dernier qui reste. La description, le **Format**, le matériel et tous les champs sous **Plus de champs** d'un bloc sont enregistrés ensemble. Si vous modifiez en même temps deux de ces champs sur le même bloc, une modification peut écraser l'autre. Mettez-vous d'accord sur qui prend quel bloc. Le cadre coloré te montre où quelqu'un est en train de taper.
+### Un champ, une personne
+
+Tant que quelqu'un écrit dans un champ, ce champ lui appartient. Pour tous les autres, il est verrouillé et entouré d'un cadre coloré, et en dessous on lit par exemple « Mira est en train d’écrire ». Les autres champs du même bloc restent libres. Cela vaut aussi pour le nom d'une section et la **Note sur la journée**.
+
+Le champ redevient libre
+
+- dès que la personne le quitte,
+- après 30 secondes sans frappe – ce qu'elle a écrit jusque-là est enregistré,
+- dès qu'elle ferme l'onglet ou le navigateur,
+- au plus tard après environ 20 secondes si sa connexion est coupée sans déconnexion, par exemple parce que l'ordinateur portable est refermé ou que le wifi a disparu.
+
+Si deux personnes cliquent au même moment dans le même champ, c'est celle qui était là en premier qui l'obtient. Pour l'autre, il est verrouillé.
+
+:::caution[L'assistant IA ne respecte pas les verrous]
+Si l'[assistant IA](/fr/ai/introduction/) modifie un champ dans lequel quelqu'un est en train d'écrire, sa modification remplace le texte qui n'est pas encore enregistré.
 :::
 
 Il n'y a pas d'annulation. Ce que quelqu'un supprime disparaît pour tout le monde. En cas de doute, mieux vaut mettre de côté, voir [Blocs mis de côté](/fr/agenda/parking/).

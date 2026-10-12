@@ -11,6 +11,7 @@ import * as decoding from 'lib0/decoding'
 import * as encoding from 'lib0/encoding'
 import * as syncProtocol from 'y-protocols/sync'
 import type { Peer } from '@/features/agenda/document'
+import type { FieldClaim } from '@/domain/collab/locks'
 
 /**
  * The browser half of the collaboration connection.
@@ -83,8 +84,28 @@ export class CollabProvider {
     this.connect()
   }
 
-  setFocus(blockId: string | null): void {
-    this.awareness.setLocalStateField('focusedBlockId', blockId)
+  /**
+   * Where this person is: the block for the marks on the row, the field as a
+   * claim nobody else may enter meanwhile. Staying in the same field keeps the
+   * original time, which is what decides a race (see domain/collab/locks).
+   */
+  setFocus(blockId: string | null, field: string | null): void {
+    const current = this.ownClaim()
+    const editing =
+      blockId && field
+        ? current && current.blockId === blockId && current.field === field
+          ? { blockId, field, since: current.since }
+          : { blockId, field, since: Date.now() }
+        : null
+    const state = this.awareness.getLocalState() ?? {}
+    this.awareness.setLocalState({ ...state, focusedBlockId: blockId, editing })
+  }
+
+  /** This client's own claim, as the others see it. */
+  ownClaim(): FieldClaim | null {
+    const state = this.awareness.getLocalState() as { editing?: unknown } | null
+    const editing = readClaim(state?.editing)
+    return editing ? { clientId: this.awareness.clientID, ...editing } : null
   }
 
   peers(): PeerPresence[] {
@@ -99,6 +120,7 @@ export class CollabProvider {
         hue: typeof user.hue === 'number' ? user.hue : 250,
         kind: user.kind === 'model' ? 'model' : 'person',
         focusedBlockId: (state as { focusedBlockId?: string | null }).focusedBlockId ?? null,
+        editing: readClaim((state as { editing?: unknown }).editing),
       })
     })
     return out
@@ -271,4 +293,15 @@ export class CollabProvider {
     encoding.writeVarUint8Array(encoder, payload)
     return encoding.toUint8Array(encoder)
   }
+}
+
+/**
+ * A claim as it arrives from another browser -- which could send anything, so
+ * anything not shaped like a claim is read as none.
+ */
+function readClaim(raw: unknown): Peer['editing'] {
+  if (typeof raw !== 'object' || raw === null) return null
+  const { blockId, field, since } = raw as Record<string, unknown>
+  if (typeof blockId !== 'string' || typeof field !== 'string') return null
+  return { blockId, field, since: typeof since === 'number' ? since : 0 }
 }

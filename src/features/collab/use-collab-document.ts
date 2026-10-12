@@ -36,6 +36,7 @@ import {
   removeModule,
 } from './y-ops'
 import { setDayFields } from '@/domain/collab/ops'
+import { fieldHolders, type FieldClaim } from '@/domain/collab/locks'
 
 /**
  * The editor, backed by a shared document.
@@ -66,6 +67,8 @@ export function useCollabDocument(initial: DayDoc, target: CollabTarget): Agenda
   const [connection, setConnection] = useState<ConnectionState>('connecting')
   const [peers, setPeers] = useState<PeerPresence[]>([])
   const [pending, setPending] = useState(false)
+  /** This client's own claim: it decides a race for a field the others see too. */
+  const [ownClaim, setOwnClaim] = useState<FieldClaim | null>(null)
   // A counter rather than the document itself: a Y.Doc mutates in place, so
   // React would never see it as a new value.
   const [revision, setRevision] = useState(0)
@@ -138,12 +141,38 @@ export function useCollabDocument(initial: DayDoc, target: CollabTarget): Agenda
     return { kind: 'live', peers: peers.length }
   }, [connection, peers.length, pending])
 
+  /**
+   * The fields somebody else holds. Every claim in the room, this client's own
+   * included, goes through the same rule -- so when two people clicked into
+   * one field together, both screens agree which of them has it.
+   */
+  const locks = useMemo(() => {
+    const claims: FieldClaim[] = peers.flatMap((peer) =>
+      peer.editing ? [{ clientId: peer.clientId, ...peer.editing }] : [],
+    )
+    if (ownClaim) claims.push(ownClaim)
+
+    const byClient = new Map(peers.map((peer) => [peer.clientId, peer]))
+    const out = new Map<string, PeerPresence>()
+    for (const [key, holder] of fieldHolders(claims)) {
+      const peer = byClient.get(holder.clientId)
+      if (peer) out.set(key, peer)
+    }
+    return out
+  }, [peers, ownClaim])
+
   return useMemo(
     () => ({
       doc,
       status,
       peers,
-      setFocus: (blockId: string | null) => providerRef.current?.setFocus(blockId),
+      setFocus: (blockId: string | null, field: string | null) => {
+        const provider = providerRef.current
+        if (!provider) return
+        provider.setFocus(blockId, field)
+        setOwnClaim(provider.ownClaim())
+      },
+      locks,
       patchModule: (moduleId: string, patch: ModulePatch) =>
         withDoc((d) => patchModule(d, moduleId, patch)),
       patchCluster: (clusterId: string, patch: ClusterPatch) =>
@@ -188,7 +217,7 @@ export function useCollabDocument(initial: DayDoc, target: CollabTarget): Agenda
       },
       removeModule: (moduleId: string) => withDoc((d) => removeModule(d, moduleId)),
     }),
-    [doc, status, peers, withDoc],
+    [doc, status, peers, locks, withDoc],
   )
 }
 

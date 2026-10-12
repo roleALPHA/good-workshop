@@ -34,10 +34,23 @@ While something is still on its way, **Saving …** briefly appears below the ag
 
 You can work on different blocks at the same time without getting in each other's way. Two people moving different blocks at the same time don't disturb each other either.
 
-On the same block, **Title**, **Duration**, the fixed start time and **Responsible** are saved separately. If one person changes the title and another the duration, both changes are kept.
+On the same block, every field is saved on its own: **Title**, **Duration**, the fixed start time, **Responsible**, the description, the **Format**, the materials and every field under **More fields**. If one person changes the description and another the format, both changes are kept.
 
-:::caution[Same field: the last change wins]
-If two people change the same field, the change that arrives last stays. A block's description, **Format**, materials and all fields under **More fields** are saved together. If you edit two of these fields on the same block at the same time, one change can overwrite the other. Agree on who takes which block. The colored border shows you where someone is typing right now.
+### One field, one person
+
+While someone is typing in a field, it belongs to them. For everyone else it is locked and has a colored border, and below it says, for example, “Mira is typing”. The other fields of the same block stay free. This also applies to the name of a section and the **Note about the day**.
+
+The field becomes free again
+
+- as soon as the person leaves it,
+- after 30 seconds without a key press – whatever they have typed until then is saved,
+- as soon as they close the tab or the browser,
+- after about 20 seconds at the latest if their connection drops without signing off, for example because the laptop is closed or the Wi-Fi is gone.
+
+If two people click into the same field at the same moment, the one who was there first gets it. For the other, it is locked.
+
+:::caution[The AI assistant does not respect locks]
+If the [AI assistant](/en/ai/introduction/) changes a field in which someone is typing right now, its change replaces the text that has not been saved yet.
 :::
 
 There is no undo. What someone deletes is gone for everyone. If you're unsure, park instead, see [Parking area](/en/agenda/parking/).

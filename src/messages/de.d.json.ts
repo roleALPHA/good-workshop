@@ -330,6 +330,7 @@ declare const messages: {
       "addBlockToTrack": "Block in {title} hinzufügen",
       "addTrackTo": "Strang zu {title} hinzufügen"
     },
+    "fieldLocked": "{name} schreibt gerade",
     "presenceModel": "KI-Assistent",
     "presenceEditing": "bearbeitet diesen Block gerade"
   },

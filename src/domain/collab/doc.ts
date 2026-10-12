@@ -64,6 +64,55 @@ export type BlockFields = {
   responsible?: Responsible[]
 }
 
+/**
+ * One key per field of a block's `desc`, beside the block's own fields.
+ *
+ * `desc` used to be written whole, so two people changing two of its fields at
+ * once wrote two whole objects and the later one silently undid the other --
+ * and a lock on "the description" protected nothing against somebody saving
+ * the social form beside it. A key per field makes each one its own
+ * last-write-wins value, like the title and the duration already were.
+ *
+ * Flat keys on the block rather than a nested Y.Map: two clients creating the
+ * nested map at the same moment would each make their own, and one of them --
+ * with whatever was written into it -- loses. And no migration: `desc` stays
+ * where it was as the base, and a field key overrides it. `null` is how a
+ * field is cleared, because deleting the key would let the base value show
+ * through again.
+ */
+const DESC_FIELD = 'desc.'
+
+/** The block's description fields: the stored object with every field key applied. */
+export function readDesc(block: Y.Map<unknown>): Record<string, unknown> {
+  const out = { ...((block.get('desc') as Record<string, unknown> | undefined) ?? {}) }
+  block.forEach((value, key) => {
+    if (!key.startsWith(DESC_FIELD)) return
+    const field = key.slice(DESC_FIELD.length)
+    if (value === null || value === undefined) delete out[field]
+    else out[field] = value
+  })
+  return out
+}
+
+/** Writes the named fields and nothing else; `undefined` clears one. */
+export function writeDescFields(block: Y.Map<unknown>, fields: Record<string, unknown>): void {
+  for (const [field, value] of Object.entries(fields)) {
+    block.set(DESC_FIELD + field, value === undefined ? null : value)
+  }
+}
+
+/**
+ * Replaces the whole description -- what MCP's `desc` means, and what a block
+ * arriving from another day carries. The field keys go too, or an older single
+ * field would go on overriding the replacement.
+ */
+export function replaceDesc(block: Y.Map<unknown>, desc: Record<string, unknown>): void {
+  for (const key of [...block.keys()]) {
+    if (key.startsWith(DESC_FIELD)) block.delete(key)
+  }
+  block.set('desc', desc)
+}
+
 export function blocksOf(doc: Y.Doc): Y.Map<Y.Map<unknown>> {
   return doc.getMap<Y.Map<unknown>>(BLOCKS_MAP)
 }
@@ -234,7 +283,7 @@ export function toDayDoc(doc: Y.Doc, moduleTypes: DayDoc['moduleTypes']): DayDoc
       title: String(block.get('title') ?? ''),
       durationMinutes: Number(block.get('durationMinutes') ?? 0),
       pinnedStartMinute: (block.get('pinnedStartMinute') as number | null) ?? null,
-      desc: (block.get('desc') as Record<string, unknown>) ?? {},
+      desc: readDesc(block),
       parked: block.get('parked') === true,
       responsible: normalizeResponsible(block.get('responsible')),
       order: order.get(blockId) ?? 0,
@@ -316,7 +365,7 @@ export function readBlocks(doc: Y.Doc): RawBlock[] {
       pinnedStartMinute: (block.get('pinnedStartMinute') as number | null) ?? null,
       color: (block.get('color') as string | null) ?? null,
       mode: kind === 'cluster' ? modeOf(block) : 'sequential',
-      desc: (block.get('desc') as Record<string, unknown>) ?? {},
+      desc: readDesc(block),
       parked: block.get('parked') === true,
       // Normalised here rather than trusted: the table has a CHECK on the
       // shape, and one malformed list must not stop the day being written.

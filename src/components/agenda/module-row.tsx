@@ -17,6 +17,7 @@ import { ResponsibleInput, ResponsibleList } from './responsible'
 import { PeerMarks } from './presence'
 import { DescriptionInput, TitleInput } from './inline-inputs'
 import { OverlapWarning, TimeCell } from './time-cell'
+import { LockField } from './field-lock'
 import { GRID, type RowChrome, type RowEditing } from './agenda-rows'
 
 /**
@@ -109,17 +110,21 @@ export function ModuleRow({
       <div className={cn('pt-3 pb-3 pl-4 md:px-2 md:pl-2', nested && 'pl-7 md:pl-2')}>
         <TimeCell
           entry={entry}
-          editing={editing && { ...editing, pinnedStartMinute: mod.pinnedStartMinute }}
+          editing={
+            editing && { ...editing, pinnedStartMinute: mod.pinnedStartMinute, blockId: mod.id }
+          }
         >
           {participation &&
             (editing ? (
-              <ParticipationControl
-                field={participation}
-                value={
-                  typeof mod.desc.participation === 'string' ? mod.desc.participation : undefined
-                }
-                onChange={(value) => writeDesc('participation', value)}
-              />
+              <LockField blockId={mod.id} field="desc.participation">
+                <ParticipationControl
+                  field={participation}
+                  value={
+                    typeof mod.desc.participation === 'string' ? mod.desc.participation : undefined
+                  }
+                  onChange={(value) => writeDesc('participation', value)}
+                />
+              </LockField>
             ) : (
               <ParticipationBadge
                 field={participation}
@@ -140,9 +145,12 @@ export function ModuleRow({
         )}
       >
         {editing ? (
-          <h3 id={titleId}>
-            <TitleInput value={mod.title} onCommit={editing.onTitleChange} />
-          </h3>
+          // Around the heading, not inside it: a fieldset is not phrasing content.
+          <LockField blockId={mod.id} field="title">
+            <h3 id={titleId}>
+              <TitleInput value={mod.title} onCommit={editing.onTitleChange} />
+            </h3>
+          </LockField>
         ) : (
           <h3 id={titleId} className="font-semibold text-[var(--fg)]">
             {mod.title}
@@ -153,13 +161,13 @@ export function ModuleRow({
           asked of every row, and a closed row answers it without a click.
         */}
         {editing?.onResponsibleChange ? (
-          <div className="mt-0.5 mb-1">
+          <LockField blockId={mod.id} field="responsible" className="mt-0.5 mb-1">
             <ResponsibleInput
               value={mod.responsible}
               people={people}
               onChange={editing.onResponsibleChange}
             />
-          </div>
+          </LockField>
         ) : (
           <ResponsibleList
             people={resolveResponsible(mod.responsible, people)}
@@ -172,11 +180,13 @@ export function ModuleRow({
           breakpoint a writer could change everything in the row but this.
         */}
         {editing && descriptionField ? (
-          <DescriptionInput
-            value={description}
-            label={descriptionField.label}
-            onCommit={(value) => writeDesc('description', value)}
-          />
+          <LockField blockId={mod.id} field="desc.description">
+            <DescriptionInput
+              value={description}
+              label={descriptionField.label}
+              onCommit={(value) => writeDesc('description', value)}
+            />
+          </LockField>
         ) : (
           description && (
             <RichText value={description} className="mt-1 text-[15px] text-[var(--fg-muted)]" />
@@ -254,15 +264,17 @@ export function ModuleRow({
       <div className={cn('space-y-1 pb-3 pl-4 md:px-3 md:pt-3 md:pl-3', nested && 'pl-7 md:pl-3')}>
         {info.length > 0 && <InfoChips items={info} />}
         {editing && materialField && (
-          <ChipsInput
-            values={materials}
-            onChange={(next) => writeDesc('materials', next.length > 0 ? next : undefined)}
-            addLabel={t('materials.add')}
-            removeLabel={(name) => t('materials.remove', { name })}
-            editLabel={(name) => t('materials.edit', { name })}
-            editFieldLabel={(name) => t('materials.editField', { name })}
-            placeholder={t('materials.placeholder')}
-          />
+          <LockField blockId={mod.id} field="desc.materials">
+            <ChipsInput
+              values={materials}
+              onChange={(next) => writeDesc('materials', next.length > 0 ? next : undefined)}
+              addLabel={t('materials.add')}
+              removeLabel={(name) => t('materials.remove', { name })}
+              editLabel={(name) => t('materials.edit', { name })}
+              editFieldLabel={(name) => t('materials.editField', { name })}
+              placeholder={t('materials.placeholder')}
+            />
+          </LockField>
         )}
       </div>
 

@@ -90,6 +90,7 @@ export function TrackColumn({
           titleId={titleId}
           title={cluster.title}
           color={cluster.color}
+          blockId={cluster.id}
           level={3}
           editing={
             editing && {

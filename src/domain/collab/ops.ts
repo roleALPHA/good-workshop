@@ -2,7 +2,15 @@ import * as Y from 'yjs'
 import { keyAtEnd, placeAfter, sortByPosition, type Ordered } from '@/domain/agenda/ordering'
 import { normalizeResponsible, type Responsible } from '@/domain/agenda/responsible'
 import type { ClusterMode } from '@/domain/agenda/types'
-import { blocksOf, dayOf, modeOf, type BlockKind } from './doc'
+import {
+  blocksOf,
+  dayOf,
+  modeOf,
+  readDesc,
+  replaceDesc,
+  writeDescFields,
+  type BlockKind,
+} from './doc'
 
 /**
  * Mutations on the shared document.
@@ -22,7 +30,14 @@ export type BlockPatch = {
   title?: string
   durationMinutes?: number
   pinnedStartMinute?: number | null
+  /** The whole description, replacing every field -- MCP's `desc`. */
   desc?: Record<string, unknown>
+  /**
+   * Single fields of the description, each written on its own; `undefined`
+   * clears one. What the editor sends, so two people in two fields of one
+   * block do not overwrite each other.
+   */
+  descFields?: Record<string, unknown>
   color?: string | null
   parentId?: string | null
   /** Set aside: in the day, out of the schedule. */
@@ -139,7 +154,10 @@ export function patchBlock(doc: Y.Doc, blockId: string, patch: BlockPatch): bool
     // Field by field, because that is the granularity that lets two people
     // edit the title and the duration of one block at the same time.
     for (const [key, value] of Object.entries(patch)) {
-      if (value !== undefined) block.set(key, value)
+      if (value === undefined) continue
+      if (key === 'desc') replaceDesc(block, value as Record<string, unknown>)
+      else if (key === 'descFields') writeDescFields(block, value as Record<string, unknown>)
+      else block.set(key, value)
     }
   })
   return true
@@ -178,7 +196,7 @@ export function snapshotModule(doc: Y.Doc, blockId: string): ModuleSnapshot | nu
     title: String(block.get('title') ?? ''),
     durationMinutes: Number(block.get('durationMinutes') ?? 0),
     pinnedStartMinute: (block.get('pinnedStartMinute') as number | null) ?? null,
-    desc: (block.get('desc') as Record<string, unknown>) ?? {},
+    desc: readDesc(block),
     parked: block.get('parked') === true,
     responsible: normalizeResponsible(block.get('responsible')),
   }

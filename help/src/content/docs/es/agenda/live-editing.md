@@ -34,10 +34,23 @@ Mientras algo está todavía en camino, debajo de la agenda aparece brevemente *
 
 Podéis trabajar a la vez en bloques distintos sin estorbaros. Tampoco se molestan dos personas que mueven bloques distintos al mismo tiempo.
 
-En un mismo bloque, **Título**, **Duración**, la hora de inicio fijada y **Responsable** se guardan por separado. Si una persona cambia el título y otra la duración, se conservan los dos cambios.
+En un mismo bloque, cada campo se guarda por separado: **Título**, **Duración**, la hora de inicio fijada, **Responsable**, la descripción, el **Formato**, el material y cada campo de **Más campos**. Si una persona cambia la descripción y otra el formato, se conservan los dos cambios.
 
-:::caution[El mismo campo: gana el último cambio]
-Si dos personas cambian el mismo campo, se queda el cambio que llega en último lugar. La descripción, el **Formato**, el material y todos los campos de **Más campos** de un bloque se guardan juntos. Si editáis a la vez dos de estos campos en el mismo bloque, un cambio puede sobrescribir al otro. Poneos de acuerdo sobre quién se encarga de cada bloque. El borde de color te muestra dónde está escribiendo alguien.
+### Un campo, una persona
+
+Mientras alguien escribe en un campo, ese campo es suyo. Para todos los demás queda bloqueado y con un borde de color, y debajo pone por ejemplo «Mira está escribiendo». Los demás campos del mismo bloque siguen libres. Esto vale también para el nombre de una sección y la **Nota sobre la jornada**.
+
+El campo vuelve a quedar libre
+
+- en cuanto la persona sale de él,
+- tras 30 segundos sin pulsar ninguna tecla – lo que haya escrito hasta entonces se guarda,
+- en cuanto cierra la pestaña o el navegador,
+- como muy tarde tras unos 20 segundos si su conexión se corta sin cerrar sesión, por ejemplo porque se cierra el portátil o se va el wifi.
+
+Si dos personas hacen clic en el mismo campo en el mismo momento, se lo queda quien llegó primero. Para la otra queda bloqueado.
+
+:::caution[El asistente de IA no respeta los bloqueos]
+Si el [asistente de IA](/es/ai/introduction/) cambia un campo en el que alguien está escribiendo, su cambio sustituye el texto que todavía no se ha guardado.
 :::
 
 No hay deshacer. Lo que alguien elimina desaparece para todos. Si no estás seguro, mejor apártalo; consulta [Apartados](/es/agenda/parking/).

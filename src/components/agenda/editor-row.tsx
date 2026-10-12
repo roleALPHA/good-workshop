@@ -3,7 +3,7 @@
 import { CSS } from '@dnd-kit/utilities'
 import { useSortable } from '@dnd-kit/sortable'
 import type { ReactNode } from 'react'
-import type { AgendaDocument, Peer } from '@/features/agenda/document'
+import type { AgendaDocument, ModulePatch, Peer } from '@/features/agenda/document'
 import type { FlatRow } from '@/features/agenda/flatten'
 import type { Schedule } from '@/domain/schedule/types'
 import type { AssignablePerson } from '@/domain/agenda/responsible'
@@ -12,6 +12,7 @@ import { GapRow, type RowChrome } from './agenda-rows'
 import { DragHandle } from './drag-handle'
 import { ModuleRow } from './module-row'
 import { ModuleDetails } from '@/components/inspector/module-details'
+import { descChanges } from '@/domain/moduleType/desc'
 
 /**
  * One editable row, wherever it stands.
@@ -45,7 +46,7 @@ export function EditorRow({ row, ctx }: { row: FlatRow; ctx: RowContext }) {
   if (!entry) return null
 
   const doc = ctx.agenda.doc
-  const patch = (moduleId: string, fields: Partial<(typeof doc)['modules'][number]>) => {
+  const patch = (moduleId: string, fields: ModulePatch) => {
     // Listed field by field rather than spread: undefined means "not part of
     // this change", and passing the whole object through would let a caller's
     // missing key clear a field it never mentioned.
@@ -53,7 +54,9 @@ export function EditorRow({ row, ctx }: { row: FlatRow; ctx: RowContext }) {
       title: fields.title,
       durationMinutes: fields.durationMinutes,
       pinnedStartMinute: fields.pinnedStartMinute,
-      desc: fields.desc,
+      // Never `desc` from here: the editor writes the fields it changed, so a
+      // second person in another field of the block keeps theirs.
+      descFields: fields.descFields,
       parked: fields.parked,
       responsible: fields.responsible,
     })
@@ -102,7 +105,8 @@ export function EditorRow({ row, ctx }: { row: FlatRow; ctx: RowContext }) {
               onToggleExpanded: () => ctx.onToggleExpanded(row.id),
               onTitleChange: (title) => patch(row.id, { title }),
               onDurationChange: (durationMinutes) => patch(row.id, { durationMinutes }),
-              onDescChange: (desc) => patch(row.id, { desc }),
+              onDescChange: (desc) =>
+                patch(row.id, { descFields: descChanges(row.module.desc, desc) }),
               onPinChange: (pinnedStartMinute) => patch(row.id, { pinnedStartMinute }),
               onPark: () => patch(row.id, { parked: true }),
               onRemove: () => ctx.agenda.removeModule(row.id),
@@ -110,7 +114,9 @@ export function EditorRow({ row, ctx }: { row: FlatRow; ctx: RowContext }) {
                 <ModuleDetails
                   module={row.module}
                   type={doc.moduleTypes[row.module.moduleTypeId]}
-                  onChange={(desc) => patch(row.id, { desc })}
+                  onChange={(desc) =>
+                    patch(row.id, { descFields: descChanges(row.module.desc, desc) })
+                  }
                 />
               ),
             }}
