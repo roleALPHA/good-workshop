@@ -10,12 +10,13 @@ Chaque agenda peut être téléchargé à tout moment sous forme de fichier Mark
 ## Exporter en trois étapes
 
 1. Ouvre une journée de l'atelier.
-2. En haut à droite, choisis avec les deux cases ce qui est inclus :
-   - **Tout l'atelier** – toutes les journées dans un seul fichier au lieu de la seule journée ouverte.
+2. En haut à droite, choisis avec les cases ce qui est inclus :
    - **Avec les notes d'animation** – tes notes sur les blocs.
+   - **Tous les champs** – en plus la note sur la journée. Les champs sous **Plus de champs** figurent toujours dans le fichier.
+   - **Tout l'atelier** – toutes les journées dans un seul fichier au lieu de la seule journée ouverte.
 3. Clique sur **Markdown**. Ton navigateur télécharge un fichier `.md` portant le nom de l'atelier.
 
-Les deux cases valent aussi pour [Imprimer](/fr/sharing/print/) – elles répondent à la même question : pour qui est cette copie ?
+Les cases valent aussi pour [Imprimer](/fr/sharing/print/) – elles répondent à la même question : pour qui est cette copie ?
 
 :::caution[Les notes sont exclues par défaut]
 Les champs qu'un type de bloc marque comme privés – aujourd'hui les notes d'animation – ne figurent dans le fichier qu'avec **Avec les notes d'animation**. La case est décochée à chaque ouverture. Ne transmets pas un fichier contenant des notes aux participants.
@@ -27,7 +28,7 @@ Les champs qu'un type de bloc marque comme privés – aujourd'hui les notes d'a
 
 **Puis le titre** de l'atelier comme titre principal. Pour tout l'atelier, chaque journée suit sous son propre titre : son nom, à défaut sa date, à défaut « Journée 1 », « Journée 2 » …
 
-**Pour chaque journée, un résumé** : nom, date, début et fin ainsi que la répartition, par exemple « 5h 30m de contenu, 1h 15m de pauses ».
+**Pour chaque journée, un résumé** : nom, date, début et fin ainsi que la répartition, par exemple « 5h 30m de contenu, 1h 15m de pauses ». Avec **Tous les champs**, la [note sur la journée](/fr/agenda/days/#note-sur-la-journée) suit en dessous.
 
 **En dessous, le déroulé sous forme de tableau** avec les colonnes Heure, Durée, Bloc et Info :
 

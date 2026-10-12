@@ -51,8 +51,8 @@ zeigt Titel, Tags, die Zahl der Tage und den Status, darunter den Ordner und die
 Ein Klick auf einen Workshop öffnet seinen ersten Tag. Von oben nach unten:
 
 1. **← Bibliothek**, der Titel des Workshops und darunter seine Tags (**+ Tag**).
-2. Rechts die Ausgabe: **Zugriff**, **Mit Moderationsnotizen**, **Ganzer Workshop**,
-   **Markdown** und **Drucken**.
+2. Rechts die Ausgabe: **Zugriff**, **Mit Moderationsnotizen**, **Alle Felder**, **Ganzer
+   Workshop**, **Markdown** und **Drucken**.
 3. Die Reiter der Tage und **Workshoptag** zum Hinzufügen. Darunter Name, Datum und Beginn des
    offenen Tags, die Pfeile zum Umsortieren und **Workshoptag löschen**.
 4. Die Kopfzeile des Tags: Beginn und Ende, Inhalt, Pausen und Zahl der Blöcke, dann

@@ -1006,6 +1006,7 @@ declare const messages: {
     "print": "Drucken",
     "scopeDay": "Dieser Tag",
     "scopeWorkshop": "Ganzer Workshop",
+    "allFields": "Alle Felder",
     "someone": "Jemand",
     "untitled": "Workshop",
     "untitledDay": "Tag",

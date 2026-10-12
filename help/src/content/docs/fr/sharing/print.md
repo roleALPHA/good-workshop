@@ -1,6 +1,6 @@
 ---
 title: Imprimer
-description: Ouvrir une journée ou tout l'atelier en vue d'impression, l'imprimer sur papier ou l'enregistrer en PDF – avec ou sans tes notes d'animation.
+description: Ouvrir une journée ou tout l'atelier en vue d'impression, l'imprimer sur papier ou l'enregistrer en PDF – avec ou sans tes notes d'animation et tous les champs.
 sidebar:
   order: 3
 ---
@@ -10,9 +10,10 @@ Le jour J, tu veux souvent le déroulé sur papier : pour toi à la table d'anim
 ## Imprimer en trois étapes
 
 1. Ouvre une journée de l'atelier.
-2. En haut à droite, choisis avec les deux cases ce qui est inclus :
-   - **Tout l'atelier** – toutes les journées au lieu de la seule journée ouverte.
+2. En haut à droite, choisis avec les cases ce qui est inclus :
    - **Avec les notes d'animation** – tes notes sur les blocs.
+   - **Tous les champs** – aussi les champs sous **Plus de champs** et la note sur la journée.
+   - **Tout l'atelier** – toutes les journées au lieu de la seule journée ouverte.
 3. Clique sur **Imprimer**. La vue d'impression s'ouvre dans un nouvel onglet.
 
 Là, tu imprimes avec la commande d'impression de ton navigateur (Ctrl+P, sur Mac ⌘+P).
@@ -41,6 +42,8 @@ Pour chaque bloc apparaissent :
 - la description,
 - dans la colonne **Infos complémentaires**, une sélection d'autres champs du bloc, par exemple le matériel ou la salle.
 
+Avec **Tous les champs**, on obtient la version complète pour toutes les personnes qui mènent la journée : sous la description figurent alors aussi tous les champs qui se trouvent derrière **Plus de champs** dans l'agenda – par exemple Consigne de travail, Question directrice ou Disposition de la salle –, chacun avec son libellé. Sous l'en-tête de la journée figure la [note sur la journée](/fr/agenda/days/#note-sur-la-journée).
+
 À la fin figure l'heure de fin de la journée.
 
 Les [sections](/fr/agenda/clusters-and-breakouts/) apparaissent comme des intertitres en couleur avec heure de début et durée. Pour un **breakout**, deux ou trois volets sont côte à côte en colonnes ; à partir de quatre volets, ils se suivent les uns sous les autres, parce que quatre colonnes ne seraient plus lisibles sur du A4. Si un breakout ne tient pas sur une page, il est coupé entre deux volets, et chaque volet nomme son breakout.
@@ -49,6 +52,7 @@ Les [sections](/fr/agenda/clusters-and-breakouts/) apparaissent comme des intert
 
 - Les blocs [mis de côté](/fr/agenda/parking/) – ils ne figurent pas dans le planning.
 - Les notes d'animation, tant que **Avec les notes d'animation** n'est pas cochée. La case est décochée à chaque ouverture de la page : le cas le plus fréquent est l'impression pour le groupe, et tes notes n'y ont pas leur place.
+- Les champs sous **Plus de champs** et la note sur la journée, tant que **Tous les champs** n'est pas cochée. Cette case aussi est décochée à chaque ouverture de la page.
   :::
 
 ## Qui peut imprimer

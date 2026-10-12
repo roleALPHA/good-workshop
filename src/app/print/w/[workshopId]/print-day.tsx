@@ -25,12 +25,15 @@ export async function PrintDay({
   heading,
   locale,
   showNotes,
+  allFields,
   breakBefore = false,
 }: {
   doc: DayDoc
   heading: string
   locale: Locale
   showNotes: boolean
+  /** Every field of every block, and the note on the day: the full copy. */
+  allFields: boolean
   /** Start on a fresh sheet. False for the first day, true for the ones after. */
   breakBefore?: boolean
 }) {
@@ -38,6 +41,7 @@ export async function PrintDay({
 
   const rows = flattenDay(doc)
   const schedule = computeSchedule(doc.startMinute, toScheduleItems(rows))
+  const note = allFields && typeof doc.desc?.text === 'string' ? doc.desc.text.trim() : ''
 
   return (
     <section style={breakBefore ? { breakBefore: 'page' } : undefined}>
@@ -48,6 +52,7 @@ export async function PrintDay({
           {' · '}
           {formatTime(schedule.dayStartMinute, locale)}–{formatTime(schedule.dayEndMinute, locale)}
         </p>
+        {note && <p className="mt-2 text-[14px] whitespace-pre-line text-neutral-700">{note}</p>}
       </header>
 
       <div>
@@ -69,6 +74,7 @@ export async function PrintDay({
                 schedule={schedule}
                 locale={locale}
                 showNotes={showNotes}
+                allFields={allFields}
               />
             )
           }
@@ -102,6 +108,7 @@ export async function PrintDay({
               doc={doc}
               locale={locale}
               showNotes={showNotes}
+              allFields={allFields}
             />
           )
         })}

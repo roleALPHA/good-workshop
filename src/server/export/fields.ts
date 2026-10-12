@@ -1,7 +1,8 @@
 import type { DayDoc, ModuleTypeDto } from '@/domain/agenda/types'
 import { parseSchema } from '@/domain/moduleType/profile'
 import { richTextToMarkdown } from '@/lib/richtext/markdown'
-import { isRichTextValue } from '@/lib/richtext/schema'
+import { isRichTextValue, type RichTextValue } from '@/lib/richtext/schema'
+import type { Locale } from '@/i18n/config'
 import { translator } from '@/i18n/translator'
 import type { ExportOptions } from './markdown'
 
@@ -14,11 +15,19 @@ import type { ExportOptions } from './markdown'
  * fields, and neither needs the other's vocabulary.
  */
 
+/** One field of a block as it leaves the application: labelled, and in words. */
+export type ExportableField =
+  | { key: string; label: string; kind: 'rich'; value: RichTextValue }
+  | { key: string; label: string; kind: 'text'; value: string }
+
 /**
- * Renders a module's `desc`, labelling its fields from the type's own schema.
+ * Which fields of a block go out, under which label and with which value.
  *
- * Rich text becomes Markdown, arrays become comma lists, scalars become a
- * labelled line. Everything else is skipped.
+ * Shared by the Markdown export and the print view, which lay them out
+ * differently and must not disagree about what is in them. The print view used
+ * to have its own short list -- description, notes, summary chips -- and so had
+ * no way at all to carry what sits behind "Mehr Felder", while the Markdown
+ * file of the same day carried every field.
  *
  * The labels used to be a table in this file, next to a second table for enum
  * values. The comment there said they belonged in the schema and named the
@@ -28,17 +37,16 @@ import type { ExportOptions } from './markdown'
  * quietly disagreed with the inspector in the meantime.
  *
  * So both are gone, and this reads the same FieldSpec[] the inspector renders.
- * Which also means a TENANT-DEFINED type exports with its real labels for the
- * first time, rather than with `key.replaceAll('_', ' ')` -- something this
- * function's own docstring already claimed.
+ * Which also means a TENANT-DEFINED type exports with its real labels, rather
+ * than with `key.replaceAll('_', ' ')`.
  */
-export function describeModule(
+export function exportableFields(
   desc: Record<string, unknown>,
   type: ModuleTypeDto | undefined,
-  opts: Required<ExportOptions>,
-): string[] {
+  opts: { locale: Locale; includePrivateFields: boolean },
+): ExportableField[] {
   const t = translator(opts.locale, 'export')
-  const lines: string[] = []
+  const out: ExportableField[] = []
   const fields = new Map(
     parseSchema(type?.jsonSchema)
       .flatMap((group) => group.fields)
@@ -67,41 +75,56 @@ export function describeModule(
      * handover something the application displays.
      */
     if (fields.get(key)?.private && !opts.includePrivateFields) return
-    if (key === 'description' && !opts.includeDescriptions) return
+
+    const text = (value: string) => out.push({ key, label: label(key), kind: 'text', value })
 
     if (isRichTextValue(raw)) {
-      const text = richTextToMarkdown(raw)
-      if (text)
-        lines.push(
-          '',
-          key === 'description' ? text : `**${label(key)}:**`,
-          key === 'description' ? '' : text,
-        )
-      return
-    }
-    if (Array.isArray(raw) && raw.length > 0) {
+      out.push({ key, label: label(key), kind: 'rich', value: raw })
+    } else if (Array.isArray(raw)) {
       const items = raw
         .filter((v): v is string => typeof v === 'string')
         .map((item) => value(key, item))
-      if (items.length > 0) lines.push('', `**${label(key)}:** ${items.join(', ')}`)
-      return
-    }
-    if (typeof raw === 'string' && raw.trim() !== '') {
-      lines.push('', `**${label(key)}:** ${value(key, raw)}`)
-      return
-    }
-    if (typeof raw === 'number') {
-      lines.push('', `**${label(key)}:** ${raw}`)
+      if (items.length > 0) text(items.join(', '))
+    } else if (typeof raw === 'string' && raw.trim() !== '') {
+      text(value(key, raw))
+    } else if (typeof raw === 'number') {
+      text(String(raw))
     } else if (typeof raw === 'boolean') {
-      lines.push('', `**${label(key)}:** ${raw ? t('yes') : t('no')}`)
+      text(raw ? t('yes') : t('no'))
     }
   }
 
   // description first, then everything else in declaration order.
   push('description', desc.description)
-  for (const [key, value] of Object.entries(desc)) {
-    if (key === 'description') continue
-    push(key, value)
+  for (const [key, raw] of Object.entries(desc)) {
+    if (key !== 'description') push(key, raw)
+  }
+  return out
+}
+
+/**
+ * Renders a module's `desc` as Markdown: rich text as a block under a bold
+ * label, everything else as a labelled line. The description goes without a
+ * label -- it is what the block is about, not one of its attributes.
+ */
+export function describeModule(
+  desc: Record<string, unknown>,
+  type: ModuleTypeDto | undefined,
+  opts: Required<ExportOptions>,
+): string[] {
+  const lines: string[] = []
+
+  for (const field of exportableFields(desc, type, opts)) {
+    if (field.key === 'description' && !opts.includeDescriptions) continue
+
+    if (field.kind === 'rich') {
+      const text = richTextToMarkdown(field.value)
+      if (!text) continue
+      if (field.key === 'description') lines.push('', text, '')
+      else lines.push('', `**${field.label}:**`, text)
+    } else {
+      lines.push('', `**${field.label}:** ${field.value}`)
+    }
   }
 
   return lines.filter((line, index, all) => !(line === '' && all[index - 1] === ''))

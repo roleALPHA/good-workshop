@@ -21,13 +21,20 @@ import { useTranslations } from 'next-intl'
  * Off by default, and that is the load-bearing part: the common case is handing
  * the agenda to the group, and a default that leaks the facilitator's own notes
  * into that is a default nobody would have chosen deliberately.
+ *
+ * "Alle Felder" is the same question asked once more: the short sheet for the
+ * group, or the full one for whoever runs the day -- every field behind "Mehr
+ * Felder" and the note on the day. It was asked for because print had no way
+ * to carry those at all. Off by default for the same reason as the notes.
  */
 export function HandoverLinks({ workshopId, dayId }: { workshopId: string; dayId: string }) {
   const t = useTranslations('workshop')
   const [withNotes, setWithNotes] = useState(false)
+  const [allFields, setAllFields] = useState(false)
   const [wholeWorkshop, setWholeWorkshop] = useState(false)
 
-  const suffix = withNotes ? '?notes=1' : ''
+  // Spelled out rather than built: typed routes need the query as a literal.
+  const suffix = withNotes ? (allFields ? '?notes=1&all=1' : '?notes=1') : allFields ? '?all=1' : ''
   /**
    * Two scopes, two paths, one pair of buttons.
    *
@@ -55,6 +62,16 @@ export function HandoverLinks({ workshopId, dayId }: { workshopId: string; dayId
           className="size-4"
         />
         {t('withNotes')}
+      </label>
+
+      <label className="inline-flex items-center gap-1.5 text-[14px] text-[var(--fg-muted)] pointer-coarse:min-h-11">
+        <input
+          type="checkbox"
+          checked={allFields}
+          onChange={(e) => setAllFields(e.target.checked)}
+          className="size-4"
+        />
+        {t('allFields')}
       </label>
 
       <label className="inline-flex items-center gap-1.5 text-[14px] text-[var(--fg-muted)] pointer-coarse:min-h-11">

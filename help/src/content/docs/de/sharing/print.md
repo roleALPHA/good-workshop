@@ -1,6 +1,6 @@
 ---
 title: Drucken
-description: Einen Tag oder den ganzen Workshop als Druckansicht öffnen, auf Papier bringen oder als PDF speichern – wahlweise mit deinen Moderationsnotizen.
+description: Einen Tag oder den ganzen Workshop als Druckansicht öffnen, auf Papier bringen oder als PDF speichern – wahlweise mit deinen Moderationsnotizen und mit allen Feldern.
 sidebar:
   order: 3
 ---
@@ -10,9 +10,10 @@ Für den Tag selbst willst du den Ablauf oft auf Papier: für dich am Moderation
 ## Drucken in drei Schritten
 
 1. Öffne einen Tag des Workshops.
-2. Lege oben rechts mit den beiden Häkchen fest, was mitkommt:
-   - **Ganzer Workshop** – alle Tage statt nur des geöffneten.
+2. Lege oben rechts mit den Häkchen fest, was mitkommt:
    - **Mit Moderationsnotizen** – deine Notizen zu den Blöcken.
+   - **Alle Felder** – auch die Felder unter **Mehr Felder** und die Notiz zum Tag.
+   - **Ganzer Workshop** – alle Tage statt nur des geöffneten.
 3. Klicke auf **Drucken**. Die Druckansicht öffnet sich in einem neuen Tab.
 
 Dort druckst du mit dem Druckbefehl deines Browsers (Strg+P, auf dem Mac ⌘+P).
@@ -41,6 +42,8 @@ Zu jedem Block erscheinen:
 - die Beschreibung,
 - in der Spalte **Zusatzinfo** ausgewählte weitere Felder des Blocks, etwa Material oder Raum.
 
+Mit **Alle Felder** wird daraus die vollständige Fassung für alle, die den Tag durchführen: Unter der Beschreibung stehen dann auch alle Felder, die in der Agenda hinter **Mehr Felder** liegen – etwa Arbeitsauftrag, Leitfrage oder Raumaufbau –, jeweils mit ihrer Beschriftung. Unter dem Kopf des Tags steht die [Notiz zum Tag](/de/agenda/days/#notiz-zum-tag).
+
 Am Ende steht, wann der Tag endet.
 
 [Abschnitte](/de/agenda/clusters-and-breakouts/) erscheinen als farbige Zwischenüberschriften mit Startzeit und Dauer. Bei einem **Breakout** stehen zwei oder drei Stränge als Spalten nebeneinander; ab vier Strängen folgen sie untereinander, weil vier Spalten auf A4 nicht mehr lesbar wären. Passt ein Breakout nicht auf eine Seite, bricht er zwischen zwei Strängen um, und jeder Strang nennt seinen Breakout.
@@ -49,6 +52,7 @@ Am Ende steht, wann der Tag endet.
 
 - Blöcke auf dem [Parkplatz](/de/agenda/parking/) – sie stehen nicht im Zeitplan.
 - Moderationsnotizen, solange **Mit Moderationsnotizen** nicht angehakt ist. Das Häkchen ist bei jedem Öffnen der Seite aus: Der häufigste Fall ist der Ausdruck für die Gruppe, und dort haben deine Notizen nichts zu suchen.
+- Die Felder unter **Mehr Felder** und die Notiz zum Tag, solange **Alle Felder** nicht angehakt ist. Auch dieses Häkchen ist bei jedem Öffnen aus.
   :::
 
 ## Wer drucken darf

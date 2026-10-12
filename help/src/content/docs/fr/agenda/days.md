@@ -55,7 +55,7 @@ Certaines choses n'appartiennent à aucun bloc en particulier, mais à toute la 
 2. Écris dans le champ **Note sur la journée**.
 3. L'enregistrement se fait dès que tu quittes le champ.
 
-Qui peut seulement lire la journée voit la note, mais ne peut pas la modifier.
+Qui peut seulement lire la journée voit la note, mais ne peut pas la modifier. Elle figure sur l'[impression](/fr/sharing/print/) et dans l'[export Markdown](/fr/sharing/export/) si tu coches **Tous les champs**.
 
 ## Le résumé
 

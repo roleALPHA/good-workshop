@@ -27,14 +27,15 @@ export default async function PrintWorkshopPage({
   searchParams,
 }: {
   params: Promise<{ workshopId: string }>
-  searchParams: Promise<{ notes?: string }>
+  searchParams: Promise<{ notes?: string; all?: string }>
 }) {
   const session = await readSession()
   if (!session) notFound()
 
   const { workshopId } = await params
-  const { notes } = await searchParams
+  const { notes, all } = await searchParams
   const showNotes = notes === '1'
+  const allFields = all === '1'
   const [t, locale] = await Promise.all([getTranslations('workshop'), getLocale()])
 
   const actor = {
@@ -74,6 +75,7 @@ export default async function PrintWorkshopPage({
           heading={index === 0 ? data.meta.title : doc.title || doc.date || t('untitled')}
           locale={locale}
           showNotes={showNotes}
+          allFields={allFields}
           breakBefore={index > 0}
         />
       ))}

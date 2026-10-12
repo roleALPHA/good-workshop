@@ -55,7 +55,7 @@ Algunas cosas no pertenecen a ningún bloque concreto, sino a toda la jornada: l
 2. Escribe en el campo **Nota sobre la jornada**.
 3. Se guarda en cuanto sales del campo.
 
-Quien solo puede leer la jornada ve la nota, pero no puede cambiarla.
+Quien solo puede leer la jornada ve la nota, pero no puede cambiarla. Aparece en la [copia impresa](/es/sharing/print/) y en la [exportación a Markdown](/es/sharing/export/) si marcas **Todos los campos**.
 
 ## El resumen
 

@@ -1,6 +1,6 @@
 ---
 title: Print
-description: Open a day or the whole workshop as a print view, put it on paper or save it as a PDF – with your facilitator notes if you want.
+description: Open a day or the whole workshop as a print view, put it on paper or save it as a PDF – with your facilitator notes and with all fields if you want.
 sidebar:
   order: 3
 ---
@@ -10,9 +10,10 @@ On the day itself you often want the schedule on paper: for you at the facilitat
 ## Print in three steps
 
 1. Open a day of the workshop.
-2. Use the two checkboxes at the top right to decide what comes along:
-   - **Whole workshop** – all days instead of only the open one.
+2. Use the checkboxes at the top right to decide what comes along:
    - **With facilitator notes** – your notes on the blocks.
+   - **All fields** – also the fields under **More fields** and the note about the day.
+   - **Whole workshop** – all days instead of only the open one.
 3. Click **Print**. The print view opens in a new tab.
 
 There you print with your browser's print command (Ctrl+P, or ⌘+P on a Mac).
@@ -41,6 +42,8 @@ For each block you'll see:
 - the description,
 - in the **Additional info** column, selected further fields of the block, such as materials or room.
 
+With **All fields**, this becomes the complete version for everyone running the day: below the description you'll also find all fields that sit behind **More fields** in the agenda – such as Task, Guiding question or Room setup – each with its label. Below the day's header is the [note about the day](/en/agenda/days/#note-about-the-day).
+
 At the end it says when the day ends.
 
 [Sections](/en/agenda/clusters-and-breakouts/) appear as colored subheadings with start time and duration. For a **breakout**, two or three strands sit side by side as columns; from four strands on they follow one below the other, because four columns would no longer be readable on A4. If a breakout doesn't fit on one page, it breaks between two strands, and each strand names its breakout.
@@ -49,6 +52,7 @@ At the end it says when the day ends.
 
 - Blocks in the [parking area](/en/agenda/parking/) – they aren't in the schedule.
 - Facilitator notes, as long as **With facilitator notes** isn't checked. The checkbox is off every time you open the page: the most common case is the printout for the group, and your notes have no place there.
+- The fields under **More fields** and the note about the day, as long as **All fields** isn't checked. This checkbox, too, is off every time you open the page.
   :::
 
 ## Who may print

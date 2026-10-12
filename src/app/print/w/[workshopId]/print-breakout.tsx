@@ -27,12 +27,14 @@ export async function PrintBreakout({
   schedule,
   locale,
   showNotes,
+  allFields,
 }: {
   node: Extract<RenderNode, { kind: 'breakout' }>
   doc: DayDoc
   schedule: Schedule
   locale: Locale
   showNotes: boolean
+  allFields: boolean
 }) {
   const t = await getTranslations({ locale, namespace: 'agenda' })
   const entry = schedule.entries.get(node.id)
@@ -95,6 +97,7 @@ export async function PrintBreakout({
                     doc={doc}
                     locale={locale}
                     showNotes={showNotes}
+                    allFields={allFields}
                     layout={columns ? 'narrow' : 'wide'}
                   />
                 ) : null,

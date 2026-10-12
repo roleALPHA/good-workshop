@@ -41,6 +41,12 @@ export type ExportOptions = {
    */
   includePrivateFields?: boolean
   includeFrontmatter?: boolean
+  /**
+   * The note on the day -- room, travel, who brings what. Part of the full copy
+   * ("Alle Felder"), not of the handover to the group: it is written for the
+   * people running the day, and reads like it.
+   */
+  includeDayNote?: boolean
 }
 
 export type WorkshopMeta = {
@@ -74,6 +80,7 @@ const DEFAULTS: Required<ExportOptions> = {
   // case for an export is handing it to participants.
   includePrivateFields: false,
   includeFrontmatter: true,
+  includeDayNote: false,
 }
 
 export function renderDayMarkdown(
@@ -147,6 +154,10 @@ function layOutDay(day: DayDoc, opts: Opts): DayPart {
   ].filter(Boolean)
 
   const body = [`> ${summary.join(' · ')}`]
+  const note = typeof day.desc?.text === 'string' ? day.desc.text.trim() : ''
+  // Two trailing spaces: the note is typed with line breaks, and Markdown would
+  // otherwise run its lines together into one.
+  if (opts.includeDayNote && note) body.push(text(note).split(/\r?\n/).join('  \n'))
   body.push(
     opts.flavor === 'agenda'
       ? renderTable(day, rows, schedule, opts)
