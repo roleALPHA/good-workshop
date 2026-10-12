@@ -48,6 +48,15 @@ export function ModuleDetails({ module: mod, type, onChange }: ModuleDetailsProp
   const valuesRef = useRef(mod.desc)
   /** True while this panel holds an edit the document has not been told about. */
   const dirtyRef = useRef(false)
+  /**
+   * The document's `desc` as of the last render, dirty or not.
+   *
+   * `valuesRef` stops following the document while an edit is held, which is
+   * right for the fields being typed into and wrong for everything else: the
+   * row goes on writing the description beside this panel. `commit` takes the
+   * rest of the object from here.
+   */
+  const latestDesc = useRef(mod.desc)
 
   // The whole schema, for working out which stored values no longer have a
   // field -- a value the row edits is not an orphan just because this panel
@@ -65,6 +74,10 @@ export function ModuleDetails({ module: mod, type, onChange }: ModuleDetailsProp
         .filter((group) => group.fields.length > 0),
     [schema],
   )
+  const owned = useMemo(
+    () => groups.flatMap((group) => group.fields.map((field) => field.key)),
+    [groups],
+  )
 
   // Adopt changes that arrived from elsewhere -- another tab, a collaborator,
   // an undo -- without discarding what is being typed here. `mod.desc` is a
@@ -72,6 +85,7 @@ export function ModuleDetails({ module: mod, type, onChange }: ModuleDetailsProp
   // so the dirty flag rather than the dependency list is what protects an
   // edit in progress.
   useEffect(() => {
+    latestDesc.current = mod.desc
     if (dirtyRef.current) return
     valuesRef.current = mod.desc
     setValues(mod.desc)
@@ -112,7 +126,14 @@ export function ModuleDetails({ module: mod, type, onChange }: ModuleDetailsProp
     if (!type) return
     if (!dirtyRef.current) return
 
-    const pending = valuesRef.current
+    // Only this panel's own fields come from its copy. A dirty panel's copy of
+    // the description is whatever it was when the edit began, and handing that
+    // back overwrote what had been written in the row since.
+    const pending = { ...latestDesc.current }
+    for (const key of owned) {
+      if (key in valuesRef.current) pending[key] = valuesRef.current[key]
+      else delete pending[key]
+    }
 
     let result: ReturnType<typeof validateModuleDesc>
     try {

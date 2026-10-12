@@ -344,6 +344,19 @@ describe('the agenda as a whole', () => {
     )
   })
 
+  // jsdom applies no Tailwind, so a field that only exists from `lg:` up reads
+  // as present here. The classes are what decide it, and below 1024px a writer
+  // was left with the description as plain text and no way to change it.
+  it('keeps the description editable at every width, not only from 1024px up', () => {
+    renderEditor()
+    const row = within(block('Check-in & Start'))
+    const field = row.getByRole('textbox', { name: 'Beschreibung' })
+
+    expect(field.className.split(/\s+/)).not.toContain('hidden')
+    // And no read-only copy of the same text beside it, for the narrow screens.
+    expect(row.getAllByText('Kurze Vorstellungsrunde, ein Satz pro Person.')).toEqual([field])
+  })
+
   it('offers an editor a lock for the start time of a block and of a section', () => {
     renderEditor()
 

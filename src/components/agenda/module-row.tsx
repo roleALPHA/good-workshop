@@ -166,21 +166,17 @@ export function ModuleRow({
             className="mt-1 mb-1"
           />
         )}
+        {/*
+          At every width. It used to exist only from 1024px up, a rule from when
+          this was a TipTap editor; it is a textarea now, and below the
+          breakpoint a writer could change everything in the row but this.
+        */}
         {editing && descriptionField ? (
-          <>
-            <DescriptionInput
-              value={description}
-              label={descriptionField.label}
-              onCommit={(value) => writeDesc('description', value)}
-              className="hidden lg:block"
-            />
-            {description && (
-              <RichText
-                value={description}
-                className="mt-1 text-[15px] text-[var(--fg-muted)] lg:hidden"
-              />
-            )}
-          </>
+          <DescriptionInput
+            value={description}
+            label={descriptionField.label}
+            onCommit={(value) => writeDesc('description', value)}
+          />
         ) : (
           description && (
             <RichText value={description} className="mt-1 text-[15px] text-[var(--fg-muted)]" />

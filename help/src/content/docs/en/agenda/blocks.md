@@ -29,13 +29,13 @@ You can't change a block's type later. If you picked the wrong one, delete the b
 
 ## What a row contains
 
-The agenda has three columns: **Time**, **Title and description** and **Additional info**. On a phone they turn into cards, and everything essential is still editable there.
+The agenda has three columns: **Time**, **Title and description** and **Additional info**. On a phone they turn into cards, and everything is still editable there.
 
 - **Time:** the calculated start time and, below it, the duration. How to change it or fix a clock time is described under [Duration and start times](/en/agenda/timing/).
 - **Format:** below the time, via **Choose a participation format** (for example **Plenary**, **Small groups** or **Individual**).
 - **Title:** click it directly and type. Enter or a click elsewhere saves, Escape discards. An empty title is not accepted.
 - **Responsible:** below the title, see [Responsible people](/en/agenda/responsible/).
-- **Description:** below that. On wide screens you edit it right in the row; on narrower ones it is only displayed.
+- **Description:** below that. You edit it right in the row, at any screen width. Enter saves, Shift+Enter starts a new line.
 - **Materials:** in the **Additional info** column, via **+ material**. Confirm each entry with Enter.
 
 Some types also show a field as a small label in the **Additional info** column, for example the presenter or the deliverable of a group work.

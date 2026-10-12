@@ -196,6 +196,59 @@ test('a folder editor works in the subtree, but neither shares nor bins', async 
   ).toHaveCount(0)
 })
 
+/**
+ * "Obwohl eine Person Schreibrechte hat, lässt sich nicht immer der
+ * Beschreibungstext anpassen." Not a permission at all: the description field
+ * was hidden below 1024px while the rest of the row stayed editable, so a
+ * writer in a split screen, at 150 % scaling or on a tablet could change the
+ * title and not the text under it. Asserted from a member's browser because
+ * that is how it was reported -- and at two widths, the phone and the narrow
+ * desktop window that is the more common way to land below the breakpoint.
+ */
+test('a folder editor edits a block’s description at every width', async () => {
+  const title = `Pause ${run}`
+  await callMcpTool(api, 'add_module', {
+    workshopId: workshops.acme.id,
+    dayId: workshops.acme.day,
+    typeKey: 'break',
+    title,
+  })
+
+  for (const [width, height] of [
+    [900, 800],
+    [390, 844],
+  ] as const) {
+    await mo.page.setViewportSize({ width, height })
+    await mo.page.goto(dayUrl(workshops.acme))
+    await expect(mo.page.getByRole('region', { name: /^Agenda/ })).toHaveAttribute(
+      'data-save-state',
+      'live',
+    )
+
+    const text = `Bei ${width}px geschrieben`
+    // Found by its own label, not through the row: the row is named after its
+    // title field, which is a fragile thing to scope by.
+    const field = mo.page
+      .getByRole('article', { name: title })
+      .getByRole('textbox', { name: 'Beschreibung', exact: true })
+    await expect(field).toBeVisible()
+    await field.fill(text)
+    await field.press('Enter')
+
+    await expect
+      .poll(async () => {
+        await mo.page.reload()
+        return mo.page
+          .getByRole('article', { name: title })
+          .getByRole('textbox', { name: 'Beschreibung', exact: true })
+          .inputValue({ timeout: 5_000 })
+          .catch(() => '')
+      })
+      .toBe(text)
+  }
+  await mo.page.setViewportSize({ width: 1280, height: 720 })
+})
+
 test('the sharing screen does not name a folder above that the reader cannot see', async () => {
   // Mo holds Acme through Kunden. Lea, who holds only Acme, sees that -- and
   // not where from.

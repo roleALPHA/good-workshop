@@ -111,12 +111,17 @@ Clusters become `position: sticky` section headers with a running clock time.
   content wraps or gets a scroll container of its own.
 - `dvh` rather than `vh` for anything full-height; `env(safe-area-inset-*)` for sticky footers.
 
-### Rich text is still not edited on a phone
+### No rich-text editor on a phone, but the description is still editable
 
-Descriptions render as static HTML there. Never a TipTap `EditorView` instance below 1024 px --
-this half of the old rule survives, because it is the half that was actually about the screen.
-A paragraph of formatted text is not a tap, and a toolbar under a thumb is the cramped variant
-the rule above forbids.
+Never a TipTap `EditorView` instance below 1024 px -- this half of the old rule survives,
+because it is the half that was actually about the screen. A toolbar under a thumb is the
+cramped variant the rule above forbids.
+
+The row's description is not such an editor. It is a plain textarea holding Markdown
+(`DescriptionInput`), and it is editable at every width. It used to be hidden below 1024 px
+with a static copy in its place, carried over from when it was TipTap. Writers in a split
+screen, at 150 % display scaling or on a tablet could then change everything in a row except
+its description, which was reported as a missing permission.
 
 ## Colours
 

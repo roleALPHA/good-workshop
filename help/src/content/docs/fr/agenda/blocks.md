@@ -29,13 +29,13 @@ Tu ne peux plus changer le type d'un bloc par la suite. Si tu t'es trompé, supp
 
 ## Le contenu d'une ligne
 
-L'agenda a trois colonnes : **Heure**, **Titre et description** et **Infos complémentaires**. Sur le téléphone, elles deviennent des cartes, où l'essentiel reste modifiable.
+L'agenda a trois colonnes : **Heure**, **Titre et description** et **Infos complémentaires**. Sur le téléphone, elles deviennent des cartes, où tout reste modifiable.
 
 - **Heure :** l'heure de début calculée et, en dessous, la durée. Pour la modifier ou fixer une heure, voir [Durée et heures de début](/fr/agenda/timing/).
 - **Format :** sous l'heure, via **Choisir la forme de participation** (par exemple **Plénière**, **Petits groupes** ou **Individuel**).
 - **Titre :** clique directement dessus et tape. Entrée ou un clic à côté enregistre, Échap annule. Un titre vide n'est pas pris en compte.
 - **Responsable :** sous le titre, voir [Responsables](/fr/agenda/responsible/).
-- **Description :** en dessous. Sur les grands écrans, tu la modifies directement dans la ligne ; sur les écrans plus étroits, elle est seulement affichée.
+- **Description :** en dessous. Tu la modifies directement dans la ligne, quelle que soit la largeur de l'écran. Entrée enregistre, Maj+Entrée commence une nouvelle ligne.
 - **Matériel :** dans la colonne **Infos complémentaires**, via **+ matériel**. Valide chaque entrée avec Entrée.
 
 Certains types affichent en plus un champ sous forme de petite étiquette dans la colonne **Infos complémentaires**, par exemple la personne qui intervient ou le livrable d'un travail en groupe.
