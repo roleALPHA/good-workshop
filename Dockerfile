@@ -14,7 +14,7 @@
 # there is no signing key -- and naming one told operators they had taken a
 # precaution that does not exist.
 
-ARG NODE_VERSION=22-alpine@sha256:c610fcdfb1d5b4740dd70c284ed3cb16bb857e0f7166196e36a5501df7a3aa32
+ARG NODE_VERSION=22-alpine@sha256:0a7108bf6c7bf5de370ffb1a3ed6be93d405b43ff159f681a8d18c0e2bc2e402
 
 # --- deps -------------------------------------------------------------------
 FROM node:${NODE_VERSION} AS deps
