@@ -9,6 +9,7 @@ import type { Locale } from '@/i18n/config'
 import { ParticipationBadge } from '@/components/agenda/participation-control'
 import { RichText } from '@/lib/richtext/render'
 import { getTranslations } from 'next-intl/server'
+import { exportableFields } from '@/server/export/fields'
 
 /**
  * One block on paper.
@@ -24,6 +25,7 @@ export async function PrintBlock({
   doc,
   locale,
   showNotes,
+  allFields = false,
   layout = 'wide',
 }: {
   row: Extract<FlatRow, { kind: 'module' }>
@@ -31,6 +33,8 @@ export async function PrintBlock({
   doc: DayDoc
   locale: Locale
   showNotes: boolean
+  /** Everything behind "Mehr Felder" too: the full copy rather than the group's. */
+  allFields?: boolean
   layout?: 'wide' | 'narrow'
 }) {
   const tAgenda = await getTranslations({ locale, namespace: 'agenda' })
@@ -48,6 +52,17 @@ export async function PrintBlock({
   const groups = parseSchema(type?.jsonSchema)
   const participation = findField(groups, 'participation')
   const info = summaryChips(groups, row.module.desc)
+
+  // The rest of the block, from the same list the Markdown export reads, less
+  // what this sheet already shows elsewhere. The summary chips only count as
+  // shown where their column exists; a strand has none.
+  const shown = new Set(['description', 'participation', 'facilitator_notes'])
+  if (layout === 'wide') for (const item of info) shown.add(item.key)
+  const extra = allFields
+    ? exportableFields(row.module.desc, type, { locale, includePrivateFields: showNotes }).filter(
+        (field) => !shown.has(field.key),
+      )
+    : []
 
   const indent = layout === 'wide' ? (row.depth === 1 ? 'ml-6' : '') : ''
 
@@ -98,6 +113,25 @@ export async function PrintBlock({
           <div className="mt-1 border-l-2 border-neutral-300 pl-2 text-[14px] text-neutral-600">
             <RichText value={facilitatorNotes} />
           </div>
+        )}
+        {extra.length > 0 && (
+          <dl className="mt-2 space-y-1.5 text-[14px]">
+            {extra.map((field) =>
+              field.kind === 'rich' ? (
+                <div key={field.key}>
+                  <dt className="font-medium text-neutral-700">{field.label}</dt>
+                  <dd>
+                    <RichText value={field.value} />
+                  </dd>
+                </div>
+              ) : (
+                <div key={field.key}>
+                  <dt className="inline font-medium text-neutral-700">{field.label}: </dt>
+                  <dd className="inline">{field.value}</dd>
+                </div>
+              ),
+            )}
+          </dl>
         )}
       </div>
       {/* The info column does not exist in a strand: there is no room for it. */}

@@ -30,6 +30,8 @@ export async function GET(
   const locale = asLocale(params.get('locale')) ?? (await getLocale())
   const flavor = params.get('flavor') === 'outline' ? 'outline' : 'agenda'
   const notes = params.get('notes') === '1'
+  // "Alle Felder": every field goes out regardless; this adds the day's note.
+  const all = params.get('all') === '1'
 
   const actor = {
     tenantId: session.tenantId,
@@ -44,6 +46,7 @@ export async function GET(
       const rendered = await renderWorkshopExport(tx, access, locale, {
         flavor,
         includePrivateFields: notes,
+        includeDayNote: all,
       })
       return { ...rendered, contentVersion: access.contentVersion }
     })
@@ -54,7 +57,7 @@ export async function GET(
         'content-disposition': `attachment; filename="${exportFilename(title)}.md"`,
         // Everything that changes the bytes, as on the day export: the version
         // alone would answer 304 with the German file for a French request.
-        etag: `"${contentVersion}-${locale}-${flavor}-${notes ? 'n' : ''}"`,
+        etag: `"${contentVersion}-${locale}-${flavor}-${notes ? 'n' : ''}${all ? 'a' : ''}"`,
         'cache-control': 'private, no-cache',
       },
     })

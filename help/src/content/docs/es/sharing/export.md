@@ -10,12 +10,13 @@ Cualquier desarrollo se puede descargar en todo momento como archivo Markdown. M
 ## Exportar en tres pasos
 
 1. Abre una jornada del taller.
-2. Arriba a la derecha, con las dos casillas, decide qué se incluye:
-   - **Todo el taller**: todas las jornadas en un solo archivo en lugar de solo la abierta.
+2. Arriba a la derecha, con las casillas, decide qué se incluye:
    - **Con notas de facilitación**: tus notas sobre los bloques.
+   - **Todos los campos**: además, la nota sobre la jornada. Los campos de **Más campos** están siempre en el archivo.
+   - **Todo el taller**: todas las jornadas en un solo archivo en lugar de solo la abierta.
 3. Haz clic en **Markdown**. Tu navegador descarga un archivo `.md` con el nombre del taller.
 
-Las dos casillas valen también para [imprimir](/es/sharing/print/): responden a la misma pregunta, ¿para quién es esta copia?
+Las casillas valen también para [imprimir](/es/sharing/print/): responden a la misma pregunta, ¿para quién es esta copia?
 
 :::caution[Las notas quedan fuera por defecto]
 Los campos que un tipo de bloque marca como privados (hoy, las notas de facilitación) solo están en el archivo con **Con notas de facilitación**. La casilla está desmarcada cada vez que abres la página. No pases a los participantes un archivo con notas.
@@ -27,7 +28,7 @@ Los campos que un tipo de bloque marca como privados (hoy, las notas de facilita
 
 **Después, el título** del taller como encabezado. Con el taller entero, cada jornada va bajo su propio encabezado: su nombre, si no su fecha, y si no «Jornada 1», «Jornada 2»…
 
-**Para cada jornada, un resumen**: nombre, fecha, inicio y fin, y el reparto, por ejemplo «5h 30m de contenido, 1h 15m de pausas».
+**Para cada jornada, un resumen**: nombre, fecha, inicio y fin, y el reparto, por ejemplo «5h 30m de contenido, 1h 15m de pausas». Con **Todos los campos**, debajo sigue la [nota sobre la jornada](/es/agenda/days/#nota-sobre-la-jornada).
 
 **Debajo, el desarrollo como tabla** con las columnas Hora, Duración, Bloque e Info:
 

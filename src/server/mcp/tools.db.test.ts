@@ -464,6 +464,23 @@ describe('days', () => {
     const kept = await must('get_workshop', { workshopId, dayId: firstDay })
     expect(kept.data.blocks).toEqual([expect.objectContaining({ title: 'Plan B', parked: true })])
   })
+
+  it('exports the note on the day only when asked for', async () => {
+    const { must } = await connect(me)
+    const { data } = await must('create_workshop', { title: unique('Notiz') })
+    const workshopId = data.workshopId as string
+    await must('update_day', {
+      workshopId,
+      dayId: data.dayId,
+      note: 'Raum 4.12, Flipchart mitbringen',
+    })
+
+    const handover = await must('export_workshop', { workshopId })
+    expect(handover.text).not.toContain('Raum 4.12')
+
+    const full = await must('export_workshop', { workshopId, dayNote: true })
+    expect(full.text).toContain('Raum 4.12, Flipchart mitbringen')
+  })
 })
 
 describe('blocks', () => {

@@ -441,7 +441,7 @@ export function registerLibraryTools(server: McpServer, { actor }: Ctx): void {
       description:
         'The whole workshop as one Markdown document: every day, in order. ' +
         'Use it to read a workshop as a text, to hand it on, or to keep a copy. ' +
-        'Facilitation notes are left out unless asked for.',
+        'Facilitation notes and the note on each day are left out unless asked for.',
       inputSchema: {
         workshopId: Id,
         flavor: z
@@ -456,9 +456,13 @@ export function registerLibraryTools(server: McpServer, { actor }: Ctx): void {
           .boolean()
           .optional()
           .describe('Include the facilitator\u2019s private notes. Default false.'),
+        dayNote: z
+          .boolean()
+          .optional()
+          .describe('Include the note on each day (room, travel, who brings what). Default false.'),
       },
     },
-    async ({ workshopId, flavor, locale, notes }) =>
+    async ({ workshopId, flavor, locale, notes, dayNote }) =>
       guarded(async () => {
         requireScope(actor, 'workshops:read')
         return withTenant(actor, async (tx) => {
@@ -469,7 +473,11 @@ export function registerLibraryTools(server: McpServer, { actor }: Ctx): void {
             tx,
             access,
             locale ?? DEFAULT_LOCALE,
-            { flavor: flavor ?? 'agenda', includePrivateFields: notes ?? false },
+            {
+              flavor: flavor ?? 'agenda',
+              includePrivateFields: notes ?? false,
+              includeDayNote: dayNote ?? false,
+            },
           )
           return ok(markdown, { title })
         })

@@ -35,6 +35,8 @@ export async function GET(
   const locale = asLocale(params.get('locale')) ?? (await getLocale())
   const flavor = params.get('flavor') === 'outline' ? 'outline' : 'agenda'
   const notes = params.get('notes') === '1'
+  // "Alle Felder": every field goes out regardless; this adds the day's note.
+  const all = params.get('all') === '1'
 
   try {
     const { markdown, title, contentVersion } = await withTenant(
@@ -70,6 +72,7 @@ export async function GET(
               locale,
               flavor,
               includePrivateFields: notes,
+              includeDayNote: all,
             },
           ),
         }
@@ -89,7 +92,7 @@ export async function GET(
          * and answers 304 with the German file still in the client's cache.
          * The same was already true of ?flavor and ?notes before any of this.
          */
-        etag: `"${contentVersion}-${locale}-${flavor}-${notes ? 'n' : ''}"`,
+        etag: `"${contentVersion}-${locale}-${flavor}-${notes ? 'n' : ''}${all ? 'a' : ''}"`,
         'cache-control': 'private, no-cache',
       },
     })

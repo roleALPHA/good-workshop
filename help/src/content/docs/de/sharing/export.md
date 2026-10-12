@@ -10,12 +10,13 @@ Jede Agenda lässt sich jederzeit als Markdown-Datei herunterladen. Markdown ist
 ## Exportieren in drei Schritten
 
 1. Öffne einen Tag des Workshops.
-2. Lege oben rechts mit den beiden Häkchen fest, was mitkommt:
-   - **Ganzer Workshop** – alle Tage in einer Datei statt nur des geöffneten.
+2. Lege oben rechts mit den Häkchen fest, was mitkommt:
    - **Mit Moderationsnotizen** – deine Notizen zu den Blöcken.
+   - **Alle Felder** – zusätzlich die Notiz zum Tag. Die Felder unter **Mehr Felder** stehen in der Datei immer.
+   - **Ganzer Workshop** – alle Tage in einer Datei statt nur des geöffneten.
 3. Klicke auf **Markdown**. Dein Browser lädt eine `.md`-Datei herunter, benannt nach dem Workshop.
 
-Beide Häkchen gelten auch für [Drucken](/de/sharing/print/) – sie beantworten dieselbe Frage: Für wen ist diese Kopie?
+Die Häkchen gelten auch für [Drucken](/de/sharing/print/) – sie beantworten dieselbe Frage: Für wen ist diese Kopie?
 
 :::caution[Notizen sind standardmäßig draußen]
 Felder, die ein Bausteintyp als privat kennzeichnet – heute die Moderationsnotizen –, sind nur mit **Mit Moderationsnotizen** in der Datei. Das Häkchen ist bei jedem Öffnen aus. Gib eine Datei mit Notizen nicht an Teilnehmende weiter.
@@ -27,7 +28,7 @@ Felder, die ein Bausteintyp als privat kennzeichnet – heute die Moderationsnot
 
 **Dann der Titel** des Workshops als Überschrift. Beim ganzen Workshop folgt jeder Tag unter einer eigenen Überschrift: seinem Namen, sonst seinem Datum, sonst „Tag 1“, „Tag 2“ …
 
-**Pro Tag eine Zusammenfassung**: Name, Datum, Beginn und Ende sowie die Aufteilung, zum Beispiel „5h 30m Inhalt, 1h 15m Pausen“.
+**Pro Tag eine Zusammenfassung**: Name, Datum, Beginn und Ende sowie die Aufteilung, zum Beispiel „5h 30m Inhalt, 1h 15m Pausen“. Mit **Alle Felder** folgt darunter die [Notiz zum Tag](/de/agenda/days/#notiz-zum-tag).
 
 **Darunter der Ablauf als Tabelle** mit den Spalten Zeit, Dauer, Block und Info:
 

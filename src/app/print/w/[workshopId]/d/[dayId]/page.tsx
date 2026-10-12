@@ -27,14 +27,15 @@ export default async function PrintPage({
   searchParams,
 }: {
   params: Promise<{ workshopId: string; dayId: string }>
-  searchParams: Promise<{ notes?: string }>
+  searchParams: Promise<{ notes?: string; all?: string }>
 }) {
   const session = await readSession()
   if (!session) notFound()
 
   const { workshopId, dayId } = await params
-  const { notes } = await searchParams
+  const { notes, all } = await searchParams
   const showNotes = notes === '1'
+  const allFields = all === '1'
   const [t, locale] = await Promise.all([getTranslations('workshop'), getLocale()])
 
   const actor = {
@@ -63,7 +64,13 @@ export default async function PrintPage({
 
   return (
     <main>
-      <PrintDay doc={data.doc} heading={data.title} locale={locale} showNotes={showNotes} />
+      <PrintDay
+        doc={data.doc}
+        heading={data.title}
+        locale={locale}
+        showNotes={showNotes}
+        allFields={allFields}
+      />
       <p className="mt-6 text-center text-xs text-neutral-500">{ATTRIBUTION_TEXT}</p>
     </main>
   )

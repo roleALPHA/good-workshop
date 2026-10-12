@@ -1,6 +1,6 @@
 ---
 title: Imprimir
-description: Abrir una jornada o el taller entero en la vista de impresión, llevarlo a papel o guardarlo como PDF, si quieres con tus notas de facilitación.
+description: Abrir una jornada o el taller entero en la vista de impresión, llevarlo a papel o guardarlo como PDF, si quieres con tus notas de facilitación y con todos los campos.
 sidebar:
   order: 3
 ---
@@ -10,9 +10,10 @@ Para el día del taller a menudo quieres el desarrollo en papel: para ti en la m
 ## Imprimir en tres pasos
 
 1. Abre una jornada del taller.
-2. Arriba a la derecha, con las dos casillas, decide qué se incluye:
-   - **Todo el taller**: todas las jornadas en lugar de solo la abierta.
+2. Arriba a la derecha, con las casillas, decide qué se incluye:
    - **Con notas de facilitación**: tus notas sobre los bloques.
+   - **Todos los campos**: también los campos de **Más campos** y la nota sobre la jornada.
+   - **Todo el taller**: todas las jornadas en lugar de solo la abierta.
 3. Haz clic en **Imprimir**. La vista de impresión se abre en una pestaña nueva.
 
 Allí imprimes con la orden de imprimir de tu navegador (Ctrl+P; en Mac, ⌘+P).
@@ -41,6 +42,8 @@ Para cada bloque aparecen:
 - la descripción,
 - en la columna **Información adicional**, otros campos seleccionados del bloque, por ejemplo material o sala.
 
+Con **Todos los campos**, esto se convierte en la versión completa para quienes conducen la jornada: debajo de la descripción aparecen también todos los campos que en la agenda están detrás de **Más campos** (por ejemplo Encargo de trabajo, Pregunta guía o Disposición de la sala), cada uno con su etiqueta. Debajo de la cabecera de la jornada aparece la [nota sobre la jornada](/es/agenda/days/#nota-sobre-la-jornada).
+
 Al final aparece cuándo termina la jornada.
 
 Las [secciones](/es/agenda/clusters-and-breakouts/) aparecen como subtítulos de color con hora de inicio y duración. En un **breakout**, dos o tres grupos aparecen como columnas una junto a otra; a partir de cuatro grupos van uno debajo de otro, porque cuatro columnas en A4 ya no se leerían. Si un breakout no cabe en una página, se corta entre dos grupos, y cada grupo indica a qué breakout pertenece.
@@ -49,6 +52,7 @@ Las [secciones](/es/agenda/clusters-and-breakouts/) aparecen como subtítulos de
 
 - Los bloques [apartados](/es/agenda/parking/): no están en el horario.
 - Las notas de facilitación, mientras **Con notas de facilitación** no esté marcada. La casilla está desmarcada cada vez que abres la página: el caso más habitual es la copia impresa para el grupo, y ahí tus notas no pintan nada.
+- Los campos de **Más campos** y la nota sobre la jornada, mientras **Todos los campos** no esté marcada. También esta casilla está desmarcada cada vez que abres la página.
   :::
 
 ## Quién puede imprimir

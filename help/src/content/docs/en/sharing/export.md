@@ -10,12 +10,13 @@ Every agenda can be downloaded as a Markdown file at any time. Markdown is plain
 ## Export in three steps
 
 1. Open a day of the workshop.
-2. Use the two checkboxes at the top right to decide what comes along:
-   - **Whole workshop** – all days in one file instead of only the open one.
+2. Use the checkboxes at the top right to decide what comes along:
    - **With facilitator notes** – your notes on the blocks.
+   - **All fields** – also the note about the day. The fields under **More fields** are always in the file.
+   - **Whole workshop** – all days in one file instead of only the open one.
 3. Click **Markdown**. Your browser downloads a `.md` file, named after the workshop.
 
-Both checkboxes also apply to [printing](/en/sharing/print/) – they answer the same question: who is this copy for?
+The checkboxes also apply to [printing](/en/sharing/print/) – they answer the same question: who is this copy for?
 
 :::caution[Notes are left out by default]
 Fields that a block type marks as private – currently the facilitator notes – are only in the file with **With facilitator notes**. The checkbox is off every time you open the page. Don't pass a file with notes on to participants.
@@ -27,7 +28,7 @@ Fields that a block type marks as private – currently the facilitator notes �
 
 **Then the title** of the workshop as a heading. For the whole workshop, each day follows under its own heading: its name, otherwise its date, otherwise “Day 1”, “Day 2” …
 
-**A summary for each day**: name, date, start and end, and the split, for example “5h 30m content, 1h 15m breaks”.
+**A summary for each day**: name, date, start and end, and the split, for example “5h 30m content, 1h 15m breaks”. With **All fields**, the [note about the day](/en/agenda/days/#note-about-the-day) follows below it.
 
 **Below that, the schedule as a table** with the columns Time, Duration, Block and Info:
 

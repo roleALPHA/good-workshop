@@ -200,3 +200,33 @@ describe('breakouts', () => {
     expect(out).toContain('##### 15:30 · Bestandsaufnahme')
   })
 })
+
+/**
+ * The note on the day -- room, travel, who brings what -- belongs to the full
+ * copy, which is asked for, and not to the participants' handover by default.
+ */
+describe('the note on the day', () => {
+  const withNote = () => {
+    const day = createDemoDay()
+    day.desc = { text: 'Raum 4.12\nFlipchart mitbringen' }
+    return day
+  }
+
+  it('stays out unless asked for', () => {
+    expect(renderDayMarkdown(meta, withNote())).not.toContain('Raum 4.12')
+  })
+
+  it('stands under the day’s summary when asked for, line breaks kept', () => {
+    const out = renderDayMarkdown(meta, withNote(), { includeDayNote: true })
+    const summary = out.indexOf('> ')
+    const note = out.indexOf('Raum 4.12')
+    expect(note).toBeGreaterThan(summary)
+    expect(note).toBeLessThan(out.indexOf('|'))
+    expect(out).toContain('Raum 4.12  \nFlipchart mitbringen')
+  })
+
+  it('goes with each day of a whole workshop', () => {
+    const out = renderWorkshopMarkdown(meta, [withNote()], { includeDayNote: true })
+    expect(out).toContain('Raum 4.12')
+  })
+})

@@ -55,7 +55,7 @@ Manches gehört zu keinem einzelnen Block, sondern zum ganzen Tag: der Raum, die
 2. Schreib in das Feld **Notiz zum Tag**.
 3. Gespeichert wird, sobald du das Feld verlässt.
 
-Wer den Tag nur lesen darf, sieht die Notiz, kann sie aber nicht ändern.
+Wer den Tag nur lesen darf, sieht die Notiz, kann sie aber nicht ändern. Auf den [Ausdruck](/de/sharing/print/) und in den [Markdown-Export](/de/sharing/export/) kommt sie, wenn du **Alle Felder** anhakst.
 
 ## Die Zusammenfassung
 

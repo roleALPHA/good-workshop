@@ -55,7 +55,7 @@ Some things don't belong to a single block but to the whole day: the room, direc
 2. Write in the **Note about the day** field.
 3. It is saved as soon as you leave the field.
 
-Anyone who may only read the day sees the note but can't change it.
+Anyone who may only read the day sees the note but can't change it. It goes on the [printout](/en/sharing/print/) and into the [Markdown export](/en/sharing/export/) if you check **All fields**.
 
 ## The summary
 
