@@ -33,8 +33,10 @@ export default async function RegisterPage() {
     readPriceList(),
   ])
 
+  // rr-block: the session replay shows an empty box here, never the form or
+  // the address it was sent to (see src/cloud/site/analytics.tsx).
   return (
-    <div className="max-w-xl">
+    <div className="rr-block max-w-xl">
       <h1 className="text-3xl font-semibold tracking-tight">{t('title')}</h1>
       <p className="mt-2 mb-8 text-[17px] text-[var(--fg-muted)]">{t('intro')}</p>
       {/* Only the slice the form renders goes to the browser; `site` is not a

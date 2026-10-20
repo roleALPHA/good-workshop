@@ -21,8 +21,10 @@ export default async function ConfirmSignupPage({
   ])
   const valid = token ? await peekSignup(token) : false
 
+  // rr-block: the session replay shows an empty box here, never the form or
+  // the address it was sent to (see src/cloud/site/analytics.tsx).
   return (
-    <div className="max-w-xl">
+    <div className="rr-block max-w-xl">
       <h1 className="text-3xl font-semibold tracking-tight">{t('title')}</h1>
       {valid && token ? (
         <>

@@ -4,6 +4,7 @@ import { useMemo, useState } from 'react'
 import { useFormatter, useLocale, useTranslations } from 'next-intl'
 import { PLAN_KEYS, type PlanKey } from '@/cloud/billing/plans'
 import { SIGNUP_COUNTRIES, vatIdRequired, type SignupCountry } from '@/cloud/registration/rules'
+import { track } from '@/cloud/site/track'
 import { register, type RegisterResult } from './actions'
 
 const field =
@@ -65,7 +66,9 @@ export function RegisterForm({
       ]) {
         raw[box] = formData.get(box) === 'on'
       }
-      setResult(await register(raw))
+      const outcome = await register(raw)
+      if (outcome?.ok) void track('signup-submitted')
+      setResult(outcome)
     } finally {
       setPending(false)
     }

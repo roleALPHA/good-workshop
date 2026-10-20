@@ -1,6 +1,6 @@
 # Política de privacidad
 
-Versión: 29 de septiembre de 2026
+Versión: 20 de octubre de 2026
 
 > Solo la versión alemana de esta política es jurídicamente vinculante. Esta traducción se ofrece para facilitar la comprensión.
 
@@ -20,7 +20,7 @@ Solo se establecen estas cookies, y únicamente cuando usted hace algo que las r
 
 Además, el navegador de las personas con sesión iniciada guarda localmente la elección entre apariencia clara y oscura y qué carpetas están plegadas. Nada de esto requiere consentimiento, porque sin ese almacenamiento no existe el servicio que usted ha solicitado (§ 165.3 TKG 2021).
 
-**Medición de alcance.** En las páginas públicas de este sitio contamos las visitas con Umami, un programa de código abierto que operamos en nuestro propio servidor. No se establecen cookies, no se almacenan direcciones IP ni se elaboran perfiles; de la visita y los datos del navegador resulta una suma de verificación que cambia a diario y no puede atribuirse a ninguna persona. Las cifras así obtenidas no salen de nuestro servidor. La base jurídica es nuestro interés legítimo en disponer de estadísticas sin seguimiento (art. 6.1.f RGPD). **En el espacio de trabajo no se realiza medición alguna**: lo que los clientes hacen con sus talleres no lo contamos.
+**Medición de alcance.** En las páginas públicas de este sitio y en nuestra ayuda en doc.goodworkshop.org medimos el uso con Umami, un programa de código abierto que operamos en nuestro propio servidor (analytics.rolealpha.app). Contamos las visitas y algunos eventos, como un clic en «Probar gratis» o un registro completado, sin ningún dato sobre la persona. En una parte de las visitas registramos además cómo se usa la página (movimientos del ratón, clics, desplazamiento) para elaborar mapas de calor y reproducciones de sesión y ver dónde una página resulta poco clara. Lo que se escribe en los campos de un formulario nunca se registra, y las páginas de registro no se registran en absoluto. No se establecen cookies, no se almacenan direcciones IP ni se elaboran perfiles entre visitas; de la visita y los datos del navegador resulta una suma de verificación que cambia a diario y no puede atribuirse a ninguna persona. Los datos así obtenidos no salen de nuestro servidor. La base jurídica es nuestro interés legítimo en mejorar nuestro sitio sin seguimiento (art. 6.1.f RGPD). **En el espacio de trabajo no se realiza medición alguna**: lo que los clientes hacen con sus talleres no lo contamos.
 
 **Registro y cuenta.** Nombre, dirección de correo electrónico, empresa, dirección de facturación y número de IVA de la persona que celebra el contrato para su empresa, con el fin de celebrar y ejecutar el contrato (art. 6.1.b RGPD).
 

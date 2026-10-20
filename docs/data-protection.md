@@ -62,6 +62,11 @@ There are exactly four ways, and three of them are switched off until an operato
 Nothing else reaches the network. There are no third-party fonts, no CDN, no analytics, no error
 reporting service — the browser talks only to your own hostname.
 
+The **cloud** measures its public website (not the workspace) with Umami, including heatmaps and
+session replays, when `GW_ANALYTICS_SCRIPT_URL` and `GW_ANALYTICS_WEBSITE_ID` are set; see
+`src/cloud/site/analytics.tsx`. A self-hosted installation has no public website and loads none
+of it.
+
 ## What expires, and who has to make it
 
 In the **cloud**, the billing worker sweeps these tables on every run (`sweepExpired` in

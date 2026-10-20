@@ -1,6 +1,6 @@
 # Politique de confidentialité
 
-Version : 29 septembre 2026
+Version : 20 octobre 2026
 
 > Seule la version allemande de cette politique fait foi. Cette traduction est fournie à titre de compréhension.
 
@@ -20,7 +20,7 @@ Seuls ces cookies sont déposés, et uniquement lorsque vous faites quelque chos
 
 Par ailleurs, le navigateur des personnes connectées conserve localement le choix entre un aspect clair et un aspect sombre ainsi que les dossiers repliés. Rien de tout cela ne nécessite de consentement, car sans ce stockage le service que vous avez appelé n’existe pas (§ 165, al. 3, TKG 2021).
 
-**Mesure d’audience.** Sur les pages publiques de ce site, nous comptons les consultations avec Umami, un logiciel libre que nous exploitons sur notre propre serveur. Aucun cookie n’est déposé, aucune adresse IP n’est conservée et aucun profil n’est constitué ; la consultation et les indications du navigateur produisent une somme de contrôle qui change chaque jour et ne peut être rattachée à une personne. Les chiffres ainsi obtenus ne quittent pas notre serveur. La base légale est notre intérêt légitime à disposer de statistiques sans suivi (art. 6, par. 1, point f, RGPD). **Aucune mesure n’a lieu dans l’espace de travail** : ce que les clients font de leurs ateliers, nous ne le comptons pas.
+**Mesure d’audience.** Sur les pages publiques de ce site et sur notre aide à l’adresse doc.goodworkshop.org, nous mesurons l’utilisation avec Umami, un logiciel libre que nous exploitons sur notre propre serveur (analytics.rolealpha.app). Nous comptons les consultations et certains événements, comme un clic sur « Essai gratuit » ou une inscription terminée – sans aucune indication sur la personne. Pour une partie des visites, nous enregistrons en outre la manière dont la page est utilisée (mouvements de souris, clics, défilement) afin d’établir des cartes de chaleur et des relectures de session et de voir où une page manque de clarté. Ce qui est saisi dans les champs de formulaire n’est jamais enregistré, et les pages d’inscription ne le sont pas du tout. Aucun cookie n’est déposé, aucune adresse IP n’est conservée et aucun profil n’est constitué d’une visite à l’autre ; la consultation et les indications du navigateur produisent une somme de contrôle qui change chaque jour et ne peut être rattachée à une personne. Les données ainsi obtenues ne quittent pas notre serveur. La base légale est notre intérêt légitime à améliorer notre site sans suivi (art. 6, par. 1, point f, RGPD). **Aucune mesure n’a lieu dans l’espace de travail** : ce que les clients font de leurs ateliers, nous ne le comptons pas.
 
 **Inscription et compte.** Nom, adresse électronique, entreprise, adresse de facturation et numéro de TVA de la personne qui conclut le contrat pour son entreprise, afin de conclure et d’exécuter le contrat (art. 6, par. 1, point b, RGPD).
 

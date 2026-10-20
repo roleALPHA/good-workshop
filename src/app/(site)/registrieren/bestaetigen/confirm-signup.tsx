@@ -2,6 +2,7 @@
 
 import { useState } from 'react'
 import { useTranslations } from 'next-intl'
+import { track } from '@/cloud/site/track'
 import { confirmSignup } from '../actions'
 
 /**
@@ -17,6 +18,9 @@ export function ConfirmSignup({ token }: { token: string }) {
     setPending(true)
     const result = await confirmSignup(token)
     if (result.ok) {
+      // Counted before leaving: the navigation would cancel the request.
+      // `track` gives up after a moment, so a slow counter costs no wait.
+      await track('signup-confirmed')
       // A full navigation: the session cookie was set by the action, and a
       // client-side one would render from a router cache built without it.
       // eslint-disable-next-line @next/next/no-location-assign-relative-destination -- see above

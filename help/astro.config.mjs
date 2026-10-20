@@ -12,6 +12,23 @@ import starlightLlmsTxt from 'starlight-llms-txt'
  * The sidebar groups follow the product from the first workshop to running it
  * yourself; each group lists its directory, ordered by `sidebar.order`.
  */
+/**
+ * Reach measurement, as on the public website (src/cloud/site/analytics.tsx):
+ * the Umami counter and its recorder for heatmaps and replays, baked in at
+ * build time because this is a static site. The deployment passes both values
+ * as build arguments; a build without them -- local, CI, anybody else's --
+ * loads nothing external at all.
+ */
+const analyticsSrc = process.env.GW_ANALYTICS_SCRIPT_URL
+const analyticsSite = process.env.GW_ANALYTICS_WEBSITE_ID
+const analytics =
+  analyticsSrc && analyticsSite
+    ? [analyticsSrc, new URL('recorder.js', analyticsSrc).href].map((src) => ({
+        tag: /** @type {const} */ ('script'),
+        attrs: { src, 'data-website-id': analyticsSite, defer: true },
+      }))
+    : []
+
 const group = (directory, de, en, fr, es) => ({
   label: de,
   translations: { en, fr, es },
@@ -32,6 +49,7 @@ export default defineConfig({
       description: 'Workshops planen mit GoodWorkshop: Anleitungen, Referenz und Fehlerbehebung.',
       logo: { src: './src/assets/logo.svg', replacesTitle: false },
       favicon: '/favicon.svg',
+      head: analytics,
       defaultLocale: 'de',
       locales: {
         de: { label: 'Deutsch', lang: 'de' },
