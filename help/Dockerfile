@@ -5,7 +5,11 @@ RUN corepack enable
 COPY package.json pnpm-lock.yaml .npmrc ./
 RUN pnpm install --frozen-lockfile
 COPY . .
-RUN pnpm build
+# Reach measurement (see astro.config.mjs). Empty by default: only the
+# goodworkshop.org deployment passes them, every other build stays without.
+ARG GW_ANALYTICS_SCRIPT_URL=
+ARG GW_ANALYTICS_WEBSITE_ID=
+RUN GW_ANALYTICS_SCRIPT_URL=$GW_ANALYTICS_SCRIPT_URL GW_ANALYTICS_WEBSITE_ID=$GW_ANALYTICS_WEBSITE_ID pnpm build
 
 # nginx rather than Caddy: static files need no Go runtime, and the Caddy
 # binary carried a dozen fixed-but-unshipped Go advisories that failed the

@@ -76,7 +76,8 @@ const INTERNAL = {
   GW_OPERATOR_URL: 'Cloud only: where the operator console is served; passkeys are bound to it.',
   GW_ANALYTICS_SCRIPT_URL:
     'Cloud only: the counter script for the public website (Umami). Its origin is added to the ' +
-    'content security policy; without it nothing external is loaded at all.',
+    'content security policy; without it nothing external is loaded at all. The recorder ' +
+    '(replays, heatmaps) is loaded from the same origin. Also a build argument of help/Dockerfile.',
   GW_ANALYTICS_WEBSITE_ID:
     'Cloud only: which site the counter counts for. Both have to be set, or nothing is loaded.',
   GW_ZAMMAD_URL:

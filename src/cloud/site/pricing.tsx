@@ -101,6 +101,8 @@ export async function Pricing() {
       <p className="mt-2 text-[15px]">{t('trial')}</p>
       <Link
         href={'/registrieren' as Route}
+        data-umami-event="cta-register"
+        data-umami-event-location="pricing"
         className="mt-4 inline-block rounded bg-[var(--brand)] px-4 py-3 text-[16px] font-medium text-[var(--brand-fg)] hover:bg-[var(--brand-hover)]"
       >
         {t('cta')}

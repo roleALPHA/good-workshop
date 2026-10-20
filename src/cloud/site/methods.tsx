@@ -123,6 +123,8 @@ export async function Methods() {
         <p className="mt-2 text-[15px] text-[var(--fg-muted)]">{t('ctaBody')}</p>
         <Link
           href={'/registrieren' as Route}
+          data-umami-event="cta-register"
+          data-umami-event-location="methods"
           className="mt-4 inline-flex min-h-11 items-center rounded bg-[var(--brand)] px-4 py-3 text-[16px] font-medium text-[var(--brand-fg)] hover:bg-[var(--brand-hover)]"
         >
           {t('cta')}

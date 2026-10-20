@@ -1,6 +1,6 @@
 # Privacy Policy
 
-Version: 29 September 2026
+Version: 20 October 2026
 
 > Only the German version of this policy is legally binding. This translation is provided for understanding.
 
@@ -20,7 +20,7 @@ Only these cookies are set, and only when you do something that requires them:
 
 In addition, the browser of a signed-in person stores the choice between a light and a dark appearance and which folders are collapsed locally. None of this needs consent, because without that storage the service you called up does not exist (§ 165(3) TKG 2021).
 
-**Reach measurement.** On the public pages of this website we count page views with Umami, open-source software we run on our own server. No cookies are set, no IP addresses are stored and no profiles are built; the request and the browser details become a checksum that changes daily and cannot be traced to a person. The resulting figures do not leave our server. The legal basis is our legitimate interest in statistics without tracking (Art. 6(1)(f) GDPR). **No measurement takes place inside the workspace**: what customers do with their workshops, we do not count.
+**Reach measurement.** On the public pages of this website and on our help at doc.goodworkshop.org we measure usage with Umami, open-source software we run on our own server (analytics.rolealpha.app). We count page views and individual events such as a click on “Try it free” or a completed registration – without any details about the person. For a share of visits we also record how the page is used (mouse movements, clicks, scrolling) to build heatmaps and session replays and to see where a page is unclear. What is typed into form fields is never recorded, and the registration pages are not recorded at all. No cookies are set, no IP addresses are stored and no profiles are built across visits; the request and the browser details become a checksum that changes daily and cannot be traced to a person. The resulting data do not leave our server. The legal basis is our legitimate interest in improving our website without tracking (Art. 6(1)(f) GDPR). **No measurement takes place inside the workspace**: what customers do with their workshops, we do not count.
 
 **Registration and account.** Name, e-mail address, company, billing address and VAT identification number of the person concluding the contract for their business, in order to conclude and perform the contract (Art. 6(1)(b) GDPR).
 

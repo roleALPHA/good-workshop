@@ -63,6 +63,8 @@ export async function SiteShell({ children }: { children: React.ReactNode }) {
           </Link>
           <Link
             href={'/registrieren' as Route}
+            data-umami-event="cta-register"
+            data-umami-event-location="header"
             className="rounded bg-[var(--brand)] px-3 py-2 text-[15px] font-medium text-[var(--brand-fg)] hover:bg-[var(--brand-hover)]"
           >
             {t('register')}

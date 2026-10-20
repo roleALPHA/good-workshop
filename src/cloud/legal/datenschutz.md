@@ -1,6 +1,6 @@
 # Datenschutzerklärung
 
-Stand: 29. September 2026
+Stand: 20. Oktober 2026
 
 ## Verantwortlicher
 
@@ -18,7 +18,7 @@ Gesetzt werden nur diese Cookies, und nur, wenn Sie etwas tun, das sie erfordert
 
 Dazu speichert der Browser angemeldeter Personen die Wahl zwischen hellem und dunklem Erscheinungsbild sowie zugeklappte Ordner lokal. Für all das ist keine Einwilligung nötig, weil es ohne diese Speicherung den Dienst nicht gibt, den Sie aufgerufen haben (§ 165 Abs. 3 TKG 2021).
 
-**Reichweitenmessung.** Auf den öffentlichen Seiten dieser Webseite zählen wir Seitenaufrufe mit Umami, einer quelloffenen Software, die wir auf unserem eigenen Server betreiben. Es werden keine Cookies gesetzt, keine IP-Adressen gespeichert und keine Profile gebildet; aus Aufruf und Browserangaben entsteht eine Prüfsumme, die täglich wechselt und sich keiner Person zuordnen lässt. Die so entstandenen Zahlen verlassen unseren Server nicht. Rechtsgrundlage ist unser berechtigtes Interesse an einer Statistik ohne Nachverfolgung (Art. 6 Abs. 1 lit. f DSGVO). **Im Arbeitsbereich findet keine Messung statt**: Was Kundinnen und Kunden mit ihren Workshops tun, zählen wir nicht.
+**Reichweitenmessung.** Auf den öffentlichen Seiten dieser Webseite und auf unserer Hilfe unter doc.goodworkshop.org messen wir die Nutzung mit Umami, einer quelloffenen Software, die wir auf unserem eigenen Server (analytics.rolealpha.app) betreiben. Gezählt werden Seitenaufrufe und einzelne Ereignisse wie ein Klick auf „Kostenlos testen“ oder eine abgeschlossene Registrierung – ohne Angaben zur Person. Bei einem Teil der Besuche zeichnen wir außerdem auf, wie die Seite benutzt wird (Mausbewegungen, Klicks, Scrollen), um daraus Heatmaps und Sitzungswiedergaben zu erstellen und zu sehen, wo eine Seite unverständlich ist. Eingaben in Formularfelder werden dabei nie aufgezeichnet, die Seiten zur Registrierung gar nicht. Es werden keine Cookies gesetzt, keine IP-Adressen gespeichert und keine Profile über mehrere Besuche gebildet; aus Aufruf und Browserangaben entsteht eine Prüfsumme, die täglich wechselt und sich keiner Person zuordnen lässt. Die so entstandenen Daten verlassen unseren Server nicht. Rechtsgrundlage ist unser berechtigtes Interesse daran, unsere Webseite ohne Nachverfolgung zu verbessern (Art. 6 Abs. 1 lit. f DSGVO). **Im Arbeitsbereich findet keine Messung statt**: Was Kundinnen und Kunden mit ihren Workshops tun, zählen wir nicht.
 
 **Registrierung und Konto.** Name, E-Mail-Adresse, Unternehmen, Rechnungsadresse und UID-Nummer der Person, die den Vertrag für ihr Unternehmen abschließt, um den Vertrag abzuschließen und zu erfüllen (Art. 6 Abs. 1 lit. b DSGVO).
 

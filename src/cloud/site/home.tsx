@@ -89,6 +89,8 @@ export async function Home() {
         <div className="mt-6 flex flex-wrap items-center gap-3">
           <Link
             href={'/registrieren' as Route}
+            data-umami-event="cta-register"
+            data-umami-event-location="home"
             className="rounded bg-[var(--brand)] px-4 py-3 text-[16px] font-medium text-[var(--brand-fg)] hover:bg-[var(--brand-hover)]"
           >
             {t('cta')}
@@ -202,6 +204,7 @@ export async function Home() {
         <p className="mt-2 max-w-2xl text-[15px] text-[var(--fg-muted)]">{t('selfHostBody')}</p>
         <a
           href={SOURCE_URL}
+          data-umami-event="github"
           target="_blank"
           rel="noreferrer"
           className="mt-3 inline-flex min-h-11 items-center gap-2 text-[15px] underline underline-offset-2"
