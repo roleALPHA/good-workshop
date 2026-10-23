@@ -1,4 +1,5 @@
 import { expect, test, type Page } from '@playwright/test'
+import { inviteMember } from './fixtures/members'
 
 /**
  * Folders: creating one inside another, and moving one afterwards.
@@ -389,6 +390,11 @@ test.describe('filing things by dragging them', () => {
  */
 test('opens the access screen of a folder from the tree', async ({ page }) => {
   const name = `Geteilt ${Date.now()}`
+  // Somebody to grant a role to. Only other people get a select; whether one
+  // was there used to depend on which test had invited somebody earlier in the
+  // same shard, and adding a test elsewhere was enough to take it away.
+  const email = `ordner-${Date.now()}@example.org`
+  await inviteMember(page, { firstName: 'Ordner', lastName: 'Gast', email })
 
   await page.goto('/library')
   await sidebar(page).getByRole('button', { name: 'Ordner', exact: true }).click()
@@ -404,6 +410,6 @@ test('opens the access screen of a folder from the tree', async ({ page }) => {
   await expect(page.getByText(/Gilt für alles in diesem Ordner/)).toBeVisible()
 
   // The creator may hand on both roles; the select says so.
-  const anySelect = page.getByRole('combobox').first()
-  await expect(anySelect.getByRole('option', { name: 'Bearbeiten' })).toBeAttached()
+  const select = page.getByLabel(`Zugriff von ${email} auf diesen Ordner`)
+  await expect(select.getByRole('option', { name: 'Bearbeiten' })).toBeAttached()
 })

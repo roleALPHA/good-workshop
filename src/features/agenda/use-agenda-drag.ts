@@ -16,6 +16,7 @@ import { ImmediateKeyboardSensor } from './keyboard'
 import { describeProjection } from './drag-announcement'
 import type { flattenDay } from './flatten'
 import { getProjection, rowsForDrag, toProjectionRows, type Projection } from './projection'
+import { agendaSortingStrategy } from './sorting'
 import {
   INDENT_PX,
   KEYBOARD_OPTIONS,
@@ -34,7 +35,7 @@ import {
  * and none of them belongs in a component that is otherwise about a table.
  *
  * What comes back is exactly what a DndContext and the rows need -- the sensors,
- * the five handlers, the projected landing spot, and the sentence a screen reader
+ * the five handlers, which rows make room, the projected landing spot, and the sentence a screen reader
  * is read.
  */
 export function useAgendaDrag({
@@ -71,6 +72,8 @@ export function useAgendaDrag({
     activeId && overId ? getProjection(dragRows, activeId, overId, offsetX, INDENT_PX) : null
 
   const sortableIds = useMemo(() => dragRows.map((r) => r.id), [dragRows])
+  // Built from the same list as the ids, so an index means the same row to both.
+  const sortingStrategy = useMemo(() => agendaSortingStrategy(dragRows), [dragRows])
 
   const [dropMessage, setDropMessage] = useState('')
 
@@ -167,6 +170,7 @@ export function useAgendaDrag({
     projection,
     dragRows,
     sortableIds,
+    sortingStrategy,
     sensors,
     liveMessage,
     handlers: {
