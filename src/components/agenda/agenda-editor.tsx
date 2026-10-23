@@ -3,7 +3,7 @@
 import { Fragment, useEffect, useMemo, useRef, useState } from 'react'
 import { DndContext, DragOverlay, MeasuringStrategy } from '@dnd-kit/core'
 import { restrictToWindowEdges } from '@dnd-kit/modifiers'
-import { SortableContext, verticalListSortingStrategy } from '@dnd-kit/sortable'
+import { SortableContext } from '@dnd-kit/sortable'
 import { useTranslations } from 'next-intl'
 import type { AssignablePerson } from '@/domain/agenda/responsible'
 import { computeSchedule } from '@/domain/schedule/computeSchedule'
@@ -17,7 +17,7 @@ import type { ParkedElsewhere } from '@/features/agenda/days'
 import { useAgendaDrag } from '@/features/agenda/use-agenda-drag'
 import { catClass } from '@/lib/category-colors'
 import { cn } from '@/lib/cn'
-import { agendaCollisionDetection, INDENT_PX, SILENT_ANNOUNCEMENTS } from './agenda-dnd'
+import { agendaCollisionDetection, INDENT_PX, layoutRect, SILENT_ANNOUNCEMENTS } from './agenda-dnd'
 import { EndOfDay, HeaderRow } from './agenda-rows'
 import { EditorBreakout } from './editor-breakout'
 import { EditorRow, type RowContext } from './editor-row'
@@ -84,11 +84,12 @@ export function AgendaEditor({
   // time, like the expanded row: two open choices are two half-made decisions.
   const [openSlot, setOpenSlot] = useState<string | null>(null)
 
-  const { activeId, projection, sortableIds, sensors, liveMessage, handlers } = useAgendaDrag({
-    doc,
-    rows,
-    onMove: (id, where) => agenda.move(id, where),
-  })
+  const { activeId, projection, sortableIds, sortingStrategy, sensors, liveMessage, handlers } =
+    useAgendaDrag({
+      doc,
+      rows,
+      onMove: (id, where) => agenda.move(id, where),
+    })
 
   /**
    * Edits land straight on the document.
@@ -275,8 +276,10 @@ export function AgendaEditor({
       sensors={sensors}
       collisionDetection={agendaCollisionDetection}
       // Rows resize during a drag: a description reflows, a cluster collapses.
-      // Without Always, dnd-kit keeps aiming at where rows used to be.
-      measuring={{ droppable: { strategy: MeasuringStrategy.Always } }}
+      // Without Always, dnd-kit keeps aiming at where rows used to be. And
+      // measured where a row stands, not where a shifted breakout carries it --
+      // see layoutRect.
+      measuring={{ droppable: { strategy: MeasuringStrategy.Always, measure: layoutRect } }}
       // Deliberately NOT restrictToVerticalAxis: the horizontal delta is what
       // expresses nesting.
       modifiers={[restrictToWindowEdges]}
@@ -307,7 +310,7 @@ export function AgendaEditor({
           <PresenceBar peers={agenda.peers} />
           <HeaderRow />
 
-          <SortableContext items={sortableIds} strategy={verticalListSortingStrategy}>
+          <SortableContext items={sortableIds} strategy={sortingStrategy}>
             <div className="border-t border-[var(--border)] md:border-t-0">
               {nodes.length > 0 && lineAfter(null)}
               {nodes.map((node) =>

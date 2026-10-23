@@ -138,6 +138,57 @@ test.describe('breakouts', () => {
     await expect(second.getByRole('article')).toHaveCount(1)
     await expect(first.getByRole('article')).toHaveCount(0)
   })
+
+  /**
+   * Reported as "drag a card above a breakout and the display falls apart".
+   * Breakout, strands and blocks are sortable items nested in each other, and
+   * each of them was shifted by the card's height on its own -- the strands
+   * twice, their blocks three times -- so they climbed out of their box. Only a
+   * real layout shows that, which is why it is asserted here and the rule
+   * itself in sorting.test.ts.
+   */
+  test('keeps the strands inside their breakout while a block passes above it', async ({
+    page,
+  }) => {
+    const breakout = group(page, /^Vertiefung in drei Räumen/)
+    const strands = [group(page, /^A · Datenmodell/), group(page, /^B · Prozesse/)]
+
+    // Tall enough for the breakout's head and the block below it at once. In a
+    // smaller window the pointer has to leave the viewport to reach the head,
+    // dnd-kit scrolls, and every box measured meanwhile is from a moving page.
+    await page.setViewportSize({ width: 1280, height: 1600 })
+    await breakout.evaluate((el) => el.scrollIntoView({ block: 'center' }))
+
+    const handle = page.getByRole('button', { name: 'IT-Management verorten verschieben' })
+    await handle.hover()
+    await page.mouse.down()
+    const from = (await handle.boundingBox())!
+    await page.mouse.move(from.x + from.width / 2, from.y - 20, { steps: 5 })
+
+    // Onto the breakout's head: the block is to land above it, on the day.
+    const head = (await breakout.boundingBox())!
+    await page.mouse.move(from.x + from.width / 2, head.y + 12, { steps: 20 })
+    await expect(live(page)).toContainText('auf Tagesebene')
+
+    const box = (await breakout.boundingBox())!
+    const columns = await Promise.all(strands.map(async (s) => (await s.boundingBox())!))
+    for (const column of columns) {
+      expect(column.y).toBeGreaterThanOrEqual(box.y - 1)
+      expect(column.y + column.height).toBeLessThanOrEqual(box.y + box.height + 1)
+    }
+    // Side by side still, not one shifted against the other.
+    expect(Math.abs(columns[0]!.y - columns[1]!.y)).toBeLessThan(4)
+
+    await page.mouse.up()
+    await expect(live(page)).toContainText('abgelegt')
+
+    const titles = await page
+      .getByLabel('Titel', { exact: true })
+      .evaluateAll((els) => els.map((el) => (el as HTMLInputElement).value))
+    const at = (title: string) => titles.indexOf(title)
+    expect(at('IT-Management verorten')).toBe(at('Mittagessen') + 1)
+    expect(at('IT-Management verorten')).toBeLessThan(at('Bestandsaufnahme'))
+  })
 })
 
 test.describe('breakouts at phone width', () => {

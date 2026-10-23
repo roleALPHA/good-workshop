@@ -2,6 +2,7 @@ import {
   closestCorners,
   pointerWithin,
   type Announcements,
+  type ClientRect,
   type CollisionDetection,
 } from '@dnd-kit/core'
 import { treeKeyboardCoordinateGetter } from '@/features/agenda/keyboard'
@@ -88,4 +89,49 @@ export const agendaCollisionDetection: CollisionDetection = (args) => {
         : []
     })
     .sort((a, b) => a.data.value - b.data.value)
+}
+
+/**
+ * Where a row stands in the layout, whatever the drag is doing to it.
+ *
+ * dnd-kit's own measure undoes a row's transform, but only the row's own. A
+ * strand sits inside its breakout, and a breakout makes room for a card by
+ * moving as one box -- so the strand was measured where its breakout had
+ * carried it. The pointer then met a different row than the one under it in
+ * the layout, the rows made room for THAT one, and the next measurement
+ * disagreed again.
+ *
+ * Every transform up to the agenda's region is a translation from a sortable
+ * row, so subtracting them is exact.
+ */
+export function layoutRect(element: HTMLElement): ClientRect {
+  const rect = element.getBoundingClientRect()
+  let x = 0
+  let y = 0
+  for (
+    let node: HTMLElement | null = element;
+    node && !node.classList.contains('gw-agenda');
+    node = node.parentElement
+  ) {
+    const [dx, dy] = translationOf(getComputedStyle(node).transform)
+    x += dx
+    y += dy
+  }
+  return {
+    top: rect.top - y,
+    bottom: rect.bottom - y,
+    left: rect.left - x,
+    right: rect.right - x,
+    width: rect.width,
+    height: rect.height,
+  }
+}
+
+/** The translation part of a computed `transform`: `matrix(…)` or `matrix3d(…)`. */
+export function translationOf(transform: string): [number, number] {
+  const match = /^matrix(3d)?\((.*)\)$/.exec(transform)
+  if (!match) return [0, 0]
+  const values = match[2]!.split(',').map(Number)
+  const [x, y] = match[1] ? [values[12], values[13]] : [values[4], values[5]]
+  return [x || 0, y || 0]
 }
