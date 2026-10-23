@@ -4,7 +4,7 @@ import { useMemo, useState } from 'react'
 import type { FieldSpec } from '@/domain/moduleType/profile'
 import { cn } from '@/lib/cn'
 import { RichText } from '@/lib/richtext/render'
-import { fromPlainText, isPlainParagraphs, toPlainText } from '@/lib/richtext/plain'
+import { fitsMarkdown, markdownToRichText, richTextToMarkdown } from '@/lib/richtext/markdown'
 import { isRichTextValue, type RichTextValue } from '@/lib/richtext/schema'
 import { useTranslations } from 'next-intl'
 
@@ -163,13 +163,16 @@ function Widget({
 }
 
 /**
- * Rich text without a rich text editor, yet.
+ * Rich text as Markdown, the way the row edits the description.
  *
- * A textarea can round-trip a paragraphs-only document losslessly, so that is
- * editable. A document containing lists or bold text cannot, so it is shown
- * read-only with a plain explanation instead of being flattened the moment
- * somebody types. Losing a facilitator's nested checklist to an editor that
- * "just" normalised it is not a trade worth making for convenience.
+ * The small dialect in `markdown.ts` mirrors the rich text allowlist, so a
+ * list or a bold word survives the round trip. Only a document with a node or
+ * mark outside it -- which the dialect would drop -- is shown read-only: never
+ * silently flatten what somebody wrote.
+ *
+ * A local draft that commits on blur, like TagsField and for the same reason:
+ * parsing on every keystroke would renumber a list and swallow a half-typed
+ * `- ` while the person is still writing it.
  */
 function RichTextField({
   id,
@@ -184,8 +187,17 @@ function RichTextField({
 }) {
   const t = useTranslations('agenda')
   const rich: RichTextValue | null = isRichTextValue(value) ? value : null
+  const source = rich ? editableMarkdown(rich) : ''
+  const [draft, setDraft] = useState(source)
 
-  if (rich && !isPlainParagraphs(rich)) {
+  // Adopt a value that changed elsewhere, compared as text -- see TagsField.
+  const [seen, setSeen] = useState(source)
+  if (source !== seen) {
+    setSeen(source)
+    setDraft(source)
+  }
+
+  if (rich && !fitsMarkdown(rich)) {
     return (
       <div className="rounded border border-[var(--border)] bg-[var(--surface-raised)] p-2.5">
         <RichText value={rich} className="text-[15px]" />
@@ -199,11 +211,19 @@ function RichTextField({
       id={id}
       rows={4}
       className={className}
-      value={rich ? toPlainText(rich) : ''}
-      onChange={(e) => onChange(e.target.value === '' ? undefined : fromPlainText(e.target.value))}
+      value={draft}
+      onChange={(e) => setDraft(e.target.value)}
+      onBlur={() => {
+        const next = draft.trim()
+        if (next === source.trim()) return
+        onChange(next === '' ? undefined : markdownToRichText(next))
+      }}
     />
   )
 }
+
+const editableMarkdown = (value: RichTextValue) =>
+  richTextToMarkdown(value).replaceAll('  \n', '\n')
 
 /**
  * Comma- or newline-separated entry; chips on the way out.

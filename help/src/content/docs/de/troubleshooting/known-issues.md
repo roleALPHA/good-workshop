@@ -17,14 +17,6 @@ Bist du nicht angemeldet, wenn ein Client dich zur Freigabe schickt, meldest du 
 landest in der Bibliothek statt auf **Zugriff erlauben?**. Starte das Verbinden im Client dann
 noch einmal. Abhilfe: vorher im selben Browser anmelden.
 
-### Formatierte Textfelder lassen sich nicht bearbeiten
-
-Einfache Absätze kannst du in jedem Textfeld bearbeiten. Enthält ein Feld aber Formatierung wie
-Listen oder Fettdruck, zeigt der Editor: „Enthält Formatierung. Bearbeiten kommt mit dem
-Text-Editor — bis dahin bleibt der Inhalt hier unangetastet.“ Der Inhalt bleibt vollständig
-erhalten, statt beim ersten Tippen plattgedrückt zu werden — ist im Editor aber vorerst nur
-lesbar.
-
 ### Ein gelöschter Name bleibt im Bearbeitungsverlauf
 
 Löschst du einen Namen im Editor, verschwindet er aus der aktuellen Agenda, aber noch nicht aus

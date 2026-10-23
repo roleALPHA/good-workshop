@@ -243,7 +243,7 @@
       "legacyHeading": "Alte Felder ({count, number})",
       "legacyHint": "Diese Angaben stammen aus einer früheren Fassung dieses Modultyps. Sie bleiben erhalten, lassen sich aber nicht mehr bearbeiten.",
       "privateNote": "nur für dich",
-      "richTextReadOnly": "Enthält Formatierung. Bearbeiten kommt mit dem Text-Editor — bis dahin bleibt der Inhalt hier unangetastet.",
+      "richTextReadOnly": "Enthält Formatierung, die sich hier nicht bearbeiten lässt. Der Inhalt bleibt darum unangetastet.",
       "unset": "— keine Angabe —"
     },
     "filterPlaceholder": "Tippen zum Filtern …",

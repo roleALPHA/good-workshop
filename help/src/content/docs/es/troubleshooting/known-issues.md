@@ -17,14 +17,6 @@ Si no has iniciado sesión cuando un cliente te envía a la autorización, inici
 la biblioteca en lugar de en **¿Permitir el acceso?**. En ese caso, vuelve a empezar la conexión
 desde el cliente. Solución: inicia sesión antes en el mismo navegador.
 
-### Los campos de texto con formato no se pueden editar
-
-Los párrafos sencillos se pueden editar en cualquier campo de texto. Pero si un campo contiene
-formato, como listas o negrita, el editor muestra: «Contiene formato. La edición llegará con el
-editor de texto — hasta entonces el contenido se queda intacto.» El contenido se conserva completo
-en lugar de aplanarse con la primera pulsación de tecla — pero de momento en el editor solo se
-puede leer.
-
 ### Un nombre borrado sigue en el historial de edición
 
 Si borras un nombre en el editor, desaparece de la agenda actual, pero todavía no del historial de

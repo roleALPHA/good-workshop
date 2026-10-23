@@ -42,7 +42,7 @@ Algunos tipos muestran además un campo como pequeña etiqueta en la columna **I
 
 ## Más campos
 
-Debajo de cada bloque aparece **Más campos**. Un clic despliega el resto de campos del tipo de bloque; **Menos** los vuelve a plegar. Solo hay un bloque desplegado a la vez, para que la agenda siga siendo legible. Los cambios se guardan en cuanto sales de un campo. En la [copia impresa](/es/sharing/print/) aparecen estos campos si marcas **Todos los campos**; en la [exportación a Markdown](/es/sharing/export/) se incluyen siempre.
+Debajo de cada bloque aparece **Más campos**. Un clic despliega el resto de campos del tipo de bloque; **Menos** los vuelve a plegar. Solo hay un bloque desplegado a la vez, para que la agenda siga siendo legible. Los cambios se guardan en cuanto sales de un campo. Los campos de texto más largos, como **Instrucciones**, se escriben como la descripción: `- ` o `1. ` al principio de una línea crea una lista, `**negrita**` y `*cursiva*` destacan, `[texto](https://…)` añade un enlace. En la [copia impresa](/es/sharing/print/) aparecen estos campos si marcas **Todos los campos**; en la [exportación a Markdown](/es/sharing/export/) se incluyen siempre.
 
 Todos los tipos tienen el campo **Notas de facilitación**. Está marcado con «solo para ti» y no aparece en la vista de lectura. Al imprimir y al exportar en Markdown, las notas solo se incluyen si marcas **Con notas de facilitación**. Si un bloque tiene notas, un pequeño icono junto a **Más campos** lo indica.
 

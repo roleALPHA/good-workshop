@@ -4,6 +4,7 @@ import userEvent from '@testing-library/user-event'
 import { describe, expect, it, vi } from 'vitest'
 import type { ModuleDto } from '@/domain/agenda/types'
 import { MODULE_TYPES_BY_KEY } from '@/features/agenda/fixtures/module-types'
+import { markdownToRichText, richTextToMarkdown } from '@/lib/richtext/markdown'
 import { ModuleDetails } from './module-details'
 
 /**
@@ -243,5 +244,50 @@ describe('a panel holding an edit while the row changes the description', () => 
     await leaveThePanel(user)
 
     expect(onChange).toHaveBeenLastCalledWith({ description: 'Neu', notiz: 'lang genug' })
+  })
+})
+
+/**
+ * A rich text field behind "Mehr Felder" whose content has a list or bold text.
+ *
+ * Reported as "some fields are not editable although I can write": the panel
+ * offered a textarea only for paragraphs-only documents and showed everything
+ * else read-only, waiting for an editor. Instructions from the catalogue are
+ * numbered lists almost without exception. The row's description has long
+ * edited the same format as Markdown, and so does this field now.
+ */
+describe('a rich text field with formatting', () => {
+  const listed = markdownToRichText('1. **Paare** bilden\n2. Fragen klären')
+
+  it('is editable, as Markdown', () => {
+    render(
+      <ModuleDetails
+        module={moduleWith({ facilitator_notes: listed })}
+        type={type}
+        onChange={() => {}}
+      />,
+    )
+
+    expect(screen.getByLabelText(/Moderationsnotizen/)).toHaveValue(
+      '1. **Paare** bilden\n2. Fragen klären',
+    )
+  })
+
+  it('keeps the list when a line is added', async () => {
+    const user = userEvent.setup()
+    const onChange = vi.fn()
+    render(
+      <ModuleDetails
+        module={moduleWith({ facilitator_notes: listed })}
+        type={type}
+        onChange={onChange}
+      />,
+    )
+
+    await user.type(screen.getByLabelText(/Moderationsnotizen/), '\n3. Auswerten')
+    await leaveThePanel(user)
+
+    const written = onChange.mock.calls.at(-1)?.[0].facilitator_notes
+    expect(richTextToMarkdown(written)).toBe('1. **Paare** bilden\n2. Fragen klären\n3. Auswerten')
   })
 })

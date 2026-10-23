@@ -17,13 +17,6 @@ If you're not signed in when a client sends you to the consent page, you sign in
 library instead of on **Allow access?**. Then start connecting again from the client. Workaround:
 sign in beforehand in the same browser.
 
-### Formatted text fields can't be edited
-
-You can edit plain paragraphs in any text field. But if a field contains formatting such as lists
-or bold text, the editor shows: “Contains formatting. Editing comes with the text editor — until
-then the content here stays untouched.” The content is kept in full instead of being flattened at
-the first keystroke — but for now it is read-only in the editor.
-
 ### A deleted name stays in the editing history
 
 If you delete a name in the editor, it disappears from the current agenda, but not yet from the

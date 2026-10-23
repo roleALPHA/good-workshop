@@ -243,7 +243,7 @@
       "legacyHeading": "Anciens champs ({count, number})",
       "legacyHint": "Ces valeurs viennent d'une version antérieure de ce type de bloc. Elles sont conservées, mais ne peuvent plus être modifiées.",
       "privateNote": "pour toi seulement",
-      "richTextReadOnly": "Contient de la mise en forme. L'édition arrivera avec l'éditeur de texte — d'ici là, le contenu reste intact.",
+      "richTextReadOnly": "Contient une mise en forme qui ne peut pas être modifiée ici ; le contenu reste donc intact.",
       "unset": "— non renseigné —"
     },
     "filterPlaceholder": "Tape pour filtrer …",

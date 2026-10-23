@@ -17,14 +17,6 @@ Si tu n'es pas connecté quand un client t'envoie vers la page d'autorisation, t
 arrives dans la bibliothèque au lieu de **Autoriser l'accès ?**. Relance alors la connexion depuis
 le client. Solution : te connecter d'abord dans le même navigateur.
 
-### Les champs de texte mis en forme ne sont pas modifiables
-
-Tu peux modifier des paragraphes simples dans n'importe quel champ de texte. Mais si un champ
-contient de la mise en forme, comme des listes ou du gras, l'éditeur affiche : « Contient de la mise
-en forme. L'édition arrivera avec l'éditeur de texte — d'ici là, le contenu reste intact. » Le
-contenu est conservé en entier au lieu d'être aplati à la première frappe — mais pour l'instant, il
-est en lecture seule dans l'éditeur.
-
 ### Un nom supprimé reste dans l'historique d'édition
 
 Si tu supprimes un nom dans l'éditeur, il disparaît de l'agenda actuel, mais pas encore de
