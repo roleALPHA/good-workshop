@@ -243,7 +243,7 @@
       "legacyHeading": "Old fields ({count, number})",
       "legacyHint": "These values come from an earlier version of this block type. They are kept, but can no longer be edited.",
       "privateNote": "only for you",
-      "richTextReadOnly": "Contains formatting. Editing comes with the text editor — until then the content here stays untouched.",
+      "richTextReadOnly": "Contains formatting that cannot be edited here, so the content stays untouched.",
       "unset": "— not set —"
     },
     "filterPlaceholder": "Type to filter …",

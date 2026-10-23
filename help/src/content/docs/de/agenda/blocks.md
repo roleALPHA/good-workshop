@@ -42,7 +42,7 @@ Einige Typen zeigen zusätzlich ein Feld als kleines Etikett in der Spalte **Zus
 
 ## Mehr Felder
 
-Unter jedem Block steht **Mehr Felder**. Ein Klick klappt die übrigen Felder des Bausteintyps auf, **Weniger** klappt sie wieder zu. Es ist immer nur ein Block aufgeklappt, damit die Agenda lesbar bleibt. Änderungen werden gespeichert, sobald du ein Feld verlässt. Auf dem [Ausdruck](/de/sharing/print/) stehen diese Felder, wenn du **Alle Felder** anhakst; im [Markdown-Export](/de/sharing/export/) sind sie immer dabei.
+Unter jedem Block steht **Mehr Felder**. Ein Klick klappt die übrigen Felder des Bausteintyps auf, **Weniger** klappt sie wieder zu. Es ist immer nur ein Block aufgeklappt, damit die Agenda lesbar bleibt. Änderungen werden gespeichert, sobald du ein Feld verlässt. Längere Textfelder wie **Anleitung** schreibst du wie die Beschreibung: `- ` oder `1. ` am Zeilenanfang macht eine Liste, `**fett**` und `*kursiv*` heben hervor, `[Text](https://…)` setzt einen Link. Auf dem [Ausdruck](/de/sharing/print/) stehen diese Felder, wenn du **Alle Felder** anhakst; im [Markdown-Export](/de/sharing/export/) sind sie immer dabei.
 
 Jeder Typ hat das Feld **Moderationsnotizen**. Es ist mit „nur für dich“ markiert und erscheint nicht in der Lese-Ansicht. Beim Drucken und beim Markdown-Export kommen die Notizen nur mit, wenn du **Mit Moderationsnotizen** anhakst. Hat ein Block Notizen, zeigt ein kleines Symbol neben **Mehr Felder** das an.
 

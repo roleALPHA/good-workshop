@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest'
-import { markdownToRichText, richTextToMarkdown } from './markdown'
+import { fitsMarkdown, markdownToRichText, richTextToMarkdown } from './markdown'
 
 describe('description Markdown', () => {
   it('turns hyphen lines into a bullet list', () => {
@@ -37,5 +37,19 @@ describe('description Markdown', () => {
   it('round-trips nested lists emitted by the exporter', () => {
     const markdown = '- Außen\n  1. Innen\n- Danach'
     expect(richTextToMarkdown(markdownToRichText(markdown))).toBe(markdown)
+  })
+})
+
+describe('fitsMarkdown', () => {
+  it('accepts everything the dialect writes', () => {
+    expect(fitsMarkdown(markdownToRichText('- **fett** und [Link](https://example.com)'))).toBe(
+      true,
+    )
+  })
+
+  it('refuses a node the dialect would drop', () => {
+    const value = markdownToRichText('Text')
+    value.doc.content!.push({ type: 'heading', content: [{ type: 'text', text: 'Weg' }] })
+    expect(fitsMarkdown(value)).toBe(false)
   })
 })

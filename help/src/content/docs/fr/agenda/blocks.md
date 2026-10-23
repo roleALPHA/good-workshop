@@ -42,7 +42,7 @@ Certains types affichent en plus un champ sous forme de petite étiquette dans l
 
 ## Plus de champs
 
-Sous chaque bloc figure **Plus de champs**. Un clic déplie les autres champs du type de bloc, **Moins** les replie. Un seul bloc est déplié à la fois, pour que l'agenda reste lisible. Les modifications sont enregistrées dès que tu quittes un champ. Sur l'[impression](/fr/sharing/print/), ces champs figurent si tu coches **Tous les champs** ; dans l'[export Markdown](/fr/sharing/export/), ils sont toujours inclus.
+Sous chaque bloc figure **Plus de champs**. Un clic déplie les autres champs du type de bloc, **Moins** les replie. Un seul bloc est déplié à la fois, pour que l'agenda reste lisible. Les modifications sont enregistrées dès que tu quittes un champ. Les champs de texte plus longs, comme **Consignes**, s'écrivent comme la description : `- ` ou `1. ` en début de ligne crée une liste, `**gras**` et `*italique*` mettent en valeur, `[texte](https://…)` ajoute un lien. Sur l'[impression](/fr/sharing/print/), ces champs figurent si tu coches **Tous les champs** ; dans l'[export Markdown](/fr/sharing/export/), ils sont toujours inclus.
 
 Chaque type a le champ **Notes d'animation**. Il est marqué « rien que pour toi » et n'apparaît pas dans la vue en lecture. À l'impression et à l'export Markdown, les notes ne sont incluses que si tu coches **Avec les notes d'animation**. Quand un bloc a des notes, une petite icône à côté de **Plus de champs** le signale.
 

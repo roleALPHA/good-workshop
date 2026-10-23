@@ -21,6 +21,20 @@ export function richTextToMarkdown(value: RichTextValue, indent = ''): string {
 }
 
 /**
+ * Whether `richTextToMarkdown` keeps everything in this document.
+ *
+ * It drops what is not on the allowlist, which is right for an export and
+ * wrong for an editor: the next save would write the loss back.
+ */
+export function fitsMarkdown(value: RichTextValue): boolean {
+  const fits = (node: RichTextNode): boolean =>
+    isAllowedNode(node.type) &&
+    (node.marks ?? []).every((mark) => isAllowedMark(mark.type)) &&
+    (node.content ?? []).every(fits)
+  return fits(value.doc)
+}
+
+/**
  * The small Markdown dialect used by block descriptions.
  *
  * It deliberately mirrors the rich-text allowlist: paragraphs, hard line
