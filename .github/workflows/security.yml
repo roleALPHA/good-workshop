@@ -62,7 +62,7 @@ jobs:
       # Template injection, over-broad permissions, credentials persisted into
       # artifacts, cache poisoning in release jobs -- the ways a workflow hands
       # the repository to whoever can open a pull request.
-      - uses: zizmorcore/zizmor-action@cc914d7f3750a2d13d75c7f184a1060aa0e9d482 # v0.6.4
+      - uses: zizmorcore/zizmor-action@85b2b9fb8e3325e7a23d7d0a9d7ba5ae0f999e3e # v0.7.1
         with:
           version: 1.30.1
           # Fail the job on a finding instead of uploading SARIF: an upload
@@ -81,7 +81,7 @@ jobs:
       # what a pull request ADDS. This reads the whole closure, and on the
       # weekly run it notices an advisory published against a version that
       # has been in the lockfile for months.
-      - uses: google/osv-scanner-action/osv-scanner-action@a345acffa64b0eaede81a3d9aae6141214d9c8fc # v2.6.0
+      - uses: google/osv-scanner-action/osv-scanner-action@b1d267aea5211fa648d9d442fa64b90dbdcbdd36 # v2.7.0
         with:
           scan-args: |-
             --lockfile=./pnpm-lock.yaml
