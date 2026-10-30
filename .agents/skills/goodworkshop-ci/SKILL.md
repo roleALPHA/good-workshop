@@ -9,5 +9,5 @@ description: 'CI/CD and the Docker build for GoodWorkshop: workflows, multi-arch
 that file before changing anything in the areas it names.
 
 It lives there rather than here on purpose: the rules apply to every contribution, not only to
-somebody working with a particular tool — and `.Codex/` is not part of the repository. A second
+somebody working with a particular tool — and `.claude/` is not part of the repository. A second
 copy here would drift.
