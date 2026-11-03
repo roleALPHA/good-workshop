@@ -86,6 +86,9 @@ No workshop is lost when you remove a folder: workshops and subfolders move up o
 folder's sharing, however, is lost. GoodWorkshop refuses to move a folder into itself or into one
 of its subfolders.
 
+If you remove the folder that is currently open, you land where its contents went: in the parent
+folder or, for a top-level folder, in the whole library.
+
 ## Search
 
 The **Search** field above the list searches workshop titles, within the folder or tag you

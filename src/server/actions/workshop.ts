@@ -1,6 +1,7 @@
 'use server'
 
 import { revalidatePath } from 'next/cache'
+import { redirect } from 'next/navigation'
 import { getTranslations } from 'next-intl/server'
 import { z } from 'zod'
 import { listDays } from '@/domain/workshop/days'
@@ -198,15 +199,33 @@ export async function loadTrash(): Promise<
  * Guarded by the tenant admin check rather than by workshop capabilities: a
  * folder belongs to the tenant, not to a workshop, and the workshops inside it
  * may well belong to other people. None of them is touched beyond where it sits.
+ *
+ * `leave` is for the folder that is open: revalidating re-rendered its own
+ * page, by an id that no longer exists, and the page answers that with a 404.
+ * The redirect takes the reader where the contents went instead -- and it has
+ * to happen here, outside `action`, which would catch it as a failure; a
+ * client-side navigation afterwards would come after the 404 was drawn.
  */
-export async function deleteFolderAction(raw: { id: string }): Promise<ActionResult<null>> {
-  const result = await action(z.object({ id: z.string().uuid() }), raw, async (tx, actor) => {
-    assertTenantAdmin(actor)
-    await deleteFolder(tx, raw.id)
-    return null
-  })
+export async function deleteFolderAction(raw: {
+  id: string
+  leave?: boolean
+}): Promise<ActionResult<{ parentId: string | null }>> {
+  const result = await action(
+    z.object({ id: z.string().uuid(), leave: z.boolean().optional() }),
+    raw,
+    async (tx, actor) => {
+      assertTenantAdmin(actor)
+      return { parentId: await deleteFolder(tx, raw.id) }
+    },
+  )
 
-  if (result.ok) revalidatePath('/library')
+  if (result.ok) {
+    revalidatePath('/library')
+    if (raw.leave) {
+      const { parentId } = result.data
+      redirect(parentId ? `/library?folder=${parentId}` : '/library')
+    }
+  }
   return result
 }
 

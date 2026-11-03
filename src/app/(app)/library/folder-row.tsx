@@ -104,7 +104,7 @@ export function FolderRow({
     setFailed(null)
     setConfirming(false)
     startTransition(async () => {
-      const result = await deleteFolderAction({ id })
+      const result = await deleteFolderAction({ id, leave: active })
       if (!result.ok) setFailed(result.message)
     })
   }

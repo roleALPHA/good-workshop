@@ -87,6 +87,9 @@ Beim Entfernen geht kein Workshop verloren: Workshops und Unterordner rücken ei
 oben. Verloren gehen aber die Freigaben dieses Ordners. Einen Ordner in sich selbst oder in einen
 seiner Unterordner zu verschieben, lehnt GoodWorkshop ab.
 
+Entfernst du den Ordner, der gerade geöffnet ist, landest du dort, wohin sein Inhalt gerückt ist:
+im übergeordneten Ordner oder, bei einem Ordner der obersten Ebene, in der ganzen Bibliothek.
+
 ## Suchen
 
 Das Feld **Suchen** über der Liste durchsucht die Titel der Workshops, und zwar innerhalb

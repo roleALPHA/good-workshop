@@ -305,7 +305,8 @@ export async function renameFolder(tx: Tx, id: string, name: string): Promise<vo
   await tx.update(folder).set({ name }).where(eq(folder.id, id))
 }
 
-export async function deleteFolder(tx: Tx, id: string): Promise<void> {
+/** Deletes a folder and returns its parent -- where its contents went. */
+export async function deleteFolder(tx: Tx, id: string): Promise<string | null> {
   const rows = await tx
     .select({ parentId: folder.parentId })
     .from(folder)
@@ -325,6 +326,7 @@ export async function deleteFolder(tx: Tx, id: string): Promise<void> {
   await tx.update(folder).set({ parentId }).where(eq(folder.parentId, id))
   await tx.update(workshop).set({ folderId: parentId }).where(eq(workshop.folderId, id))
   await tx.delete(folder).where(eq(folder.id, id))
+  return parentId
 }
 
 export async function createFolder(

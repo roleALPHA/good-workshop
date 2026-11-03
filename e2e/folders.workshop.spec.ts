@@ -140,6 +140,54 @@ test('does not offer a folder its own subtree as a destination', async ({ page }
   expect(options.some((text) => text.includes(parent))).toBe(false)
 })
 
+/**
+ * Removing the folder that is open.
+ *
+ * The action revalidated the library and Next re-rendered the page it was on
+ * -- `?folder=` with the id just deleted -- which the page answers with a 404.
+ * The reader now lands where the contents went: the parent, or the top level.
+ */
+test('removes the open folder and lands where its contents went', async ({ page }) => {
+  const parent = `Bleibt ${Date.now()}`
+  const child = `Geht ${Date.now()}`
+
+  async function removeOpen(name: string) {
+    await sidebar(page).getByRole('link', { name, exact: true }).hover()
+    await sidebar(page)
+      .getByRole('button', { name: `Mehr zu Ordner ${name}` })
+      .click()
+    await sidebar(page)
+      .getByRole('button', { name: `Ordner ${name} entfernen` })
+      .click()
+    await sidebar(page).getByRole('button', { name: 'Ordner entfernen', exact: true }).click()
+  }
+
+  await page.goto('/library')
+  await sidebar(page).getByRole('button', { name: 'Ordner', exact: true }).click()
+  await page.getByLabel('Name des Ordners').fill(parent)
+  await page.keyboard.press('Enter')
+  await sidebar(page).getByRole('link', { name: parent, exact: true }).click()
+  await expect(page).toHaveURL(/folder=/)
+  const parentUrl = page.url()
+
+  await sidebar(page).getByRole('button', { name: 'Ordner', exact: true }).click()
+  await page.getByLabel('Name des Unterordners').fill(child)
+  await page.keyboard.press('Enter')
+  await sidebar(page).getByRole('link', { name: child, exact: true }).click()
+  await expect(page).not.toHaveURL(parentUrl)
+
+  // A subfolder: back into the parent.
+  await removeOpen(child)
+  await expect(page).toHaveURL(parentUrl)
+  await expect(sidebar(page).getByRole('link', { name: child, exact: true })).toHaveCount(0)
+  await expect(page.getByText('This page could not be found.')).toHaveCount(0)
+
+  // A top-level folder: back into the whole library.
+  await removeOpen(parent)
+  await expect(page).toHaveURL(/\/library$/)
+  await expect(page.getByRole('heading', { name: 'Workshops', exact: true })).toBeVisible()
+})
+
 test('keeps the folder tree out of the way on a phone until it is asked for', async ({ page }) => {
   // Shown in full, a tree of any size pushes the workshops off the screen: on a
   // phone the list is what you came for, and the folders are how you narrow it
