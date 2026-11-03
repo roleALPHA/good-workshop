@@ -5,6 +5,6 @@
 # An entry is never extended without reading the advisory again.
 
 [[IgnoredVulns]]
-id = "GHSA-vfj7-8cjw-p6xm"
-ignoreUntil = 2026-11-04T00:00:00Z
-reason = "braces <= 3.0.3, no fixed release yet. Only via eslint-config-next (devDependency); not in the standalone build or the image, and the glob patterns it expands are our own."
+id = "GHSA-g3hv-75wg-m249"
+ignoreUntil = 2026-12-04T00:00:00Z
+reason = "minimatch 3.x, fixed only in 11.0.1 and not backported. Pulled in by eslint 9, @eslint/eslintrc and eslint-plugin-import/jsx-a11y/react, which all still require ^3 (devDependencies, not in the standalone build or the image); the patterns they expand are our own lint config. The 10.x copy under typescript-eslint is overridden to ^11 in package.json."
