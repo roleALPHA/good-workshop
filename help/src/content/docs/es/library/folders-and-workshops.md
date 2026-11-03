@@ -91,6 +91,9 @@ Al eliminarla no se pierde ningún taller: los talleres y las subcarpetas suben 
 se pierde son los accesos compartidos de esa carpeta. GoodWorkshop rechaza mover una carpeta dentro
 de sí misma o de una de sus subcarpetas.
 
+Si eliminas la carpeta que está abierta, llegas adonde fue su contenido: a la carpeta superior o,
+si era una carpeta de primer nivel, a toda la biblioteca.
+
 ## Buscar
 
 El campo **Buscar**, encima de la lista, busca en los títulos de los talleres, dentro de la

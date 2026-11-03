@@ -93,6 +93,9 @@ La suppression ne fait perdre aucun atelier : les ateliers et les sous-dossiers 
 niveau. En revanche, les partages de ce dossier sont perdus. GoodWorkshop refuse de déplacer un
 dossier dans lui-même ou dans l'un de ses sous-dossiers.
 
+Si tu supprimes le dossier actuellement ouvert, tu arrives là où son contenu est allé : dans le
+dossier parent ou, pour un dossier de premier niveau, dans toute la bibliothèque.
+
 ## Rechercher
 
 Le champ **Rechercher** au-dessus de la liste cherche dans les titres des ateliers, à l'intérieur du

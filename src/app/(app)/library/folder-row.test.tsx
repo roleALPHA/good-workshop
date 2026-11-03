@@ -25,14 +25,14 @@ const { FolderRow } = await import('./folder-row')
 
 const TARGETS = [{ id: 'f-2', name: 'Anderswo', depth: 0 }]
 
-const show = (canManage = true) =>
+const show = (canManage = true, active = false) =>
   renderWithIntl(
     <FolderRow
       id="f-1"
       name="Kunden"
       parentId={null}
       depth={0}
-      active={false}
+      active={active}
       canManage={canManage}
       targets={TARGETS}
     />,
@@ -85,7 +85,20 @@ describe('a folder in the sidebar', () => {
     await userEvent.click(screen.getByRole('button', { name: 'Ordner Kunden entfernen' }))
     await userEvent.click(screen.getByRole('button', { name: 'Ordner entfernen' }))
 
-    expect(deleteFolderAction).toHaveBeenCalledWith({ id: 'f-1' })
+    expect(deleteFolderAction).toHaveBeenCalledWith({ id: 'f-1', leave: false })
+  })
+
+  it('leaves the page of the folder it removes', async () => {
+    // Removing the open folder re-rendered its own page, by an id that no
+    // longer existed -- a 404. The action is told to take the reader along.
+    deleteFolderAction.mockResolvedValue({ ok: true, data: { parentId: null } })
+    show(true, true)
+
+    await openMenu()
+    await userEvent.click(screen.getByRole('button', { name: 'Ordner Kunden entfernen' }))
+    await userEvent.click(screen.getByRole('button', { name: 'Ordner entfernen' }))
+
+    expect(deleteFolderAction).toHaveBeenCalledWith({ id: 'f-1', leave: true })
   })
 
   it('lets go of the question again', async () => {
