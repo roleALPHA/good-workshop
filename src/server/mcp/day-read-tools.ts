@@ -3,6 +3,7 @@ import { eq } from 'drizzle-orm'
 import type { McpServer } from '@modelcontextprotocol/sdk/server/mcp.js'
 import { assertWorkshopAccess } from '@/domain/agenda/access'
 import { loadDay } from '@/domain/agenda/repo'
+import { describeFields, RICHTEXT_HINT } from '@/domain/moduleType/fields'
 import { localiseModuleType } from '@/domain/moduleType/localise'
 import { firstDayOf } from '@/domain/workshop/days'
 import { computeSchedule } from '@/domain/schedule/computeSchedule'
@@ -35,7 +36,8 @@ export function registerDayReadTools(server: McpServer, { actor }: Ctx): void {
     {
       title: 'List block types',
       description:
-        'Every available block type with its field schema. Call this before creating blocks: the schemas say which values a type accepts.',
+        'Every available block type with its fields and their schema. Call this before creating blocks: ' +
+        'the fields say which values a type accepts.',
       inputSchema: {},
     },
     async () =>
@@ -49,10 +51,19 @@ export function registerDayReadTools(server: McpServer, { actor }: Ctx): void {
         )
         const types = rows.map((row) => localiseModuleType(row, MCP_LOCALE))
 
+        // The fields go into the text, not only into structuredContent: a
+        // client that shows the model the text alone (Claude.ai does) would
+        // otherwise leave it guessing what `description` takes.
         return ok(
-          types
-            .map((t) => `${t.key} — ${t.name} (${formatDuration(t.defaultDurationMinutes)})`)
-            .join('\n'),
+          [
+            ...types.map(
+              (t) =>
+                `${t.key} — ${t.name} (${formatDuration(t.defaultDurationMinutes)}): ` +
+                describeFields(t.jsonSchema),
+            ),
+            '',
+            RICHTEXT_HINT,
+          ].join('\n'),
           {
             moduleTypes: types.map((t) => ({
               key: t.key,

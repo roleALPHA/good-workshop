@@ -1,6 +1,11 @@
 import { BUILTIN_BY_KEY, BUILTIN_MODULE_TYPES } from '@/domain/moduleType/builtins'
+import {
+  coerceRichText,
+  describeField,
+  fieldsOf,
+  type BlockTypeField,
+} from '@/domain/moduleType/fields'
 import { validateModuleDesc } from '@/domain/moduleType/validate'
-import { markdownToRichText } from '@/lib/richtext/markdown'
 import type { DayDraft } from './catalog'
 
 /**
@@ -19,17 +24,7 @@ import type { DayDraft } from './catalog'
  * while the author can still fix it.
  */
 
-/** What one field of a block type accepts, in the terms a caller writes it in. */
-export type BlockTypeField = {
-  name: string
-  /** `richtext`, `string`, `string[]`, `integer`, `number`, `boolean`. */
-  type: string
-  /** The only values an enum field takes. */
-  allowed?: string[]
-  required: boolean
-  /** The type's own label, which is authored per installation and may be German. */
-  label?: string
-}
+export type { BlockTypeField }
 
 export type BlockTypeSpec = {
   key: string
@@ -46,39 +41,6 @@ export type BlockTypeSpec = {
    * summary leaves out is what the caller then has to invent.
    */
   jsonSchema: Record<string, unknown>
-}
-
-type Property = {
-  type?: string
-  enum?: unknown[]
-  items?: { type?: string }
-  title?: string
-  'x-gw'?: { widget?: string }
-}
-
-/**
- * `object` plus the rich-text widget is the one shape a caller cannot guess.
- *
- * It is `{ format: 'tiptap-doc-v1', doc: … }` with `additionalProperties:
- * false`, so a sentence written into it fails every time. Naming it `richtext`
- * rather than `object` is what lets `normaliseBlockFields` accept Markdown.
- */
-function fieldType(property: Property): string {
-  if (property.type === 'object' && property['x-gw']?.widget === 'richtext') return 'richtext'
-  if (property.type === 'array') return `${property.items?.type ?? 'string'}[]`
-  return property.type ?? 'string'
-}
-
-function fieldsOf(jsonSchema: Record<string, unknown>): BlockTypeField[] {
-  const properties = (jsonSchema.properties ?? {}) as Record<string, Property>
-  const required = new Set((jsonSchema.required as string[] | undefined) ?? [])
-  return Object.entries(properties).map(([name, property]) => ({
-    name,
-    type: fieldType(property),
-    ...(property.enum ? { allowed: property.enum.map(String) } : {}),
-    required: required.has(name),
-    ...(property.title ? { label: property.title } : {}),
-  }))
 }
 
 /**
@@ -99,9 +61,6 @@ export function blockTypeCatalogue(): BlockTypeSpec[] {
     jsonSchema: type.jsonSchema,
   }))
 }
-
-const describeField = (field: BlockTypeField) =>
-  `${field.name}: ${field.allowed ? field.allowed.join('|') : field.type}`
 
 /** One line per type, for the text a model reads before it reads anything else. */
 export function describeBlockTypes(specs: BlockTypeSpec[]): string {
@@ -137,6 +96,7 @@ const RENDER: Record<
   (error: { path: string; params?: Record<string, unknown> }) => string
 > = {
   'field.enum': (e) => `\`${e.path}\` must be one of: ${String(e.params?.allowed ?? '')}`,
+  'field.const': (e) => `\`${e.path}\` must be exactly: ${String(e.params?.allowed ?? '')}`,
   'field.unexpected': (e) => `\`${e.path}\` is not a field of this block type`,
   'field.required': (e) => `\`${e.path}\` is missing`,
   'field.type': (e) => `\`${e.path}\` must be ${String(e.params?.type ?? 'another type')}`,
@@ -173,13 +133,7 @@ export function normaliseBlockFields(
   if (!fields || Object.keys(fields).length === 0) return {}
 
   const spec = fieldsOf(builtin.jsonSchema)
-  const richtext = new Set(spec.filter((f) => f.type === 'richtext').map((f) => f.name))
-  const coerced = Object.fromEntries(
-    Object.entries(fields).map(([name, value]) => [
-      name,
-      richtext.has(name) && typeof value === 'string' ? markdownToRichText(value) : value,
-    ]),
-  )
+  const coerced = coerceRichText(builtin.jsonSchema, fields)
 
   const result = validateModuleDesc(
     { id: builtin.key, schemaVersion: 1, jsonSchema: builtin.jsonSchema },

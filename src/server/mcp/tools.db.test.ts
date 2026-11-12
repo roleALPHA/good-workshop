@@ -1153,3 +1153,82 @@ describe('apply_agenda', () => {
     expect(clusters.rows[0]).toEqual({ n: 0 })
   })
 })
+
+/**
+ * Rich text, written by a model.
+ *
+ * A model in Claude.ai could not fill a group work's `description` or `task`.
+ * `list_module_types` named only the types; the schema with its
+ * `format: tiptap-doc-v1` sat in structuredContent, which that client does not
+ * show the model. The refusal said `is invalid (const)` without the value. And
+ * even with it, the document is ProseMirror JSON. It guessed some forty
+ * formats and fell back to a plain note.
+ */
+describe('rich text', () => {
+  it('tells the model in the text what each field takes', async () => {
+    const { must } = await connect(me)
+    const { text } = await must('list_module_types')
+    const groupWork = text.split('\n').find((line) => line.startsWith('group_work'))
+    expect(groupWork).toContain('description: richtext')
+    expect(groupWork).toContain('task: richtext')
+    expect(text).toContain('Markdown')
+  })
+
+  it('reads a string in a rich-text field as Markdown, in update_module and apply_agenda', async () => {
+    const { must } = await connect(me)
+    const { data } = await must('create_workshop', { title: unique('Richtext') })
+    const workshopId = data.workshopId as string
+    const dayId = data.dayId as string
+
+    await must('apply_agenda', {
+      workshopId,
+      dayId,
+      items: [
+        {
+          kind: 'module',
+          typeKey: 'group_work',
+          title: 'Rollen',
+          desc: { description: 'Worum es geht', task: '1. Rollen sammeln\n2. **Clustern**' },
+        },
+      ],
+    })
+    const [row] = (
+      await ops.query('select id, json_desc from module where workshop_id = $1', [workshopId])
+    ).rows
+    expect(row.json_desc.description).toMatchObject({
+      format: 'tiptap-doc-v1',
+      text: 'Worum es geht',
+    })
+    expect(row.json_desc.task.doc.content[0].type).toBe('orderedList')
+
+    await must('update_module', {
+      workshopId,
+      dayId,
+      moduleId: row.id,
+      desc: { description: 'Neu\n\n- Punkt *kursiv*' },
+    })
+    const after = await ops.query('select json_desc from module where id = $1', [row.id])
+    expect(after.rows[0].json_desc.description).toMatchObject({
+      format: 'tiptap-doc-v1',
+      doc: { content: [{ type: 'paragraph' }, { type: 'bulletList' }] },
+    })
+  })
+
+  it('names the format a hand-written document needs', async () => {
+    const { must, call } = await connect(me)
+    const { data } = await must('create_workshop', { title: unique('Richtext') })
+    const result = await call('apply_agenda', {
+      workshopId: data.workshopId,
+      dayId: data.dayId,
+      items: [
+        {
+          kind: 'module',
+          typeKey: 'group_work',
+          desc: { description: { format: 'prosemirror', doc: { type: 'doc' } } },
+        },
+      ],
+    })
+    expect(result.isError).toBe(true)
+    expect(result.text).toContain('tiptap-doc-v1')
+  })
+})

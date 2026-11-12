@@ -108,15 +108,15 @@ Alle Stränge eines Breakouts beginnen mit ihm; er endet, wenn der längste Stra
 
 ### Blockfelder
 
-| Feld                | Bedeutung                                                                                                                                                                                                      |
-| ------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| `title`             | Titel des Blocks                                                                                                                                                                                               |
-| `durationMinutes`   | Dauer in Minuten                                                                                                                                                                                               |
-| `pinnedStartMinute` | feste Startzeit (siehe [Dauer und Startzeiten](/de/agenda/timing/)); `null` löst sie                                                                                                                           |
-| `desc`              | die Felder des Bausteintyps, etwa Beschreibung, Material oder Vortragende:r – geprüft gegen dessen Schema                                                                                                      |
-| `parked`            | `true` legt den Block auf den [Parkplatz](/de/agenda/parking/)                                                                                                                                                 |
-| `responsible`       | wer für den Block verantwortlich ist, bis zu 20 Personen: ein Mitglied per `memberId` oder exaktem vollem Namen, andere nur mit Namen; `[]` leert die Liste (siehe [Verantwortliche](/de/agenda/responsible/)) |
-| `color`             | nur für Abschnitte: `rose`, `red`, `orange`, `amber`, `emerald`, `teal`, `cyan`, `blue`, `violet`, `slate`                                                                                                     |
+| Feld                | Bedeutung                                                                                                                                                                                                                         |
+| ------------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `title`             | Titel des Blocks                                                                                                                                                                                                                  |
+| `durationMinutes`   | Dauer in Minuten                                                                                                                                                                                                                  |
+| `pinnedStartMinute` | feste Startzeit (siehe [Dauer und Startzeiten](/de/agenda/timing/)); `null` löst sie                                                                                                                                              |
+| `desc`              | die Felder des Bausteintyps, etwa Beschreibung, Material oder Vortragende:r – geprüft gegen dessen Schema. Formatierte Textfelder wie Beschreibung oder Anleitung nehmen Markdown: Absätze, Listen, `**fett**`, `*kursiv*`, Links |
+| `parked`            | `true` legt den Block auf den [Parkplatz](/de/agenda/parking/)                                                                                                                                                                    |
+| `responsible`       | wer für den Block verantwortlich ist, bis zu 20 Personen: ein Mitglied per `memberId` oder exaktem vollem Namen, andere nur mit Namen; `[]` leert die Liste (siehe [Verantwortliche](/de/agenda/responsible/))                    |
+| `color`             | nur für Abschnitte: `rose`, `red`, `orange`, `amber`, `emerald`, `teal`, `cyan`, `blue`, `violet`, `slate`                                                                                                                        |
 
 ## Einzelne Blöcke
 

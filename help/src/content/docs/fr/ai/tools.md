@@ -108,15 +108,15 @@ Tous les volets d'un breakout commencent avec lui ; il se termine quand le volet
 
 ### Champs de bloc
 
-| Champ               | Signification                                                                                                                                                                                                    |
-| ------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| `title`             | titre du bloc                                                                                                                                                                                                    |
-| `durationMinutes`   | durée en minutes                                                                                                                                                                                                 |
-| `pinnedStartMinute` | heure de début fixe (voir [Durée et heures de début](/fr/agenda/timing/)) ; `null` la libère                                                                                                                     |
-| `desc`              | les champs du type de bloc, par exemple description, matériel ou intervenant·e – vérifiés par rapport à son schéma                                                                                               |
-| `parked`            | `true` met le bloc [de côté](/fr/agenda/parking/)                                                                                                                                                                |
-| `responsible`       | qui est responsable du bloc, jusqu'à 20 personnes : un membre par `memberId` ou par son nom complet exact, les autres seulement par leur nom ; `[]` vide la liste (voir [Responsables](/fr/agenda/responsible/)) |
-| `color`             | uniquement pour les sections : `rose`, `red`, `orange`, `amber`, `emerald`, `teal`, `cyan`, `blue`, `violet`, `slate`                                                                                            |
+| Champ               | Signification                                                                                                                                                                                                                                                             |
+| ------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `title`             | titre du bloc                                                                                                                                                                                                                                                             |
+| `durationMinutes`   | durée en minutes                                                                                                                                                                                                                                                          |
+| `pinnedStartMinute` | heure de début fixe (voir [Durée et heures de début](/fr/agenda/timing/)) ; `null` la libère                                                                                                                                                                              |
+| `desc`              | les champs du type de bloc, par exemple description, matériel ou intervenant·e – vérifiés par rapport à son schéma. Les champs de texte mis en forme, comme la description ou les consignes, acceptent du Markdown : paragraphes, listes, `**gras**`, `*italique*`, liens |
+| `parked`            | `true` met le bloc [de côté](/fr/agenda/parking/)                                                                                                                                                                                                                         |
+| `responsible`       | qui est responsable du bloc, jusqu'à 20 personnes : un membre par `memberId` ou par son nom complet exact, les autres seulement par leur nom ; `[]` vide la liste (voir [Responsables](/fr/agenda/responsible/))                                                          |
+| `color`             | uniquement pour les sections : `rose`, `red`, `orange`, `amber`, `emerald`, `teal`, `cyan`, `blue`, `violet`, `slate`                                                                                                                                                     |
 
 ## Blocs individuels
 

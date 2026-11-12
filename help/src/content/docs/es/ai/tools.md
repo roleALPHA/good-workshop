@@ -108,15 +108,15 @@ Todos los grupos de un breakout empiezan con él; termina cuando termina el grup
 
 ### Campos de bloque
 
-| Campo               | Significado                                                                                                                                                                                                         |
-| ------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| `title`             | título del bloque                                                                                                                                                                                                   |
-| `durationMinutes`   | duración en minutos                                                                                                                                                                                                 |
-| `pinnedStartMinute` | hora de inicio fija (consulta [Duración y horas de inicio](/es/agenda/timing/)); `null` la quita                                                                                                                    |
-| `desc`              | los campos del tipo de bloque, por ejemplo descripción, material o ponente; se validan contra su esquema                                                                                                            |
-| `parked`            | `true` lleva el bloque a [los apartados](/es/agenda/parking/)                                                                                                                                                       |
-| `responsible`       | quién es responsable del bloque, hasta 20 personas: un miembro por `memberId` o por su nombre completo exacto, los demás solo por su nombre; `[]` vacía la lista (consulta [Responsables](/es/agenda/responsible/)) |
-| `color`             | solo para secciones: `rose`, `red`, `orange`, `amber`, `emerald`, `teal`, `cyan`, `blue`, `violet`, `slate`                                                                                                         |
+| Campo               | Significado                                                                                                                                                                                                                                                 |
+| ------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `title`             | título del bloque                                                                                                                                                                                                                                           |
+| `durationMinutes`   | duración en minutos                                                                                                                                                                                                                                         |
+| `pinnedStartMinute` | hora de inicio fija (consulta [Duración y horas de inicio](/es/agenda/timing/)); `null` la quita                                                                                                                                                            |
+| `desc`              | los campos del tipo de bloque, por ejemplo descripción, material o ponente; se validan contra su esquema. Los campos de texto con formato, como la descripción o las instrucciones, aceptan Markdown: párrafos, listas, `**negrita**`, `*cursiva*`, enlaces |
+| `parked`            | `true` lleva el bloque a [los apartados](/es/agenda/parking/)                                                                                                                                                                                               |
+| `responsible`       | quién es responsable del bloque, hasta 20 personas: un miembro por `memberId` o por su nombre completo exacto, los demás solo por su nombre; `[]` vacía la lista (consulta [Responsables](/es/agenda/responsible/))                                         |
+| `color`             | solo para secciones: `rose`, `red`, `orange`, `amber`, `emerald`, `teal`, `cyan`, `blue`, `violet`, `slate`                                                                                                                                                 |
 
 ## Bloques individuales
 

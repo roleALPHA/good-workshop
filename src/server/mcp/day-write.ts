@@ -5,6 +5,7 @@ import {
   VersionConflictError,
   type WorkshopAccess,
 } from '@/domain/agenda/access'
+import { coerceRichText, RICHTEXT_HINT } from '@/domain/moduleType/fields'
 import { ModuleDescError, validateModuleDesc } from '@/domain/moduleType/validate'
 import { CATEGORY_COLORS } from '@/lib/category-colors'
 import {
@@ -77,7 +78,10 @@ export const UpdateFields = {
   title: z.string().trim().min(1).max(300).optional(),
   durationMinutes: Duration.optional(),
   pinnedStartMinute: Minute.nullable().optional(),
-  desc: z.record(z.string(), z.unknown()).optional(),
+  desc: z
+    .record(z.string(), z.unknown())
+    .optional()
+    .describe(`The block type's own fields, from list_module_types. ${RICHTEXT_HINT}`),
   parked: z.boolean().optional(),
   responsible: PeopleInput.optional(),
   color: z.enum(CATEGORY_COLORS).nullable().optional(),
@@ -266,7 +270,7 @@ export function planUpdate(
   if (fields.desc !== undefined) {
     const type = schemas.get(String(block.get('moduleTypeId') ?? ''))
     if (type) {
-      const validated = validateModuleDesc(type, fields.desc)
+      const validated = validateModuleDesc(type, coerceRichText(type.jsonSchema, fields.desc))
       if (!validated.ok) return { kind: 'invalid', error: new ModuleDescError(validated.errors) }
       patch.desc = validated.value
     }

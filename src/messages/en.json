@@ -572,6 +572,7 @@
       },
       "field": {
         "enum": "must be one of these values: {allowed}",
+        "const": "must be exactly: {allowed}",
         "required": "is required",
         "unexpected": "is not part of this block type",
         "type": "must be of type {type}",

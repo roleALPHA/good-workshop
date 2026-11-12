@@ -1,6 +1,7 @@
 import { z } from 'zod'
 import { uuidv7 } from 'uuidv7'
 import type { McpServer } from '@modelcontextprotocol/sdk/server/mcp.js'
+import { coerceRichText, RICHTEXT_HINT } from '@/domain/moduleType/fields'
 import { ModuleDescError, validateModuleDesc, type FieldError } from '@/domain/moduleType/validate'
 import { addClusterBlock, addModuleBlock, clearBlocks, patchBlock } from '@/domain/collab/ops'
 import { agendaBlocks, agendaItemsSchema, type BlockShape } from './agenda-items'
@@ -54,7 +55,8 @@ export function registerDayAgendaTools(server: McpServer, ctx: Ctx): void {
       .optional()
       .describe(
         "The block type's own fields (presenter, materials, description, ...), " +
-          'shaped by its schema from list_module_types. Left out, the block starts empty.',
+          'shaped by its schema from list_module_types. Left out, the block starts empty. ' +
+          RICHTEXT_HINT,
       ),
     parked: z.boolean().optional().describe('true puts the block straight into the parking area.'),
     responsible: PeopleInput.optional(),
@@ -107,7 +109,8 @@ export function registerDayAgendaTools(server: McpServer, ctx: Ctx): void {
         const descs = new Map<string, Record<string, unknown>>()
         const check = (block: { typeKey: string; desc?: Record<string, unknown> }, at: string) => {
           if (block.desc === undefined) return
-          const validated = validateModuleDesc(types.get(block.typeKey)!, block.desc)
+          const type = types.get(block.typeKey)!
+          const validated = validateModuleDesc(type, coerceRichText(type.jsonSchema, block.desc))
           if (validated.ok) descs.set(at, validated.value)
           else
             issues.push(
