@@ -64,6 +64,22 @@ describe('validateModuleDesc', () => {
     expect(String(result.errors[0]!.params?.allowed)).toMatch(/round/)
   })
 
+  it('names the one value a constant allows', () => {
+    // `is invalid (const)` is all a model used to get for a rich-text field
+    // with the wrong `format`, and it guessed forty values before giving up.
+    const result = validateModuleDesc(typeFor('group_work'), {
+      description: { format: 'prosemirror', doc: { type: 'doc' } },
+    })
+    expect(result.ok).toBe(false)
+    if (result.ok) return
+    expect(result.errors[0]).toMatchObject({
+      path: 'description.format',
+      messageKey: 'field.const',
+      params: { allowed: 'tiptap-doc-v1' },
+      allowed: ['tiptap-doc-v1'],
+    })
+  })
+
   it('rejects a field the type does not declare', () => {
     const result = validateModuleDesc(typeFor('break'), { erfunden: true })
     expect(result.ok).toBe(false)

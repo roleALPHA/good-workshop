@@ -575,6 +575,7 @@ declare const messages: {
       },
       "field": {
         "enum": "muss einer dieser Werte sein: {allowed}",
+        "const": "muss genau dieser Wert sein: {allowed}",
         "required": "ist erforderlich",
         "unexpected": "ist in diesem Modultyp nicht vorgesehen",
         "type": "muss vom Typ {type} sein",

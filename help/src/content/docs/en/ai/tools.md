@@ -108,15 +108,15 @@ All strands of a breakout start with it; it ends when the longest strand ends. B
 
 ### Block fields
 
-| Field               | Meaning                                                                                                                                                                                          |
-| ------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
-| `title`             | title of the block                                                                                                                                                                               |
-| `durationMinutes`   | duration in minutes                                                                                                                                                                              |
-| `pinnedStartMinute` | fixed start time (see [Duration and start times](/en/agenda/timing/)); `null` releases it                                                                                                        |
-| `desc`              | the block type's fields, such as description, materials or presenter – validated against its schema                                                                                              |
-| `parked`            | `true` puts the block in the [parking area](/en/agenda/parking/)                                                                                                                                 |
-| `responsible`       | who is responsible for the block, up to 20 people: a member by `memberId` or exact full name, anyone else by name only; `[]` clears the list (see [Responsible people](/en/agenda/responsible/)) |
-| `color`             | sections only: `rose`, `red`, `orange`, `amber`, `emerald`, `teal`, `cyan`, `blue`, `violet`, `slate`                                                                                            |
+| Field               | Meaning                                                                                                                                                                                                                        |
+| ------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
+| `title`             | title of the block                                                                                                                                                                                                             |
+| `durationMinutes`   | duration in minutes                                                                                                                                                                                                            |
+| `pinnedStartMinute` | fixed start time (see [Duration and start times](/en/agenda/timing/)); `null` releases it                                                                                                                                      |
+| `desc`              | the block type's fields, such as description, materials or presenter – validated against its schema. Formatted text fields such as description or instructions take Markdown: paragraphs, lists, `**bold**`, `*italic*`, links |
+| `parked`            | `true` puts the block in the [parking area](/en/agenda/parking/)                                                                                                                                                               |
+| `responsible`       | who is responsible for the block, up to 20 people: a member by `memberId` or exact full name, anyone else by name only; `[]` clears the list (see [Responsible people](/en/agenda/responsible/))                               |
+| `color`             | sections only: `rose`, `red`, `orange`, `amber`, `emerald`, `teal`, `cyan`, `blue`, `violet`, `slate`                                                                                                                          |
 
 ## Single blocks
 

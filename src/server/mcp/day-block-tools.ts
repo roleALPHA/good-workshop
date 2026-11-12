@@ -221,7 +221,8 @@ export function registerDayBlockTools(server: McpServer, ctx: Ctx): void {
         '(true sets it aside: kept with the day, out of the schedule) and responsible (the whole list ' +
         'of who answers for it; [] clears it). A cluster takes title, color ' +
         'and pinnedStartMinute. `desc` replaces the whole description and must match the block ' +
-        "type's schema from list_module_types; read the current one from get_workshop.",
+        "type's schema from list_module_types (a richtext field takes Markdown); read the current " +
+        'one from get_workshop.',
       inputSchema: {
         workshopId: Id,
         dayId: Id,

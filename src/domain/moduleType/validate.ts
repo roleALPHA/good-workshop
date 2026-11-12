@@ -25,6 +25,7 @@ import { DomainError } from '@/domain/errors'
 export const FIELD_ERROR_KEYS = [
   'desc.notObject',
   'field.enum',
+  'field.const',
   'field.required',
   'field.unexpected',
   'field.type',
@@ -137,6 +138,12 @@ function toFieldError(error: ErrorObject): FieldError {
         params: { allowed: allowed.join(', ') },
         allowed,
       }
+    }
+    case 'const': {
+      // A rich-text field's `format` is one: without the value named, a
+      // model guesses editor names until it gives up.
+      const allowed = [error.params.allowedValue]
+      return { path, messageKey: 'field.const', params: { allowed: String(allowed[0]) }, allowed }
     }
     case 'required':
       return { path: String(error.params.missingProperty), messageKey: 'field.required' }
