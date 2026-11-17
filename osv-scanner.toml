@@ -8,3 +8,8 @@
 id = "GHSA-g3hv-75wg-m249"
 ignoreUntil = 2026-12-04T00:00:00Z
 reason = "minimatch 3.x, fixed only in 11.0.1 and not backported. Pulled in by eslint 9, @eslint/eslintrc and eslint-plugin-import/jsx-a11y/react, which all still require ^3 (devDependencies, not in the standalone build or the image); the patterns they expand are our own lint config. The 10.x copy under typescript-eslint is overridden to ^11 in package.json."
+
+[[IgnoredVulns]]
+id = "GHSA-fc5q-39xc-vjpf"
+ignoreUntil = 2026-12-15T00:00:00Z
+reason = "picomatch <= 4.0.7, ReDoS through attacker-supplied extglob patterns; no fixed version yet. Nothing here compiles a glob from user input: in the image it is next's compiled copy (images.remotePatterns from next.config) and @parcel/watcher under next-intl (message extraction globs from our config); everything else is build and test tooling, and help/ is a static site. Look again when picomatch publishes a fix."
