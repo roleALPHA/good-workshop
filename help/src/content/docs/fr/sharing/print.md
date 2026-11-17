@@ -10,7 +10,7 @@ Le jour J, tu veux souvent le déroulé sur papier : pour toi à la table d'anim
 ## Imprimer en trois étapes
 
 1. Ouvre une journée de l'atelier.
-2. En haut à droite, choisis avec les cases ce qui est inclus :
+2. Dans l'en-tête de l'atelier, choisis avec les cases ce qui est inclus :
    - **Avec les notes d'animation** – tes notes sur les blocs.
    - **Tous les champs** – aussi les champs sous **Plus de champs** et la note sur la journée.
    - **Tout l'atelier** – toutes les journées au lieu de la seule journée ouverte.

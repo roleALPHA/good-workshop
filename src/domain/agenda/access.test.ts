@@ -65,14 +65,21 @@ describe('effectiveRole', () => {
       'viewer',
       'owner',
     ],
-    // Before the admin override, so an admin named by a folder grant is that
-    // grant -- the same shape a workshop grant has.
+    // ── a tenant admin who was also given something ────────────────────────
+    // A grant adds access, it never takes the admin's away. An admin named on
+    // a workshop or a folder used to BE that grant, and lost the right to hand
+    // out access to a workshop somebody had merely shared with them.
+    ['an admin with an editor row', member({ tenantRole: 'admin' }), 'editor', null, 'admin'],
+    ['an admin with a viewer row', member({ tenantRole: 'admin' }), 'viewer', null, 'admin'],
+    ['an admin the folder grants viewer', member({ tenantRole: 'admin' }), null, 'viewer', 'admin'],
+    // Owner is still owner: the two carry the same capabilities, and the label
+    // the screen shows is the one that is true without the tenant role.
     [
-      'an admin the folder grants viewer',
-      member({ tenantRole: 'admin' }),
+      'an admin who owns the workshop',
+      member({ memberId: OWNER, tenantRole: 'admin' }),
       null,
-      'viewer',
-      'viewer',
+      null,
+      'owner',
     ],
 
     ['a guest invited to write', guest('editor'), null, null, 'guestEditor'],

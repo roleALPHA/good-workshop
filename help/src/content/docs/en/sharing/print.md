@@ -10,7 +10,7 @@ On the day itself you often want the schedule on paper: for you at the facilitat
 ## Print in three steps
 
 1. Open a day of the workshop.
-2. Use the checkboxes at the top right to decide what comes along:
+2. Use the checkboxes in the workshop's header to decide what comes along:
    - **With facilitator notes** – your notes on the blocks.
    - **All fields** – also the fields under **More fields** and the note about the day.
    - **Whole workshop** – all days instead of only the open one.

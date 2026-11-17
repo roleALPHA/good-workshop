@@ -230,10 +230,10 @@ function roleOf(
   actor: Actor,
 ): WorkshopSummary['role'] {
   if (ownerId === actor.memberId) return 'owner'
+  // Same order as `effectiveRole`: a grant never narrows an admin, so an admin
+  // who was also given a workshop or a folder is shown as an admin.
+  if (actor.tenantRole === 'admin') return 'admin'
   if (collaboratorRole === 'editor' || collaboratorRole === 'viewer') return collaboratorRole
-  // Same order as `effectiveRole`: what the folder confers sits in front of the
-  // admin fallback, so an admin who was granted viewer on a folder is shown as
-  // a viewer rather than as an admin.
   const inherited = inheritedWorkshopRole(folderRoleFromPath(folderPath, actor))
   if (inherited) return inherited
   return 'admin'

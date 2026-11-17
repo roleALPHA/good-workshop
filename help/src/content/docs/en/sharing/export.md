@@ -10,7 +10,7 @@ Every agenda can be downloaded as a Markdown file at any time. Markdown is plain
 ## Export in three steps
 
 1. Open a day of the workshop.
-2. Use the checkboxes at the top right to decide what comes along:
+2. Use the checkboxes in the workshop's header to decide what comes along:
    - **With facilitator notes** – your notes on the blocks.
    - **All fields** – also the note about the day. The fields under **More fields** are always in the file.
    - **Whole workshop** – all days in one file instead of only the open one.

@@ -105,6 +105,29 @@ describe('a colleague who has not been shared with', () => {
   })
 })
 
+describe('a tenant admin the workshop was shared with', () => {
+  // A grant adds access and never takes the admin's away: an admin who was
+  // given a workshop as editor must still be able to hand out access to it.
+  it('keeps every admin capability, including sharing', async () => {
+    await ops.query(`update member set role = 'admin' where id = $1`, [colleagueId])
+    try {
+      await share(colleagueId, 'editor')
+      const caps = await withTenant(as(colleagueId, 'admin'), async (tx) => {
+        const access = await assertWorkshopAccess(
+          tx,
+          as(colleagueId, 'admin'),
+          workshopId,
+          'workshop.read',
+        )
+        return { role: access.role, share: access.can('workshop.share') }
+      })
+      expect(caps).toEqual({ role: 'admin', share: true })
+    } finally {
+      await ops.query(`update member set role = 'member' where id = $1`, [colleagueId])
+    }
+  })
+})
+
 describe('setCollaborator', () => {
   it('turns a colleague into an editor who may write', async () => {
     await share(colleagueId, 'editor')

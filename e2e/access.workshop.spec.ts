@@ -385,3 +385,43 @@ test('taking the grant back takes the folder and its workshops with it', async (
   expect((await lea.page.goto(dayUrl(workshops.acme)))?.status()).toBe(404)
   expect((await lea.page.goto(`/f/${ids.acme}/sharing`))?.status()).toBe(404)
 })
+
+test('an admin the workshop was shared with still hands out access to it', async ({ browser }) => {
+  // A grant adds access and never takes an admin's away. Before v0.8.42 an
+  // admin named on a workshop WAS that grant: shared as editor, the sharing
+  // screen showed them a read-only list.
+  const adaEmail = `ada-${run}@example.test`
+  const link = await inviteMember(admin, { firstName: 'Ada', lastName: 'Admin', email: adaEmail })
+  await admin.goto('/admin/members')
+  await admin.getByLabel(`Rolle von ${adaEmail}`).selectOption('admin')
+  await expect(admin.getByLabel(`Rolle von ${adaEmail}`)).toHaveValue('admin')
+
+  await admin.goto(`/w/${workshops.intern.id}/sharing`)
+  await admin.getByLabel(`Zugriff von ${adaEmail}`).selectOption('editor')
+  await expect(admin.getByLabel(`Zugriff von ${adaEmail}`)).toHaveValue('editor')
+
+  // And named on a folder the same way: Acme handed to Ada as viewer.
+  await shareFolder(ids.acme, adaEmail, 'viewer')
+
+  const ada = await signInAs(browser, adaEmail, link)
+  try {
+    await ada.page.goto(`/w/${workshops.intern.id}/sharing`)
+    const leaAccess = ada.page.getByLabel(`Zugriff von ${lea.email}`)
+    await leaAccess.selectOption('viewer')
+    await expect(leaAccess).toHaveValue('viewer')
+    await leaAccess.selectOption('none')
+    await expect(leaAccess).toHaveValue('none')
+
+    await ada.page.goto(`/w/${workshops.acme.id}/sharing`)
+    await expect(ada.page.getByLabel(`Zugriff von ${lea.email}`)).toBeEnabled()
+
+    await ada.page.goto(`/f/${ids.acme}/sharing`)
+    await expect(
+      ada.page
+        .getByLabel(`Zugriff von ${lea.email} auf diesen Ordner`)
+        .locator('option[value="editor"]'),
+    ).toHaveCount(1)
+  } finally {
+    await ada.context.close()
+  }
+})

@@ -27,13 +27,13 @@ Die Seite selbst sagt es knapp: „Bearbeiter:innen sehen Änderungen sofort —
 ## Einen Workshop teilen
 
 1. Öffne einen Tag des Workshops.
-2. Klicke oben rechts auf **Zugriff**. Den Knopf sehen nur die Eigentümer:in und Admins des Arbeitsbereichs.
+2. Klicke im Kopf des Workshops auf **Zugriff** – den ersten Knopf in der Reihe mit **Drucken**. Den Knopf sehen nur die Eigentümer:in und Admins des Arbeitsbereichs.
 3. Wähle in der Zeile der Person **Lesen**, **Bearbeiten** oder **Kein Zugriff**.
 
 Die Änderung gilt sofort, es gibt keinen Speichern-Knopf. Um jemandem den Zugriff wieder zu nehmen, stellst du auf **Kein Zugriff**.
 
 :::note[Zugriff kann auch woanders herkommen]
-Diese Liste zeigt nur die Freigaben auf dem Workshop selbst. Liegt der Workshop in einem geteilten Ordner, haben dessen Personen trotzdem Zugriff – auch wenn hier **Kein Zugriff** steht. Admins des Arbeitsbereichs kommen ohnehin an jeden Workshop.
+Diese Liste zeigt nur die Freigaben auf dem Workshop selbst. Liegt der Workshop in einem geteilten Ordner, haben dessen Personen trotzdem Zugriff – auch wenn hier **Kein Zugriff** steht. Admins des Arbeitsbereichs kommen ohnehin an jeden Workshop. Eine Freigabe an Admins – hier oder auf einem Ordner – schränkt sie nicht ein: Auch mit **Lesen** oder **Bearbeiten** in der Liste behalten sie alle Admin-Rechte, das Teilen eingeschlossen.
 :::
 
 Unter der Personenliste steht auf derselben Seite der Bereich **Gäste ohne Konto** – das sind die [Freigabelinks](/de/sharing/share-links/).

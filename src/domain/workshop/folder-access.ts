@@ -45,9 +45,11 @@ export type FolderStep = {
  * it. Both on the same folder means the creator wins, because a grant cannot
  * demote somebody out of their own folder.
  *
- * A tenant admin is the floor rather than the ceiling: an explicit grant that
- * names them is respected first, the same way `effectiveRole` lets a workshop
- * grant sit in front of the admin override.
+ * A grant never narrows a tenant admin: it adds access, and an admin already
+ * has all of it. So an admin's own grants are not consulted -- the same rule
+ * `effectiveRole` applies to a workshop. Having created a folder still reads
+ * as 'owner', which grants the same and is the label that stays true without
+ * the tenant role.
  */
 export function effectiveFolderRole(
   path: readonly FolderStep[],
@@ -59,14 +61,15 @@ export function effectiveFolderRole(
   // link would become a key to a whole subtree.
   if (actor.share) return null
 
+  const isAdmin = actor.tenantRole === 'admin'
   for (let i = path.length - 1; i >= 0; i--) {
     const step = path[i]!
     if (actor.memberId && step.createdBy === actor.memberId) return 'owner'
-    const granted = grants.get(step.id)
+    const granted = isAdmin ? undefined : grants.get(step.id)
     if (granted) return granted
   }
 
-  if (actor.tenantRole === 'admin') return 'admin'
+  if (isAdmin) return 'admin'
   return null
 }
 

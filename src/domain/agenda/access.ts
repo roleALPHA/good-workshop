@@ -306,22 +306,26 @@ export function effectiveRole({
     return actor.share.role === 'editor' ? 'guestEditor' : 'guestViewer'
   }
   if (ownerId === actor.memberId) return 'owner'
+  /**
+   * Before any grant, because a grant ADDS access and never takes an admin's
+   * away. It used to sit after them, so an admin somebody had shared a
+   * workshop or a folder with as editor WAS an editor there -- and could no
+   * longer hand out access to a workshop they could have shared a minute
+   * before the grant. After the owner, because the two carry the same
+   * capabilities and "owner" is the label that is true without the tenant role.
+   *
+   * Defaults to on: self-hosted teams expect an admin to be able to help. Every
+   * such access writes an audit event, and the transparency is what makes the
+   * default acceptable rather than creepy.
+   */
+  if (actor.tenantRole === 'admin') return 'admin'
   if (collaboratorRole === 'editor' || collaboratorRole === 'viewer') return collaboratorRole
   /**
-   * After the workshop's own row and before the admin override, and both
-   * halves are the rule rather than an ordering accident.
-   *
-   * Before admin, so a folder grant is what an admin sees when one names them,
-   * the same way a workshop grant is. After the workshop row, because THAT is
-   * what "the most specific wins" means here: a subtree shared as editor can
-   * still hold one workshop pinned back to viewer, and the way to say so is a
-   * row on the workshop.
+   * After the workshop's own row, because THAT is what "the most specific wins"
+   * means here: a subtree shared as editor can still hold one workshop pinned
+   * back to viewer, and the way to say so is a row on the workshop.
    */
   if (inheritedRole === 'editor' || inheritedRole === 'viewer') return inheritedRole
-  // Defaults to on: self-hosted teams expect an admin to be able to help. Every
-  // such access writes an audit event, and the transparency is what makes the
-  // default acceptable rather than creepy.
-  if (actor.tenantRole === 'admin') return 'admin'
   return null
 }
 

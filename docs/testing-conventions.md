@@ -213,7 +213,8 @@ fixing, not the selector.
     the folder above, in the tree, the export and the sharing screen alike. A folder editor
     works in the subtree but neither shares nor bins, a workshop shared on its own does not
     reveal its folder, MCP lists what the library lists and files nothing elsewhere, and taking
-    the grant back takes it all away again. The rules are asserted a level down; what only this
+    the grant back takes it all away again. A second admin who is also named on a workshop and
+    a folder still hands out access to both — a grant adds, it never narrows an admin. The rules are asserted a level down; what only this
     level shows is that every surface asks them about the person actually signed in — the suite's
     own session is an admin, who would pass every one of these checks for the wrong reason
 

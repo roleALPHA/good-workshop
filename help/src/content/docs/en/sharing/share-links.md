@@ -13,7 +13,7 @@ The workshop's owner and the workspace's admins may invite guests – the same p
 
 ## Invite a guest
 
-1. Open a day of the workshop and click **Access** at the top right.
+1. Open a day of the workshop and click **Access** in the workshop's header – the first button in the row with **Print**.
 2. Scroll to the **Guests without an account** section.
 3. Enter the **E-mail address**.
 4. Choose the **Permission**: **Read only** or **Read and write**.

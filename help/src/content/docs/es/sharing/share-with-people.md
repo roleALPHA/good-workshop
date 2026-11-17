@@ -27,13 +27,13 @@ La propia página lo resume así: «Quien edita ve los cambios al momento — es
 ## Compartir un taller
 
 1. Abre una jornada del taller.
-2. Haz clic arriba a la derecha en **Acceso**. El botón solo lo ven la propietaria y los Admin del espacio de trabajo.
+2. Haz clic en la cabecera del taller en **Acceso**, el primer botón de la fila con **Imprimir**. El botón solo lo ven la propietaria y los Admin del espacio de trabajo.
 3. En la fila de la persona, elige **Leer**, **Editar** o **Sin acceso**.
 
 El cambio se aplica al momento; no hay botón de guardar. Para quitarle el acceso a alguien, lo pones en **Sin acceso**.
 
 :::note[El acceso también puede venir de otro sitio]
-Esta lista solo muestra los permisos del propio taller. Si el taller está en una carpeta compartida, las personas de esa carpeta tienen acceso igualmente, aunque aquí ponga **Sin acceso**. Los Admin del espacio de trabajo llegan de todos modos a cualquier taller.
+Esta lista solo muestra los permisos del propio taller. Si el taller está en una carpeta compartida, las personas de esa carpeta tienen acceso igualmente, aunque aquí ponga **Sin acceso**. Los Admin del espacio de trabajo llegan de todos modos a cualquier taller. Un permiso dado a un Admin – aquí o en una carpeta – no lo limita: aunque figure con **Leer** o **Editar** en la lista, conserva todos los derechos de Admin, incluido compartir.
 :::
 
 Debajo de la lista de personas, en la misma página, está el apartado **Invitados sin cuenta**: son los [enlaces de invitación](/es/sharing/share-links/).

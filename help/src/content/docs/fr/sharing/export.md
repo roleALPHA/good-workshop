@@ -10,7 +10,7 @@ Chaque agenda peut être téléchargé à tout moment sous forme de fichier Mark
 ## Exporter en trois étapes
 
 1. Ouvre une journée de l'atelier.
-2. En haut à droite, choisis avec les cases ce qui est inclus :
+2. Dans l'en-tête de l'atelier, choisis avec les cases ce qui est inclus :
    - **Avec les notes d'animation** – tes notes sur les blocs.
    - **Tous les champs** – en plus la note sur la journée. Les champs sous **Plus de champs** figurent toujours dans le fichier.
    - **Tout l'atelier** – toutes les journées dans un seul fichier au lieu de la seule journée ouverte.
