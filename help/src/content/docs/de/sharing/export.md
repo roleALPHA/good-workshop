@@ -10,7 +10,7 @@ Jede Agenda lässt sich jederzeit als Markdown-Datei herunterladen. Markdown ist
 ## Exportieren in drei Schritten
 
 1. Öffne einen Tag des Workshops.
-2. Lege oben rechts mit den Häkchen fest, was mitkommt:
+2. Lege im Kopf des Workshops mit den Häkchen fest, was mitkommt:
    - **Mit Moderationsnotizen** – deine Notizen zu den Blöcken.
    - **Alle Felder** – zusätzlich die Notiz zum Tag. Die Felder unter **Mehr Felder** stehen in der Datei immer.
    - **Ganzer Workshop** – alle Tage in einer Datei statt nur des geöffneten.

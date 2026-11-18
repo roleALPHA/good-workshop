@@ -13,7 +13,7 @@ Gäste einladen dürfen die Eigentümer:in des Workshops und Admins des Arbeitsb
 
 ## Einen Gast einladen
 
-1. Öffne einen Tag des Workshops und klicke oben rechts auf **Zugriff**.
+1. Öffne einen Tag des Workshops und klicke im Kopf des Workshops auf **Zugriff** – den ersten Knopf in der Reihe mit **Drucken**.
 2. Scrolle zum Bereich **Gäste ohne Konto**.
 3. Trage die **E-Mail-Adresse** ein.
 4. Wähle das **Recht**: **Nur lesen** oder **Lesen und schreiben**.

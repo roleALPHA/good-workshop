@@ -10,7 +10,7 @@ Cualquier desarrollo se puede descargar en todo momento como archivo Markdown. M
 ## Exportar en tres pasos
 
 1. Abre una jornada del taller.
-2. Arriba a la derecha, con las casillas, decide qué se incluye:
+2. En la cabecera del taller, con las casillas, decide qué se incluye:
    - **Con notas de facilitación**: tus notas sobre los bloques.
    - **Todos los campos**: además, la nota sobre la jornada. Los campos de **Más campos** están siempre en el archivo.
    - **Todo el taller**: todas las jornadas en un solo archivo en lugar de solo la abierta.

@@ -75,11 +75,11 @@ describe('the role a member holds on a folder', () => {
       'admin',
     ],
     [
-      'an admin named by a grant is that grant, the way a workshop grant works',
+      'an admin named by a grant stays admin, the way a workshop grant works',
       path(['a', SOMEBODY]),
       grants(['a', 'viewer']),
       actor({ tenantRole: 'admin' }),
-      'viewer',
+      'admin',
     ],
   ])('%s', (_name, p, g, a, expected) => {
     expect(effectiveFolderRole(p, g, a)).toBe(expected)

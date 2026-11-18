@@ -27,13 +27,13 @@ The page itself puts it briefly: “Editors see changes immediately — they are
 ## Share a workshop
 
 1. Open a day of the workshop.
-2. Click **Access** at the top right. Only the owner and the workspace's admins see this button.
+2. Click **Access** in the workshop's header – the first button in the row with **Print**. Only the owner and the workspace's admins see this button.
 3. In the person's row, choose **Read**, **Edit** or **No access**.
 
 The change applies immediately; there is no save button. To take someone's access away again, set it to **No access**.
 
 :::note[Access can come from elsewhere too]
-This list only shows the shares on the workshop itself. If the workshop is in a shared folder, that folder's people still have access – even if it says **No access** here. The workspace's admins can reach every workshop anyway.
+This list only shows the shares on the workshop itself. If the workshop is in a shared folder, that folder's people still have access – even if it says **No access** here. The workspace's admins can reach every workshop anyway. A share given to an admin – here or on a folder – does not limit them: even listed with **Read** or **Edit**, they keep every admin right, sharing included.
 :::
 
 Below the list of people, on the same page, is the **Guests without an account** section – those are the [share links](/en/sharing/share-links/).

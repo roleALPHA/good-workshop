@@ -27,13 +27,13 @@ La page le dit elle-même en peu de mots : « Les personnes qui éditent voient 
 ## Partager un atelier
 
 1. Ouvre une journée de l'atelier.
-2. Clique en haut à droite sur **Accès**. Seuls le ou la propriétaire et les admins de l'espace de travail voient ce bouton.
+2. Clique dans l'en-tête de l'atelier sur **Accès** – le premier bouton de la rangée avec **Imprimer**. Seuls le ou la propriétaire et les admins de l'espace de travail voient ce bouton.
 3. Dans la ligne de la personne, choisis **Lire**, **Modifier** ou **Aucun accès**.
 
 Le changement s'applique immédiatement, il n'y a pas de bouton d'enregistrement. Pour retirer l'accès à quelqu'un, passe à **Aucun accès**.
 
 :::note[L'accès peut aussi venir d'ailleurs]
-Cette liste ne montre que les accès partagés sur l'atelier lui-même. Si l'atelier se trouve dans un dossier partagé, les personnes de ce dossier y ont quand même accès – même si **Aucun accès** est indiqué ici. Les admins de l'espace de travail accèdent de toute façon à chaque atelier.
+Cette liste ne montre que les accès partagés sur l'atelier lui-même. Si l'atelier se trouve dans un dossier partagé, les personnes de ce dossier y ont quand même accès – même si **Aucun accès** est indiqué ici. Les admins de l'espace de travail accèdent de toute façon à chaque atelier. Un accès donné à un admin – ici ou sur un dossier – ne le limite pas : même avec **Lire** ou **Modifier** dans la liste, il garde tous les droits d'admin, partage compris.
 :::
 
 Sous la liste des personnes, la même page contient la zone **Invités sans compte** – ce sont les [liens d'invitation](/fr/sharing/share-links/).

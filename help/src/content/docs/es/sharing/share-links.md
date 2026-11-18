@@ -13,7 +13,7 @@ Pueden invitar a invitados la propietaria del taller y los Admin del espacio de 
 
 ## Invitar a un invitado
 
-1. Abre una jornada del taller y haz clic arriba a la derecha en **Acceso**.
+1. Abre una jornada del taller y haz clic en la cabecera del taller en **Acceso**, el primer botón de la fila con **Imprimir**.
 2. Desplázate hasta el apartado **Invitados sin cuenta**.
 3. Escribe la **Dirección de correo**.
 4. Elige el **Permiso**: **Solo lectura** o **Lectura y escritura**.

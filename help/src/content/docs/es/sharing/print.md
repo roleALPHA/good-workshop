@@ -10,7 +10,7 @@ Para el día del taller a menudo quieres el desarrollo en papel: para ti en la m
 ## Imprimir en tres pasos
 
 1. Abre una jornada del taller.
-2. Arriba a la derecha, con las casillas, decide qué se incluye:
+2. En la cabecera del taller, con las casillas, decide qué se incluye:
    - **Con notas de facilitación**: tus notas sobre los bloques.
    - **Todos los campos**: también los campos de **Más campos** y la nota sobre la jornada.
    - **Todo el taller**: todas las jornadas en lugar de solo la abierta.

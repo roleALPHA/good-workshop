@@ -13,7 +13,7 @@ Peuvent inviter des invités le ou la propriétaire de l'atelier et les admins d
 
 ## Inviter un invité
 
-1. Ouvre une journée de l'atelier et clique en haut à droite sur **Accès**.
+1. Ouvre une journée de l'atelier et clique dans l'en-tête de l'atelier sur **Accès** – le premier bouton de la rangée avec **Imprimer**.
 2. Fais défiler jusqu'à la zone **Invités sans compte**.
 3. Saisis l'**Adresse e-mail**.
 4. Choisis le **Droit** : **Lecture seule** ou **Lecture et écriture**.

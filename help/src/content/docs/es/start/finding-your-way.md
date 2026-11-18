@@ -51,7 +51,7 @@ las acciones **Exportar**, **Mover a** y **Mover a la papelera**. Más en
 Un clic en un taller abre su primera jornada. De arriba abajo:
 
 1. **← Biblioteca**, el título del taller y debajo sus etiquetas (**+ etiqueta**).
-2. A la derecha, la salida: **Acceso**, **Con notas de facilitación**, **Todos los campos**,
+2. La fila de botones con **Acceso** y la salida: **Con notas de facilitación**, **Todos los campos**,
    **Todo el taller**, **Markdown** e **Imprimir**.
 3. Las pestañas de las jornadas y **Jornada** para añadir una. Debajo, el nombre, la fecha y el
    comienzo de la jornada abierta, las flechas para reordenar y **Eliminar jornada del taller**.

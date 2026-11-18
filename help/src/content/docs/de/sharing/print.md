@@ -10,7 +10,7 @@ Für den Tag selbst willst du den Ablauf oft auf Papier: für dich am Moderation
 ## Drucken in drei Schritten
 
 1. Öffne einen Tag des Workshops.
-2. Lege oben rechts mit den Häkchen fest, was mitkommt:
+2. Lege im Kopf des Workshops mit den Häkchen fest, was mitkommt:
    - **Mit Moderationsnotizen** – deine Notizen zu den Blöcken.
    - **Alle Felder** – auch die Felder unter **Mehr Felder** und die Notiz zum Tag.
    - **Ganzer Workshop** – alle Tage statt nur des geöffneten.
