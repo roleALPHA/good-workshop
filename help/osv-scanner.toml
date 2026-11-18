@@ -1,2 +1,7 @@
 # Known advisories without a fixed version, accepted for a limited time.
 # See ../osv-scanner.toml for the rules; this file covers help/pnpm-lock.yaml.
+
+[[IgnoredVulns]]
+id = "GHSA-fc5q-39xc-vjpf"
+ignoreUntil = 2026-12-15T00:00:00Z
+reason = "picomatch <= 4.0.7, ReDoS through attacker-supplied extglob patterns; no fixed version yet. Here it is build tooling only (astro, vite, the links validator), with globs from our own config; the help ships as static files behind nginx. Look again when picomatch publishes a fix."
