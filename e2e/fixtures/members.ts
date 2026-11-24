@@ -41,6 +41,10 @@ export async function signInAs(browser: Browser, email: string, link: string): P
   const page = await context.newPage()
   await page.goto(link)
   await page.getByRole('button', { name: 'Anmelden', exact: true }).click()
-  await page.waitForURL((url) => !url.pathname.startsWith('/verify'))
+  // Not just "left /verify": the form sends the browser to `/`, and `/`
+  // redirects on to /library. Returning at `/` let the caller's next goto()
+  // collide with that redirect ("interrupted by another navigation to
+  // /library") -- on 24 November in both attempts of one test.
+  await page.waitForURL((url) => url.pathname !== '/' && !url.pathname.startsWith('/verify'))
   return { email, page, context }
 }

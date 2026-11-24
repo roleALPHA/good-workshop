@@ -71,6 +71,13 @@ WORKDIR /app
 # digest is pinned: without it, an OpenSSL fix published after the pin would
 # only arrive when somebody moves the pin, and the image scan in CI would fail
 # on exactly that in the meantime.
+#
+# `apk upgrade` alone was not enough: with the pin unchanged, the build cache
+# keeps this layer, and with it the packages of the day it was first built.
+# From 20 November the nightly scan failed on OpenSSL 3.5.9-r0 while r1 had
+# long been in the Alpine repository. The pipelines pass the current day here,
+# so the layer is rebuilt once a day and then comes from the cache again.
+ARG APK_REFRESH=
 RUN apk upgrade --no-cache && \
     rm -rf /usr/local/lib/node_modules/npm /usr/local/lib/node_modules/corepack \
            /usr/local/bin/npm /usr/local/bin/npx /usr/local/bin/corepack \
