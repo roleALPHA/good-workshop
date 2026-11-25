@@ -42,7 +42,7 @@ A section is deleted _with all the blocks inside it_, without confirmation and w
 
 A breakout is a section whose _strands run at the same time_: parallel small groups, each with its own little schedule. All strands start when the breakout starts. The breakout ends when the longest strand ends, and then the day continues.
 
-The header row says this in words, for example **3 strands, at the same time · longest strand 45m**. Each strand shows its position, time and duration, for example “Strand 2 of 3 · 10:00 AM–10:45 AM · 45m”. On a large screen the strands sit side by side as columns; on a phone, one below the other.
+The header row says this in words, for example **3 strands, at the same time · longest strand 45m**. Each strand shows its position, time and duration, for example “Strand 2 of 3 · 10:00 AM–10:45 AM · 45m”. On a large screen at most two strands sit side by side, each in a card of its own; from the third strand on they continue in a new row below. That keeps every strand wide enough to read and edit its titles, descriptions and material. On a phone, all strands sit one below the other.
 
 ### Create a breakout
 
@@ -50,7 +50,7 @@ The header row says this in words, for example **3 strands, at the same time · 
 2. It appears at the end of the day as **New breakout**, already with two strands, “New strand 1” and “New strand 2”.
 3. Rename the breakout and the strands (**Breakout name**, **Strand name**).
 4. Fill each strand using its own **Add a block** button.
-5. More groups are added with **Add strand** at the end of the columns.
+5. More groups are added with **Add strand** below the strands.
 
 Like a section, a breakout can also be created right where it belongs via the “+” between two rows, with **Breakout**.
 
@@ -73,7 +73,7 @@ A breakout is deleted with all its strands and blocks (**Delete with 3 strands**
 You move blocks, sections and breakouts by the handle on the left of the row, as described under [Blocks and block types](/en/agenda/blocks/). What happens when you drop depends on where you let go:
 
 - **Block into a section:** Between two blocks of a section it always lands in the section. Directly below the last block, or below the header row of an empty section, the horizontal position decides: dragged to the right it lands in the section, to the left on day level. With the keyboard you indent and outdent with Arrow Right and Arrow Left.
-- **Block into a breakout:** The column under the mouse pointer is the strand it lands in. If you let go on the breakout's header row, it goes to the end of the first strand. With the keyboard you switch between strands with Arrow Left and Arrow Right.
+- **Block into a breakout:** It lands in the strand whose card is under the mouse pointer. If you let go on the breakout's header row, it goes to the end of the first strand. With the keyboard you switch between strands with Arrow Left and Arrow Right.
 - **Section into a breakout:** The section becomes another strand, with all its blocks.
 - **Strand out of a breakout:** Drag it to day level, and it becomes a section of its own, with all its blocks.
 

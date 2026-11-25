@@ -67,6 +67,9 @@ export function TrackColumn({
       className={cn(
         catClass(cluster.color ?? 'slate'),
         'group relative flex min-w-0 flex-col',
+        // A card from md up, so two strands side by side read as two rooms
+        // rather than one tinted band with text in it.
+        'md:rounded-md md:border md:border-[var(--border)] md:bg-[var(--surface)]',
         chrome?.isDragging && 'opacity-40',
         chrome?.isDropTarget && 'ring-2 ring-[var(--cat-bar)] ring-inset',
       )}
@@ -84,6 +87,9 @@ export function TrackColumn({
         className={cn(
           'sticky top-0 z-10 flex min-w-0 flex-wrap items-baseline gap-x-2 gap-y-1',
           'border-l-4 border-[var(--cat-bar)] bg-[var(--cat-bg)] px-3 py-2 md:relative',
+          // Room for the drag handle, which otherwise lay over the title's
+          // first letter. Its blocks start at the same edge.
+          'md:rounded-t-[5px] md:pl-10',
         )}
       >
         <ClusterChrome
@@ -125,7 +131,9 @@ export function TrackColumn({
       <div className="min-w-0 flex-1">
         {children}
         {blockCount === 0 && (
-          <p className="px-3 py-2 text-[13px] text-[var(--fg-muted)]">{t('breakout.emptyTrack')}</p>
+          <p className="px-3 py-2 text-[13px] text-[var(--fg-muted)] md:pl-10">
+            {t('breakout.emptyTrack')}
+          </p>
         )}
       </div>
 
