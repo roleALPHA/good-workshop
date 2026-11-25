@@ -42,7 +42,7 @@ Une section est supprimée _avec tous les blocs qu'elle contient_, sans confirma
 
 Un breakout est une section dont les _volets se déroulent en même temps_ : des petits groupes en parallèle, chacun avec son propre petit déroulé. Tous les volets commencent quand le breakout commence. Le breakout se termine quand le volet le plus long se termine, puis la journée continue.
 
-L'en-tête le dit en toutes lettres, par exemple **3 volets, en même temps · volet le plus long 45m**. Chaque volet indique sa position, son horaire et sa durée, par exemple « Volet 2 sur 3 · 10:00–10:45 · 45m ». Sur un grand écran, les volets sont disposés en colonnes côte à côte ; sur le téléphone, les uns sous les autres.
+L'en-tête le dit en toutes lettres, par exemple **3 volets, en même temps · volet le plus long 45m**. Chaque volet indique sa position, son horaire et sa durée, par exemple « Volet 2 sur 3 · 10:00–10:45 · 45m ». Sur un grand écran, deux volets au plus sont côte à côte, chacun dans sa propre carte ; à partir du troisième, ils continuent sur une nouvelle rangée en dessous. Chaque volet reste ainsi assez large pour lire et modifier ses titres, descriptions et matériel. Sur le téléphone, tous les volets sont les uns sous les autres.
 
 ### Créer un breakout
 
@@ -50,7 +50,7 @@ L'en-tête le dit en toutes lettres, par exemple **3 volets, en même temps · v
 2. Il apparaît à la fin de la journée sous le nom **Nouveau breakout**, déjà avec deux volets, « Nouveau volet 1 » et « Nouveau volet 2 ».
 3. Renomme le breakout et les volets (**Nom du breakout**, **Nom du volet**).
 4. Remplis chaque volet avec son propre bouton **Ajouter un bloc**.
-5. Ajoute d'autres groupes avec **Ajouter un volet**, à la fin des colonnes.
+5. Ajoute d'autres groupes avec **Ajouter un volet**, sous les volets.
 
 Comme une section, un breakout peut aussi être créé directement à sa place via le « + » entre deux lignes, avec **Breakout**.
 
@@ -73,7 +73,7 @@ Un breakout est supprimé avec tous ses volets et blocs (**Supprimer avec 3 vole
 Tu déplaces blocs, sections et breakouts par la poignée à gauche de la ligne, comme décrit dans [Blocs et types de blocs](/fr/agenda/blocks/). Ce qui se passe au dépôt dépend de l'endroit où tu relâches :
 
 - **Bloc dans une section :** entre deux blocs d'une section, il atterrit toujours dans la section. Juste sous le dernier bloc, ou sous l'en-tête d'une section vide, c'est le mouvement horizontal qui décide : glissé vers la droite, il atterrit dans la section ; vers la gauche, au niveau de la journée. Au clavier, flèche droite et flèche gauche le font entrer et sortir.
-- **Bloc dans un breakout :** la colonne sous le pointeur de la souris est le volet où il atterrit. Si tu le relâches sur l'en-tête du breakout, il va à la fin du premier volet. Au clavier, flèche gauche et flèche droite passent d'un volet à l'autre.
+- **Bloc dans un breakout :** il atterrit dans le volet dont la carte est sous le pointeur de la souris. Si tu le relâches sur l'en-tête du breakout, il va à la fin du premier volet. Au clavier, flèche gauche et flèche droite passent d'un volet à l'autre.
 - **Section dans un breakout :** la section devient un volet de plus, avec tous ses blocs.
 - **Volet hors d'un breakout :** fais-le glisser au niveau de la journée, et il devient une section à part, avec tous ses blocs.
 

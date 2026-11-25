@@ -148,7 +148,14 @@ export function BreakoutRow({
         applied there -- which is the same mechanism the rest of the agenda
         collapses by, rather than a second layout to keep in step.
       */}
-      <div className="grid gap-x-4 gap-y-0 pb-2 md:grid-cols-[repeat(auto-fit,minmax(var(--gw-track-min),1fr))] md:pl-[72px]">
+      {/*
+        Each strand a card of its own, two to a row at most (see
+        --gw-track-grid). The inset is the breakout's handle column and no more:
+        every pixel taken here is one a strand's text has to wrap around.
+        gap-4 is also the 1rem the grid's calc(50% - 0.5rem) splits between
+        two columns -- change one, change both.
+      */}
+      <div className="grid gap-4 pb-3 md:grid-cols-[var(--gw-track-grid)] md:pr-3 md:pl-8">
         {children}
         {editing?.onAddTrack && (
           <button
@@ -159,10 +166,10 @@ export function BreakoutRow({
             // are one repeated thing to a screen reader rather than three
             // different ones.
             aria-label={t('breakout.addTrackTo', { title: cluster.title })}
-            // The last cell of the grid, where a new column would appear. The
-            // raster explains itself that way, instead of a button somewhere
-            // above it explaining the raster.
-            className="m-2 inline-flex min-h-11 items-center justify-center gap-1 rounded border border-dashed border-[var(--border-strong)] px-3 py-2 text-[13px] text-[var(--fg-muted)] hover:border-[var(--cat-bar)] hover:text-[var(--fg)]"
+            // Under the strands, across the whole raster. As the last cell it
+            // took half a row of its own at two strands, a card-sized hole
+            // that looked like an empty strand.
+            className="inline-flex min-h-11 items-center justify-center gap-1 rounded border border-dashed border-[var(--border-strong)] px-3 py-2 text-[13px] text-[var(--fg-muted)] hover:border-[var(--cat-bar)] hover:text-[var(--fg)] md:col-span-full"
           >
             <Plus aria-hidden className="size-4 shrink-0" />
             {t('breakout.addTrack')}

@@ -42,7 +42,7 @@ Una sección se elimina _con todos los bloques que contiene_, sin confirmación 
 
 Un breakout es una sección cuyos _grupos transcurren a la vez_: grupos pequeños en paralelo, cada uno con su propio pequeño desarrollo. Todos los grupos empiezan cuando empieza el breakout. El breakout termina cuando termina el grupo más largo, y después la jornada continúa.
 
-La cabecera lo dice con palabras, por ejemplo **3 grupos, a la vez · grupo más largo 45m**. Cada grupo muestra su posición, su horario y su duración, por ejemplo «Grupo 2 de 3 · 10:00–10:45 · 45m». En pantalla, los grupos aparecen como columnas una junto a otra; en el móvil, uno debajo de otro.
+La cabecera lo dice con palabras, por ejemplo **3 grupos, a la vez · grupo más largo 45m**. Cada grupo muestra su posición, su horario y su duración, por ejemplo «Grupo 2 de 3 · 10:00–10:45 · 45m». En pantalla aparecen como mucho dos grupos uno junto a otro, cada uno en su propia tarjeta; a partir del tercero continúan en una nueva fila debajo. Así cada grupo es lo bastante ancho para leer y editar sus títulos, descripciones y material. En el móvil, todos los grupos aparecen uno debajo de otro.
 
 ### Crear un breakout
 
@@ -50,7 +50,7 @@ La cabecera lo dice con palabras, por ejemplo **3 grupos, a la vez · grupo más
 2. Aparece al final de la jornada como **Nuevo breakout**, ya con dos grupos, «Nuevo grupo 1» y «Nuevo grupo 2».
 3. Cambia el nombre del breakout y de los grupos (**Nombre del breakout**, **Nombre del grupo**).
 4. Llena cada grupo con su propio botón **Añadir un bloque**.
-5. Añade más grupos con **Añadir grupo**, al final de las columnas.
+5. Añade más grupos con **Añadir grupo**, debajo de los grupos.
 
 Igual que una sección, un breakout también se puede crear directamente en su sitio con el «+» entre dos filas, eligiendo **Breakout**.
 
@@ -73,7 +73,7 @@ Un breakout se elimina con todos sus grupos y bloques (**Eliminar con 3 grupos**
 Los bloques, las secciones y los breakouts se mueven con el asa a la izquierda de la fila, como se describe en [Bloques y tipos de bloque](/es/agenda/blocks/). Lo que pasa al soltar depende de dónde lo sueltes:
 
 - **Bloque en una sección:** entre dos bloques de una sección, siempre acaba en la sección. Justo debajo del último bloque o debajo de la cabecera de una sección vacía decide la horizontal: arrastrado a la derecha acaba en la sección, a la izquierda en el nivel de la jornada. Con el teclado lo metes y lo sacas con las flechas derecha e izquierda.
-- **Bloque en un breakout:** la columna bajo el puntero es el grupo en el que acaba. Si lo sueltas sobre la cabecera del breakout, va al final del primer grupo. Con el teclado cambias de grupo con las flechas izquierda y derecha.
+- **Bloque en un breakout:** acaba en el grupo cuya tarjeta está bajo el puntero. Si lo sueltas sobre la cabecera del breakout, va al final del primer grupo. Con el teclado cambias de grupo con las flechas izquierda y derecha.
 - **Sección en un breakout:** la sección se convierte en un grupo más, con todos sus bloques.
 - **Grupo fuera de un breakout:** arrástralo al nivel de la jornada y se convierte en una sección propia, con todos sus bloques.
 

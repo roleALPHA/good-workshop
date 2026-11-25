@@ -17,15 +17,16 @@
      side by side are not a six-column table any more. Its head is an ordinary
      --gw-cols row, so nothing outside the breakout notices.
 
-     auto-fit rather than repeat(n), deliberately: at eight strands there is no
-     width in which eight columns are legible, and the alternative would be
-     scrolling sideways -- which docs/ui-conventions.md lists as a fault, not a
-     compromise. Past the fit the strands wrap into a second grid row, and each
-     strand head says its position in words so the order survives the wrap. */
-  --gw-track-min: 15rem;
-  /* Time | content. A strand column has no room for the extra-info column, so
-     its chips move under the title. */
-  --gw-track-cols: 56px minmax(0, 1fr);
+     Two columns at most. Three and more side by side left each strand a
+     sliver in which titles, descriptions and material wrapped word by word --
+     legible to nobody and impossible to edit in. So the column is never
+     narrower than half the row (minus half the gap), which caps auto-fit at
+     two; below twice --gw-track-min it falls back to one. The third strand
+     wraps into a second grid row, and each strand head says its position in
+     words so "at the same time" survives the wrap. Sideways scrolling is not
+     an option: docs/ui-conventions.md lists it as a fault, not a compromise. */
+  --gw-track-min: 20rem;
+  --gw-track-grid: repeat(auto-fit, minmax(max(var(--gw-track-min), calc(50% - 0.5rem)), 1fr));
 }
 
 :root {

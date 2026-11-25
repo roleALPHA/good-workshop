@@ -49,7 +49,13 @@ export function ModuleRow({
   nested: boolean
   /**
    * 'table' is the day's six-column grid. 'stack' is a strand column, which is
-   * too narrow for it: the cells stack, and the chips move under the title.
+   * too narrow for it: the row is the phone's card at every width -- time and
+   * format on one line, the title under it, the chips under that, each with
+   * the strand's whole width.
+   *
+   * Not a narrower grid. The table's empty cells used to come along into a
+   * two-column one and push the chips into the 56px time column, where
+   * "Poster template" stood one word per line.
    *
    * A layout switch rather than a second component. A column-shaped copy of a
    * block row would be the place the two quietly drift apart -- and every field
@@ -82,6 +88,10 @@ export function ModuleRow({
     editing?.onDescChange(setDescField(mod.desc, key, value))
 
   const titleId = `module-title-${mod.id}`
+  const stack = layout === 'stack'
+  // In a strand the strand's own card is the indentation; another 28px would
+  // only be taken from the text.
+  const indent = nested && !stack
 
   return (
     <article
@@ -93,23 +103,34 @@ export function ModuleRow({
         catClass(type?.color),
         'group relative break-inside-avoid border-b border-[var(--border)]',
         chrome?.isDragging && 'opacity-40',
-        layout === 'table' ? GRID : 'md:grid md:grid-cols-[var(--gw-track-cols)] md:items-start',
+        !stack && GRID,
       )}
     >
       {chrome?.handle}
       {chrome?.presence ? <PeerMarks peers={chrome.presence} /> : null}
-      {/* Phone: the category bar is the card's left edge. */}
+      {/* Phone and strand: the category bar is the card's left edge. */}
       <span
         aria-hidden
-        className="absolute inset-y-0 left-0 w-1 bg-[var(--cat-bar)] md:hidden"
-        style={nested ? { left: '0.75rem' } : undefined}
+        className={cn('absolute inset-y-0 left-0 w-1 bg-[var(--cat-bar)]', !stack && 'md:hidden')}
+        style={indent ? { left: '0.75rem' } : undefined}
       />
 
-      <span className="hidden md:block" />
+      {!stack && <span className="hidden md:block" />}
 
-      <div className={cn('pt-3 pb-3 pl-4 md:px-2 md:pl-2', nested && 'pl-7 md:pl-2')}>
+      <div
+        className={cn(
+          stack
+            ? // pl-10 from md up: the drag handle's place, the strand head's edge.
+              'pt-3 pr-3 pb-2 pl-4 md:pl-10'
+            : 'pt-3 pb-3 pl-4 md:px-2 md:pl-2',
+          indent && 'pl-7 md:pl-2',
+        )}
+      >
         <TimeCell
           entry={entry}
+          // One line in a strand too: a column of time, duration and format
+          // costs three lines of height for nothing.
+          className={cn(stack && 'flex-wrap md:flex-row md:items-baseline md:gap-2')}
           editing={
             editing && { ...editing, pinnedStartMinute: mod.pinnedStartMinute, blockId: mod.id }
           }
@@ -136,12 +157,14 @@ export function ModuleRow({
         </TimeCell>
       </div>
 
-      <span className="hidden md:block" />
+      {!stack && <span className="hidden md:block" />}
 
       <div
         className={cn(
-          'pb-3 pl-4 md:border-l-4 md:border-[var(--cat-bar)] md:px-3 md:pt-3 md:pl-3',
-          nested && 'pl-7 md:ml-7 md:pl-3',
+          stack
+            ? 'pr-3 pb-2 pl-4 md:pl-10'
+            : 'pb-3 pl-4 md:border-l-4 md:border-[var(--cat-bar)] md:px-3 md:pt-3 md:pl-3',
+          indent && 'pl-7 md:ml-7 md:pl-3',
         )}
       >
         {editing ? (
@@ -261,7 +284,14 @@ export function ModuleRow({
         )}
       </div>
 
-      <div className={cn('space-y-1 pb-3 pl-4 md:px-3 md:pt-3 md:pl-3', nested && 'pl-7 md:pl-3')}>
+      <div
+        className={cn(
+          stack
+            ? 'space-y-1 pr-3 pb-3 pl-4 md:pl-10'
+            : 'space-y-1 pb-3 pl-4 md:px-3 md:pt-3 md:pl-3',
+          indent && 'pl-7 md:pl-3',
+        )}
+      >
         {info.length > 0 && <InfoChips items={info} />}
         {editing && materialField && (
           <LockField blockId={mod.id} field="desc.materials">
@@ -278,7 +308,7 @@ export function ModuleRow({
         )}
       </div>
 
-      <span className="hidden md:block" />
+      {!stack && <span className="hidden md:block" />}
 
       {/*
         A child of the ROW's grid, spanning all of it, rather than a child of the
@@ -293,8 +323,9 @@ export function ModuleRow({
           id={`details-${mod.id}`}
           className={cn(
             'mb-3 ml-4 rounded border border-[var(--border)] bg-[var(--surface-raised)] p-3',
-            'md:col-span-full md:mr-3 md:ml-3',
-            nested && 'ml-7 md:ml-10',
+            // The fields need every pixel the strand has; the handle is not in the way here.
+            stack ? 'mr-3 md:ml-3' : 'md:col-span-full md:mr-3 md:ml-3',
+            indent && 'ml-7 md:ml-10',
           )}
         >
           {editing.details}

@@ -69,6 +69,46 @@ test.describe('breakouts', () => {
     await expect(group(page, /Neuer Strang 3/)).toBeVisible()
   })
 
+  /**
+   * Reported as "far too narrow, ugly and hard to use": three and more strands
+   * side by side left each of them a sliver in which a block's title, its
+   * description and its material wrapped word by word. Two columns are the most
+   * a block can be worked on in; the third strand goes underneath.
+   */
+  test('puts at most two strands side by side', async ({ page }) => {
+    await page.setViewportSize({ width: 1600, height: 1000 })
+    await addBreakout(page)
+    await page.getByRole('button', { name: 'Strang zu Neuer Breakout hinzufügen' }).click()
+
+    const first = (await group(page, /Neuer Strang 1/).boundingBox())!
+    const second = (await group(page, /Neuer Strang 2/).boundingBox())!
+    const third = (await group(page, /Neuer Strang 3/).boundingBox())!
+
+    expect(Math.abs(first.y - second.y)).toBeLessThan(4)
+    // Under the first, in its column -- not a third column beside the second.
+    expect(Math.abs(third.x - first.x)).toBeLessThan(4)
+    expect(third.y).toBeGreaterThan(first.y + Math.min(first.height, second.height) - 4)
+  })
+
+  /**
+   * The same report, from inside a strand: a block's chips -- room, group size,
+   * material -- stood in the 56px time column, one word per line, because the
+   * block row's empty table cells were still taking their places in the
+   * strand's two-column grid.
+   */
+  test("gives a block's chips the strand's width, not the time column's", async ({ page }) => {
+    const strand = group(page, /^A · Datenmodell/)
+    const material = strand
+      .getByRole('article')
+      .first()
+      .getByRole('group')
+      .filter({ has: page.getByRole('textbox', { name: 'Material hinzufügen' }) })
+
+    const strandBox = (await strand.boundingBox())!
+    const materialBox = (await material.boundingBox())!
+    expect(materialBox.width).toBeGreaterThan(strandBox.width / 2)
+  })
+
   test('adds a block into one strand, not into the day', async ({ page }) => {
     await addBreakout(page)
     await page.getByRole('button', { name: /^Block in Neuer Strang 2 hinzufügen$/ }).click()

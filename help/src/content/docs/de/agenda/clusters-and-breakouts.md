@@ -42,7 +42,7 @@ Ein Abschnitt wird _mit allen Blöcken darin_ gelöscht, ohne Rückfrage und ohn
 
 Ein Breakout ist ein Abschnitt, dessen _Stränge gleichzeitig_ laufen: parallele Kleingruppen, jede mit ihrem eigenen kleinen Ablauf. Alle Stränge beginnen, wenn der Breakout beginnt. Der Breakout endet, wenn der längste Strang endet, und danach geht der Tag weiter.
 
-Die Kopfzeile sagt das in Worten, etwa **3 Stränge, gleichzeitig · längster Strang 45m**. Jeder Strang zeigt seine Position, Uhrzeit und Dauer, etwa „Strang 2 von 3 · 10:00–10:45 · 45m“. Auf dem Bildschirm stehen die Stränge als Spalten nebeneinander, auf dem Handy untereinander.
+Die Kopfzeile sagt das in Worten, etwa **3 Stränge, gleichzeitig · längster Strang 45m**. Jeder Strang zeigt seine Position, Uhrzeit und Dauer, etwa „Strang 2 von 3 · 10:00–10:45 · 45m“. Auf dem Bildschirm stehen höchstens zwei Stränge nebeneinander, jeder in einer eigenen Karte; ab dem dritten Strang geht es in einer neuen Reihe darunter weiter. So bleibt jeder Strang breit genug, um Titel, Beschreibung und Material darin zu lesen und zu bearbeiten. Auf dem Handy stehen alle Stränge untereinander.
 
 ### Einen Breakout anlegen
 
@@ -50,7 +50,7 @@ Die Kopfzeile sagt das in Worten, etwa **3 Stränge, gleichzeitig · längster S
 2. Er erscheint am Ende des Tages als **Neuer Breakout**, schon mit zwei Strängen, „Neuer Strang 1“ und „Neuer Strang 2“.
 3. Benenne Breakout und Stränge um (**Name des Breakouts**, **Name des Strangs**).
 4. Füll jeden Strang über seinen eigenen Knopf **Block hinzufügen**.
-5. Weitere Gruppen kommen mit **Strang hinzufügen** am Ende der Spalten dazu.
+5. Weitere Gruppen kommen mit **Strang hinzufügen** unter den Strängen dazu.
 
 Wie ein Abschnitt lässt sich auch ein Breakout über das „+“ zwischen zwei Zeilen direkt an seiner Stelle anlegen, mit **Breakout**.
 
@@ -73,7 +73,7 @@ Ein Breakout wird mit allen Strängen und Blöcken gelöscht (**Mit 3 Strängen 
 Blöcke, Abschnitte und Breakouts verschiebst du am Griff links in der Zeile, wie unter [Blöcke und Bausteintypen](/de/agenda/blocks/) beschrieben. Was beim Ablegen passiert, hängt davon ab, wo du loslässt:
 
 - **Block in einen Abschnitt:** Zwischen zwei Blöcken eines Abschnitts landet er immer im Abschnitt. Direkt unter dem letzten Block oder unter der Kopfzeile eines leeren Abschnitts entscheidet die Waagerechte: nach rechts gezogen landet er im Abschnitt, nach links auf Tagesebene. Mit der Tastatur rückst du mit Pfeil rechts und links ein und aus.
-- **Block in einen Breakout:** Die Spalte unter dem Mauszeiger ist der Strang, in dem er landet. Lässt du ihn auf der Kopfzeile des Breakouts los, kommt er ans Ende des ersten Strangs. Mit der Tastatur wechselst du mit Pfeil links und rechts zwischen den Strängen.
+- **Block in einen Breakout:** Er landet in dem Strang, über dessen Karte der Mauszeiger steht. Lässt du ihn auf der Kopfzeile des Breakouts los, kommt er ans Ende des ersten Strangs. Mit der Tastatur wechselst du mit Pfeil links und rechts zwischen den Strängen.
 - **Abschnitt in einen Breakout:** Der Abschnitt wird zu einem weiteren Strang, mit allen seinen Blöcken.
 - **Strang aus einem Breakout:** Zieh ihn auf die Tagesebene, und er wird ein eigener Abschnitt, mit allen seinen Blöcken.
 
